@@ -17,10 +17,11 @@
     <h1 class="logo">ZiBuy</h1>
 
     <input
-      type="text"
-      placeholder="Search products..."
-      class="search-box"
-    >
+    type="text"
+    id="search-input"
+    placeholder="Search products..."
+    onkeyup="searchProducts()"
+>
 
     <button onclick="toggleCart()" class="cart-open-btn">
       Cart
