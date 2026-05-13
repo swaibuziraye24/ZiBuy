@@ -168,6 +168,13 @@ async function loadProducts() {
             const product = docSnap.data();
 
             if (
+    activeCategory !== "all" &&
+    product.category !== activeCategory
+) {
+    return;
+}
+
+            if (
     !product.name
         .toLowerCase()
         .includes(searchValue)
@@ -238,6 +245,10 @@ window.addProduct = async function () {
 
     const file = document.getElementById("product-image").files[0];
 
+const category = document.getElementById(
+    "product-category"
+).value;
+
     if (!name || !price || !file) {
 
         alert("Fill all fields");
@@ -260,8 +271,9 @@ window.addProduct = async function () {
 
             name: name,
             price: Number(price),
+            category: category,
             images: [imageUrl]
-
+            
         });
 
         alert("Product uploaded successfully");
@@ -413,6 +425,16 @@ window.removeCartItem = function (index) {
 renderCart();
 
 window.searchProducts = function () {
+
+    loadProducts();
+
+};
+
+let activeCategory = "all";
+
+window.filterCategory = function (category) {
+
+    activeCategory = category;
 
     loadProducts();
 
