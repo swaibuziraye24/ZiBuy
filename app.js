@@ -188,48 +188,41 @@ async function loadProducts() {
 
            card.innerHTML = `
 
-    <div
+    <div class="product-image-box"
         onclick="openProduct(
             '${product.name}',
             ${product.price},
             '${product.images[0]}'
-        )"
-    >
+        )">
 
-        <div class="product-image-box">
-
-            <img
-                src="${product.images[0]}"
-                class="product-image"
-            >
-
-        </div>
-
-        <div class="product-info">
-
-            <h3 class="product-title">
-                ${product.name}
-            </h3>
-
-            <p class="product-price">
-                UGX ${product.price.toLocaleString()}
-            </p>
-
-        </div>
+        <img 
+            src="${product.images[0]}" 
+            class="product-image"
+        >
 
     </div>
 
-    <button
-        class="cart-btn"
-        onclick="event.stopPropagation(); addToCart(
-            '${product.name}',
-            ${product.price}
-        )"
-    >
+    <div class="product-info">
 
-        Add To Cart
+        <h3 class="product-title">
+            ${product.name}
+        </h3>
 
-    </button>
+        <p class="product-price">
+            UGX ${product.price.toLocaleString()}
+        </p>
+
+        <button class="cart-btn"
+            onclick="addToCart(
+                '${product.name}',
+                ${product.price}
+            )">
+
+            Add To Cart
+
+        </button>
+
+    </div>
 
 `;
             productsContainer.appendChild(card);
@@ -656,5 +649,24 @@ async function loadOrders() {
         console.error(error);
 
     }
+
+}
+
+
+window.openProduct = function(name, price, image){
+
+    document.getElementById("product-modal").style.display = "flex";
+
+    document.getElementById("modal-name").innerText = name;
+
+    document.getElementById("modal-price").innerText =
+        "UGX " + price.toLocaleString();
+
+    document.getElementById("modal-image").src = image;
+}
+
+window.closeProduct = function(){
+
+    document.getElementById("product-modal").style.display = "none";
 
 }
