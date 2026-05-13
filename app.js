@@ -670,3 +670,46 @@ window.closeProduct = function(){
     document.getElementById("product-modal").style.display = "none";
 
 }
+
+// PRODUCT POPUP
+
+function openProduct(name, price, image){
+
+    document.getElementById("product-modal").style.display = "flex";
+
+    document.getElementById("modal-name").innerText = name;
+
+    document.getElementById("modal-price").innerText =
+        "UGX " + price.toLocaleString();
+
+    document.getElementById("modal-image").src = image;
+
+    document.getElementById("modal-cart-btn").onclick = () => {
+
+        addToCart(name, price);
+
+    };
+}
+
+
+// CLOSE MODAL
+
+document.getElementById("close-modal").onclick = () => {
+
+    document.getElementById("product-modal").style.display = "none";
+
+};
+
+
+// CLOSE WHEN CLICKING OUTSIDE
+
+window.onclick = (e) => {
+
+    const modal = document.getElementById("product-modal");
+
+    if(e.target === modal){
+
+        modal.style.display = "none";
+
+    }
+};
