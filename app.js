@@ -188,9 +188,12 @@ async function loadProducts() {
 
             card.innerHTML = `
 
-    <div class="product-image-box">
-
-        <img src="${product.images[0]}" class="product-image">
+    <div class="product-card"
+onclick="openProduct(
+    '${product.name}',
+    ${product.price},
+    '${product.images[0]}'
+)">
 
     </div>
 
@@ -437,5 +440,31 @@ window.filterCategory = function (category) {
     activeCategory = category;
 
     loadProducts();
+
+};
+
+
+window.openProduct = function (name, price, image) {
+
+    document.getElementById("product-modal").style.display = "flex";
+
+    document.getElementById("modal-name").innerText = name;
+
+    document.getElementById("modal-price").innerText =
+        "UGX " + price.toLocaleString();
+
+    document.getElementById("modal-image").src = image;
+
+    document.getElementById("modal-add-btn").onclick = function () {
+
+        addToCart(name, price);
+
+    };
+
+};
+
+window.closeProductModal = function () {
+
+    document.getElementById("product-modal").style.display = "none";
 
 };
