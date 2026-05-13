@@ -30,9 +30,10 @@
     onkeyup="searchProducts()"
 >
 
-    <button onclick="toggleCart()" class="cart-open-btn">
-      Cart
-   </button>
+    <button class="admin-btn"
+onclick="toggleAdminPanel()">
+Admin
+</button>
 
   </header>
 
@@ -180,53 +181,63 @@
 
 </section>
 </main>
+<!-- ADMIN DASHBOARD -->
 
-<!-- ADMIN PANEL -->
+<section id="admin-dashboard">
 
-<section class="admin-panel">
+    <div class="admin-top">
 
-    <h2>Admin Upload</h2>
+        <h2>ZiBuy Admin</h2>
 
-    <input
-        type="text"
-        id="product-name"
-        placeholder="Product name"
-    >
+        <button onclick="toggleAdminPanel()">
+            Close
+        </button>
 
-    <input
-        type="number"
-        id="product-price"
-        placeholder="Product price"
-    >
+    </div>
 
-    <select id="product-category">
+    <div class="admin-upload">
 
-        <option value="phones">Phones</option>
-        <option value="fashion">Fashion</option>
-        <option value="electronics">Electronics</option>
-        <option value="beauty">Beauty</option>
-        <option value="shoes">Shoes</option>
-        <option value="bags">Bags</option>
-        <option value="watches">Watches</option>
-        <option value="groceries">Groceries</option>
-        <option value="home">Home</option>
-        <option value="gaming">Gaming</option>
+        <input
+            type="text"
+            id="product-name"
+            placeholder="Product name"
+        >
 
-    </select>
+        <input
+            type="number"
+            id="product-price"
+            placeholder="Product price"
+        >
 
-    <input
-        type="file"
-        id="product-image"
-        multiple
-        accept="image/*"
-    >
+        <select id="product-category">
 
-    <button onclick="addProduct()">
-        Upload Product
-    </button>
+            <option value="phones">Phones</option>
+            <option value="fashion">Fashion</option>
+            <option value="electronics">Electronics</option>
+            <option value="beauty">Beauty</option>
+            <option value="shoes">Shoes</option>
+            <option value="bags">Bags</option>
+            <option value="watches">Watches</option>
+            <option value="groceries">Groceries</option>
+            <option value="home">Home</option>
+            <option value="gaming">Gaming</option>
+
+        </select>
+
+        <input
+            type="file"
+            id="product-image"
+            multiple
+            accept="image/*"
+        >
+
+        <button onclick="addProduct()">
+            Upload Product
+        </button>
+
+    </div>
 
 </section>
-
 
 <style>
 
