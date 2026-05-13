@@ -264,3 +264,137 @@ window.addProduct = async function () {
     }
 
 };
+
+/* ================= CART SYSTEM ================= */
+
+let cart = JSON.parse(localStorage.getItem("zibuy-cart")) || [];
+
+function saveCart() {
+
+    localStorage.setItem(
+        "zibuy-cart",
+        JSON.stringify(cart)
+    );
+
+}
+
+window.toggleCart = function () {
+
+    document
+        .getElementById("cart-sidebar")
+        .classList.toggle("active");
+
+};
+
+window.addToCart = function (name, price) {
+
+    const existing = cart.find(item => item.name === name);
+
+    if (existing) {
+
+        existing.qty += 1;
+
+    } else {
+
+        cart.push({
+            name,
+            price,
+            qty: 1
+        });
+
+    }
+
+    saveCart();
+
+    renderCart();
+
+};
+
+function renderCart() {
+
+    const container = document.getElementById("cart-items");
+
+    const totalBox = document.getElementById("cart-total");
+
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    let total = 0;
+
+    cart.forEach((item, index) => {
+
+        total += item.price * item.qty;
+
+        container.innerHTML += `
+
+            <div class="cart-item">
+
+                <div class="cart-item-info">
+
+                    <h4>${item.name}</h4>
+
+                    <p>
+                        UGX ${item.price.toLocaleString()}
+                    </p>
+
+                    <div class="qty-controls">
+
+                        <button onclick="changeQty(${index}, -1)">
+                            -
+                        </button>
+
+                        <span>${item.qty}</span>
+
+                        <button onclick="changeQty(${index}, 1)">
+                            +
+                        </button>
+
+                    </div>
+
+                    <button class="remove-btn"
+                        onclick="removeCartItem(${index})">
+
+                        Remove
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        `;
+
+    });
+
+    totalBox.innerText = total.toLocaleString();
+
+}
+
+window.changeQty = function (index, change) {
+
+    cart[index].qty += change;
+
+    if (cart[index].qty <= 0) {
+
+        cart.splice(index, 1);
+
+    }
+
+    saveCart();
+
+    renderCart();
+
+};
+
+window.removeCartItem = function (index) {
+
+    cart.splice(index, 1);
+
+    saveCart();
+
+    renderCart();
+
+};
+
+renderCart();
