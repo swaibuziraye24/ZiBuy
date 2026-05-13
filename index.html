@@ -22,9 +22,9 @@
       class="search-box"
     >
 
-    <button class="cart-btn">
-      Cart (0)
-    </button>
+    <button onclick="toggleCart()" class="cart-open-btn">
+      Cart
+   </button>
 
   </header>
 
@@ -175,12 +175,152 @@
     cursor: pointer;
 }
 
+/* ================= CART SIDEBAR ================= */
+
+.cart-sidebar {
+    position: fixed;
+    top: 0;
+    right: -420px;
+    width: 400px;
+    max-width: 100%;
+    height: 100vh;
+    background: white;
+    z-index: 9999;
+    box-shadow: -4px 0 20px rgba(0,0,0,0.15);
+    transition: 0.3s;
+    display: flex;
+    flex-direction: column;
+}
+
+.cart-sidebar.active {
+    right: 0;
+}
+
+.cart-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.close-cart {
+    background: none;
+    border: none;
+    font-size: 28px;
+    cursor: pointer;
+}
+
+#cart-items {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.cart-item {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.cart-item img {
+    width: 90px;
+    height: 90px;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+.cart-item-info {
+    flex: 1;
+}
+
+.cart-item-info h4 {
+    margin: 0;
+}
+
+.cart-item-info p {
+    color: #ff6600;
+    font-weight: bold;
+}
+
+.qty-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.qty-controls button {
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 6px;
+    background: #eee;
+    cursor: pointer;
+}
+
+.remove-btn {
+    background: red;
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: 8px;
+}
+
+.cart-footer {
+    padding: 20px;
+    border-top: 1px solid #eee;
+}
+
+.checkout-btn {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 10px;
+    background: #ff6600;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+}
+
 
 </style>
 
 
 
   <script type="module" src="app.js"></script>
+
+<!-- ================= CART SIDEBAR ================= -->
+
+<div id="cart-sidebar" class="cart-sidebar">
+
+    <div class="cart-top">
+
+        <h2>Your Cart</h2>
+
+        <button onclick="toggleCart()" class="close-cart">
+            ×
+        </button>
+
+    </div>
+
+    <div id="cart-items"></div>
+
+    <div class="cart-footer">
+
+        <h3>
+            Total: UGX
+            <span id="cart-total">0</span>
+        </h3>
+
+        <button class="checkout-btn">
+            Checkout
+        </button>
+
+    </div>
+
+</div>
 
 </body>
 </html>
