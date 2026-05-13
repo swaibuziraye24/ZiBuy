@@ -167,22 +167,36 @@ async function loadProducts() {
             card.className = "product-card";
 
             card.innerHTML = `
-                <img src="${product.images[0]}" class="product-image">
 
-                <h3>${product.name}</h3>
+    <div class="product-image-box">
 
-                <p class="product-price">
-                    UGX ${product.price}
-                </p>
+        <img src="${product.images[0]}" class="product-image">
 
-                <button onclick="addToCart(
-                    '${product.name}',
-                    ${product.price}
-                )">
-                    Add to Cart
-                </button>
-            `;
+    </div>
 
+    <div class="product-info">
+
+        <h3 class="product-title">
+            ${product.name}
+        </h3>
+
+        <p class="product-price">
+            UGX ${product.price.toLocaleString()}
+        </p>
+
+        <button class="cart-btn"
+            onclick="addToCart(
+                '${product.name}',
+                ${product.price}
+            )">
+
+            Add To Cart
+
+        </button>
+
+    </div>
+
+`;
             productsContainer.appendChild(card);
 
         });
