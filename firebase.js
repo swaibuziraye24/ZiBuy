@@ -13,6 +13,7 @@ import {
 import {
     getFirestore,
     collection,
+    getDocs,
     addDoc
 } from
 "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -54,3 +55,4 @@ window.storage = storage;
 window.db = db;
 window.collection = collection;
 window.addDoc = addDoc;
+window.getDocs = getDocs;
