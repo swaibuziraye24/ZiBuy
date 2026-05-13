@@ -181,6 +181,52 @@
 </section>
 </main>
 
+<!-- ADMIN PANEL -->
+
+<section class="admin-panel">
+
+    <h2>Admin Upload</h2>
+
+    <input
+        type="text"
+        id="product-name"
+        placeholder="Product name"
+    >
+
+    <input
+        type="number"
+        id="product-price"
+        placeholder="Product price"
+    >
+
+    <select id="product-category">
+
+        <option value="phones">Phones</option>
+        <option value="fashion">Fashion</option>
+        <option value="electronics">Electronics</option>
+        <option value="beauty">Beauty</option>
+        <option value="shoes">Shoes</option>
+        <option value="bags">Bags</option>
+        <option value="watches">Watches</option>
+        <option value="groceries">Groceries</option>
+        <option value="home">Home</option>
+        <option value="gaming">Gaming</option>
+
+    </select>
+
+    <input
+        type="file"
+        id="product-image"
+        multiple
+        accept="image/*"
+    >
+
+    <button onclick="addProduct()">
+        Upload Product
+    </button>
+
+</section>
+
 
 <style>
 
