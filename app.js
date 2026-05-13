@@ -228,3 +228,57 @@ async function loadProducts() {
         `;
     }
 }
+
+window.addEventListener("DOMContentLoaded", () => {
+
+    loadProducts();
+
+});
+
+window.addProduct = async function () {
+
+    const name = document.getElementById("product-name").value;
+
+    const price = document.getElementById("product-price").value;
+
+    const file = document.getElementById("product-image").files[0];
+
+    if (!name || !price || !file) {
+
+        alert("Fill all fields");
+
+        return;
+    }
+
+    try {
+
+        const storageRef = ref(
+            storage,
+            "products/" + Date.now() + "_" + file.name
+        );
+
+        await uploadBytes(storageRef, file);
+
+        const imageUrl = await getDownloadURL(storageRef);
+
+        await addDoc(collection(db, "products"), {
+
+            name: name,
+            price: Number(price),
+            images: [imageUrl]
+
+        });
+
+        alert("Product uploaded successfully");
+
+        loadProducts();
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(error.message);
+
+    }
+
+};
