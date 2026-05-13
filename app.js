@@ -39,10 +39,7 @@ const products = [
   }
 
 ];
-
-
-async function addProduct() {
-
+window.addProduct = async function () {
     // ✅ ONLY ADMIN CHECK
     if (!isAdmin) {
         alert("Admin only");
@@ -145,36 +142,7 @@ window.addToCart = function(id){
 
 };
 
-
 renderProducts();
-
-
-
-async function loadProducts() {
-    const container = document.getElementById("products");
-    container.innerHTML = "";
-
-    const snapshot = await getDocs(collection(db, "products"));
-
-    snapshot.forEach((docSnap) => {
-        const p = docSnap.data();
-
-        container.innerHTML += `
-            <div class="product-card">
-                <img src="${p.image}" />
-                <h3>${p.name}</h3>
-                <p>UGX ${p.price}</p>
-                <button onclick="addToCart('${p.name}', ${p.price})">
-                    Add to Cart
-                </button>
-            </div>
-        `;
-    });
-}
-
-window.addEventListener("DOMContentLoaded", async () => {
-    await loadProducts();
-});
 
 async function loadProducts() {
 
