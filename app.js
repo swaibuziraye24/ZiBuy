@@ -175,3 +175,56 @@ async function loadProducts() {
 window.addEventListener("DOMContentLoaded", async () => {
     await loadProducts();
 });
+
+async function loadProducts() {
+
+    const productsContainer = document.getElementById("products");
+
+    if (!productsContainer) return;
+
+    productsContainer.innerHTML = "<p>Loading products...</p>";
+
+    try {
+
+        const querySnapshot = await getDocs(collection(db, "products"));
+
+        productsContainer.innerHTML = "";
+
+        querySnapshot.forEach((docSnap) => {
+
+            const product = docSnap.data();
+
+            const card = document.createElement("div");
+
+            card.className = "product-card";
+
+            card.innerHTML = `
+                <img src="${product.images[0]}" class="product-image">
+
+                <h3>${product.name}</h3>
+
+                <p class="product-price">
+                    UGX ${product.price}
+                </p>
+
+                <button onclick="addToCart(
+                    '${product.name}',
+                    ${product.price}
+                )">
+                    Add to Cart
+                </button>
+            `;
+
+            productsContainer.appendChild(card);
+
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        productsContainer.innerHTML = `
+            <p>Failed to load products</p>
+        `;
+    }
+}
