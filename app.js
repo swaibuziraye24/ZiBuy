@@ -186,38 +186,50 @@ async function loadProducts() {
 
             card.className = "product-card";
 
-            card.innerHTML = `
+           card.innerHTML = `
 
-    <div class="product-card"
-onclick="openProduct(
-    '${product.name}',
-    ${product.price},
-    '${product.images[0]}'
-)">
+    <div
+        onclick="openProduct(
+            '${product.name}',
+            ${product.price},
+            '${product.images[0]}'
+        )"
+    >
+
+        <div class="product-image-box">
+
+            <img
+                src="${product.images[0]}"
+                class="product-image"
+            >
+
+        </div>
+
+        <div class="product-info">
+
+            <h3 class="product-title">
+                ${product.name}
+            </h3>
+
+            <p class="product-price">
+                UGX ${product.price.toLocaleString()}
+            </p>
+
+        </div>
 
     </div>
 
-    <div class="product-info">
+    <button
+        class="cart-btn"
+        onclick="event.stopPropagation(); addToCart(
+            '${product.name}',
+            ${product.price}
+        )"
+    >
 
-        <h3 class="product-title">
-            ${product.name}
-        </h3>
+        Add To Cart
 
-        <p class="product-price">
-            UGX ${product.price.toLocaleString()}
-        </p>
-
-        <button class="cart-btn"
-            onclick="addToCart(
-                '${product.name}',
-                ${product.price}
-            )">
-
-            Add To Cart
-
-        </button>
-
-    </div>
+    </button>
 
 `;
             productsContainer.appendChild(card);
