@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>ZiBuy</title>
+
+<link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+<!-- HEADER -->
+<header class="header">
+
+    <div class="logo">
+        ZiBuy
+    </div>
+
+    <input 
+    type="text"
+    id="search"
+    placeholder="Search products..."
+    >
+
+    <div class="header-actions">
+
+        <button id="login-btn">
+            Login
+        </button>
+
+        <button id="cart-btn">
+            Cart (<span id="cart-count">0</span>)
+        </button>
+
+    </div>
+
+</header>
+
+<!-- HERO -->
+<section class="hero">
+
+    <h1>
+        Welcome to ZiBuy
+    </h1>
+
+    <p>
+        Smart shopping starts here.
+    </p>
+
+</section>
+
+<!-- PRODUCTS -->
+<section>
+
+    <h2 class="section-title">
+        Products
+    </h2>
+
+    <div id="products-container" class="products-grid">
+
+    </div>
+
+</section>
+
+<!-- CART SIDEBAR -->
+<div id="cart-sidebar" class="cart-sidebar">
+
+    <div class="cart-header">
+
+        <h2>Your Cart</h2>
+
+        <button id="close-cart">
+            ✕
+        </button>
+
+    </div>
+
+    <div id="cart-items">
+
+    </div>
+
+    <div class="cart-footer">
+
+        <h3>
+            Total: UGX <span id="cart-total">0</span>
+        </h3>
+
+        <button id="checkout-btn">
+            Checkout
+        </button>
+
+    </div>
+
+</div>
+
+<script type="module" src="firebase.js"></script>
+<script type="module" src="auth.js"></script>
+<script type="module" src="products.js"></script>
+<script type="module" src="admin.js"></script>
+<script type="module" src="app.js"></script>
+
+</body>
+</html>
