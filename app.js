@@ -566,3 +566,95 @@ window.checkout = async function () {
     }
 
 };
+
+window.openAdmin = function () {
+
+    document.getElementById(
+        "admin-panel"
+    ).style.display = "flex";
+
+    loadOrders();
+
+};
+
+window.closeAdmin = function () {
+
+    document.getElementById(
+        "admin-panel"
+    ).style.display = "none";
+
+};
+
+async function loadOrders() {
+
+    const ordersContainer =
+        document.getElementById(
+            "admin-orders"
+        );
+
+    ordersContainer.innerHTML =
+        "Loading orders...";
+
+    try {
+
+        const snapshot = await getDocs(
+            collection(db, "orders")
+        );
+
+        ordersContainer.innerHTML = "";
+
+        let totalOrders = 0;
+        let totalRevenue = 0;
+
+        snapshot.forEach(doc => {
+
+            const order = doc.data();
+
+            totalOrders++;
+
+            totalRevenue += order.total;
+
+            ordersContainer.innerHTML += `
+
+                <div class="order-card">
+
+                    <h4>
+                        ${order.customerName}
+                    </h4>
+
+                    <p>
+                        ${order.customerPhone}
+                    </p>
+
+                    <p>
+                        ${order.customerLocation}
+                    </p>
+
+                    <p>
+                        Total:
+                        UGX ${order.total.toLocaleString()}
+                    </p>
+
+                </div>
+
+            `;
+
+        });
+
+        document.getElementById(
+            "total-orders"
+        ).innerText = totalOrders;
+
+        document.getElementById(
+            "total-revenue"
+        ).innerText =
+            "UGX " +
+            totalRevenue.toLocaleString();
+
+    } catch (error) {
+
+        console.error(error);
+
+    }
+
+}
