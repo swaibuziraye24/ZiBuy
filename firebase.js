@@ -13,6 +13,13 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
 
+export {
+  db,
+  auth,
+  storage
+};
+
+
 const firebaseConfig = {
   apiKey: "AIzaSyDc7-XKk30DshUE-9PUoMF4VObt4UTIncM",
   authDomain: "zibuy-5deae.firebaseapp.com",
@@ -24,6 +31,8 @@ const firebaseConfig = {
 };
 
 
+
+
 const app = initializeApp(firebaseConfig);
 
 const db = getFirestore(app);
@@ -31,13 +40,6 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 
 const storage = getStorage(app);
-
-
-export {
-  db,
-  auth,
-  storage
-};
 
 
 window.db = db;
