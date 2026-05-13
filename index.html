@@ -36,6 +36,62 @@
     <p>Shop smarter across Uganda.</p>
   </section>
 
+<section class="categories">
+
+    <button onclick="filterCategory('all')">
+        All
+    </button>
+
+    <button onclick="filterCategory('phones')">
+        Phones
+    </button>
+
+    <button onclick="filterCategory('electronics')">
+        Electronics
+    </button>
+
+    <button onclick="filterCategory('fashion')">
+        Fashion
+    </button>
+
+    <button onclick="filterCategory('shoes')">
+        Shoes
+    </button>
+
+    <button onclick="filterCategory('beauty')">
+        Beauty
+    </button>
+
+    <button onclick="filterCategory('bags')">
+        Bags
+    </button>
+
+    <button onclick="filterCategory('groceries')">
+        Groceries
+    </button>
+
+    <button onclick="filterCategory('watches')">
+        Watches
+    </button>
+
+    <button onclick="filterCategory('computers')">
+        Computers
+    </button>
+
+    <button onclick="filterCategory('gaming')">
+        Gaming
+    </button>
+
+    <button onclick="filterCategory('home')">
+        Home
+    </button>
+
+    <button onclick="filterCategory('accessories')">
+        Accessories
+    </button>
+
+</section>
+
   <section id="products" class="products-grid"></section>
 
 
@@ -48,6 +104,56 @@
         id="product-name"
         placeholder="Product Name"
     >
+
+<select id="product-category">
+
+    <option value="phones">Phones</option>
+
+    <option value="electronics">
+        Electronics
+    </option>
+
+    <option value="fashion">
+        Fashion
+    </option>
+
+    <option value="shoes">
+        Shoes
+    </option>
+
+    <option value="beauty">
+        Beauty
+    </option>
+
+    <option value="bags">
+        Bags
+    </option>
+
+    <option value="groceries">
+        Groceries
+    </option>
+
+    <option value="watches">
+        Watches
+    </option>
+
+    <option value="computers">
+        Computers
+    </option>
+
+    <option value="gaming">
+        Gaming
+    </option>
+
+    <option value="home">
+        Home
+    </option>
+
+    <option value="accessories">
+        Accessories
+    </option>
+
+</select>
 
     <input
         type="number"
@@ -283,6 +389,37 @@
     color: white;
     font-weight: bold;
     cursor: pointer;
+}
+
+/* ================= CATEGORIES ================= */
+
+.categories {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding: 15px 20px;
+    background: white;
+    scrollbar-width: none;
+}
+
+.categories::-webkit-scrollbar {
+    display: none;
+}
+
+.categories button {
+    border: none;
+    background: #f3f4f6;
+    padding: 10px 18px;
+    border-radius: 30px;
+    cursor: pointer;
+    white-space: nowrap;
+    font-weight: 600;
+    transition: 0.2s;
+}
+
+.categories button:hover {
+    background: #ff6600;
+    color: white;
 }
 
 
