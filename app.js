@@ -713,3 +713,11 @@ window.onclick = (e) => {
 
     }
 };
+
+function toggleAdminPanel(){
+
+    document
+        .getElementById("admin-dashboard")
+        .classList.toggle("active");
+
+}
