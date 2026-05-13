@@ -158,9 +158,22 @@ async function loadProducts() {
 
         productsContainer.innerHTML = "";
 
+        const searchValue = document
+    .getElementById("search-input")
+    .value
+    .toLowerCase();
+
         querySnapshot.forEach((docSnap) => {
 
             const product = docSnap.data();
+
+            if (
+    !product.name
+        .toLowerCase()
+        .includes(searchValue)
+) {
+    return;
+}
 
             const card = document.createElement("div");
 
@@ -398,3 +411,9 @@ window.removeCartItem = function (index) {
 };
 
 renderCart();
+
+window.searchProducts = function () {
+
+    loadProducts();
+
+};
