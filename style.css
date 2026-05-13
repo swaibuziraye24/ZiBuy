@@ -226,3 +226,75 @@
     font-size:20px;
     font-weight:bold;
 }
+
+/* PRODUCT MODAL */
+
+.product-modal{
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 3000;
+}
+
+.product-modal-content{
+    background: white;
+    width: 90%;
+    max-width: 420px;
+    border-radius: 16px;
+    padding: 20px;
+    position: relative;
+    animation: popup .25s ease;
+}
+
+.product-modal-content img{
+    width: 100%;
+    height: 300px;
+    object-fit: cover;
+    border-radius: 12px;
+}
+
+#close-modal{
+    position: absolute;
+    right: 15px;
+    top: 10px;
+    font-size: 30px;
+    cursor: pointer;
+}
+
+#modal-name{
+    margin-top: 15px;
+    font-size: 24px;
+}
+
+#modal-price{
+    color: #ff6600;
+    font-size: 22px;
+    font-weight: bold;
+}
+
+#modal-cart-btn{
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 10px;
+    background: #ff6600;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 15px;
+}
+
+@keyframes popup{
+    from{
+        transform: scale(.8);
+        opacity: 0;
+    }
+
+    to{
+        transform: scale(1);
+        opacity: 1;
+    }
+}
