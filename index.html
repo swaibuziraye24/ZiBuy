@@ -16,6 +16,13 @@
 
     <h1 class="logo">ZiBuy</h1>
 
+<button
+    class="admin-btn"
+    onclick="openAdmin()"
+>
+    Admin
+</button>
+
     <input
     type="text"
     id="search-input"
@@ -562,6 +569,45 @@
         <button id="modal-add-btn">
             Add to Cart
         </button>
+
+    </div>
+
+</div>
+
+
+<!-- ================= ADMIN PANEL ================= -->
+
+<div id="admin-panel" class="admin-panel">
+
+    <div class="admin-content">
+
+        <div class="admin-top">
+
+            <h2>ZiBuy Admin</h2>
+
+            <button onclick="closeAdmin()">
+                ×
+            </button>
+
+        </div>
+
+        <div class="admin-stats">
+
+            <div class="stat-box">
+                <h3>Total Orders</h3>
+                <p id="total-orders">0</p>
+            </div>
+
+            <div class="stat-box">
+                <h3>Total Revenue</h3>
+                <p id="total-revenue">0</p>
+            </div>
+
+        </div>
+
+        <h3>Orders</h3>
+
+        <div id="admin-orders"></div>
 
     </div>
 
