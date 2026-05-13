@@ -79,15 +79,7 @@
 
 /* ================= ADMIN PANEL ================= */
 
-.admin-panel {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.6);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 99999;
-}
+
 
 .admin-content {
     width: 95%;
@@ -345,7 +337,7 @@
 #admin-dashboard{
     position: fixed;
     top: 0;
-    right: -100%;
+    right: -420px;
     width: 380px;
     height: 100vh;
     background: white;
