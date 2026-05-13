@@ -480,3 +480,89 @@ window.closeProductModal = function () {
     document.getElementById("product-modal").style.display = "none";
 
 };
+
+
+window.checkout = async function () {
+
+    if (cart.length === 0) {
+
+        alert("Cart is empty");
+
+        return;
+
+    }
+
+    const name = document
+        .getElementById("customer-name")
+        .value;
+
+    const phone = document
+        .getElementById("customer-phone")
+        .value;
+
+    const location = document
+        .getElementById("customer-location")
+        .value;
+
+    if (!name || !phone || !location) {
+
+        alert("Fill all customer details");
+
+        return;
+
+    }
+
+    try {
+
+        let total = 0;
+
+        cart.forEach(item => {
+
+            total += item.price * item.qty;
+
+        });
+
+        await addDoc(
+            collection(db, "orders"),
+            {
+                customerName: name,
+                customerPhone: phone,
+                customerLocation: location,
+
+                items: cart,
+
+                total: total,
+
+                createdAt: new Date()
+            }
+        );
+
+        alert("Order placed successfully");
+
+        cart = [];
+
+        saveCart();
+
+        renderCart();
+
+        document.getElementById(
+            "customer-name"
+        ).value = "";
+
+        document.getElementById(
+            "customer-phone"
+        ).value = "";
+
+        document.getElementById(
+            "customer-location"
+        ).value = "";
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert("Checkout failed");
+
+    }
+
+};
