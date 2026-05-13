@@ -422,6 +422,66 @@
     color: white;
 }
 
+/* ================= PRODUCT MODAL ================= */
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 99999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.6);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: white;
+    width: 90%;
+    max-width: 420px;
+    padding: 20px;
+    border-radius: 14px;
+    text-align: center;
+    position: relative;
+}
+
+.modal-content img {
+    width: 100%;
+    height: 280px;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+.close-modal {
+    position: absolute;
+    right: 15px;
+    top: 10px;
+    font-size: 26px;
+    cursor: pointer;
+}
+
+#modal-name {
+    margin: 10px 0;
+}
+
+#modal-price {
+    color: #ff6600;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+#modal-add-btn {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    background: #ff6600;
+    color: white;
+    font-weight: bold;
+    border-radius: 10px;
+    cursor: pointer;
+}
 
 </style>
 
@@ -454,6 +514,30 @@
 
         <button class="checkout-btn">
             Checkout
+        </button>
+
+    </div>
+
+</div>
+
+<!-- ================= PRODUCT MODAL ================= -->
+
+<div id="product-modal" class="modal">
+
+    <div class="modal-content">
+
+        <span class="close-modal" onclick="closeProductModal()">
+            ×
+        </span>
+
+        <img id="modal-image" src="" />
+
+        <h2 id="modal-name"></h2>
+
+        <p id="modal-price"></p>
+
+        <button id="modal-add-btn">
+            Add to Cart
         </button>
 
     </div>
