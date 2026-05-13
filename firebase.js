@@ -13,6 +13,14 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
 
+import {
+    getFirestore,
+    collection,
+    addDoc
+} from
+"https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+
 export {
   db,
   auth,
@@ -42,6 +50,10 @@ const auth = getAuth(app);
 const storage = getStorage(app);
 
 
-window.db = db;
+
 window.auth = auth;
 window.storage = storage;
+
+window.db = db;
+window.collection = collection;
+window.addDoc = addDoc;
