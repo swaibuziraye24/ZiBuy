@@ -1,5 +1,19 @@
-import { db, auth, storage } from "./firebase.js";
+import {
+    addDoc,
+    collection,
+    getDocs,
+    doc,
+    deleteDoc,
+    updateDoc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+import {
+    ref,
+    uploadBytes,
+    getDownloadURL
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+
+import { db, auth, storage } from "./firebase.js";
 
 const products = [
 
@@ -25,6 +39,67 @@ const products = [
   }
 
 ];
+
+
+async function addProduct() {
+
+    // ✅ ONLY ADMIN CHECK
+    if (!isAdmin) {
+        alert("Admin only");
+        return;
+    }
+
+    // 📍 1. GET INPUTS (FROM YOUR ADMIN PANEL)
+    const name = document.getElementById("p-name").value;
+    const price = document.getElementById("p-price").value;
+    const category = document.getElementById("p-category").value;
+
+    if (!name || !price) {
+        alert("Fill all fields");
+        return;
+    }
+
+    // 📍 2. IMAGE UPLOAD (YOU ALREADY USE selectedFiles)
+    if (!window.selectedFiles || window.selectedFiles.length === 0) {
+        alert("Select at least 1 image");
+        return;
+    }
+
+    let imageUrls = [];
+
+    for (let file of window.selectedFiles) {
+
+        const storageRef = ref(storage, "products/" + Date.now() + "_" + file.name);
+
+        await uploadBytes(storageRef, file);
+
+        const url = await getDownloadURL(storageRef);
+
+        imageUrls.push(url);
+    }
+
+    // 📍 3. SAVE TO FIRESTORE
+    await addDoc(collection(db, "products"), {
+        name: name,
+        price: Number(price),
+        category: category,
+        images: imageUrls,
+        createdAt: new Date()
+    });
+
+    // 📍 4. RESET FORM (IMPORTANT)
+    document.getElementById("p-name").value = "";
+    document.getElementById("p-price").value = "";
+    window.selectedFiles = [];
+
+    document.getElementById("preview-container").innerHTML = "";
+
+    alert("Product added successfully");
+
+    // 📍 5. REFRESH PRODUCTS
+    loadProducts();
+}
+
 
 
 function renderProducts(){
@@ -72,3 +147,31 @@ window.addToCart = function(id){
 
 
 renderProducts();
+
+
+
+async function loadProducts() {
+    const container = document.getElementById("products");
+    container.innerHTML = "";
+
+    const snapshot = await getDocs(collection(db, "products"));
+
+    snapshot.forEach((docSnap) => {
+        const p = docSnap.data();
+
+        container.innerHTML += `
+            <div class="product-card">
+                <img src="${p.image}" />
+                <h3>${p.name}</h3>
+                <p>UGX ${p.price}</p>
+                <button onclick="addToCart('${p.name}', ${p.price})">
+                    Add to Cart
+                </button>
+            </div>
+        `;
+    });
+}
+
+window.addEventListener("DOMContentLoaded", async () => {
+    await loadProducts();
+});
