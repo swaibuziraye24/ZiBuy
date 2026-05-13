@@ -38,3 +38,8 @@ export {
   auth,
   storage
 };
+
+
+window.db = db;
+window.auth = auth;
+window.storage = storage;
