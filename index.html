@@ -37,6 +37,34 @@
 
   <section id="products" class="products-grid"></section>
 
+
+  <section class="admin-panel">
+
+    <h2>Admin Product Upload</h2>
+
+    <input
+        type="text"
+        id="product-name"
+        placeholder="Product Name"
+    >
+
+    <input
+        type="number"
+        id="product-price"
+        placeholder="Product Price"
+    >
+
+    <input
+        type="file"
+        id="product-image"
+        accept="image/*"
+    >
+
+    <button onclick="addProduct()">
+        Upload Product
+    </button>
+
+</section>
 </main>
 
 
@@ -94,6 +122,41 @@
     font-weight: bold;
     cursor: pointer;
 }
+
+/* ================= ADMIN PANEL ================= */
+
+.admin-panel {
+    background: white;
+    margin: 20px;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.admin-panel h2 {
+    margin-top: 0;
+}
+
+.admin-panel input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 12px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    box-sizing: border-box;
+}
+
+.admin-panel button {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 8px;
+    background: #ff6600;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+}
+
 
 </style>
 
