@@ -716,8 +716,9 @@ window.onclick = (e) => {
 
 function toggleAdminPanel(){
 
-    document
-        .getElementById("admin-dashboard")
-        .classList.toggle("active");
+    const panel =
+        document.getElementById("admin-dashboard");
+
+    panel.classList.toggle("active");
 
 }
