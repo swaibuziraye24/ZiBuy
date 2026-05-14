@@ -514,6 +514,23 @@
     cursor: pointer;
 }
 
+/* IMAGE PREVIEW */
+
+#preview-container{
+    display:flex;
+    gap:10px;
+    overflow-x:auto;
+    margin-bottom:15px;
+}
+
+.preview-image{
+    width:80px;
+    height:80px;
+    object-fit:cover;
+    border-radius:10px;
+    border:2px solid #eee;
+}
+
 </style>
 
   
@@ -682,10 +699,14 @@
         </select>
 
         <input
-            type="file"
-            id="product-image"
-            accept="image/*"
-        >
+    type="file"
+    id="product-image"
+    multiple
+    accept="image/*"
+    onchange="previewImages(event)"
+>
+
+<div id="preview-container"></div>
 
         <button onclick="addProduct()">
             Upload Product
