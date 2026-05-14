@@ -672,9 +672,15 @@ window.previewImages = function(event){
 
     container.innerHTML = "";
 
-    const files = event.target.files;
+    const files = [...event.target.files];
 
-    Array.from(files).forEach(file => {
+    if(files.length === 0) return;
+
+    files.forEach(file => {
+
+        if(!file.type.startsWith("image/")){
+            return;
+        }
 
         const reader = new FileReader();
 
@@ -696,7 +702,7 @@ window.previewImages = function(event){
 
     });
 
-};
+}
 
 setInterval(() => {
 
@@ -725,3 +731,32 @@ setInterval(() => {
     });
 
 }, 3000);
+
+
+window.openProduct = function(name, price, image){
+
+    document.getElementById("product-modal").style.display = "flex";
+
+    document.getElementById("modal-name").innerText = name;
+
+    document.getElementById("modal-price").innerText =
+        "UGX " + Number(price).toLocaleString();
+
+    document.getElementById("modal-image").src = image;
+
+    document.getElementById("modal-cart-btn").onclick = () => {
+
+        addToCart(name, price);
+
+    };
+
+}
+
+window.closeProductModal = function(){
+
+    document.getElementById(
+        "product-modal"
+    ).style.display = "none";
+
+}
+
