@@ -72,10 +72,18 @@ async function loadProducts() {
             '${product.images[0]}'
         )">
 
-        <img 
-            src="${product.images[0]}" 
-            class="product-image"
+        <div class="slider">
+
+    ${product.images.map((img, index) => `
+
+        <img
+            src="${img}"
+            class="product-image ${index === 0 ? 'active' : ''}"
         >
+
+    `).join("")}
+
+</div>
 
     </div>
 
@@ -329,6 +337,9 @@ function renderCart() {
 
     totalBox.innerText = total.toLocaleString();
 
+    document.getElementById("cart-count").innerText =
+    cart.length;
+
 }
 
 window.changeQty = function (index, change) {
@@ -541,9 +552,14 @@ async function loadOrders() {
 
 window.openAdmin = function () {
 
-    document.getElementById(
-        "admin-panel"
-    ).style.display = "flex";
+    const panel =
+        document.getElementById("admin-panel");
+
+    panel.style.display = "flex";
+
+    panel.style.justifyContent = "center";
+
+    panel.style.alignItems = "center";
 
     loadOrders();
 
@@ -682,3 +698,30 @@ window.previewImages = function(event){
 
 };
 
+setInterval(() => {
+
+    document.querySelectorAll(".slider")
+    .forEach(slider => {
+
+        let images =
+            slider.querySelectorAll("img");
+
+        if(images.length <= 1) return;
+
+        let current =
+            [...images].findIndex(img =>
+                img.classList.contains("active")
+            );
+
+        images[current]
+            .classList.remove("active");
+
+        let next =
+            (current + 1) % images.length;
+
+        images[next]
+            .classList.add("active");
+
+    });
+
+}, 3000);
