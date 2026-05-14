@@ -700,77 +700,32 @@ onAuthStateChanged(auth, (user) => {
 
 });
 
-window.previewImages = function(event){
-
-    const container =
-        document.getElementById(
-            "preview-container"
-        );
-
-    if(!container) return;
+window.previewImages = function (event) {
+    const container = document.getElementById("preview-container");
+    if (!container) return;
 
     container.innerHTML = "";
 
-    const files = [...event.target.files];
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
 
-    if(files.length === 0) return;
-
-    files.forEach(file => {
-
-        if(!file.type.startsWith("image/")){
-            return;
-        }
+    Array.from(files).forEach((file) => {
+        if (!file.type.startsWith("image/")) return;
 
         const reader = new FileReader();
 
-        reader.onload = function(e){
-
-            const img =
-                document.createElement("img");
-
+        reader.onload = function (e) {
+            const img = document.createElement("img");
             img.src = e.target.result;
-
-            img.className =
-                "preview-image";
-
+            img.className = "preview-image";
             container.appendChild(img);
-
         };
 
         reader.readAsDataURL(file);
-
     });
+};
 
-}
-
-setInterval(() => {
-
-    document.querySelectorAll(".slider")
-    .forEach(slider => {
-
-        let images =
-            slider.querySelectorAll("img");
-
-        if(images.length <= 1) return;
-
-        let current =
-            [...images].findIndex(img =>
-                img.classList.contains("active")
-            );
-
-        images[current]
-            .classList.remove("active");
-
-        let next =
-            (current + 1) % images.length;
-
-        images[next]
-            .classList.add("active");
-
-    });
-
-}, 3000);
-
+event.target.value = "";
 
 window.openProduct = function(name, price, image){
 
