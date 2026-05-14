@@ -30,10 +30,7 @@
     onkeyup="searchProducts()"
 >
 
-    <button class="admin-btn"
-onclick="toggleAdminPanel()">
-Admin
-</button>
+    
 
   </header>
 
@@ -103,141 +100,8 @@ Admin
   <section id="products" class="products-grid"></section>
 
 
-  <section class="admin-panel">
-
-    <h2>Admin Product Upload</h2>
-
-    <input
-        type="text"
-        id="product-name"
-        placeholder="Product Name"
-    >
-
-<select id="product-category">
-
-    <option value="phones">Phones</option>
-
-    <option value="electronics">
-        Electronics
-    </option>
-
-    <option value="fashion">
-        Fashion
-    </option>
-
-    <option value="shoes">
-        Shoes
-    </option>
-
-    <option value="beauty">
-        Beauty
-    </option>
-
-    <option value="bags">
-        Bags
-    </option>
-
-    <option value="groceries">
-        Groceries
-    </option>
-
-    <option value="watches">
-        Watches
-    </option>
-
-    <option value="computers">
-        Computers
-    </option>
-
-    <option value="gaming">
-        Gaming
-    </option>
-
-    <option value="home">
-        Home
-    </option>
-
-    <option value="accessories">
-        Accessories
-    </option>
-
-</select>
-
-    <input
-        type="number"
-        id="product-price"
-        placeholder="Product Price"
-    >
-
-    <input
-        type="file"
-        id="product-image"
-        accept="image/*"
-    >
-
-    <button onclick="addProduct()">
-        Upload Product
-    </button>
-
-</section>
+  
 </main>
-<!-- ADMIN DASHBOARD -->
-
-<section id="admin-dashboard">
-
-    <div class="admin-top">
-
-        <h2>ZiBuy Admin</h2>
-
-        <button onclick="toggleAdminPanel()">
-            Close
-        </button>
-
-    </div>
-
-    <div class="admin-upload">
-
-        <input
-            type="text"
-            id="product-name"
-            placeholder="Product name"
-        >
-
-        <input
-            type="number"
-            id="product-price"
-            placeholder="Product price"
-        >
-
-        <select id="product-category">
-
-            <option value="phones">Phones</option>
-            <option value="fashion">Fashion</option>
-            <option value="electronics">Electronics</option>
-            <option value="beauty">Beauty</option>
-            <option value="shoes">Shoes</option>
-            <option value="bags">Bags</option>
-            <option value="watches">Watches</option>
-            <option value="groceries">Groceries</option>
-            <option value="home">Home</option>
-            <option value="gaming">Gaming</option>
-
-        </select>
-
-        <input
-            type="file"
-            id="product-image"
-            multiple
-            accept="image/*"
-        >
-
-        <button onclick="addProduct()">
-            Upload Product
-        </button>
-
-    </div>
-
-</section>
 
 <style>
 
@@ -668,44 +532,6 @@ Admin
 
 </div>
 
-<div id="product-modal" class="product-modal">
-
-    <div class="product-modal-content">
-
-        <span class="close-modal" onclick="closeProduct()">
-            ✕
-        </span>
-
-        <img id="modal-image">
-
-        <h2 id="modal-name"></h2>
-
-        <p id="modal-price"></p>
-
-    </div>
-
-</div>
-
-<!-- PRODUCT POPUP -->
-<div id="product-modal" class="product-modal">
-
-  <div class="product-modal-content">
-
-    <span id="close-modal">&times;</span>
-
-    <img id="modal-image">
-
-    <h2 id="modal-name"></h2>
-
-    <p id="modal-price"></p>
-
-    <button id="modal-cart-btn">
-      Add To Cart
-    </button>
-
-  </div>
-
-</div>
 
 <script type="module" src="app.js"></script>
 
