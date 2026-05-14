@@ -23,92 +23,105 @@ import {
 
 async function loadProducts() {
 
-    const productsContainer = document.getElementById("products");
+    const productsContainer =
+        document.getElementById("products");
 
     if (!productsContainer) return;
 
-    productsContainer.innerHTML = "<p>Loading products...</p>";
+    productsContainer.innerHTML =
+        "<p>Loading products...</p>";
 
     try {
 
-        const querySnapshot = await getDocs(collection(db, "products"));
+        const querySnapshot =
+            await getDocs(
+                collection(db, "products")
+            );
 
         productsContainer.innerHTML = "";
 
-        const searchValue = document
-    .getElementById("search-input")
-    .value
-    .toLowerCase();
+        const searchValue =
+            document
+            .getElementById("search-input")
+            .value
+            .toLowerCase();
 
         querySnapshot.forEach((docSnap) => {
 
             const product = docSnap.data();
 
             if (
-    activeCategory !== "all" &&
-    product.category !== activeCategory
-) {
-    return;
-}
+                activeCategory !== "all" &&
+                product.category !== activeCategory
+            ) {
+                return;
+            }
 
             if (
-    !product.name
-        .toLowerCase()
-        .includes(searchValue)
-) {
-    return;
-}
+                !product.name
+                    .toLowerCase()
+                    .includes(searchValue)
+            ) {
+                return;
+            }
 
-            const card = document.createElement("div");
+            const card =
+                document.createElement("div");
 
             card.className = "product-card";
 
-           card.innerHTML = `
+            // SAFE IMAGES
+            const images =
+                Array.isArray(product.images)
+                ? product.images
+                : [];
 
-    <div class="product-image-box"
-        onclick="
-window.location.href=
-'product.html?id=${docSnap.id}'
-"
+            card.innerHTML = `
 
-        <div class="slider">
+<div class="product-image-box"
+    onclick="window.location.href='product.html?id=${docSnap.id}'">
 
-    ${product.images.map((img, index) => `
+    <div class="slider">
 
-        <img
-            src="${img}"
-            class="product-image ${index === 0 ? 'active' : ''}"
-        >
+        ${images.map((img, index) => `
 
-    `).join("")}
+            <img
+                src="${img}"
+                class="product-image ${index === 0 ? 'active' : ''}"
+            >
+
+        `).join("")}
+
+    </div>
 
 </div>
 
-    </div>
+<div class="product-info">
 
-    <div class="product-info">
+    <h3 class="product-title">
+        ${product.name}
+    </h3>
 
-        <h3 class="product-title">
-            ${product.name}
-        </h3>
+    <p class="product-price">
+        UGX ${Number(product.price).toLocaleString()}
+    </p>
 
-        <p class="product-price">
-            UGX ${product.price.toLocaleString()}
-        </p>
+    <button
+        class="cart-btn"
+        onclick="addToCart(
+            '${product.name}',
+            ${product.price}
+        )"
+    >
 
-        <button class="cart-btn"
-            onclick="addToCart(
-                '${product.name}',
-                ${product.price}
-            )">
+        Add To Cart
 
-            Add To Cart
+    </button>
 
-        </button>
-
-    </div>
+</div>
 
 `;
+
             productsContainer.appendChild(card);
 
         });
