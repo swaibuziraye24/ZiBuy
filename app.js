@@ -66,11 +66,10 @@ async function loadProducts() {
            card.innerHTML = `
 
     <div class="product-image-box"
-        onclick="openProduct(
-            '${product.name}',
-            ${product.price},
-            '${product.images[0]}'
-        )">
+        onclick="
+window.location.href=
+'product.html?id=${docSnap.id}'
+"
 
         <div class="slider">
 
