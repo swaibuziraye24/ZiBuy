@@ -411,6 +411,63 @@
     cursor: pointer;
 }
 
+/* ADMIN MODAL */
+
+.admin-modal{
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 99999;
+}
+
+.admin-box{
+    background: white;
+    width: 95%;
+    max-width: 500px;
+    border-radius: 14px;
+    padding: 20px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.admin-header{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.admin-header button{
+    border: none;
+    background: none;
+    font-size: 28px;
+    cursor: pointer;
+}
+
+.admin-box input,
+.admin-box select{
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 12px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    box-sizing: border-box;
+}
+
+.admin-box button{
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 8px;
+    background: #ff6600;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+}
+
 </style>
 
   
@@ -494,13 +551,16 @@
 </div>
 
 
-<!-- ================= ADMIN PANEL ================= -->
 
-<div id="admin-panel" class="admin-panel">
+<script type="module" src="app.js"></script>
 
-    <div class="admin-content">
+<!-- ADMIN PANEL -->
+ 
+<div id="admin-panel" class="admin-modal">
 
-        <div class="admin-top">
+    <div class="admin-box">
+
+        <div class="admin-header">
 
             <h2>ZiBuy Admin</h2>
 
@@ -510,21 +570,53 @@
 
         </div>
 
-        <div class="admin-stats">
+        <input
+            type="text"
+            id="product-name"
+            placeholder="Product Name"
+        >
 
-            <div class="stat-box">
-                <h3>Total Orders</h3>
-                <p id="total-orders">0</p>
-            </div>
+        <input
+            type="number"
+            id="product-price"
+            placeholder="Product Price"
+        >
 
-            <div class="stat-box">
-                <h3>Total Revenue</h3>
-                <p id="total-revenue">0</p>
-            </div>
+        <select id="product-category">
 
-        </div>
+            <option value="phones">Phones</option>
+            <option value="electronics">Electronics</option>
+            <option value="fashion">Fashion</option>
+            <option value="shoes">Shoes</option>
+            <option value="beauty">Beauty</option>
+            <option value="bags">Bags</option>
+            <option value="groceries">Groceries</option>
+            <option value="watches">Watches</option>
+            <option value="computers">Computers</option>
+            <option value="gaming">Gaming</option>
+            <option value="home">Home</option>
 
-        <h3>Orders</h3>
+        </select>
+
+        <input
+            type="file"
+            id="product-image"
+            accept="image/*"
+        >
+
+        <button onclick="addProduct()">
+            Upload Product
+        </button>
+
+        <hr>
+
+        <h3>Total Orders:
+            <span id="total-orders">0</span>
+        </h3>
+
+        <h3>Total Revenue:
+            <span id="total-revenue">0</span>
+        </h3>
 
         <div id="admin-orders"></div>
 
@@ -532,8 +624,6 @@
 
 </div>
 
-
-<script type="module" src="app.js"></script>
 
 </body>
 </html>
