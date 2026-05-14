@@ -15,134 +15,6 @@ import {
 
 import { db, auth, storage } from "./firebase.js";
 
-const products = [
-
-  {
-    id: 1,
-    name: "Luxury Perfume",
-    price: 80000,
-    image: "https://picsum.photos/300/300?1"
-  },
-
-  {
-    id: 2,
-    name: "Smart Watch",
-    price: 120000,
-    image: "https://picsum.photos/300/300?2"
-  },
-
-  {
-    id: 3,
-    name: "Ladies Bag",
-    price: 95000,
-    image: "https://picsum.photos/300/300?3"
-  }
-
-];
-window.addProduct = async function () {
-    // ✅ ONLY ADMIN CHECK
-    if (!isAdmin) {
-        alert("Admin only");
-        return;
-    }
-
-    // 📍 1. GET INPUTS (FROM YOUR ADMIN PANEL)
-    const name = document.getElementById("p-name").value;
-    const price = document.getElementById("p-price").value;
-    const category = document.getElementById("p-category").value;
-
-    if (!name || !price) {
-        alert("Fill all fields");
-        return;
-    }
-
-    // 📍 2. IMAGE UPLOAD (YOU ALREADY USE selectedFiles)
-    if (!window.selectedFiles || window.selectedFiles.length === 0) {
-        alert("Select at least 1 image");
-        return;
-    }
-
-    let imageUrls = [];
-
-    for (let file of window.selectedFiles) {
-
-        const storageRef = ref(storage, "products/" + Date.now() + "_" + file.name);
-
-        await uploadBytes(storageRef, file);
-
-        const url = await getDownloadURL(storageRef);
-
-        imageUrls.push(url);
-    }
-
-    // 📍 3. SAVE TO FIRESTORE
-    await addDoc(collection(db, "products"), {
-        name: name,
-        price: Number(price),
-        category: category,
-        images: imageUrls,
-        createdAt: new Date()
-    });
-
-    // 📍 4. RESET FORM (IMPORTANT)
-    document.getElementById("p-name").value = "";
-    document.getElementById("p-price").value = "";
-    window.selectedFiles = [];
-
-    document.getElementById("preview-container").innerHTML = "";
-
-    alert("Product added successfully");
-
-    // 📍 5. REFRESH PRODUCTS
-    loadProducts();
-}
-
-
-
-function renderProducts(){
-
-  const container = document.getElementById("products");
-
-  container.innerHTML = "";
-
-  products.forEach(product => {
-
-    container.innerHTML += `
-
-      <div class="product-card">
-
-        <img src="${product.image}" alt="${product.name}">
-
-        <h3>${product.name}</h3>
-
-        <p class="price">
-          UGX ${product.price.toLocaleString()}
-        </p>
-
-        <button onclick="addToCart(${product.id})">
-          Add To Cart
-        </button>
-
-      </div>
-
-    `;
-
-  });
-
-}
-
-
-window.addToCart = function(id){
-
-  const product = products.find(p => p.id === id);
-
-  if(!product) return;
-
-  alert(product.name + " added to cart");
-
-};
-
-renderProducts();
 
 async function loadProducts() {
 
@@ -449,24 +321,6 @@ window.filterCategory = function (category) {
 };
 
 
-window.openProduct = function (name, price, image) {
-
-    document.getElementById("product-modal").style.display = "flex";
-
-    document.getElementById("modal-name").innerText = name;
-
-    document.getElementById("modal-price").innerText =
-        "UGX " + price.toLocaleString();
-
-    document.getElementById("modal-image").src = image;
-
-    document.getElementById("modal-add-btn").onclick = function () {
-
-        addToCart(name, price);
-
-    };
-
-};
 
 window.closeProductModal = function () {
 
@@ -652,73 +506,37 @@ async function loadOrders() {
 
 }
 
-
-window.openProduct = function(name, price, image){
-
-    document.getElementById("product-modal").style.display = "flex";
-
-    document.getElementById("modal-name").innerText = name;
-
-    document.getElementById("modal-price").innerText =
-        "UGX " + price.toLocaleString();
-
-    document.getElementById("modal-image").src = image;
-}
-
-window.closeProduct = function(){
-
-    document.getElementById("product-modal").style.display = "none";
-
-}
-
-// PRODUCT POPUP
-
-function openProduct(name, price, image){
+window.openProduct = function(name, price, image) {
 
     document.getElementById("product-modal").style.display = "flex";
 
     document.getElementById("modal-name").innerText = name;
 
     document.getElementById("modal-price").innerText =
-        "UGX " + price.toLocaleString();
+        "UGX " + Number(price).toLocaleString();
 
     document.getElementById("modal-image").src = image;
 
-    document.getElementById("modal-cart-btn").onclick = () => {
+    document.getElementById("modal-add-btn").onclick = () => {
 
         addToCart(name, price);
 
     };
-}
+};
 
-
-// CLOSE MODAL
-
-document.getElementById("close-modal").onclick = () => {
+window.closeProductModal = function() {
 
     document.getElementById("product-modal").style.display = "none";
 
 };
 
-
-// CLOSE WHEN CLICKING OUTSIDE
-
-window.onclick = (e) => {
+window.onclick = function(e) {
 
     const modal = document.getElementById("product-modal");
 
-    if(e.target === modal){
+    if (e.target === modal) {
 
         modal.style.display = "none";
 
     }
 };
-
-function toggleAdminPanel(){
-
-    const panel =
-        document.getElementById("admin-dashboard");
-
-    panel.classList.toggle("active");
-
-}
