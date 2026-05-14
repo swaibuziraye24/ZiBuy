@@ -15,6 +15,11 @@ import {
 
 import { db, auth, storage } from "./firebase.js";
 
+import {
+    signInWithEmailAndPassword,
+    onAuthStateChanged,
+    signOut
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 async function loadProducts() {
 
@@ -542,3 +547,91 @@ window.closeAdmin = function () {
     ).style.display = "none";
 
 };
+
+let isAdmin = false;
+
+window.openAdminLogin = function () {
+
+    document.getElementById(
+        "admin-login-modal"
+    ).style.display = "flex";
+
+};
+
+window.closeAdminLogin = function () {
+
+    document.getElementById(
+        "admin-login-modal"
+    ).style.display = "none";
+
+};
+
+window.adminLogin = async function () {
+
+    const email =
+        document.getElementById("admin-email").value;
+
+    const password =
+        document.getElementById("admin-password").value;
+
+    try {
+
+        const result =
+            await signInWithEmailAndPassword(
+                auth,
+                email,
+                password
+            );
+
+        // ONLY YOUR ADMIN EMAIL
+        if (
+            result.user.email !==
+            "swaibuziraye22@gmail.com"
+        ) {
+
+            alert("Not authorized");
+
+            await signOut(auth);
+
+            return;
+        }
+
+        isAdmin = true;
+
+        closeAdminLogin();
+
+        openAdmin();
+
+    } catch (error) {
+
+        alert(error.message);
+
+    }
+
+};
+
+onAuthStateChanged(auth, (user) => {
+
+    if (
+        user &&
+        user.email ===
+        "swaibuziraye22@gmail.com"
+    ) {
+
+        isAdmin = true;
+
+    } else {
+
+        isAdmin = false;
+
+        const panel =
+            document.getElementById("admin-panel");
+
+        if(panel){
+
+            panel.style.display = "none";
+
+        }
+    }
+
+});
