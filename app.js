@@ -414,11 +414,23 @@ window.checkout = async function () {
 
 };
 
+let isAdmin = false;
+
 window.openAdmin = function () {
 
-    document.getElementById(
-        "admin-panel"
-    ).style.display = "flex";
+    const password = prompt("Enter Admin Password");
+
+    if(password !== "ZiBuyAdmin256"){
+
+        alert("Access denied");
+
+        return;
+
+    }
+
+    isAdmin = true;
+
+    document.getElementById("admin-panel").style.display = "flex";
 
     loadOrders();
 
@@ -426,9 +438,9 @@ window.openAdmin = function () {
 
 window.closeAdmin = function () {
 
-    document.getElementById(
-        "admin-panel"
-    ).style.display = "none";
+    document.getElementById("admin-panel").style.display = "none";
+
+    isAdmin = false;
 
 };
 
