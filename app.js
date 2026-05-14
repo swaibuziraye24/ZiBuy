@@ -386,7 +386,6 @@ window.filterCategory = function (category) {
 };
 
 
-
 window.checkout = async function () {
 
     if (cart.length === 0) {
@@ -397,19 +396,26 @@ window.checkout = async function () {
 
     }
 
-    const name = document
-        .getElementById("customer-name")
-        .value;
+    const customerName =
+        document.getElementById(
+            "customer-name"
+        ).value.trim();
 
-    const phone = document
-        .getElementById("customer-phone")
-        .value;
+    const customerPhone =
+        document.getElementById(
+            "customer-phone"
+        ).value.trim();
 
-    const location = document
-        .getElementById("customer-location")
-        .value;
+    const customerLocation =
+        document.getElementById(
+            "customer-location"
+        ).value.trim();
 
-    if (!name || !phone || !location) {
+    if (
+        !customerName ||
+        !customerPhone ||
+        !customerLocation
+    ) {
 
         alert("Fill all customer details");
 
@@ -427,22 +433,44 @@ window.checkout = async function () {
 
         });
 
+        // PROFESSIONAL ORDER ID
+        const orderId =
+            "ZB-" +
+            Date.now();
+
         await addDoc(
             collection(db, "orders"),
             {
-                customerName: name,
-                customerPhone: phone,
-                customerLocation: location,
+
+                orderId: orderId,
+
+                customerName:
+                    customerName,
+
+                customerPhone:
+                    customerPhone,
+
+                customerLocation:
+                    customerLocation,
 
                 items: cart,
 
                 total: total,
 
-                createdAt: new Date()
+                status: "Pending",
+
+                paymentMethod:
+                    "Cash On Delivery",
+
+                createdAt:
+                    new Date()
+
             }
         );
 
-        alert("Order placed successfully");
+        alert(
+            "Order placed successfully"
+        );
 
         cart = [];
 
@@ -462,6 +490,8 @@ window.checkout = async function () {
             "customer-location"
         ).value = "";
 
+        toggleCart();
+
     } catch (error) {
 
         console.error(error);
@@ -471,6 +501,7 @@ window.checkout = async function () {
     }
 
 };
+
 
 
 async function loadOrders() {
@@ -489,44 +520,53 @@ async function loadOrders() {
             collection(db, "orders")
         );
 
-        ordersContainer.innerHTML = "";
-
         let totalOrders = 0;
         let totalRevenue = 0;
+        ordersContainer.innerHTML = "";
 
-        snapshot.forEach(doc => {
-
+        snapshot.forEach((doc) => {
             const order = doc.data();
+            const orderId = order.orderId || doc.id;
 
-            totalOrders++;
-
-            totalRevenue += order.total;
+            totalOrders += 1;
+            totalRevenue += order.total || 0;
 
             ordersContainer.innerHTML += `
 
-                <div class="order-card">
+<div class="order-card">
 
-                    <h4>
-                        ${order.customerName}
-                    </h4>
+    <h3>
+        ${orderId}
+    </h3>
 
-                    <p>
-                        ${order.customerPhone}
-                    </p>
+    <p>
+        <strong>Customer:</strong>
+        ${order.customerName}
+    </p>
 
-                    <p>
-                        ${order.customerLocation}
-                    </p>
+    <p>
+        <strong>Phone:</strong>
+        ${order.customerPhone}
+    </p>
 
-                    <p>
-                        Total:
-                        UGX ${order.total.toLocaleString()}
-                    </p>
+    <p>
+        <strong>Location:</strong>
+        ${order.customerLocation}
+    </p>
 
-                </div>
+    <p>
+        <strong>Total:</strong>
+        UGX ${order.total ? order.total.toLocaleString() : "0"}
+    </p>
 
-            `;
+    <p>
+        <strong>Status:</strong>
+        ${order.status}
+    </p>
 
+</div>
+
+`;
         });
 
         document.getElementById(
