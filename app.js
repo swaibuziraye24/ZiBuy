@@ -128,13 +128,14 @@ window.addProduct = async function () {
 
     const price = document.getElementById("product-price").value;
 
-    const file = document.getElementById("product-image").files[0];
+    const files =
+    document.getElementById("product-image").files;
 
 const category = document.getElementById(
     "product-category"
 ).value;
 
-    if (!name || !price || !file) {
+     if (!name || !price || files.length === 0){
 
         alert("Fill all fields");
 
@@ -143,21 +144,32 @@ const category = document.getElementById(
 
     try {
 
-        const storageRef = ref(
-            storage,
-            "products/" + Date.now() + "_" + file.name
-        );
+        let imageUrls = [];
 
-        await uploadBytes(storageRef, file);
+for (const file of files) {
 
-        const imageUrl = await getDownloadURL(storageRef);
+    const storageRef = ref(
+        storage,
+        "products/" +
+        Date.now() +
+        "_" +
+        file.name
+    );
 
+    await uploadBytes(storageRef, file);
+
+    const url =
+        await getDownloadURL(storageRef);
+
+    imageUrls.push(url);
+
+}
         await addDoc(collection(db, "products"), {
 
             name: name,
             price: Number(price),
             category: category,
-            images: [imageUrl]
+            images: imageUrls
             
         });
 
@@ -635,3 +647,37 @@ onAuthStateChanged(auth, (user) => {
     }
 
 });
+
+window.previewImages = function(event){
+
+    const container =
+        document.getElementById(
+            "preview-container"
+        );
+
+    container.innerHTML = "";
+
+    const files = event.target.files;
+
+    for(const file of files){
+
+        const reader = new FileReader();
+
+        reader.onload = function(e){
+
+            const img =
+                document.createElement("img");
+
+            img.src = e.target.result;
+
+            img.className =
+                "preview-image";
+
+            container.appendChild(img);
+
+        };
+
+        reader.readAsDataURL(file);
+
+    }
+};
