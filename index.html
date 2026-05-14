@@ -34,7 +34,7 @@
 
         <button
             class="admin-btn"
-            onclick="openAdmin()"
+            onclick="openAdminLogin()"
         >
             Admin
         </button>
@@ -590,6 +590,43 @@
 
         <button id="modal-add-btn">
             Add to Cart
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- ADMIN LOGIN MODAL -->
+
+<div id="admin-login-modal" class="admin-modal">
+
+    <div class="admin-box">
+
+        <div class="admin-header">
+
+            <h2>ZiBuy Admin Login</h2>
+
+            <button onclick="closeAdminLogin()">
+                ×
+            </button>
+
+        </div>
+
+        <input
+            type="email"
+            id="admin-email"
+            placeholder="Admin Email"
+        >
+
+        <input
+            type="password"
+            id="admin-password"
+            placeholder="Password"
+        >
+
+        <button onclick="adminLogin()">
+            Login
         </button>
 
     </div>
