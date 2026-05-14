@@ -124,56 +124,94 @@ window.addEventListener("DOMContentLoaded", () => {
 
 window.addProduct = async function () {
 
-    const name = document.getElementById("product-name").value;
+    if (!isAdmin) {
 
-    const price = document.getElementById("product-price").value;
+        alert("Admin only");
+
+        return;
+
+    }
+
+    const name =
+        document.getElementById("product-name").value;
+
+    const price =
+        document.getElementById("product-price").value;
+
+    const category =
+        document.getElementById("product-category").value;
 
     const files =
-    document.getElementById("product-image").files;
+        document.getElementById("product-image").files;
 
-const category = document.getElementById(
-    "product-category"
-).value;
-
-     if (!name || !price || files.length === 0){
+    if (
+        !name ||
+        !price ||
+        files.length === 0
+    ) {
 
         alert("Fill all fields");
 
         return;
+
     }
 
     try {
 
         let imageUrls = [];
 
-for (const file of files) {
+        for (const file of files) {
 
-    const storageRef = ref(
-        storage,
-        "products/" +
-        Date.now() +
-        "_" +
-        file.name
-    );
+            const storageRef = ref(
+                storage,
+                "products/" +
+                Date.now() +
+                "_" +
+                file.name
+            );
 
-    await uploadBytes(storageRef, file);
+            await uploadBytes(
+                storageRef,
+                file
+            );
 
-    const url =
-        await getDownloadURL(storageRef);
+            const url =
+                await getDownloadURL(
+                    storageRef
+                );
 
-    imageUrls.push(url);
+            imageUrls.push(url);
 
-}
-        await addDoc(collection(db, "products"), {
+        }
 
-            name: name,
-            price: Number(price),
-            category: category,
-            images: imageUrls
-            
-        });
+        await addDoc(
+            collection(db, "products"),
+            {
+                name: name,
+                price: Number(price),
+                category: category,
+                images: imageUrls,
+                createdAt: new Date()
+            }
+        );
 
-        alert("Product uploaded successfully");
+        alert("Product uploaded");
+
+        document.getElementById(
+            "product-name"
+        ).value = "";
+
+        document.getElementById(
+            "product-price"
+        ).value = "";
+
+        document.getElementById(
+            "product-image"
+        ).value = "";
+
+        document.getElementById(
+            "preview-container"
+        ).innerHTML = "";
 
         loadProducts();
 
