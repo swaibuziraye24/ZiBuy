@@ -377,13 +377,6 @@ window.filterCategory = function (category) {
 
 
 
-window.closeProductModal = function () {
-
-    document.getElementById("product-modal").style.display = "none";
-
-};
-
-
 window.checkout = async function () {
 
     if (cart.length === 0) {
@@ -544,40 +537,6 @@ async function loadOrders() {
 
 }
 
-window.openProduct = function(name, price, image) {
-
-    document.getElementById("product-modal").style.display = "flex";
-
-    document.getElementById("modal-name").innerText = name;
-
-    document.getElementById("modal-price").innerText =
-        "UGX " + Number(price).toLocaleString();
-
-    document.getElementById("modal-image").src = image;
-
-    document.getElementById("modal-add-btn").onclick = () => {
-
-        addToCart(name, price);
-
-    };
-};
-
-window.closeProductModal = function() {
-
-    document.getElementById("product-modal").style.display = "none";
-
-};
-
-window.onclick = function(e) {
-
-    const modal = document.getElementById("product-modal");
-
-    if (e.target === modal) {
-
-        modal.style.display = "none";
-
-    }
-};
 
 
 window.openAdmin = function () {
@@ -693,11 +652,13 @@ window.previewImages = function(event){
             "preview-container"
         );
 
+    if(!container) return;
+
     container.innerHTML = "";
 
     const files = event.target.files;
 
-    for(const file of files){
+    Array.from(files).forEach(file => {
 
         const reader = new FileReader();
 
@@ -717,5 +678,7 @@ window.previewImages = function(event){
 
         reader.readAsDataURL(file);
 
-    }
+    });
+
 };
+
