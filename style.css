@@ -381,3 +381,10 @@
     cursor: pointer;
     font-weight: bold;
 }
+
+
+/* ================= ADMIN SECURITY ================= */
+
+#admin-panel{
+    display:none;
+}
