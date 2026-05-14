@@ -23,23 +23,24 @@
         onkeyup="searchProducts()"
     >
 
-    <div class="topbar-actions">
+  <div class="topbar-actions">
 
-        <button
-            class="cart-button"
-            onclick="toggleCart()"
-        >
-            Cart
-        </button>
+    <button
+        class="cart-button"
+        onclick="toggleCart()"
+    >
+        Cart (<span id="cart-count">0</span>)
+    </button>
 
-        <button
-            class="admin-btn"
-            onclick="openAdminLogin()"
-        >
-            Admin
-        </button>
+    <button
+        class="admin-btn"
+        onclick="openAdminLogin()"
+    >
+        Admin
+    </button>
 
-    </div>
+</div>
+
 
 </header>
 
@@ -106,7 +107,7 @@
 
 </section>
 
-  <section id="products" class="products-grid"></section>
+  <section id="products" class="products"></section>
 
 
   
@@ -591,27 +592,7 @@
 
 <!-- ================= PRODUCT MODAL ================= -->
 
-<div id="product-modal" class="modal">
 
-    <div class="modal-content">
-
-        <span class="close-modal" onclick="closeProductModal()">
-            ×
-        </span>
-
-        <img id="modal-image" src="" />
-
-        <h2 id="modal-name"></h2>
-
-        <p id="modal-price"></p>
-
-        <button id="modal-add-btn">
-            Add to Cart
-        </button>
-
-    </div>
-
-</div>
 
 
 <!-- ADMIN LOGIN MODAL -->
