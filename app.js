@@ -751,7 +751,6 @@ window.previewImages = function (event) {
     });
 };
 
-event.target.value = "";
 
 window.openProduct = function(name, price, image){
 
