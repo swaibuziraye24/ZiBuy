@@ -144,6 +144,8 @@ window.addEventListener("DOMContentLoaded", () => {
 
     loadProducts();
 
+    renderCart();
+
 });
 
 window.addProduct = async function () {
@@ -290,7 +292,6 @@ window.addToCart = function (name, price) {
 
     saveCart();
 
-    renderCart();
 
 };
 
