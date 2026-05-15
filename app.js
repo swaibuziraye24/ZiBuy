@@ -715,42 +715,35 @@ onAuthStateChanged(auth, (user) => {
 
 window.previewImages = function (event) {
 
-    if (!event || !event.target) {
-        console.error("previewImages called without event");
+    // SAFE CHECK (prevents crash)
+    if (!event || !event.target || !event.target.files) {
+        console.error("previewImages: missing event or files");
         return;
     }
 
-    const container =
-        document.getElementById("preview-container");
-
+    const container = document.getElementById("preview-container");
     if (!container) return;
 
     container.innerHTML = "";
 
-    const files = event.target.files;
+    const files = Array.from(event.target.files);
 
-    if (!files || files.length === 0) return;
+    files.forEach(file => {
 
-    Array.from(files).forEach((file) => {
-
-        if (!file.type.startsWith("image/")) return;
+        if (!file.type || !file.type.startsWith("image/")) return;
 
         const reader = new FileReader();
 
         reader.onload = function (e) {
 
             const img = document.createElement("img");
-
             img.src = e.target.result;
-
             img.className = "preview-image";
 
             container.appendChild(img);
-
         };
 
         reader.readAsDataURL(file);
-
     });
 };
 
@@ -783,3 +776,6 @@ window.closeProductModal = function(){
 
 }
 
+window.previewImages = function(event){
+    console.log("EVENT:", event);
+};
