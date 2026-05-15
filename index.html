@@ -23,31 +23,25 @@
         onkeyup="searchProducts()"
     >
 
-  <div class="topbar-actions">
+    <div class="topbar-actions">
 
-    <button
-    class="admin-btn"
-    onclick="openCustomerModal()"
->
-    Account
-</button>
+        <span id="customer-email"></span>
 
-    <button
-        class="cart-button"
-        onclick="toggleCart()"
-    >
-        Cart (<span id="cart-count">0</span>)
-    </button>
+        <button
+            class="cart-button"
+            onclick="toggleCart()"
+        >
+            Cart
+        </button>
 
-    <button
-        class="admin-btn"
-        onclick="openAdminLogin()"
-    >
-        Admin
-    </button>
+        <button
+            class="admin-btn"
+            onclick="openAdminLogin()"
+        >
+            Admin
+        </button>
 
-</div>
-
+    </div>
 
 </header>
 
@@ -147,7 +141,17 @@
 
 .topbar-actions{
     display:flex;
-    gap:10px;
+    align-items:center;
+    gap:12px;
+}
+
+#customer-email{
+    font-size:14px;
+    color:#374151;
+    max-width:180px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
 }
 
 .cart-button,
