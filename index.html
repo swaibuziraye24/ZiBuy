@@ -26,6 +26,13 @@
   <div class="topbar-actions">
 
     <button
+    class="admin-btn"
+    onclick="openCustomerModal()"
+>
+    Account
+</button>
+
+    <button
         class="cart-button"
         onclick="toggleCart()"
     >
@@ -725,6 +732,55 @@
         </h3>
 
         <div id="admin-orders"></div>
+
+    </div>
+
+</div>
+
+
+<!-- CUSTOMER AUTH MODAL -->
+
+<div id="customer-modal" class="admin-modal">
+
+    <div class="admin-box">
+
+        <div class="admin-header">
+
+            <h2>ZiBuy Account</h2>
+
+            <button onclick="closeCustomerModal()">
+                ×
+            </button>
+
+        </div>
+
+        <input
+            type="email"
+            id="customer-email"
+            placeholder="Email"
+        >
+
+        <input
+            type="password"
+            id="customer-password"
+            placeholder="Password"
+        >
+
+        <button onclick="customerRegister()">
+            Create Account
+        </button>
+
+        <br><br>
+
+        <button onclick="customerLogin()">
+            Login
+        </button>
+
+        <br><br>
+
+        <button onclick="customerLogout()">
+            Logout
+        </button>
 
     </div>
 
