@@ -714,27 +714,43 @@ onAuthStateChanged(auth, (user) => {
 });
 
 window.previewImages = function (event) {
-    const container = document.getElementById("preview-container");
+
+    if (!event || !event.target) {
+        console.error("previewImages called without event");
+        return;
+    }
+
+    const container =
+        document.getElementById("preview-container");
+
     if (!container) return;
 
     container.innerHTML = "";
 
     const files = event.target.files;
+
     if (!files || files.length === 0) return;
 
     Array.from(files).forEach((file) => {
+
         if (!file.type.startsWith("image/")) return;
 
         const reader = new FileReader();
 
         reader.onload = function (e) {
+
             const img = document.createElement("img");
+
             img.src = e.target.result;
+
             img.className = "preview-image";
+
             container.appendChild(img);
+
         };
 
         reader.readAsDataURL(file);
+
     });
 };
 
