@@ -22,11 +22,6 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 
-window.previewImages = function (event) {
-    console.log("EVENT RECEIVED:", event);
-};
-
-
 async function loadProducts() {
 
     const productsContainer =
@@ -718,6 +713,12 @@ onAuthStateChanged(auth, (user) => {
     }
 
 });
+
+
+window.previewImages = function(event) {
+    console.log("CALLED previewImages WITH:", event);
+}
+
 
 window.previewImages = function (event) {
 
