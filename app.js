@@ -17,9 +17,11 @@ import { db, auth, storage } from "./firebase.js";
 
 import {
     signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
     onAuthStateChanged,
     signOut
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+}
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 
 async function loadProducts() {
@@ -778,3 +780,115 @@ window.closeProductModal = function(){
 
 }
 
+/* ================= CUSTOMER ACCOUNTS ================= */
+
+window.openCustomerModal = function () {
+
+    document.getElementById(
+        "customer-modal"
+    ).style.display = "flex";
+
+};
+
+window.closeCustomerModal = function () {
+
+    document.getElementById(
+        "customer-modal"
+    ).style.display = "none";
+
+};
+
+window.customerRegister = async function () {
+
+    const email =
+        document.getElementById(
+            "customer-email"
+        ).value;
+
+    const password =
+        document.getElementById(
+            "customer-password"
+        ).value;
+
+    try {
+
+        await createUserWithEmailAndPassword(
+            auth,
+            email,
+            password
+        );
+
+        alert("Account created");
+
+        closeCustomerModal();
+
+    } catch (error) {
+
+        alert(error.message);
+
+    }
+
+};
+
+window.customerLogin = async function () {
+
+    const email =
+        document.getElementById(
+            "customer-email"
+        ).value;
+
+    const password =
+        document.getElementById(
+            "customer-password"
+        ).value;
+
+    try {
+
+        await signInWithEmailAndPassword(
+            auth,
+            email,
+            password
+        );
+
+        alert("Login successful");
+
+        closeCustomerModal();
+
+    } catch (error) {
+
+        alert(error.message);
+
+    }
+
+};
+
+window.customerLogout = async function () {
+
+    await signOut(auth);
+
+    alert("Logged out");
+
+};
+
+onAuthStateChanged(auth, (user) => {
+
+    const accountBtn =
+        document.querySelector(
+            ".topbar-actions .admin-btn"
+        );
+
+    if (!accountBtn) return;
+
+    if (user) {
+
+        accountBtn.innerText =
+            user.email;
+
+    } else {
+
+        accountBtn.innerText =
+            "Account";
+
+    }
+
+});
