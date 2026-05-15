@@ -715,11 +715,6 @@ onAuthStateChanged(auth, (user) => {
 });
 
 
-window.previewImages = function(event) {
-    console.log("CALLED previewImages WITH:", event);
-}
-
-
 window.previewImages = function (event) {
 
     // SAFE CHECK (prevents crash)
