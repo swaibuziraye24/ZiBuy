@@ -633,6 +633,8 @@ window.closeAdmin = function () {
 
 let isAdmin = false;
 
+window.isAdmin = isAdmin;
+
 window.openAdminLogin = function () {
 
     document.getElementById(
@@ -680,6 +682,8 @@ window.adminLogin = async function () {
         }
 
         isAdmin = true;
+
+        window.isAdmin = true;
 
         closeAdminLogin();
 
@@ -901,8 +905,3 @@ window.openCustomerModal = function(){
 
 };
 
-window.openCustomerModal = function(){
-
-    alert("Customer accounts coming next");
-
-};
