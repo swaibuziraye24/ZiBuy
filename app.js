@@ -301,8 +301,8 @@ function renderCart() {
 
     const totalBox = document.getElementById("cart-total");
 
+    if (!totalBox) return;
 
-    if (!container || !totalBox) return;
 
     container.innerHTML = "";
 
@@ -905,3 +905,17 @@ window.openCustomerModal = function(){
 
 };
 
+window.openAdminLogin = function () {
+
+    const modal =
+        document.getElementById(
+            "admin-login-modal"
+        );
+
+    if(modal){
+
+        modal.style.display = "flex";
+
+    }
+
+};
