@@ -301,6 +301,7 @@ function renderCart() {
 
     const totalBox = document.getElementById("cart-total");
 
+
     if (!container || !totalBox) return;
 
     container.innerHTML = "";
@@ -897,5 +898,11 @@ onAuthStateChanged(auth, (user) => {
 window.openCustomerModal = function(){
 
     alert("Customer account system coming next");
+
+};
+
+window.openCustomerModal = function(){
+
+    alert("Customer accounts coming next");
 
 };
