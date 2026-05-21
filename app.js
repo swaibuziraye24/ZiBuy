@@ -7,12 +7,25 @@ import {
   collection, getDocs, addDoc
 } from "./firebase.js";
 
+import {
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
 import "./auth.js";
 import "./admin.js";
 
+// ---- Show/Hide Post Ad button based on auth state ----
+import { auth } from "./firebase.js";
+onAuthStateChanged(auth, (user) => {
+  const postAdBtn = document.getElementById("post-ad-btn");
+  if (postAdBtn) {
+    postAdBtn.style.display = user ? "block" : "none";
+  }
+});
+
 // ============================================
 //   TOAST NOTIFICATIONS
-// ============================================
+//   ============================================
 
 export function showToast(message, type = "info") {
   const container = document.getElementById("toast-container");
