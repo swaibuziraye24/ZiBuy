@@ -47,14 +47,17 @@ export async function addProduct() {
     return;
   }
 
-  const name     = document.getElementById("product-name").value.trim();
-  const price    = document.getElementById("product-price").value.trim();
-  const category = document.getElementById("product-category").value;
-  const desc     = document.getElementById("product-desc").value.trim();
-  const files    = document.getElementById("product-image").files;
+  const name        = document.getElementById("product-name").value.trim();
+  const price       = document.getElementById("product-price").value.trim();
+  const category    = document.getElementById("product-category").value;
+  const desc        = document.getElementById("product-desc").value.trim();
+  const sellerName  = document.getElementById("seller-name").value.trim();
+  const sellerPhone = document.getElementById("seller-phone").value.trim();
+  const sellerLoc   = document.getElementById("seller-location").value.trim();
+  const files       = document.getElementById("product-image").files;
 
-  if (!name || !price || files.length === 0) {
-    showToast("Please fill all fields and select images", "error");
+  if (!name || !price || !sellerPhone || files.length === 0) {
+    showToast("Please fill all fields including seller phone", "error");
     return;
   }
 
@@ -75,20 +78,28 @@ export async function addProduct() {
     // Save product to Firestore
     await addDoc(collection(db, "products"), {
       name,
-      price:     Number(price),
+      price:       Number(price),
       category,
       description: desc || "Quality product from ZiBuy marketplace.",
-      images:    imageUrls,
+      images:      imageUrls,
+      seller: {
+        name:     sellerName  || "ZiBuy Seller",
+        phone:    sellerPhone,
+        location: sellerLoc   || "Uganda"
+      },
       createdAt: new Date()
     });
 
     showToast("Product uploaded successfully! 🎉", "success");
 
     // Reset form
-    document.getElementById("product-name").value    = "";
-    document.getElementById("product-price").value   = "";
-    document.getElementById("product-desc").value    = "";
-    document.getElementById("product-image").value   = "";
+    document.getElementById("product-name").value         = "";
+    document.getElementById("product-price").value        = "";
+    document.getElementById("product-desc").value         = "";
+    document.getElementById("seller-name").value          = "";
+    document.getElementById("seller-phone").value         = "";
+    document.getElementById("seller-location").value      = "";
+    document.getElementById("product-image").value        = "";
     document.getElementById("preview-container").innerHTML = "";
 
     loadProducts(); // Refresh product grid
