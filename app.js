@@ -193,14 +193,44 @@ window.checkout = async function() {
 let modalImages = [];
 let modalCurrentImg = 0;
 
-window.openProduct = function(name, price, images, category, productId) {
+window.openProduct = function(name, price, images, category, productId, seller) {
   modalImages = Array.isArray(images) ? images : [images];
   modalCurrentImg = 0;
 
-  document.getElementById("modal-image").src       = modalImages[0] || "";
+  document.getElementById("modal-image").src        = modalImages[0] || "";
   document.getElementById("modal-name").textContent  = name;
   document.getElementById("modal-price").textContent = "UGX " + Number(price).toLocaleString();
   document.getElementById("modal-cat").textContent   = category || "";
+
+  // Seller info strip
+  const sellerInfoEl = document.getElementById("modal-seller-info");
+  if (seller && seller.name) {
+    sellerInfoEl.innerHTML = `
+      <span class="modal-seller-name">👤 ${seller.name}</span>
+      <span class="modal-seller-loc">📍 ${seller.location || "Uganda"}</span>
+    `;
+  } else {
+    sellerInfoEl.innerHTML = "";
+  }
+
+  // WhatsApp + Call buttons
+  const contactEl = document.getElementById("modal-contact-btns");
+  if (seller && seller.phone) {
+    const phone    = seller.phone.replace(/\D/g, ""); // digits only
+    const waMsg    = encodeURIComponent(`Hi, I saw *${name}* on ZiBuy for UGX ${Number(price).toLocaleString()}. Is it still available?`);
+    contactEl.innerHTML = `
+      <a class="contact-btn whatsapp-btn" href="https://wa.me/${phone}?text=${waMsg}" target="_blank">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.553 4.122 1.523 5.857L.057 23.8l6.088-1.439A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.788 9.788 0 01-5.002-1.368l-.36-.214-3.716.878.938-3.63-.235-.373A9.789 9.789 0 012.182 12C2.182 6.58 6.58 2.182 12 2.182S21.818 6.58 21.818 12 17.42 21.818 12 21.818z"/></svg>
+        WhatsApp Seller
+      </a>
+      <a class="contact-btn call-btn" href="tel:+${phone}">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.67A2 2 0 012 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+        Call Seller
+      </a>
+    `;
+  } else {
+    contactEl.innerHTML = "";
+  }
 
   // Dots
   const dotsEl = document.getElementById("modal-dots");
@@ -276,8 +306,12 @@ export async function loadProducts() {
 
       const card = document.createElement("div");
       card.className = "product-card";
+
+      const seller     = p.seller || {};
+      const sellerJSON = JSON.stringify(seller).replace(/'/g, "\\'");
+
       card.innerHTML = `
-        <div class="product-image-box" onclick="openProduct('${p.name.replace(/'/g,"\\'")}', ${p.price}, ${JSON.stringify(images)}, '${p.category || ""}', '${docSnap.id}')">
+        <div class="product-image-box" onclick="openProduct('${p.name.replace(/'/g,"\\'")}', ${p.price}, ${JSON.stringify(images)}, '${p.category || ""}', '${docSnap.id}', ${JSON.stringify(seller)})">
           <div class="slider">
             ${images.map((img, i) =>
               `<img src="${img}" class="product-image ${i === 0 ? 'active' : ''}" alt="${p.name}">`
@@ -289,6 +323,7 @@ export async function loadProducts() {
           <p class="product-cat">${p.category || ""}</p>
           <h3 class="product-title">${p.name}</h3>
           <p class="product-price">UGX ${Number(p.price).toLocaleString()}</p>
+          ${seller.location ? `<p class="product-seller-loc">📍 ${seller.location}</p>` : ""}
           <div class="card-footer">
             <button class="cart-btn" onclick="addToCart('${p.name.replace(/'/g,"\\'")}', ${p.price}, '${firstImg}')">Add to Cart</button>
             <button class="view-btn" onclick="window.location.href='product.html?id=${docSnap.id}'">View</button>
