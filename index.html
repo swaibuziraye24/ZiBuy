@@ -1,801 +1,276 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <title>ZiBuy</title>
-
+  <title>ZiBuy — Buy & Sell in Uganda</title>
   <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
-  <header class="topbar">
+<!-- ============ TOP BAR ============ -->
+<header class="topbar">
 
-    <h1 class="logo">ZiBuy</h1>
+  <h1 class="logo">Zi<span>Buy</span></h1>
 
+  <div class="search-wrap">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+    </svg>
     <input
-        type="text"
-        id="search-input"
-        placeholder="Search products..."
-        onkeyup="searchProducts()"
+      type="text"
+      id="search-input"
+      placeholder="Search phones, cars, shoes..."
+      onkeyup="searchProducts()"
     >
+  </div>
 
-    <div class="topbar-actions">
+  <div class="topbar-actions">
 
-        <span id="customer-email"></span>
+    <button class="btn btn-outline" id="account-btn" onclick="openAuthModal()">
+      Account
+    </button>
 
-
-        <button
-    class="admin-btn"
-    onclick="openCustomerModal()"
->
-    Account
-</button>
-
-        <button
-            class="cart-button"
-            onclick="toggleCart()"
-        >
-            Cart
-        </button>
-
-        <button
-            class="admin-btn"
-            onclick="openAdminLogin()"
-        >
-            Admin
-        </button>
-
+    <div class="cart-btn-wrap">
+      <button class="btn btn-orange" onclick="toggleCart()">
+        🛒 Cart
+      </button>
+      <span class="cart-badge" id="cart-count">0</span>
     </div>
 
-</header>
-
-  <main>
-
-  <section class="hero">
-    <h2>Welcome to ZiBuy</h2>
-    <p>Shop smarter across Uganda.</p>
-  </section>
-
-<section class="categories">
-
-    <button onclick="filterCategory('all')">
-        All
-    </button>
-
-    <button onclick="filterCategory('phones')">
-        Phones
-    </button>
-
-    <button onclick="filterCategory('electronics')">
-        Electronics
-    </button>
-
-    <button onclick="filterCategory('fashion')">
-        Fashion
-    </button>
-
-    <button onclick="filterCategory('shoes')">
-        Shoes
-    </button>
-
-    <button onclick="filterCategory('beauty')">
-        Beauty
-    </button>
-
-    <button onclick="filterCategory('bags')">
-        Bags
-    </button>
-
-    <button onclick="filterCategory('groceries')">
-        Groceries
-    </button>
-
-    <button onclick="filterCategory('watches')">
-        Watches
-    </button>
-
-    <button onclick="filterCategory('computers')">
-        Computers
-    </button>
-
-    <button onclick="filterCategory('gaming')">
-        Gaming
-    </button>
-
-    <button onclick="filterCategory('home')">
-        Home
-    </button>
-
-    <button onclick="filterCategory('accessories')">
-        Accessories
-    </button>
-
-</section>
-
-  <section id="products" class="products"></section>
-
-
-  
-</main>
-
-<style>
-
-/* ================= MARKETPLACE PRODUCTS ================= */
-
-.topbar{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:15px;
-    padding:15px 20px;
-    background:white;
-    position:sticky;
-    top:0;
-    z-index:1000;
-    box-shadow:0 2px 10px rgba(0,0,0,0.05);
-}
-
-.topbar input{
-    flex:1;
-    max-width:500px;
-    padding:12px;
-    border:1px solid #ddd;
-    border-radius:10px;
-}
-
-.topbar-actions{
-    display:flex;
-    align-items:center;
-    gap:12px;
-}
-
-#customer-email{
-    font-size:14px;
-    color:#374151;
-    max-width:180px;
-    overflow:hidden;
-    text-overflow:ellipsis;
-    white-space:nowrap;
-}
-
-.cart-button,
-.admin-btn{
-    border:none;
-    padding:12px 18px;
-    border-radius:10px;
-    background:#ff6600;
-    color:white;
-    font-weight:bold;
-    cursor:pointer;
-}
-
-.products {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 20px;
-    padding: 20px;
-}
-
-.product-card {
-    background: white;
-    border-radius: 14px;
-    overflow: hidden;
-    transition: 0.3s;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-}
-
-.product-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 10px 24px rgba(0,0,0,0.15);
-}
-
-.product-image-box {
-    width: 100%;
-    height: 230px;
-    overflow: hidden;
-    background: #f5f5f5;
-}
-
-.product-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.product-info {
-    padding: 14px;
-}
-
-.product-title {
-    margin: 0;
-    font-size: 16px;
-    color: #222;
-    height: 42px;
-    overflow: hidden;
-}
-
-.product-price {
-    color: #ff6600;
-    font-size: 20px;
-    font-weight: bold;
-    margin-top: 10px;
-    margin-bottom: 15px;
-}
-
-.cart-btn {
-    width: 100%;
-    border: none;
-    padding: 12px;
-    border-radius: 8px;
-    background: #ff6600;
-    color: white;
-    font-weight: bold;
-    cursor: pointer;
-    transition: 0.2s;
-}
-
-.cart-btn:hover {
-    background: #e65c00;
-}
-
-/* ================= ADMIN PANEL ================= */
-
-.admin-panel {
-    background: white;
-    margin: 20px;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-}
-
-.admin-panel h2 {
-    margin-top: 0;
-}
-
-.admin-panel input {
-    width: 100%;
-    padding: 12px;
-    margin-bottom: 12px;
-    border-radius: 8px;
-    border: 1px solid #ddd;
-    box-sizing: border-box;
-}
-
-.admin-panel button {
-    width: 100%;
-    padding: 14px;
-    border: none;
-    border-radius: 8px;
-    background: #ff6600;
-    color: white;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-/* ================= CART SIDEBAR ================= */
-
-.cart-sidebar {
-    position: fixed;
-    top: 0;
-    right: -420px;
-    width: 400px;
-    max-width: 100%;
-    height: 100vh;
-    background: white;
-    z-index: 9999;
-    box-shadow: -4px 0 20px rgba(0,0,0,0.15);
-    transition: 0.3s;
-    display: flex;
-    flex-direction: column;
-}
-
-.cart-sidebar.active {
-    right: 0;
-}
-
-.cart-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px;
-    border-bottom: 1px solid #eee;
-}
-
-.close-cart {
-    background: none;
-    border: none;
-    font-size: 28px;
-    cursor: pointer;
-}
-
-#cart-items {
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px;
-}
-
-.cart-item {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 20px;
-}
-
-.cart-item img {
-    width: 90px;
-    height: 90px;
-    object-fit: cover;
-    border-radius: 10px;
-}
-
-.cart-item-info {
-    flex: 1;
-}
-
-.cart-item-info h4 {
-    margin: 0;
-}
-
-.cart-item-info p {
-    color: #ff6600;
-    font-weight: bold;
-}
-
-.qty-controls {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.qty-controls button {
-    width: 28px;
-    height: 28px;
-    border: none;
-    border-radius: 6px;
-    background: #eee;
-    cursor: pointer;
-}
-
-.remove-btn {
-    background: red;
-    color: white;
-    border: none;
-    padding: 6px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    margin-top: 8px;
-}
-
-.cart-footer {
-    padding: 20px;
-    border-top: 1px solid #eee;
-}
-
-.checkout-btn {
-    width: 100%;
-    padding: 14px;
-    border: none;
-    border-radius: 10px;
-    background: #ff6600;
-    color: white;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-/* ================= CATEGORIES ================= */
-
-.categories {
-    display: flex;
-    gap: 12px;
-    overflow-x: auto;
-    padding: 15px 20px;
-    background: white;
-    scrollbar-width: none;
-}
-
-.categories::-webkit-scrollbar {
-    display: none;
-}
-
-.categories button {
-    border: none;
-    background: #f3f4f6;
-    padding: 10px 18px;
-    border-radius: 30px;
-    cursor: pointer;
-    white-space: nowrap;
-    font-weight: 600;
-    transition: 0.2s;
-}
-
-.categories button:hover {
-    background: #ff6600;
-    color: white;
-}
-
-/* ================= PRODUCT MODAL ================= */
-
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 99999;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.6);
-    justify-content: center;
-    align-items: center;
-}
-
-.modal-content {
-    background: white;
-    width: 90%;
-    max-width: 420px;
-    padding: 20px;
-    border-radius: 14px;
-    text-align: center;
-    position: relative;
-}
-
-.modal-content img {
-    width: 100%;
-    height: 280px;
-    object-fit: cover;
-    border-radius: 10px;
-}
-
-.close-modal {
-    position: absolute;
-    right: 15px;
-    top: 10px;
-    font-size: 26px;
-    cursor: pointer;
-}
-
-#modal-name {
-    margin: 10px 0;
-}
-
-#modal-price {
-    color: #ff6600;
-    font-size: 20px;
-    font-weight: bold;
-}
-
-#modal-add-btn {
-    width: 100%;
-    padding: 12px;
-    border: none;
-    background: #ff6600;
-    color: white;
-    font-weight: bold;
-    border-radius: 10px;
-    cursor: pointer;
-}
-
-/* ADMIN MODAL */
-
-.admin-modal{
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.6);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 99999;
-}
-
-.admin-box{
-    background: white;
-    width: 95%;
-    max-width: 500px;
-    border-radius: 14px;
-    padding: 20px;
-    max-height: 90vh;
-    overflow-y: auto;
-}
-
-.admin-header{
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-.admin-header button{
-    border: none;
-    background: none;
-    font-size: 28px;
-    cursor: pointer;
-}
-
-.admin-box input,
-.admin-box select{
-    width: 100%;
-    padding: 12px;
-    margin-bottom: 12px;
-    border-radius: 8px;
-    border: 1px solid #ddd;
-    box-sizing: border-box;
-}
-
-.admin-box button{
-    width: 100%;
-    padding: 14px;
-    border: none;
-    border-radius: 8px;
-    background: #ff6600;
-    color: white;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-/* IMAGE PREVIEW */
-
-#preview-container{
-    display:flex;
-    gap:10px;
-    overflow-x:auto;
-    margin-bottom:15px;
-}
-
-.preview-image{
-    width:80px;
-    height:80px;
-    object-fit:cover;
-    border-radius:10px;
-    border:2px solid #eee;
-}
-
-</style>
-
-  
-
-<!-- ================= CART SIDEBAR ================= -->
-
-<div id="cart-sidebar" class="cart-sidebar">
-
-    <div class="cart-top">
-
-        <h2>Your Cart</h2>
-
-        <button onclick="toggleCart()" class="close-cart">
-            ×
-        </button>
-
-    </div>
-
-    <div id="cart-items"></div>
-
-    <div class="cart-footer">
-
-    <input
-        type="text"
-        id="customer-name"
-        placeholder="Your Name"
-    >
-
-    <input
-        type="text"
-        id="customer-phone"
-        placeholder="Phone Number"
-    >
-
-    <input
-        type="text"
-        id="customer-location"
-        placeholder="Delivery Location"
-    >
-
-    <h3>
-        Total: UGX
-        <span id="cart-total">0</span>
-    </h3>
-
-    <button
-        class="checkout-btn"
-        onclick="checkout()"
-    >
-
-        Place Order
-
-    </button>
-
-</div>
-
-</div>
-
-<!-- ================= PRODUCT MODAL ================= -->
-<div id="product-modal" class="product-modal">
-
-  <div class="product-modal-content">
-
-    <span
-      id="close-modal"
-      onclick="closeProductModal()"
-    >
-      &times;
-    </span>
-
-    <img id="modal-image">
-
-    <h2 id="modal-name"></h2>
-
-    <p id="modal-price"></p>
-
-    <button id="modal-cart-btn">
-      Add To Cart
+    <button class="btn btn-dark" onclick="openAdminLoginModal()">
+      Admin
     </button>
 
   </div>
+</header>
 
+<!-- ============ HERO ============ -->
+<section class="hero">
+  <div class="hero-text">
+    <h2>Buy & Sell Anything<br>in Uganda 🇺🇬</h2>
+    <p>Uganda's trusted free classifieds marketplace</p>
+  </div>
+  <div class="hero-stats">
+    <div class="stat-pill">
+      <strong>851K</strong>
+      <span>Active Ads</span>
+    </div>
+    <div class="stat-pill">
+      <strong>Free</strong>
+      <span>To Post</span>
+    </div>
+    <div class="stat-pill">
+      <strong>Safe</strong>
+      <span>Payments</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CATEGORIES ============ -->
+<nav class="categories">
+  <button class="cat-btn active" data-cat="all"         onclick="filterCategory('all')">🏪 All</button>
+  <button class="cat-btn" data-cat="phones"             onclick="filterCategory('phones')">📱 Phones</button>
+  <button class="cat-btn" data-cat="electronics"        onclick="filterCategory('electronics')">💻 Electronics</button>
+  <button class="cat-btn" data-cat="fashion"            onclick="filterCategory('fashion')">👗 Fashion</button>
+  <button class="cat-btn" data-cat="shoes"              onclick="filterCategory('shoes')">👟 Shoes</button>
+  <button class="cat-btn" data-cat="beauty"             onclick="filterCategory('beauty')">💄 Beauty</button>
+  <button class="cat-btn" data-cat="bags"               onclick="filterCategory('bags')">👜 Bags</button>
+  <button class="cat-btn" data-cat="groceries"          onclick="filterCategory('groceries')">🛒 Groceries</button>
+  <button class="cat-btn" data-cat="watches"            onclick="filterCategory('watches')">⌚ Watches</button>
+  <button class="cat-btn" data-cat="computers"          onclick="filterCategory('computers')">🖥️ Computers</button>
+  <button class="cat-btn" data-cat="gaming"             onclick="filterCategory('gaming')">🎮 Gaming</button>
+  <button class="cat-btn" data-cat="home"               onclick="filterCategory('home')">🏠 Home</button>
+  <button class="cat-btn" data-cat="accessories"        onclick="filterCategory('accessories')">💎 Accessories</button>
+</nav>
+
+<!-- ============ PRODUCT GRID ============ -->
+<div class="section-header">
+  <div>
+    <h2>Latest Listings</h2>
+    <p id="product-count"></p>
+  </div>
+  <select class="sort-select">
+    <option>Newest First</option>
+    <option>Price: Low to High</option>
+    <option>Price: High to Low</option>
+  </select>
 </div>
 
+<div id="products" class="products"></div>
 
-
-<!-- ADMIN LOGIN MODAL -->
-
-<div id="admin-login-modal" class="admin-modal">
-
-    <div class="admin-box">
-
-        <div class="admin-header">
-
-            <h2>ZiBuy Admin Login</h2>
-
-            <button onclick="closeAdminLogin()">
-                ×
-            </button>
-
-        </div>
-
-        <input
-            type="email"
-            id="admin-email"
-            placeholder="Admin Email"
-        >
-
-        <input
-            type="password"
-            id="admin-password"
-            placeholder="Password"
-        >
-
-        <button onclick="adminLogin()">
-            Login
-        </button>
-
-    </div>
-
+<!-- ============ SAFETY BANNER ============ -->
+<div class="safety-banner">
+  <span class="shield">🛡️</span>
+  <div>
+    <h4>Stay Safe When Buying on ZiBuy</h4>
+    <p>Meet sellers in public places · Don't pay in advance · Check items before paying · Report suspicious ads</p>
+  </div>
 </div>
 
-
-
-<!-- ADMIN PANEL -->
- 
-<div id="admin-panel" class="admin-modal">
-
-    <div class="admin-box">
-
-        <div class="admin-header">
-
-            <h2>ZiBuy Admin</h2>
-
-            <button onclick="closeAdmin()">
-                ×
-            </button>
-
-        </div>
-
-        <input
-            type="text"
-            id="product-name"
-            placeholder="Product Name"
-        >
-
-        <input
-            type="number"
-            id="product-price"
-            placeholder="Product Price"
-        >
-
-        <select id="product-category">
-
-            <option value="phones">Phones</option>
-            <option value="electronics">Electronics</option>
-            <option value="fashion">Fashion</option>
-            <option value="shoes">Shoes</option>
-            <option value="beauty">Beauty</option>
-            <option value="bags">Bags</option>
-            <option value="groceries">Groceries</option>
-            <option value="watches">Watches</option>
-            <option value="computers">Computers</option>
-            <option value="gaming">Gaming</option>
-            <option value="home">Home</option>
-
-        </select>
-
-        <input
-    type="file"
-    id="product-image"
-    multiple
-    accept="image/*"
-    onchange="previewImages(event)"
->
-
-<div id="preview-container"></div>
-
-        <button onclick="addProduct()">
-            Upload Product
-        </button>
-
-        <hr>
-
-        <h3>Total Orders:
-            <span id="total-orders">0</span>
-        </h3>
-
-        <h3>Total Revenue:
-            <span id="total-revenue">0</span>
-        </h3>
-
-        <div id="admin-orders"></div>
-
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div class="footer-top">
+    <div class="footer-brand">
+      <div class="logo">Zi<span style="color:white">Buy</span></div>
+      <p>Uganda's trusted free classifieds marketplace. Buy and sell safely.</p>
     </div>
+    <div class="footer-links">
+      <h4>Company</h4>
+      <a href="#">About ZiBuy</a>
+      <a href="#">Safety Tips</a>
+      <a href="#">Advertise</a>
+    </div>
+    <div class="footer-links">
+      <h4>Support</h4>
+      <a href="#">Help Center</a>
+      <a href="#">Contact Us</a>
+      <a href="#">Report Abuse</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    © 2026 ZiBuy Uganda · All rights reserved
+  </div>
+</footer>
 
+<!-- ============ OVERLAY ============ -->
+<div id="overlay" class="overlay" onclick="closeCart()"></div>
+
+<!-- ============ TOAST CONTAINER ============ -->
+<div id="toast-container" class="toast-container"></div>
+
+<!-- ============ CART SIDEBAR ============ -->
+<div id="cart-sidebar" class="cart-sidebar">
+  <div class="cart-top">
+    <h2>🛒 Your Cart</h2>
+    <button class="close-cart" onclick="closeCart()">×</button>
+  </div>
+
+  <div id="cart-items"></div>
+
+  <div class="cart-footer">
+    <input type="text"  id="customer-name"     placeholder="Your Full Name">
+    <input type="tel"   id="customer-phone"    placeholder="Phone Number (e.g. 0701 234567)">
+    <input type="text"  id="customer-location" placeholder="Delivery Location">
+    <div class="cart-total-row">
+      Total: <span>UGX <span id="cart-total">0</span></span>
+    </div>
+    <button class="checkout-btn" onclick="checkout()">Place Order</button>
+  </div>
 </div>
 
+<!-- ============ PRODUCT QUICK-VIEW MODAL ============ -->
+<div id="product-modal" class="product-modal">
+  <div class="product-modal-content">
+    <div class="modal-img-slider">
+      <img id="modal-image" alt="Product">
+      <div class="modal-img-nav" id="modal-dots"></div>
+    </div>
+    <div class="modal-body">
+      <p class="product-cat" id="modal-cat"></p>
+      <h2 id="modal-name"></h2>
+      <p class="modal-price" id="modal-price"></p>
+      <div class="modal-actions">
+        <button class="cart-btn" id="modal-cart-btn">Add to Cart</button>
+        <button class="view-btn" id="modal-view-btn" onclick="closeProductModal()">Full Page</button>
+        <button class="view-btn" onclick="closeProductModal()">×</button>
+      </div>
+    </div>
+  </div>
+</div>
 
-<!-- CUSTOMER AUTH MODAL -->
+<!-- ============ AUTH MODAL ============ -->
+<div id="auth-modal" class="modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2>ZiBuy Account</h2>
+      <button class="modal-close" onclick="closeAuthModal()">×</button>
+    </div>
+    <input type="email"    id="auth-email"    placeholder="Email address">
+    <input type="password" id="auth-password" placeholder="Password">
+    <button class="full-btn" onclick="customerLogin()">Login</button>
+    <div class="modal-divider">— or —</div>
+    <button class="full-btn secondary" onclick="customerRegister()">Create Account</button>
+    <div class="modal-divider"></div>
+    <button class="full-btn secondary" onclick="customerLogout()">Logout</button>
+  </div>
+</div>
 
-<div id="customer-modal" class="admin-modal">
+<!-- ============ ADMIN LOGIN MODAL ============ -->
+<div id="admin-login-modal" class="modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2>🔑 Admin Login</h2>
+      <button class="modal-close" onclick="closeAdminLoginModal()">×</button>
+    </div>
+    <input type="email"    id="admin-email"    placeholder="Admin Email">
+    <input type="password" id="admin-password" placeholder="Password">
+    <button class="full-btn" onclick="adminLogin()">Login as Admin</button>
+  </div>
+</div>
 
-    <div class="admin-box">
-
-        <div class="admin-header">
-
-            <h2>ZiBuy Account</h2>
-
-            <button onclick="closeCustomerModal()">
-                ×
-            </button>
-
-        </div>
-
-        <input
-            type="email"
-            id="customer-email"
-            placeholder="Email"
-        >
-
-        <input
-            type="password"
-            id="customer-password"
-            placeholder="Password"
-        >
-
-        <button onclick="customerRegister()">
-            Create Account
-        </button>
-
-        <br><br>
-
-        <button onclick="customerLogin()">
-            Login
-        </button>
-
-        <br><br>
-
-        <button onclick="customerLogout()">
-            Logout
-        </button>
-
+<!-- ============ ADMIN PANEL MODAL ============ -->
+<div id="admin-modal" class="modal">
+  <div class="modal-box admin-box">
+    <div class="modal-header">
+      <h2>⚙️ ZiBuy Admin</h2>
+      <button class="modal-close" onclick="closeAdminPanel()">×</button>
     </div>
 
+    <!-- Stats -->
+    <div class="admin-stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Total Orders</div>
+        <div class="stat-value" id="total-orders">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Revenue</div>
+        <div class="stat-value" id="total-revenue">—</div>
+      </div>
+    </div>
+
+    <!-- Upload Product -->
+    <p class="admin-section-title">Upload New Product</p>
+
+    <input type="text"   id="product-name"     placeholder="Product Name">
+    <input type="number" id="product-price"    placeholder="Price in UGX">
+
+    <select id="product-category">
+      <option value="phones">📱 Phones</option>
+      <option value="electronics">💻 Electronics</option>
+      <option value="fashion">👗 Fashion</option>
+      <option value="shoes">👟 Shoes</option>
+      <option value="beauty">💄 Beauty</option>
+      <option value="bags">👜 Bags</option>
+      <option value="groceries">🛒 Groceries</option>
+      <option value="watches">⌚ Watches</option>
+      <option value="computers">🖥️ Computers</option>
+      <option value="gaming">🎮 Gaming</option>
+      <option value="home">🏠 Home</option>
+      <option value="accessories">💎 Accessories</option>
+    </select>
+
+    <textarea id="product-desc" placeholder="Product description (optional)" rows="3" style="resize:none"></textarea>
+
+    <input
+      type="file"
+      id="product-image"
+      multiple
+      accept="image/*"
+      onchange="previewImages(event)"
+    >
+
+    <div id="preview-container"></div>
+
+    <button class="full-btn" id="upload-btn" onclick="addProduct()">
+      Upload Product
+    </button>
+
+    <!-- Orders -->
+    <p class="admin-section-title" style="margin-top:24px">Recent Orders</p>
+    <div id="admin-orders"></div>
+
+  </div>
 </div>
 
 <script type="module" src="app.js"></script>
