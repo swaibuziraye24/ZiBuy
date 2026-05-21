@@ -1,108 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>ZiBuy Product</title>
-
-<link rel="stylesheet" href="style.css">
-
-<style>
-
-body{
-    font-family:Arial;
-    margin:0;
-    background:#f5f5f5;
-}
-
-.product-page{
-    max-width:1200px;
-    margin:auto;
-    padding:20px;
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:30px;
-    background:white;
-    margin-top:30px;
-    border-radius:14px;
-}
-
-.product-page img{
-    width:100%;
-    border-radius:14px;
-}
-
-.product-details h1{
-    margin-top:0;
-}
-
-.product-price{
-    color:#ff6600;
-    font-size:32px;
-    font-weight:bold;
-}
-
-.buy-btn{
-    width:100%;
-    padding:16px;
-    border:none;
-    border-radius:12px;
-    background:#ff6600;
-    color:white;
-    font-size:18px;
-    font-weight:bold;
-    cursor:pointer;
-}
-
-@media(max-width:900px){
-
-    .product-page{
-        grid-template-columns:1fr;
-    }
-
-}
-
-</style>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZiBuy — Product</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
-<div class="product-page">
+<!-- ============ TOP BAR ============ -->
+<header class="topbar">
+  <a href="index.html"><h1 class="logo">Zi<span>Buy</span></h1></a>
+  <div class="topbar-actions" style="margin-left:auto">
+    <div class="cart-btn-wrap">
+      <button class="btn btn-orange" onclick="toggleCart()">🛒 Cart</button>
+      <span class="cart-badge" id="cart-count">0</span>
+    </div>
+  </div>
+</header>
 
+<!-- ============ PRODUCT PAGE ============ -->
+<div class="product-page-wrap">
+
+  <a href="index.html" class="back-link">← Back to listings</a>
+
+  <div class="product-page-grid" id="product-page-grid">
+
+    <!-- Skeleton while loading -->
     <div>
-
-        <img id="product-image">
-
+      <div class="skeleton-img" style="height:380px;border-radius:14px"></div>
+    </div>
+    <div>
+      <div class="skeleton-body">
+        <div class="skeleton-line short"></div>
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line short"></div>
+        <div class="skeleton-line" style="height:40px;margin-top:20px"></div>
+      </div>
     </div>
 
-    <div class="product-details">
-
-        <h1 id="product-name"></h1>
-
-        <p
-            class="product-price"
-            id="product-price"
-        ></p>
-
-        <p>
-            High quality product from ZiBuy marketplace.
-        </p>
-
-        <button
-            class="buy-btn"
-            id="buy-btn"
-        >
-            Add To Cart
-        </button>
-
-    </div>
+  </div>
 
 </div>
 
-<script type="module" src="product.js"></script>
+<!-- ============ CART SIDEBAR ============ -->
+<div id="cart-sidebar" class="cart-sidebar">
+  <div class="cart-top">
+    <h2>🛒 Your Cart</h2>
+    <button class="close-cart" onclick="closeCart()">×</button>
+  </div>
+  <div id="cart-items"></div>
+  <div class="cart-footer">
+    <input type="text" id="customer-name"     placeholder="Your Full Name">
+    <input type="tel"  id="customer-phone"    placeholder="Phone Number">
+    <input type="text" id="customer-location" placeholder="Delivery Location">
+    <div class="cart-total-row">
+      Total: <span>UGX <span id="cart-total">0</span></span>
+    </div>
+    <button class="checkout-btn" onclick="checkout()">Place Order</button>
+  </div>
+</div>
 
+<div id="overlay" class="overlay" onclick="closeCart()"></div>
+<div id="toast-container" class="toast-container"></div>
+
+<script type="module" src="product.js"></script>
 </body>
 </html>
