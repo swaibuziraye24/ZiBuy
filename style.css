@@ -1102,6 +1102,81 @@ footer {
 .seller-info p { font-size: 12px; color: var(--gray); }
 
 /* ============================================
+   SELLER PROFILE & CONTACT BUTTONS
+   ============================================ */
+
+.product-seller-loc {
+  font-size: 12px;
+  color: var(--gray);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Contact buttons — WhatsApp + Call */
+.contact-btns {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.contact-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 20px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 800;
+  font-family: var(--font);
+  text-decoration: none;
+  flex: 1;
+  justify-content: center;
+  transition: transform .15s, box-shadow .15s;
+}
+
+.contact-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}
+
+.whatsapp-btn {
+  background: #25D366;
+  color: white;
+}
+
+.whatsapp-btn:hover { background: #1ebe5c; }
+
+.call-btn {
+  background: var(--dark);
+  color: white;
+}
+
+.call-btn:hover { background: #1f2937; }
+
+/* Seller strip inside quick-view modal */
+.modal-seller {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--light);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  font-size: 13px;
+  color: var(--gray);
+}
+
+.modal-seller-name {
+  font-weight: 700;
+  color: var(--dark);
+}
+
+.modal-seller-loc { margin-left: auto; }
+
+/* ============================================
    TOAST NOTIFICATIONS
    ============================================ */
 .toast-container {
