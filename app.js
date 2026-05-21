@@ -18,8 +18,12 @@ import "./admin.js";
 import { auth } from "./firebase.js";
 onAuthStateChanged(auth, (user) => {
   const postAdBtn = document.getElementById("post-ad-btn");
+  const dashboardBtn = document.getElementById("dashboard-btn");
   if (postAdBtn) {
     postAdBtn.style.display = user ? "block" : "none";
+  }
+  if (dashboardBtn) {
+    dashboardBtn.style.display = user ? "block" : "none";
   }
 });
 
