@@ -1,921 +1,360 @@
-import {
-    addDoc,
-    collection,
-    getDocs,
-    doc,
-    deleteDoc,
-    updateDoc
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+// ============================================
+//   ZiBuy — Main App
+// ============================================
 
 import {
-    ref,
-    uploadBytes,
-    getDownloadURL
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+  db,
+  collection, getDocs, addDoc
+} from "./firebase.js";
 
-import { db, auth, storage } from "./firebase.js";
+import "./auth.js";
+import "./admin.js";
 
-import {
-    signInWithEmailAndPassword,
-    createUserWithEmailAndPassword,
-    onAuthStateChanged,
-    signOut
-}
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+// ============================================
+//   TOAST NOTIFICATIONS
+// ============================================
 
-let activeCategory = "all";
+export function showToast(message, type = "info") {
+  const container = document.getElementById("toast-container");
+  if (!container) return;
 
-async function loadProducts() {
+  const icons = { success: "✅", error: "❌", info: "🔔" };
+  const toast = document.createElement("div");
+  toast.className = `toast ${type}`;
+  toast.innerHTML = `<span>${icons[type]}</span><span>${message}</span>`;
+  container.appendChild(toast);
 
-    const productsContainer =
-        document.getElementById("products");
-
-    if (!productsContainer) return;
-
-    productsContainer.innerHTML =
-        "<p>Loading products...</p>";
-
-    try {
-
-        const querySnapshot =
-            await getDocs(
-                collection(db, "products")
-            );
-
-        productsContainer.innerHTML = "";
-
-        const searchValue =
-            document
-            .getElementById("search-input")
-            .value
-            .toLowerCase();
-
-        querySnapshot.forEach((docSnap) => {
-
-            const product = docSnap.data();
-
-            if (
-                activeCategory !== "all" &&
-                product.category !== activeCategory
-            ) {
-                return;
-            }
-
-            if (
-                !product.name
-                    .toLowerCase()
-                    .includes(searchValue)
-            ) {
-                return;
-            }
-
-            const card =
-                document.createElement("div");
-
-            card.className = "product-card";
-
-            // SAFE IMAGES
-            const images =
-                Array.isArray(product.images)
-                ? product.images
-                : [];
-
-            card.innerHTML = `
-
-<div class="product-image-box"
-    onclick="window.location.href='product.html?id=${docSnap.id}'">
-
-    <div class="slider">
-
-        ${images.map((img, index) => `
-
-            <img
-                src="${img}"
-                class="product-image ${index === 0 ? 'active' : ''}"
-            >
-
-        `).join("")}
-
-    </div>
-
-</div>
-
-<div class="product-info">
-
-    <h3 class="product-title">
-        ${product.name}
-    </h3>
-
-    <p class="product-price">
-        UGX ${Number(product.price).toLocaleString()}
-    </p>
-
-    <button
-        class="cart-btn"
-        onclick="addToCart(
-            '${product.name}',
-            ${product.price}
-        )"
-    >
-
-        Add To Cart
-
-    </button>
-
-</div>
-
-`;
-
-            productsContainer.appendChild(card);
-
-        });
-
-    } catch (error) {
-
-        console.error(error);
-
-        productsContainer.innerHTML = `
-            <p>Failed to load products</p>
-        `;
-    }
+  setTimeout(() => {
+    toast.style.animation = "toastIn .3s ease reverse";
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
 }
 
-window.addEventListener("DOMContentLoaded", () => {
+window.showToast = showToast;
 
-    loadProducts();
-
-    renderCart();
-
-});
-
-window.addProduct = async function () {
-
-    if (!isAdmin) {
-
-        alert("Admin only");
-
-        return;
-
-    }
-
-    const name =
-        document.getElementById("product-name").value;
-
-    const price =
-        document.getElementById("product-price").value;
-
-    const category =
-        document.getElementById("product-category").value;
-
-    const files =
-        document.getElementById("product-image").files;
-
-    if (
-        !name ||
-        !price ||
-        files.length === 0
-    ) {
-
-        alert("Fill all fields");
-
-        return;
-
-    }
-
-    try {
-
-        let imageUrls = [];
-
-        for (const file of files) {
-
-            const storageRef = ref(
-                storage,
-                "products/" +
-                Date.now() +
-                "_" +
-                file.name
-            );
-
-            await uploadBytes(
-                storageRef,
-                file
-            );
-
-            const url =
-                await getDownloadURL(
-                    storageRef
-                );
-
-            imageUrls.push(url);
-
-        }
-
-        await addDoc(
-            collection(db, "products"),
-            {
-                name: name,
-                price: Number(price),
-                category: category,
-                images: imageUrls,
-                createdAt: new Date()
-            }
-        );
-
-        alert("Product uploaded");
-
-        document.getElementById(
-            "product-name"
-        ).value = "";
-
-        document.getElementById(
-            "product-price"
-        ).value = "";
-
-        document.getElementById(
-            "product-image"
-        ).value = "";
-
-        document.getElementById(
-            "preview-container"
-        ).innerHTML = "";
-
-        loadProducts();
-
-    } catch (error) {
-
-        console.error(error);
-
-        alert(error.message);
-
-    }
-
-};
-
-/* ================= CART SYSTEM ================= */
+// ============================================
+//   CART SYSTEM
+// ============================================
 
 let cart = JSON.parse(localStorage.getItem("zibuy-cart")) || [];
 
 function saveCart() {
-
-    localStorage.setItem(
-        "zibuy-cart",
-        JSON.stringify(cart)
-    );
-
+  localStorage.setItem("zibuy-cart", JSON.stringify(cart));
 }
 
-window.toggleCart = function () {
+function updateCartCount() {
+  const badge = document.getElementById("cart-count");
+  if (badge) badge.textContent = cart.reduce((sum, i) => sum + i.qty, 0);
+}
 
-    document
-        .getElementById("cart-sidebar")
-        .classList.toggle("active");
+export function renderCart() {
+  const container = document.getElementById("cart-items");
+  const totalEl   = document.getElementById("cart-total");
+  if (!container) return;
 
+  if (cart.length === 0) {
+    container.innerHTML = `
+      <div class="cart-empty">
+        <div class="cart-empty-icon">🛒</div>
+        <p>Your cart is empty</p>
+        <p style="font-size:13px;margin-top:6px;color:#adb5bd">Add items to get started</p>
+      </div>`;
+    if (totalEl) totalEl.textContent = "0";
+    updateCartCount();
+    return;
+  }
+
+  let total = 0;
+  container.innerHTML = "";
+
+  cart.forEach((item, index) => {
+    total += item.price * item.qty;
+    container.innerHTML += `
+      <div class="cart-item">
+        <img src="${item.image || ''}" onerror="this.style.display='none'" alt="${item.name}">
+        <div class="cart-item-info">
+          <h4>${item.name}</h4>
+          <p class="item-price">UGX ${item.price.toLocaleString()}</p>
+          <div class="qty-controls">
+            <button class="qty-btn" onclick="changeQty(${index}, -1)">−</button>
+            <span class="qty-count">${item.qty}</span>
+            <button class="qty-btn" onclick="changeQty(${index}, 1)">+</button>
+          </div>
+          <button class="remove-btn" onclick="removeCartItem(${index})">Remove</button>
+        </div>
+      </div>`;
+  });
+
+  if (totalEl) totalEl.textContent = total.toLocaleString();
+  updateCartCount();
+}
+
+window.addToCart = function(name, price, image = "") {
+  const existing = cart.find(i => i.name === name);
+  if (existing) {
+    existing.qty += 1;
+  } else {
+    cart.push({ name, price, image, qty: 1 });
+  }
+  saveCart();
+  renderCart();
+  showToast(`${name} added to cart 🛒`, "success");
 };
 
-window.addToCart = function (name, price) {
-
-    const existing = cart.find(item => item.name === name);
-
-    if (existing) {
-
-        existing.qty += 1;
-
-    } else {
-
-        cart.push({
-            name,
-            price,
-            qty: 1
-        });
-
-    }
-
-    saveCart();
-
-
+window.changeQty = function(index, change) {
+  cart[index].qty += change;
+  if (cart[index].qty <= 0) cart.splice(index, 1);
+  saveCart();
+  renderCart();
 };
 
-function renderCart() {
+window.removeCartItem = function(index) {
+  cart.splice(index, 1);
+  saveCart();
+  renderCart();
+};
 
-    const container = document.getElementById("cart-items");
+window.toggleCart = function() {
+  const sidebar = document.getElementById("cart-sidebar");
+  const overlay = document.getElementById("overlay");
+  sidebar.classList.toggle("active");
+  overlay.classList.toggle("active");
+};
 
-    const totalBox = document.getElementById("cart-total");
+window.closeCart = function() {
+  document.getElementById("cart-sidebar").classList.remove("active");
+  document.getElementById("overlay").classList.remove("active");
+};
 
-    if (!totalBox) return;
+// ============================================
+//   CHECKOUT
+// ============================================
 
+window.checkout = async function() {
+  if (cart.length === 0) {
+    showToast("Your cart is empty", "error");
+    return;
+  }
 
-    container.innerHTML = "";
+  const name     = document.getElementById("customer-name").value.trim();
+  const phone    = document.getElementById("customer-phone").value.trim();
+  const location = document.getElementById("customer-location").value.trim();
 
-    let total = 0;
+  if (!name || !phone || !location) {
+    showToast("Please fill in your delivery details", "error");
+    return;
+  }
 
-    cart.forEach((item, index) => {
+  const checkoutBtn = document.querySelector(".checkout-btn");
+  checkoutBtn.textContent = "Placing order...";
+  checkoutBtn.disabled = true;
 
-        total += item.price * item.qty;
+  try {
+    let total = cart.reduce((sum, i) => sum + i.price * i.qty, 0);
+    const orderId = "ZB-" + Date.now();
 
-        container.innerHTML += `
-
-            <div class="cart-item">
-
-                <div class="cart-item-info">
-
-                    <h4>${item.name}</h4>
-
-                    <p>
-                        UGX ${item.price.toLocaleString()}
-                    </p>
-
-                    <div class="qty-controls">
-
-                        <button onclick="changeQty(${index}, -1)">
-                            -
-                        </button>
-
-                        <span>${item.qty}</span>
-
-                        <button onclick="changeQty(${index}, 1)">
-                            +
-                        </button>
-
-                    </div>
-
-                    <button class="remove-btn"
-                        onclick="removeCartItem(${index})">
-
-                        Remove
-
-                    </button>
-
-                </div>
-
-            </div>
-
-        `;
-
+    await addDoc(collection(db, "orders"), {
+      orderId,
+      customerName:     name,
+      customerPhone:    phone,
+      customerLocation: location,
+      items:            cart,
+      total,
+      status:           "Pending",
+      paymentMethod:    "Cash On Delivery",
+      createdAt:        new Date()
     });
 
-    totalBox.innerText = total.toLocaleString();
+    showToast(`Order ${orderId} placed! 🎉`, "success");
 
-    document.getElementById("cart-count").innerText =
-    cart.length;
-
-}
-
-window.changeQty = function (index, change) {
-
-    cart[index].qty += change;
-
-    if (cart[index].qty <= 0) {
-
-        cart.splice(index, 1);
-
-    }
-
+    cart = [];
     saveCart();
-
     renderCart();
 
+    document.getElementById("customer-name").value     = "";
+    document.getElementById("customer-phone").value    = "";
+    document.getElementById("customer-location").value = "";
+
+    window.closeCart();
+
+  } catch (err) {
+    console.error(err);
+    showToast("Checkout failed. Try again.", "error");
+  } finally {
+    checkoutBtn.textContent = "Place Order";
+    checkoutBtn.disabled    = false;
+  }
 };
 
-window.removeCartItem = function (index) {
+// ============================================
+//   PRODUCT QUICK-VIEW MODAL
+// ============================================
 
-    cart.splice(index, 1);
+let modalImages = [];
+let modalCurrentImg = 0;
 
-    saveCart();
+window.openProduct = function(name, price, images, category, productId) {
+  modalImages = Array.isArray(images) ? images : [images];
+  modalCurrentImg = 0;
 
-    renderCart();
+  document.getElementById("modal-image").src       = modalImages[0] || "";
+  document.getElementById("modal-name").textContent  = name;
+  document.getElementById("modal-price").textContent = "UGX " + Number(price).toLocaleString();
+  document.getElementById("modal-cat").textContent   = category || "";
 
+  // Dots
+  const dotsEl = document.getElementById("modal-dots");
+  dotsEl.innerHTML = modalImages.map((_, i) =>
+    `<button class="modal-dot ${i === 0 ? 'active' : ''}" onclick="modalGoTo(${i})"></button>`
+  ).join("");
+
+  // Cart button
+  document.getElementById("modal-cart-btn").onclick = () => {
+    window.addToCart(name, price, modalImages[0]);
+  };
+
+  // View full page
+  document.getElementById("modal-view-btn").onclick = () => {
+    window.location.href = `product.html?id=${productId}`;
+  };
+
+  document.getElementById("product-modal").classList.add("open");
 };
 
-renderCart();
-
-window.searchProducts = function () {
-
-    loadProducts();
-
+window.modalGoTo = function(index) {
+  modalCurrentImg = index;
+  document.getElementById("modal-image").src = modalImages[index];
+  document.querySelectorAll(".modal-dot").forEach((d, i) =>
+    d.classList.toggle("active", i === index)
+  );
 };
 
-
-
-window.filterCategory = function (category) {
-
-    activeCategory = category;
-
-    loadProducts();
-
+window.closeProductModal = function() {
+  document.getElementById("product-modal").classList.remove("open");
 };
 
-
-window.checkout = async function () {
-
-    if (cart.length === 0) {
-
-        alert("Cart is empty");
-
-        return;
-
-    }
-
-    const customerName =
-        document.getElementById(
-            "customer-name"
-        ).value.trim();
-
-    const customerPhone =
-        document.getElementById(
-            "customer-phone"
-        ).value.trim();
-
-    const customerLocation =
-        document.getElementById(
-            "customer-location"
-        ).value.trim();
-
-    if (
-        !customerName ||
-        !customerPhone ||
-        !customerLocation
-    ) {
-
-        alert("Fill all customer details");
-
-        return;
-
-    }
-
-    try {
-
-        let total = 0;
-
-        cart.forEach(item => {
-
-            total += item.price * item.qty;
-
-        });
-
-        // PROFESSIONAL ORDER ID
-        const orderId =
-            "ZB-" +
-            Date.now();
-
-        await addDoc(
-            collection(db, "orders"),
-            {
-
-                orderId: orderId,
-
-                customerName:
-                    customerName,
-
-                customerPhone:
-                    customerPhone,
-
-                customerLocation:
-                    customerLocation,
-
-                items: cart,
-
-                total: total,
-
-                status: "Pending",
-
-                paymentMethod:
-                    "Cash On Delivery",
-
-                createdAt:
-                    new Date()
-
-            }
-        );
-
-        alert(
-            "Order placed successfully"
-        );
-
-        cart = [];
-
-        saveCart();
-
-        renderCart();
-
-        document.getElementById(
-            "customer-name"
-        ).value = "";
-
-        document.getElementById(
-            "customer-phone"
-        ).value = "";
-
-        document.getElementById(
-            "customer-location"
-        ).value = "";
-
-        toggleCart();
-
-    } catch (error) {
-
-        console.error(error);
-
-        alert("Checkout failed");
-
-    }
-
-};
-
-
-
-async function loadOrders() {
-
-    const ordersContainer =
-        document.getElementById(
-            "admin-orders"
-        );
-
-    ordersContainer.innerHTML =
-        "Loading orders...";
-
-    try {
-
-        const snapshot = await getDocs(
-            collection(db, "orders")
-        );
-
-        let totalOrders = 0;
-        let totalRevenue = 0;
-        ordersContainer.innerHTML = "";
-
-        snapshot.forEach((doc) => {
-            const order = doc.data();
-            const orderId = order.orderId || doc.id;
-
-            totalOrders += 1;
-            totalRevenue += order.total || 0;
-
-            ordersContainer.innerHTML += `
-
-<div class="order-card">
-
-    <h3>
-        ${orderId}
-    </h3>
-
-    <p>
-        <strong>Customer:</strong>
-        ${order.customerName}
-    </p>
-
-    <p>
-        <strong>Phone:</strong>
-        ${order.customerPhone}
-    </p>
-
-    <p>
-        <strong>Location:</strong>
-        ${order.customerLocation}
-    </p>
-
-    <p>
-        <strong>Total:</strong>
-        UGX ${order.total ? order.total.toLocaleString() : "0"}
-    </p>
-
-    <p>
-        <strong>Status:</strong>
-        ${order.status}
-    </p>
-
-</div>
-
-`;
-        });
-
-        document.getElementById(
-            "total-orders"
-        ).innerText = totalOrders;
-
-        document.getElementById(
-            "total-revenue"
-        ).innerText =
-            "UGX " +
-            totalRevenue.toLocaleString();
-
-    } catch (error) {
-
-        console.error(error);
-
-    }
-
-}
-
-
-
-window.openAdmin = function () {
-
-    const panel =
-        document.getElementById("admin-panel");
-
-    panel.style.display = "flex";
-
-    panel.style.justifyContent = "center";
-
-    panel.style.alignItems = "center";
-
-    loadOrders();
-
-};
-
-window.closeAdmin = function () {
-
-    document.getElementById(
-        "admin-panel"
-    ).style.display = "none";
-
-};
-
-let isAdmin = false;
-
-window.isAdmin = isAdmin;
-
-window.openAdminLogin = function () {
-
-    document.getElementById(
-        "admin-login-modal"
-    ).style.display = "flex";
-
-};
-
-window.closeAdminLogin = function () {
-
-    document.getElementById(
-        "admin-login-modal"
-    ).style.display = "none";
-
-};
-
-window.adminLogin = async function () {
-
-    const email =
-        document.getElementById("admin-email").value;
-
-    const password =
-        document.getElementById("admin-password").value;
-
-    try {
-
-        const result =
-            await signInWithEmailAndPassword(
-                auth,
-                email,
-                password
-            );
-
-        // ONLY YOUR ADMIN EMAIL
-        if (
-            result.user.email !==
-            "swaibuziraye22@gmail.com"
-        ) {
-
-            alert("Not authorized");
-
-            await signOut(auth);
-
-            return;
-        }
-
-        isAdmin = true;
-
-        window.isAdmin = true;
-
-        closeAdminLogin();
-
-        openAdmin();
-
-    } catch (error) {
-
-        alert(error.message);
-
-    }
-
-};
-
-onAuthStateChanged(auth, (user) => {
-
-    if (
-        user &&
-        user.email ===
-        "swaibuziraye22@gmail.com"
-    ) {
-
-        isAdmin = true;
-
-    } else {
-
-        isAdmin = false;
-
-        const panel =
-            document.getElementById("admin-panel");
-
-        if(panel){
-
-            panel.style.display = "none";
-
-        }
-    }
-
-});
-
-
-window.previewImages = function (event) {
-
-    // SAFE CHECK (prevents crash)
-    if (!event || !event.target || !event.target.files) {
-        console.error("previewImages: missing event or files");
-        return;
-    }
-
-    const container = document.getElementById("preview-container");
-    if (!container) return;
-
-    container.innerHTML = "";
-
-    const files = Array.from(event.target.files);
-
-    files.forEach(file => {
-
-        if (!file.type || !file.type.startsWith("image/")) return;
-
-        const reader = new FileReader();
-
-        reader.onload = function (e) {
-
-            const img = document.createElement("img");
-            img.src = e.target.result;
-            img.className = "preview-image";
-
-            container.appendChild(img);
-        };
-
-        reader.readAsDataURL(file);
+// ============================================
+//   LOAD PRODUCTS FROM FIRESTORE
+// ============================================
+
+let activeCategory = "all";
+let searchValue    = "";
+
+export async function loadProducts() {
+  const grid = document.getElementById("products");
+  if (!grid) return;
+
+  // Show skeleton loaders
+  grid.innerHTML = Array(8).fill(`
+    <div class="skeleton">
+      <div class="skeleton-img"></div>
+      <div class="skeleton-body">
+        <div class="skeleton-line short"></div>
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line short"></div>
+      </div>
+    </div>
+  `).join("");
+
+  try {
+    const snapshot = await getDocs(collection(db, "products"));
+    grid.innerHTML = "";
+    let count = 0;
+
+    snapshot.forEach((docSnap) => {
+      const p = docSnap.data();
+
+      // Filter by category
+      if (activeCategory !== "all" && p.category !== activeCategory) return;
+
+      // Filter by search
+      if (searchValue && !p.name.toLowerCase().includes(searchValue)) return;
+
+      const images = Array.isArray(p.images) ? p.images : [];
+      const firstImg = images[0] || "";
+      count++;
+
+      const card = document.createElement("div");
+      card.className = "product-card";
+      card.innerHTML = `
+        <div class="product-image-box" onclick="openProduct('${p.name.replace(/'/g,"\\'")}', ${p.price}, ${JSON.stringify(images)}, '${p.category || ""}', '${docSnap.id}')">
+          <div class="slider">
+            ${images.map((img, i) =>
+              `<img src="${img}" class="product-image ${i === 0 ? 'active' : ''}" alt="${p.name}">`
+            ).join("")}
+          </div>
+          <button class="save-btn" onclick="event.stopPropagation(); this.textContent = this.textContent === '🤍' ? '❤️' : '🤍'">🤍</button>
+        </div>
+        <div class="product-info">
+          <p class="product-cat">${p.category || ""}</p>
+          <h3 class="product-title">${p.name}</h3>
+          <p class="product-price">UGX ${Number(p.price).toLocaleString()}</p>
+          <div class="card-footer">
+            <button class="cart-btn" onclick="addToCart('${p.name.replace(/'/g,"\\'")}', ${p.price}, '${firstImg}')">Add to Cart</button>
+            <button class="view-btn" onclick="window.location.href='product.html?id=${docSnap.id}'">View</button>
+          </div>
+        </div>
+      `;
+
+      // Auto-rotate slider images
+      if (images.length > 1) {
+        let idx = 0;
+        setInterval(() => {
+          const imgs = card.querySelectorAll(".slider img");
+          imgs[idx].classList.remove("active");
+          idx = (idx + 1) % imgs.length;
+          imgs[idx].classList.add("active");
+        }, 3000);
+      }
+
+      grid.appendChild(card);
     });
-};
 
+    if (count === 0) {
+      grid.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">🔍</div>
+          <p>No products found</p>
+          <p style="font-size:13px;margin-top:6px">Try a different category or search term</p>
+        </div>`;
+    }
 
-window.openProduct = function(name, price, image){
+    // Update count label
+    const countEl = document.getElementById("product-count");
+    if (countEl) countEl.textContent = count + " ads found";
 
-    document.getElementById("product-modal").style.display = "flex";
-
-    document.getElementById("modal-name").innerText = name;
-
-    document.getElementById("modal-price").innerText =
-        "UGX " + Number(price).toLocaleString();
-
-    document.getElementById("modal-image").src = image;
-
-    document.getElementById("modal-cart-btn").onclick = () => {
-
-        addToCart(name, price);
-
-    };
-
+  } catch (err) {
+    console.error(err);
+    grid.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><p>Failed to load products</p></div>`;
+  }
 }
 
-window.closeProductModal = function(){
+window.loadProducts = loadProducts;
 
-    document.getElementById(
-        "product-modal"
-    ).style.display = "none";
+// ---- Filter by category ----
+window.filterCategory = function(cat) {
+  activeCategory = cat;
 
-}
+  // Update active button style
+  document.querySelectorAll(".cat-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.cat === cat);
+  });
 
-/* ================= CUSTOMER ACCOUNTS ================= */
-
-window.openCustomerModal = function () {
-
-    document.getElementById(
-        "customer-modal"
-    ).style.display = "flex";
-
+  loadProducts();
 };
 
-window.closeCustomerModal = function () {
-
-    document.getElementById(
-        "customer-modal"
-    ).style.display = "none";
-
+// ---- Search ----
+window.searchProducts = function() {
+  searchValue = document.getElementById("search-input").value.toLowerCase().trim();
+  loadProducts();
 };
 
-window.customerRegister = async function () {
+// ============================================
+//   INIT
+// ============================================
 
-    const email =
-        document.getElementById(
-            "customer-email"
-        ).value;
-
-    const password =
-        document.getElementById(
-            "customer-password"
-        ).value;
-
-    try {
-
-        await createUserWithEmailAndPassword(
-            auth,
-            email,
-            password
-        );
-
-        alert("Account created");
-
-        closeCustomerModal();
-
-    } catch (error) {
-
-        alert(error.message);
-
-    }
-
-};
-
-window.customerLogin = async function () {
-
-    const email =
-        document.getElementById(
-            "customer-email"
-        ).value;
-
-    const password =
-        document.getElementById(
-            "customer-password"
-        ).value;
-
-    try {
-
-        await signInWithEmailAndPassword(
-            auth,
-            email,
-            password
-        );
-
-        alert("Login successful");
-
-        closeCustomerModal();
-
-    } catch (error) {
-
-        alert(error.message);
-
-    }
-
-};
-
-window.customerLogout = async function () {
-
-    await signOut(auth);
-
-    alert("Logged out");
-
-};
-
-onAuthStateChanged(auth, (user) => {
-
-    const accountBtn =
-        document.querySelector(
-            ".topbar-actions .admin-btn"
-        );
-
-    if (!accountBtn) return;
-
-    if (user) {
-
-        accountBtn.innerText =
-            user.email;
-
-    } else {
-
-        accountBtn.innerText =
-            "Account";
-
-    }
-
+window.addEventListener("DOMContentLoaded", () => {
+  loadProducts();
+  renderCart();
+  updateCartCount();
 });
-
-window.openCustomerModal = function(){
-
-    alert("Customer account system coming next");
-
-};
-
-window.openAdminLogin = function () {
-
-    const modal =
-        document.getElementById(
-            "admin-login-modal"
-        );
-
-    if(modal){
-
-        modal.style.display = "flex";
-
-    }
-
-};
