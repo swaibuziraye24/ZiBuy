@@ -1,6 +1,7 @@
 // ============================================
 //   ZiBuy — Product Detail Page
 // ============================================
+console.log("PRODUCT JS LOADED");
 
 import {
   db,
