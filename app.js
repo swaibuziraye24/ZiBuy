@@ -352,7 +352,6 @@ function updateActiveFiltersDisplay() {
   }
 }
 
-
 export async function loadProducts() {
   const grid = document.getElementById("products");
   if (!grid) return;
