@@ -3630,3 +3630,58 @@ footer {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+/* ============================================
+   PREMIUM/FEATURED ADS
+   ============================================ */
+
+.premium-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: linear-gradient(135deg, #ff6600, #ffa500);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 800;
+  box-shadow: 0 2px 8px rgba(255, 102, 0, 0.3);
+}
+
+.featured-section {
+  background: linear-gradient(135deg, #fff4ee, #fffbeb);
+  border: 2px solid #ff6600;
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.featured-section h2 {
+  margin: 0 0 16px;
+  color: var(--orange);
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.boost-option {
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 14px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all .2s;
+}
+
+.boost-option:hover {
+  border-color: var(--orange);
+  background: var(--orange-lt);
+}
+
+.boost-option input {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: var(--orange);
+}
