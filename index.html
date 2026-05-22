@@ -93,61 +93,6 @@
   <button class="cat-btn filter-toggle-btn" onclick="toggleFilters()" style="margin-left:auto">🔽 Filters</button>
 </nav>
 
-<!-- ============ ADVANCED FILTERS ============ -->
-<div id="filters-panel" class="filters-panel">
-  <div class="filters-container">
-    <div class="filter-group">
-      <h3>💰 Price Range</h3>
-      <div class="price-inputs">
-        <input type="number" id="price-min" placeholder="Min UGX" value="0">
-        <span>—</span>
-        <input type="number" id="price-max" placeholder="Max UGX" value="100000000">
-      </div>
-    </div>
-
-    <div class="filter-group">
-      <h3>📍 Location</h3>
-      <select id="location-filter">
-        <option value="">All Uganda</option>
-        <option value="Kampala">Kampala</option>
-        <option value="Wakiso">Wakiso</option>
-        <option value="Mukono">Mukono</option>
-        <option value="Jinja">Jinja</option>
-        <option value="Mbarara">Mbarara</option>
-        <option value="Entebbe">Entebbe</option>
-        <option value="Gulu">Gulu</option>
-        <option value="Mbale">Mbale</option>
-        <option value="Masaka">Masaka</option>
-        <option value="Fort Portal">Fort Portal</option>
-      </select>
-    </div>
-
-    <div class="filter-group">
-      <h3>📅 Posted</h3>
-      <div class="date-filter-btns">
-        <button class="date-filter-btn active" onclick="filterByDate('all')">All Time</button>
-        <button class="date-filter-btn" onclick="filterByDate('24h')">Last 24h</button>
-        <button class="date-filter-btn" onclick="filterByDate('7d')">Last 7 Days</button>
-        <button class="date-filter-btn" onclick="filterByDate('30d')">Last 30 Days</button>
-      </div>
-    </div>
-
-    <div class="filter-group">
-      <h3>🔄 Sort By</h3>
-      <select id="sort-filter" onchange="applySortFilter()">
-        <option value="newest">Newest First</option>
-        <option value="price-low">Price: Low to High</option>
-        <option value="price-high">Price: High to Low</option>
-        <option value="views">Most Viewed</option>
-      </select>
-    </div>
-
-    <div class="filter-actions">
-      <button class="btn btn-outline" onclick="resetFilters()">Reset Filters</button>
-      <button class="btn btn-orange" onclick="applyFilters()">Apply Filters</button>
-    </div>
-  </div>
-</div>
 
 <!-- ============ FILTERS ============ -->
 <div class="filters-bar">
