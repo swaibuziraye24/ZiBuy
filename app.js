@@ -287,6 +287,145 @@ window.closeProductModal = function() {
 let activeCategory = "all";
 let searchValue    = "";
 
+// ---- FILTER STATE ----
+let filterState = {
+  priceMin: 0,
+  priceMax: 99999999,
+  location: "",
+  dateRange: "all",
+  sortBy: "newest"
+};
+
+// ============ FILTER PANEL TOGGLE ============
+window.toggleFilters = function() {
+  const panel = document.getElementById("filters-panel");
+  if (panel) {
+    panel.classList.toggle("active");
+  }
+};
+
+// ============ UPDATE PRICE RANGE ============
+window.updatePriceRange = function() {
+  let minVal = Number(document.getElementById("price-range-min").value);
+  let maxVal = Number(document.getElementById("price-range-max").value);
+
+  if (minVal > maxVal) {
+    document.getElementById("price-range-min").value = maxVal;
+    minVal = maxVal;
+  }
+  if (maxVal < minVal) {
+    document.getElementById("price-range-max").value = minVal;
+    maxVal = minVal;
+  }
+
+  document.getElementById("price-min").value = minVal;
+  document.getElementById("price-max").value = maxVal;
+  document.getElementById("price-display-min").textContent = minVal.toLocaleString();
+  document.getElementById("price-display-max").textContent = maxVal.toLocaleString();
+};
+
+// ============ APPLY FILTERS ============
+window.applyFilters = function() {
+  filterState.priceMin = Number(document.getElementById("price-min").value) || 0;
+  filterState.priceMax = Number(document.getElementById("price-max").value) || 99999999;
+  filterState.location = document.getElementById("filter-location").value;
+  filterState.sortBy = document.getElementById("filter-sort").value;
+  
+  // Get selected date filter
+  const dateRadios = document.querySelectorAll("input[name='date-filter']");
+  dateRadios.forEach(radio => {
+    if (radio.checked) {
+      filterState.dateRange = radio.value;
+    }
+  });
+
+  updateActiveFiltersDisplay();
+  loadProducts();
+};
+
+// ============ RESET FILTERS ============
+window.resetFilters = function() {
+  document.getElementById("price-min").value = 0;
+  document.getElementById("price-max").value = 99999999;
+  document.getElementById("price-range-min").value = 0;
+  document.getElementById("price-range-max").value = 99999999;
+  document.getElementById("filter-location").value = "";
+  document.getElementById("filter-sort").value = "newest";
+  document.querySelector("input[name='date-filter'][value='all']").checked = true;
+  
+  filterState = {
+    priceMin: 0,
+    priceMax: 99999999,
+    location: "",
+    dateRange: "all",
+    sortBy: "newest"
+  };
+
+  updateActiveFiltersDisplay();
+  document.getElementById("price-display-min").textContent = "0";
+  document.getElementById("price-display-max").textContent = "99999999";
+  loadProducts();
+};
+
+// ============ UPDATE ACTIVE FILTERS DISPLAY ============
+function updateActiveFiltersDisplay() {
+  const container = document.getElementById("active-filters");
+  const filters = [];
+
+  if (filterState.priceMin > 0 || filterState.priceMax < 99999999) {
+    filters.push(`💰 UGX ${filterState.priceMin.toLocaleString()}-${filterState.priceMax.toLocaleString()}`);
+  }
+  if (filterState.location) {
+    filters.push(`📍 ${filterState.location}`);
+  }
+  if (filterState.dateRange !== "all") {
+    const dateLabels = { "7": "Last 7 days", "30": "Last 30 days" };
+    filters.push(`📅 ${dateLabels[filterState.dateRange] || "All time"}`);
+  }
+
+  if (filters.length === 0) {
+    container.innerHTML = "";
+  } else {
+    container.innerHTML = filters.map(f => `<span class="active-filter-tag">${f}</span>`).join("");
+  }
+}
+
+// ============ RESET FILTERS ============
+window.resetFilters = function() {
+  document.getElementById("price-min").value = 0;
+  document.getElementById("price-max").value = 100000000;
+  document.getElementById("location-filter").value = "";
+  document.querySelectorAll(".date-filter-btn").forEach((btn, i) => {
+    btn.classList.toggle("active", i === 0);
+  });
+  document.getElementById("sort-filter").value = "newest";
+  
+  filterState = {
+    minPrice: 0,
+    maxPrice: 100000000,
+    location: "",
+    dateFilter: "all",
+    sortBy: "newest"
+  };
+  
+  loadProducts();
+};
+
+// ============ SORT FILTER ============
+window.applySortFilter = function() {
+  filterState.sortBy = document.getElementById("sort-filter").value;
+  loadProducts();
+};
+
+// ============ FILTER STATE ============
+let filterState = {
+  minPrice: 0,
+  maxPrice: 100000000,
+  location: "",
+  dateFilter: "all",
+  sortBy: "newest"
+};
+
 export async function loadProducts() {
   const grid = document.getElementById("products");
   if (!grid) return;
@@ -306,7 +445,7 @@ export async function loadProducts() {
   try {
     const snapshot = await getDocs(collection(db, "products"));
     grid.innerHTML = "";
-    let count = 0;
+    let productsArray = [];
 
     snapshot.forEach((docSnap) => {
       const p = docSnap.data();
@@ -317,15 +456,47 @@ export async function loadProducts() {
       // Filter by search
       if (searchValue && !p.name.toLowerCase().includes(searchValue)) return;
 
+      // Filter by price
+      const price = Number(p.price);
+      if (price < filterState.priceMin || price > filterState.priceMax) return;
+
+      // Filter by location
+      if (filterState.location && p.location !== filterState.location) return;
+
+      // Filter by date
+      if (filterState.dateRange !== "all" && p.createdAt) {
+        const createdDate = p.createdAt.toDate();
+        const now = new Date();
+        const daysOld = (now - createdDate) / (1000 * 60 * 60 * 24);
+
+        if (filterState.dateRange === "7" && daysOld > 7) return;
+        if (filterState.dateRange === "30" && daysOld > 30) return;
+      }
+
+      // Add to array for sorting
+      productsArray.push({ docSnap, data: p });
+    });
+
+    // SORT PRODUCTS
+    if (filterState.sortBy === "newest") {
+      productsArray.sort((a, b) => (b.data.createdAt?.toDate() || 0) - (a.data.createdAt?.toDate() || 0));
+    } else if (filterState.sortBy === "oldest") {
+      productsArray.sort((a, b) => (a.data.createdAt?.toDate() || 0) - (b.data.createdAt?.toDate() || 0));
+    } else if (filterState.sortBy === "price-low") {
+      productsArray.sort((a, b) => Number(a.data.price) - Number(b.data.price));
+    } else if (filterState.sortBy === "price-high") {
+      productsArray.sort((a, b) => Number(b.data.price) - Number(a.data.price));
+    }
+
+    // RENDER PRODUCTS
+    productsArray.forEach(({ docSnap, data: p }) => {
       const images = Array.isArray(p.images) ? p.images : [];
       const firstImg = images[0] || "";
-      count++;
 
       const card = document.createElement("div");
       card.className = "product-card";
 
-      const seller     = p.seller || {};
-      const sellerJSON = JSON.stringify(seller).replace(/'/g, "\\'");
+      const seller = p.seller || {};
 
       card.innerHTML = `
         <div class="product-image-box" onclick="openProduct('${p.name.replace(/'/g,"\\'")}', ${p.price}, ${JSON.stringify(images)}, '${p.category || ""}', '${docSnap.id}', ${JSON.stringify(seller)})">
@@ -340,7 +511,7 @@ export async function loadProducts() {
           <p class="product-cat">${p.category || ""}</p>
           <h3 class="product-title">${p.name}</h3>
           <p class="product-price">UGX ${Number(p.price).toLocaleString()}</p>
-          ${seller.location ? `<p class="product-seller-loc">📍 ${seller.location}</p>` : ""}
+          ${p.location ? `<p class="product-seller-loc">📍 ${p.location}</p>` : ""}
           <div class="card-footer">
             <button class="cart-btn" onclick="addToCart('${p.name.replace(/'/g,"\\'")}', ${p.price}, '${firstImg}')">Add to Cart</button>
             <button class="view-btn" onclick="window.location.href='product.html?id=${docSnap.id}'">View</button>
@@ -362,18 +533,18 @@ export async function loadProducts() {
       grid.appendChild(card);
     });
 
-    if (count === 0) {
+    if (productsArray.length === 0) {
       grid.innerHTML = `
         <div class="empty-state">
           <div class="empty-icon">🔍</div>
           <p>No products found</p>
-          <p style="font-size:13px;margin-top:6px">Try a different category or search term</p>
+          <p style="font-size:13px;margin-top:6px">Try a different category or filters</p>
         </div>`;
     }
 
     // Update count label
     const countEl = document.getElementById("product-count");
-    if (countEl) countEl.textContent = count + " ads found";
+    if (countEl) countEl.textContent = productsArray.length + " ads found";
 
   } catch (err) {
     console.error(err);
