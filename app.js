@@ -394,42 +394,6 @@ function updateActiveFiltersDisplay() {
   }
 }
 
-// ============ RESET FILTERS ============
-window.resetFilters = function() {
-  document.getElementById("price-min").value = 0;
-  document.getElementById("price-max").value = 100000000;
-  document.getElementById("location-filter").value = "";
-  document.querySelectorAll(".date-filter-btn").forEach((btn, i) => {
-    btn.classList.toggle("active", i === 0);
-  });
-  document.getElementById("sort-filter").value = "newest";
-  
-  filterState = {
-    minPrice: 0,
-    maxPrice: 100000000,
-    location: "",
-    dateFilter: "all",
-    sortBy: "newest"
-  };
-  
-  loadProducts();
-};
-
-// ============ SORT FILTER ============
-window.applySortFilter = function() {
-  filterState.sortBy = document.getElementById("sort-filter").value;
-  loadProducts();
-};
-
-// ============ FILTER STATE ============
-let filterState = {
-  minPrice: 0,
-  maxPrice: 100000000,
-  location: "",
-  dateFilter: "all",
-  sortBy: "newest"
-};
-
 export async function loadProducts() {
   const grid = document.getElementById("products");
   if (!grid) return;
