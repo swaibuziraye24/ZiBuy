@@ -1,0 +1,39 @@
+PREMIUM/FEATURED ADS SETUP
+
+FILE: premium-ads.js
+- boostAd() - Promote ad for X days
+- getFeaturedAds() - Get all active featured ads
+- trackAdClick() - Track clicks on boosted ads
+- showBoostModal() - UI for boost options
+
+PLANS:
+- 7 Days: UGX 5,000
+- 14 Days: UGX 8,000
+- 30 Days: UGX 15,000
+
+INTEGRATION STEPS:
+
+1. In My Ads tab (dashboard.html), add boost button:
+   <button onclick="showBoostModal('${ad.id}', '${ad.name}')">⭐ Boost</button>
+
+2. Import premium-ads.js in dashboard.js:
+   import { showBoostModal } from "./premium-ads.js";
+
+3. In app.js loadProducts(), show featured ads first:
+   const featured = await getFeaturedAds();
+   featured.forEach(premium => {
+     // Show at top with badge
+   });
+
+4. Add to product cards:
+   ${p.isPremium ? '<span class="premium-badge">⭐ FEATURED</span>' : ''}
+
+FIRESTORE COLLECTIONS:
+- premium_ads: {productId, userId, days, price, status, expiresAt, clicks}
+- products: isPremium, premiumExpiresAt fields
+
+REVENUE MODEL:
+- Platform keeps 20% commission
+- Seller gets 80%
+
+Example: UGX 5,000 boost = UGX 1,000 platform revenue
