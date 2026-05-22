@@ -35,6 +35,8 @@ async function loadProduct() {
     const p      = snap.data();
     const images = Array.isArray(p.images) ? p.images : [];
     const seller = p.seller || {};
+    console.log("SELLER DATA:", seller);
+    console.log("PHONE:", seller.phone);
     let   active = 0;
 
     // Update page title
