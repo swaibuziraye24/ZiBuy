@@ -518,7 +518,7 @@ export async function loadProducts() {
           <p class="product-price">UGX ${Number(p.price).toLocaleString()}</p>
           ${p.location ? `<p class="product-seller-loc">📍 ${p.location}</p>` : ""}
           <div class="card-footer">
-            <button class="cart-btn" onclick="addToCart('${safeName}', ${p.price}, '${firstImg}')">Add to Cart</button>
+            <button class="cart-btn" onclick='addToCart("${safeName}", ${p.price}, "${firstImg}")'>Add to Cart</button>
             <button class="view-btn" onclick="window.location.href='product.html?id=${docSnap.id}'">View</button>
           </div>
         </div>
