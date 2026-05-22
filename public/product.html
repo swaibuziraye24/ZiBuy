@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZiBuy — Product</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ============ TOP BAR ============ -->
+<header class="topbar">
+  <a href="index.html"><h1 class="logo">Zi<span>Buy</span></h1></a>
+  <div class="topbar-actions" style="margin-left:auto">
+    <div class="cart-btn-wrap">
+      <button class="btn btn-orange" onclick="toggleCart()">🛒 Cart</button>
+      <span class="cart-badge" id="cart-count">0</span>
+    </div>
+  </div>
+</header>
+
+<!-- ============ PRODUCT PAGE ============ -->
+<div class="product-page-wrap">
+
+  <a href="index.html" class="back-link">← Back to listings</a>
+
+  <div class="product-page-grid" id="product-page-grid">
+
+    <!-- Skeleton while loading -->
+    <div>
+      <div class="skeleton-img" style="height:380px;border-radius:14px"></div>
+    </div>
+    <div>
+      <div class="skeleton-body">
+        <div class="skeleton-line short"></div>
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line short"></div>
+        <div class="skeleton-line" style="height:40px;margin-top:20px"></div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ============ CART SIDEBAR ============ -->
+<div id="cart-sidebar" class="cart-sidebar">
+  <div class="cart-top">
+    <h2>🛒 Your Cart</h2>
+    <button class="close-cart" onclick="closeCart()">×</button>
+  </div>
+  <div id="cart-items"></div>
+  <div class="cart-footer">
+    <input type="text" id="customer-name"     placeholder="Your Full Name">
+    <input type="tel"  id="customer-phone"    placeholder="Phone Number">
+    <input type="text" id="customer-location" placeholder="Delivery Location">
+    <div class="cart-total-row">
+      Total: <span>UGX <span id="cart-total">0</span></span>
+    </div>
+    <button class="checkout-btn" onclick="checkout()">Place Order</button>
+  </div>
+</div>
+
+<div id="overlay" class="overlay" onclick="closeCart()"></div>
+<div id="toast-container" class="toast-container"></div>
+
+<!-- ============ REVIEWS SECTION ============ -->
+<div class="product-page-wrap">
+  <div style="background:white;border-radius:20px;padding:32px;box-shadow:0 4px 20px rgba(0,0,0,0.08)">
+    <h2 style="font-size:20px;font-weight:800;margin-bottom:20px">⭐ Reviews</h2>
+    
+    <div id="product-reviews" style="margin-bottom:24px;padding:16px;background:#f9fafb;border-radius:12px"></div>
+
+    <div style="border-top:1px solid #e5e7eb;padding-top:20px">
+      <h3 style="font-size:15px;font-weight:800;margin-bottom:12px">Write a Review</h3>
+      <select id="review-rating" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:10px;font-family:inherit;box-sizing:border-box">
+        <option value="5">⭐⭐⭐⭐⭐ Excellent</option>
+        <option value="4">⭐⭐⭐⭐ Good</option>
+        <option value="3">⭐⭐⭐ Average</option>
+        <option value="2">⭐⭐ Poor</option>
+        <option value="1">⭐ Terrible</option>
+      </select>
+      <textarea id="review-text" placeholder="Share your experience..." rows="3" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:10px;font-family:inherit;margin-bottom:10px;resize:none;box-sizing:border-box"></textarea>
+      <button onclick="submitProductReview()" style="background:#ff6600;color:white;border:none;padding:12px 24px;border-radius:10px;font-weight:700;cursor:pointer;width:100%">Post Review</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="product.js"></script>
+</body>
+</html>
