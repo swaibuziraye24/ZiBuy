@@ -223,7 +223,9 @@ let modalImages = [];
 let modalCurrentImg = 0;
 
 window.openProduct = function(name, price, images, category, productId, seller) {
-  modalImages = Array.isArray(images) ? images : [images];
+  modalImages = Array.isArray(images)
+  ? images.filter(Boolean)
+  : [images].filter(Boolean);
   modalCurrentImg = 0;
 
   document.getElementById("modal-image").src        = modalImages[0] || "";
@@ -244,7 +246,7 @@ window.openProduct = function(name, price, images, category, productId, seller) 
 
   // WhatsApp + Call buttons
   const contactEl = document.getElementById("modal-contact-btns");
-  if (seller && seller.phone) {
+  if (seller && seller.phone && seller.phone.trim() !== "") {
     const phone    = seller.phone.replace(/\D/g, ""); // digits only
     const waMsg    = encodeURIComponent(`Hi, I saw *${name}* on ZiBuy for UGX ${Number(price).toLocaleString()}. Is it still available?`);
     contactEl.innerHTML = `
@@ -484,12 +486,25 @@ export async function loadProducts() {
 
       const seller = p.seller || {};
 
+      const safeSeller = {
+  name: String(seller.name || "").replace(/'/g, "\\'").replace(/"/g, "&quot;"),
+  phone: String(seller.phone || ""),
+  location: String(seller.location || "").replace(/'/g, "\\'").replace(/"/g, "&quot;")
+};
+
       const safeName = String(p.name || "")
   .replace(/'/g, "\\'")
   .replace(/"/g, "&quot;");
 
       card.innerHTML = `
-        <div class="product-image-box" onclick="openProduct('${safeName}', ${p.price}, ${JSON.stringify(images)}, '${p.category || ""}', '${docSnap.id}', ${JSON.stringify(seller)})">
+        <div class="product-image-box" onclick='openProduct(
+  "${safeName}",
+  ${p.price},
+  ${JSON.stringify(images)},
+  "${p.category || ""}",
+  "${docSnap.id}",
+  ${JSON.stringify(safeSeller)}
+)'>
           <div class="slider">
            ${images.filter(Boolean).map((img, i) =>
               `<img src="${img}" class="product-image ${i === 0 ? 'active' : ''}" alt="${p.name}">`
