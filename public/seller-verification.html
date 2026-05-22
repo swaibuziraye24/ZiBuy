@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seller Verification — ZiBuy</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <a href="index.html"><h1 class="logo">Zi<span>Buy</span></h1></a>
+  <div style="margin-left:auto">
+    <button class="btn btn-dark" onclick="window.location.href='dashboard.html'">← Back</button>
+  </div>
+</header>
+
+<div class="verification-wrap">
+  <div class="verification-card">
+    <h1>✅ Seller Verification</h1>
+    <p class="verification-subtitle">Get a badge to build trust with buyers</p>
+
+    <div class="verification-form">
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="full-name" placeholder="Your full name">
+      </div>
+
+      <div class="form-group">
+        <label>Business Name</label>
+        <input type="text" id="business-name" placeholder="Your business/shop name">
+      </div>
+
+      <div class="form-group">
+        <label>Phone Number</label>
+        <input type="tel" id="phone-number" placeholder="256701234567">
+      </div>
+
+      <div class="form-group">
+        <label>Location</label>
+        <select id="location">
+          <option value="">Select location</option>
+          <option value="Kampala">Kampala</option>
+          <option value="Wakiso">Wakiso</option>
+          <option value="Mukono">Mukono</option>
+          <option value="Jinja">Jinja</option>
+          <option value="Mbarara">Mbarara</option>
+          <option value="Entebbe">Entebbe</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>National ID or Passport (Upload Image)</label>
+        <input type="file" id="id-document" accept="image/*">
+      </div>
+
+      <div class="form-group">
+        <label>Business License (Optional)</label>
+        <input type="file" id="business-license" accept="image/*">
+      </div>
+
+      <div class="form-group">
+        <label>Bio</label>
+        <textarea id="bio" placeholder="Tell buyers about your business..." rows="4"></textarea>
+      </div>
+
+      <div class="verification-info" style="background:#fffbeb;border:1px solid #fde68a;padding:14px;border-radius:10px;color:#92400e;font-size:13px;margin:16px 0">
+        ℹ️ Verification takes 24-48 hours. We'll review your documents and approve/reject your application.
+      </div>
+
+      <button onclick="submitVerification()" class="btn btn-orange" style="width:100%;padding:14px">Submit for Verification</button>
+    </div>
+
+    <div id="verification-status" style="margin-top:20px;padding:16px;background:#f3f4f6;border-radius:10px;display:none">
+      <p style="margin:0;color:#6b7280">Status: <span id="status-text" style="font-weight:700"></span></p>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+
+<script type="module" src="seller-verification.js"></script>
+</body>
+</html>
