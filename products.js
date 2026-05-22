@@ -9,60 +9,11 @@ import {
   addDoc
 } from "./firebase.js";
 
-import { showToast } from "./app.js";
-
 
 // ================================
 // GET PRODUCT ID FROM URL
 // ================================
 
-const params = new URLSearchParams(window.location.search);
-const productId = params.get("id");
-
-
-// ================================
-// LOAD PRODUCT
-// ================================
-
-async function loadProduct() {
-
-  if (!productId) {
-    console.error("Missing product ID");
-    return;
-  }
-
-  try {
-
-    const productRef = doc(db, "products", productId);
-
-    const snap = await getDoc(productRef);
-
-    if (!snap.exists()) {
-      console.error("Product not found");
-      return;
-    }
-
-    const product = snap.data();
-
-    console.log(product);
-
-    // Your rendering code here
-
-  } catch (err) {
-
-    console.error(err);
-    showToast("Failed to load product", "error");
-
-  }
-
-}
-
-
-// ================================
-// INIT
-// ================================
-
-loadProduct();
 
 // Re-import app.js so cart works on this page too
 import "./app.js";
