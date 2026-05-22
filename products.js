@@ -4,16 +4,25 @@
 import {
   db,
   doc,
-  getDoc
+  getDoc,
+  collection,
+  addDoc
 } from "./firebase.js";
 
-console.log("PRODUCT JS LOADED");
+import { showToast } from "./app.js";
+
+
+// ================================
+// GET PRODUCT ID FROM URL
+// ================================
 
 const params = new URLSearchParams(window.location.search);
-
 const productId = params.get("id");
 
-console.log(productId);
+
+// ================================
+// LOAD PRODUCT
+// ================================
 
 async function loadProduct() {
 
@@ -37,14 +46,21 @@ async function loadProduct() {
 
     console.log(product);
 
+    // Your rendering code here
+
   } catch (err) {
 
     console.error(err);
-    alert("Failed to load product");
+    showToast("Failed to load product", "error");
 
   }
 
 }
+
+
+// ================================
+// INIT
+// ================================
 
 loadProduct();
 
