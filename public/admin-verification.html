@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seller Verification — Admin — ZiBuy</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <a href="index.html"><h1 class="logo">Zi<span>Buy</span></h1></a>
+  <div style="margin-left:auto">
+    <button class="btn btn-dark" onclick="window.location.href='index.html'">← Home</button>
+  </div>
+</header>
+
+<div class="admin-verification-wrap">
+  <h1>✅ Seller Verification Requests</h1>
+
+  <div class="verification-filters">
+    <button class="verify-filter active" onclick="filterVerifications('pending')">⏳ Pending</button>
+    <button class="verify-filter" onclick="filterVerifications('approved')">✅ Approved</button>
+    <button class="verify-filter" onclick="filterVerifications('rejected')">❌ Rejected</button>
+  </div>
+
+  <div id="verification-requests" class="verification-requests-list"></div>
+</div>
+
+<div id="modal-verify" class="modal">
+  <div class="modal-box" style="max-width:600px">
+    <div class="modal-header">
+      <h2 id="modal-seller-name">Seller Info</h2>
+      <button class="modal-close" onclick="closeVerifyModal()">×</button>
+    </div>
+    <div id="modal-content" style="max-height:400px;overflow-y:auto"></div>
+    <div style="display:flex;gap:10px;margin-top:20px">
+      <button onclick="approveVerification()" class="btn btn-orange" style="flex:1">✅ Approve</button>
+      <button onclick="rejectVerification()" class="btn btn-dark" style="flex:1">❌ Reject</button>
+    </div>
+  </div>
+</div>
+
+<div id="overlay" class="overlay" onclick="closeVerifyModal()"></div>
+<div id="toast-container" class="toast-container"></div>
+
+<script type="module" src="admin-verification.js"></script>
+</body>
+</html>
