@@ -7,6 +7,15 @@ let selectedCategory = "";
 let uploadedImages = [];
 
 // ============================================
+// STEP 2 INPUTS
+// ============================================
+
+const titleInput = document.getElementById("ad-title");
+const descInput = document.getElementById("ad-description");
+const priceInput = document.getElementById("ad-price");
+const locationInput = document.getElementById("ad-location");
+
+// ============================================
 // CATEGORY SELECTION
 // ============================================
 
@@ -14,18 +23,13 @@ window.selectCategory = function(category) {
 
   selectedCategory = category;
 
-  // remove previous active state
   document.querySelectorAll(".cat-card").forEach(card => {
     card.classList.remove("selected");
   });
 
-  // highlight clicked category
   event.currentTarget.classList.add("selected");
 
-  // enable continue button
   document.getElementById("step1-next").disabled = false;
-
-  console.log("Selected category:", category);
 };
 
 // ============================================
@@ -46,20 +50,20 @@ window.nextStep = function() {
     .getElementById(`step-${currentStep}-content`)
     .classList.add("active");
 
-  document.getElementById("current-step").textContent = currentStep;
+  document.getElementById("current-step").textContent =
+    currentStep;
 
-  // update indicators
   document
     .getElementById(`step-${currentStep}`)
     .classList.add("active");
 
   if (currentStep > 1) {
+
     document
       .getElementById(`line-${currentStep - 1}`)
       .classList.add("active");
   }
 
-  // fill review step
   if (currentStep === 4) {
     updateReview();
   }
@@ -82,6 +86,7 @@ window.prevStep = function() {
     .classList.remove("active");
 
   if (currentStep > 1) {
+
     document
       .getElementById(`line-${currentStep - 1}`)
       .classList.remove("active");
@@ -93,8 +98,50 @@ window.prevStep = function() {
     .getElementById(`step-${currentStep}-content`)
     .classList.add("active");
 
-  document.getElementById("current-step").textContent = currentStep;
+  document.getElementById("current-step").textContent =
+    currentStep;
 };
+
+// ============================================
+// STEP 2 VALIDATION
+// ============================================
+
+function validateStep2() {
+
+  const title = titleInput.value.trim();
+  const desc = descInput.value.trim();
+  const price = priceInput.value.trim();
+  const location = locationInput.value;
+
+  const valid =
+    title !== "" &&
+    desc !== "" &&
+    price !== "" &&
+    location !== "";
+
+  document.getElementById("step2-next").disabled = !valid;
+}
+
+titleInput.addEventListener("input", validateStep2);
+descInput.addEventListener("input", validateStep2);
+priceInput.addEventListener("input", validateStep2);
+locationInput.addEventListener("change", validateStep2);
+
+// ============================================
+// CHARACTER COUNTERS
+// ============================================
+
+titleInput.addEventListener("input", () => {
+
+  document.getElementById("title-count").textContent =
+    titleInput.value.length;
+});
+
+descInput.addEventListener("input", () => {
+
+  document.getElementById("desc-count").textContent =
+    descInput.value.length;
+});
 
 // ============================================
 // IMAGE UPLOAD
@@ -109,9 +156,8 @@ window.handleImageUpload = function(event) {
   document.getElementById("image-count").textContent =
     uploadedImages.length;
 
-  const previewContainer = document.getElementById(
-    "image-preview-container"
-  );
+  const previewContainer =
+    document.getElementById("image-preview-container");
 
   previewContainer.innerHTML = "";
 
@@ -132,11 +178,11 @@ window.handleImageUpload = function(event) {
   });
 
   document.getElementById("step3-next").disabled =
-    uploadedImages.length === 0;
+    uploadedImages.length < 1;
 };
 
 // ============================================
-// REVIEW UPDATE
+// REVIEW STEP
 // ============================================
 
 function updateReview() {
@@ -145,18 +191,16 @@ function updateReview() {
     selectedCategory;
 
   document.getElementById("review-title").textContent =
-    document.getElementById("ad-title").value;
+    titleInput.value;
 
   document.getElementById("review-price").textContent =
-    "UGX " +
-    Number(document.getElementById("ad-price").value)
-      .toLocaleString();
+    "UGX " + Number(priceInput.value).toLocaleString();
 
   document.getElementById("review-location").textContent =
-    document.getElementById("ad-location").value;
+    locationInput.value;
 
   document.getElementById("review-desc").textContent =
-    document.getElementById("ad-description").value;
+    descInput.value;
 
   if (uploadedImages.length > 0) {
 
@@ -178,14 +222,14 @@ function updateReview() {
 
 window.submitAd = async function() {
 
-  alert("Ad posting system ready.");
+  alert("Ad submitted successfully!");
 
   console.log({
     category: selectedCategory,
-    title: document.getElementById("ad-title").value,
-    description: document.getElementById("ad-description").value,
-    price: document.getElementById("ad-price").value,
-    location: document.getElementById("ad-location").value,
+    title: titleInput.value,
+    description: descInput.value,
+    price: priceInput.value,
+    location: locationInput.value,
     images: uploadedImages
   });
 };
