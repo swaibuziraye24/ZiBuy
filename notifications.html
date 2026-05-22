@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notifications — ZiBuy</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <a href="index.html"><h1 class="logo">Zi<span>Buy</span></h1></a>
+  <div class="topbar-actions" style="margin-left:auto">
+    <button class="btn btn-dark" onclick="window.location.href='dashboard.html'">← Dashboard</button>
+  </div>
+</header>
+
+<div class="notifications-wrap">
+  <h1>🔔 Notifications</h1>
+
+  <div class="notifications-filters">
+    <button class="notif-filter active" onclick="filterNotifications('all')">All</button>
+    <button class="notif-filter" onclick="filterNotifications('unread')">Unread</button>
+    <button class="notif-filter" onclick="filterNotifications('message')">💬 Messages</button>
+    <button class="notif-filter" onclick="filterNotifications('order')">📦 Orders</button>
+    <button class="notif-filter" onclick="filterNotifications('review')">⭐ Reviews</button>
+  </div>
+
+  <div id="notifications-list" class="notifications-list"></div>
+</div>
+
+<div id="overlay" class="overlay"></div>
+<div id="toast-container" class="toast-container"></div>
+
+<script type="module" src="notifications-page.js"></script>
+</body>
+</html>
