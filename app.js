@@ -485,12 +485,16 @@ export async function loadProducts() {
       card.className = "product-card";
 
       const seller = p.seller || {};
+      console.log("PRODUCT:", p);
+console.log("SELLER:", seller);
+console.log("PHONE:", seller.phone);
 
       const safeSeller = {
   name: String(seller.name || "").replace(/'/g, "\\'").replace(/"/g, "&quot;"),
   phone: String(seller.phone || ""),
   location: String(seller.location || "").replace(/'/g, "\\'").replace(/"/g, "&quot;")
 };
+
 
       const safeName = String(p.name || "")
   .replace(/'/g, "\\'")
