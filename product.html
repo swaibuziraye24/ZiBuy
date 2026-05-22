@@ -64,6 +64,27 @@
 <div id="overlay" class="overlay" onclick="closeCart()"></div>
 <div id="toast-container" class="toast-container"></div>
 
+<!-- ============ REVIEWS SECTION ============ -->
+<div class="product-page-wrap">
+  <div style="background:white;border-radius:20px;padding:32px;box-shadow:0 4px 20px rgba(0,0,0,0.08)">
+    <h2 style="font-size:20px;font-weight:800;margin-bottom:20px">⭐ Reviews</h2>
+    
+    <div id="product-reviews" style="margin-bottom:24px;padding:16px;background:#f9fafb;border-radius:12px"></div>
+
+    <div style="border-top:1px solid #e5e7eb;padding-top:20px">
+      <h3 style="font-size:15px;font-weight:800;margin-bottom:12px">Write a Review</h3>
+      <select id="review-rating" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:10px;font-family:inherit;box-sizing:border-box">
+        <option value="5">⭐⭐⭐⭐⭐ Excellent</option>
+        <option value="4">⭐⭐⭐⭐ Good</option>
+        <option value="3">⭐⭐⭐ Average</option>
+        <option value="2">⭐⭐ Poor</option>
+        <option value="1">⭐ Terrible</option>
+      </select>
+      <textarea id="review-text" placeholder="Share your experience..." rows="3" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:10px;font-family:inherit;margin-bottom:10px;resize:none;box-sizing:border-box"></textarea>
+      <button onclick="submitProductReview()" style="background:#ff6600;color:white;border:none;padding:12px 24px;border-radius:10px;font-weight:700;cursor:pointer;width:100%">Post Review</button>
+    </div>
+  </div>
+</div>
 
 <script type="module" src="product.js"></script>
 </body>
