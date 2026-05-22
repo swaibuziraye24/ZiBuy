@@ -1,30 +1,19 @@
 // ============================================
 //   ZiBuy — Product Detail Page
 // ============================================
-console.log("PRODUCT JS LOADED");
-
 import {
   db,
   doc,
-  getDoc,
-  collection,
-  addDoc
+  getDoc
 } from "./firebase.js";
 
-import { showToast } from "./app.js";
-
-
-// ================================
-// GET PRODUCT ID FROM URL
-// ================================
+console.log("PRODUCT JS LOADED");
 
 const params = new URLSearchParams(window.location.search);
+
 const productId = params.get("id");
 
-
-// ================================
-// LOAD PRODUCT
-// ================================
+console.log(productId);
 
 async function loadProduct() {
 
@@ -48,21 +37,14 @@ async function loadProduct() {
 
     console.log(product);
 
-    // Your rendering code here
-
   } catch (err) {
 
     console.error(err);
-    showToast("Failed to load product", "error");
+    alert("Failed to load product");
 
   }
 
 }
-
-
-// ================================
-// INIT
-// ================================
 
 loadProduct();
 
