@@ -1,5 +1,6 @@
 import { db, auth, collection, addDoc, getDocs, query, where, orderBy } from "./firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { notifyNewMessage } from "./notifications.js";
 
 let currentUser = null;
 let activeConversation = null;
@@ -98,6 +99,17 @@ window.sendMessage = async function() {
       timestamp: new Date(),
       lastMessageTime: new Date()
     });
+
+    // Notify recipient
+    const recipientSnap = await getDocs(query(
+      collection(db, "users"),
+      where("email", "==", activeConversation)
+    ));
+
+    if (!recipientSnap.empty) {
+      const recipientId = recipientSnap.docs[0].id;
+      notifyNewMessage(currentUser.uid, recipientId, currentUser.email);
+    }
 
     input.value = "";
     openConversation(activeConversation);
