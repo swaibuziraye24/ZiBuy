@@ -1,19 +1,23 @@
 // ============================================
 //   ZiBuy — Product Detail Page
 // ============================================
-import {
-  db,
-  doc,
-  getDoc
-} from "./firebase.js";
 
+import { db, doc, getDoc, collection, addDoc } from "./firebase.js";
+import { auth } from "./firebase.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { showToast } from "./app.js";
+
+// Re-import app.js so cart works on this page too
 import "./app.js";
 
-const params = new URLSearchParams(window.location.search);
-const id = params.get("id");
+let currentUser = null;
 
-console.log("PRODUCT PAGE LOADED");
-console.log("PRODUCT ID:", id);
+onAuthStateChanged(auth, (user) => {
+  currentUser = user;
+});
+
+const params = new URLSearchParams(window.location.search);
+const id     = params.get("id");
 
 async function loadProduct() {
   const grid = document.getElementById("product-page-grid");
@@ -35,8 +39,6 @@ async function loadProduct() {
     const p      = snap.data();
     const images = Array.isArray(p.images) ? p.images : [];
     const seller = p.seller || {};
-    console.log("SELLER DATA:", seller);
-    console.log("PHONE:", seller.phone);
     let   active = 0;
 
     // Update page title
@@ -109,7 +111,6 @@ async function loadProduct() {
       </div>
     `;
 
-    // Expose switchImage globally
     window.switchImage = function(index) {
       active = index;
       document.getElementById("main-img").src = images[index];
@@ -117,6 +118,9 @@ async function loadProduct() {
         img.classList.toggle("active", i === index)
       );
     };
+
+    loadProductReviews(id);
+    loadSellerRating(p.userId);
 
   } catch (err) {
     console.error(err);
@@ -127,5 +131,106 @@ async function loadProduct() {
       </div>`;
   }
 }
+
+async function loadSellerRating(userId) {
+  try {
+    const { getDocs, query, where, collection } = await import("./firebase.js");
+    const { db } = await import("./firebase.js");
+    
+    const snapshot = await getDocs(query(collection(db, "reviews"), where("sellerId", "==", userId)));
+    
+    if (snapshot.size === 0) return;
+
+    let totalRating = 0;
+    snapshot.forEach((doc) => {
+      totalRating += doc.data().rating;
+    });
+
+    const avgRating = (totalRating / snapshot.size).toFixed(1);
+    const sellerInfoEl = document.querySelector(".seller-info p");
+    if (sellerInfoEl) {
+      sellerInfoEl.innerHTML = `📍 ${sellerInfoEl.textContent.split("·")[0]} · ⭐ ${avgRating} (${snapshot.size} reviews)`;
+    }
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+async function loadProductReviews(productId) {
+  try {
+    const { getDocs, query, where, collection } = await import("./firebase.js");
+    const { db } = await import("./firebase.js");
+    
+    const snapshot = await getDocs(query(collection(db, "reviews"), where("productId", "==", productId)));
+    const container = document.getElementById("product-reviews");
+    
+    if (snapshot.empty) {
+      container.innerHTML = "<p style='color:#6b7280;font-size:13px'>No reviews yet. Be the first!</p>";
+      return;
+    }
+
+    let html = "";
+    let totalRating = 0;
+
+    snapshot.forEach((doc) => {
+      const review = doc.data();
+      const stars = "⭐".repeat(review.rating);
+      const date = new Date(review.createdAt.toDate()).toLocaleDateString();
+      html += `
+        <div style="padding:12px;border-bottom:1px solid #e5e7eb;font-size:13px">
+          <p style="margin:0;font-weight:700">${stars} ${review.rating}/5</p>
+          <p style="margin:4px 0;color:#6b7280">${review.text}</p>
+          <p style="margin:4px 0;font-size:11px;color:#adb5bd">${review.reviewerEmail} • ${date}</p>
+        </div>
+      `;
+      totalRating += review.rating;
+    });
+
+    const avgRating = (totalRating / snapshot.size).toFixed(1);
+    container.innerHTML = `
+      <p style="font-weight:700;margin:0 0 8px">⭐ ${avgRating} (${snapshot.size} reviews)</p>
+      ${html}
+    `;
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+window.submitProductReview = async function() {
+  const { auth } = await import("./firebase.js");
+  const { addDoc, collection } = await import("./firebase.js");
+  const { db } = await import("./firebase.js");
+
+  if (!auth.currentUser) {
+    alert("Login to review");
+    return;
+  }
+
+  const rating = document.getElementById("review-rating").value;
+  const text = document.getElementById("review-text").value.trim();
+
+  if (!text) {
+    alert("Write a review");
+    return;
+  }
+
+  try {
+    await addDoc(collection(db, "reviews"), {
+      productId: id,
+      sellerId: currentUser?.uid || "",
+      rating: Number(rating),
+      text,
+      reviewerEmail: auth.currentUser.email,
+      createdAt: new Date()
+    });
+
+    document.getElementById("review-text").value = "";
+    alert("Review posted!");
+    loadProductReviews(id);
+  } catch (err) {
+    console.error(err);
+    alert("Failed to post review");
+  }
+};
 
 loadProduct();
