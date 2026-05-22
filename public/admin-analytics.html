@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Analytics — ZiBuy</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <a href="index.html"><h1 class="logo">Zi<span>Buy</span></h1></a>
+  <div class="topbar-actions" style="margin-left:auto">
+    <span style="color:#666;font-weight:700">👤 Admin Panel</span>
+    <button class="btn btn-dark" onclick="logout()">Logout</button>
+  </div>
+</header>
+
+<div class="admin-analytics-wrap">
+  <h1>📊 Admin Analytics</h1>
+
+  <div class="stats-grid-4">
+    <div class="stat-card">
+      <p class="stat-label">Total Products</p>
+      <p class="stat-number" id="stat-products">0</p>
+      <p class="stat-trend">Active listings</p>
+    </div>
+    <div class="stat-card">
+      <p class="stat-label">Total Orders</p>
+      <p class="stat-number" id="stat-orders">0</p>
+      <p class="stat-trend">All time</p>
+    </div>
+    <div class="stat-card">
+      <p class="stat-label">Total Revenue</p>
+      <p class="stat-number" id="stat-revenue">UGX 0</p>
+      <p class="stat-trend">All orders</p>
+    </div>
+    <div class="stat-card">
+      <p class="stat-label">Active Users</p>
+      <p class="stat-number" id="stat-users">0</p>
+      <p class="stat-trend">Posted ads</p>
+    </div>
+  </div>
+
+  <div class="analytics-grid">
+    <!-- Orders by Status -->
+    <div class="analytics-card">
+      <h2>Orders by Status</h2>
+      <div id="orders-status" style="display:flex;flex-direction:column;gap:10px"></div>
+    </div>
+
+    <!-- Top Products -->
+    <div class="analytics-card">
+      <h2>Top 5 Products</h2>
+      <div id="top-products" style="display:flex;flex-direction:column;gap:8px;font-size:13px"></div>
+    </div>
+  </div>
+
+  <!-- Recent Orders -->
+  <div class="analytics-card">
+    <h2>Recent Orders</h2>
+    <div style="overflow-x:auto">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Customer</th>
+            <th>Items</th>
+            <th>Total</th>
+            <th>Status</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody id="recent-orders"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Users Activity -->
+  <div class="analytics-card">
+    <h2>Seller Activity</h2>
+    <div id="seller-activity" style="display:flex;flex-direction:column;gap:10px;font-size:13px"></div>
+  </div>
+</div>
+
+<div id="overlay" class="overlay"></div>
+<div id="toast-container" class="toast-container"></div>
+
+<script type="module" src="admin-analytics.js"></script>
+</body>
+</html>
