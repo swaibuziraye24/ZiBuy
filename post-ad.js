@@ -1,341 +1,249 @@
 // ============================================
-//   ZiBuy — Post Ad Module
+//   ZiBuy — Product Detail Page
 // ============================================
 
-import {
-  db, storage, auth,
-  collection, addDoc, query, where, getDocs
-} from "./firebase.js";
+import { db, doc, getDoc, collection, addDoc } from "./firebase.js";
+import { auth } from "./firebase.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { showToast } from "./app.js";
 
-import {
-  ref,
-  uploadBytes,
-  getDownloadURL
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+// Re-import app.js so cart works on this page too
+import "./app.js";
 
-import {
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+let currentUser = null;
 
-import { showToast, renderCart } from "./app.js";
-
-// ============ State ============
-let currentStep = 1;
-let selectedCategory = null;
-let uploadedImages = [];
-
-// ============ Auth Check ============
 onAuthStateChanged(auth, (user) => {
-  if (!user) {
-    // Redirect to home if not logged in
-    document.body.innerHTML = `
-      <div style="text-align:center;padding:60px 20px">
-        <h2>You must be logged in to post an ad</h2>
-        <p style="color:#6b7280;margin:20px 0">Sign in to your account first</p>
-        <button class="btn btn-orange" onclick="window.location.href='index.html'" style="padding:14px 28px;font-size:16px">
-          Go to ZiBuy Home
-        </button>
-      </div>
-    `;
-    return;
-  }
-
-  // User is logged in, show the form
-  const accountBtn = document.getElementById("account-btn");
-  if (accountBtn) {
-    const name = user.email.split("@")[0];
-    accountBtn.textContent = "👤 " + name;
-  }
+  currentUser = user;
 });
 
-// ============ STEP 1: CATEGORY ============
+const params = new URLSearchParams(window.location.search);
+const id     = params.get("id");
 
-window.selectCategory = function(category) {
-  selectedCategory = category;
-
-  // Update button styles
-  document.querySelectorAll(".cat-card").forEach(btn => {
-    btn.classList.remove("selected");
-  });
-  event.target.closest(".cat-card").classList.add("selected");
-
-  // Enable next button
-  document.getElementById("step1-next").disabled = false;
-};
-
-// ============ STEP 2: DETAILS ============
-
-document.getElementById("ad-title")?.addEventListener("input", (e) => {
-  const count = e.target.value.length;
-  document.getElementById("title-count").textContent = count;
-  validateStep2();
-});
-
-document.getElementById("ad-description")?.addEventListener("input", (e) => {
-  const count = e.target.value.length;
-  document.getElementById("desc-count").textContent = count;
-});
-
-document.getElementById("ad-price")?.addEventListener("input", validateStep2);
-document.getElementById("ad-location")?.addEventListener("change", validateStep2);
-
-function validateStep2() {
-  const title    = document.getElementById("ad-title").value.trim();
-  const price    = document.getElementById("ad-price").value.trim();
-  const location = document.getElementById("ad-location").value;
-
-  const isValid = title && price && location;
-  document.getElementById("step2-next").disabled = !isValid;
-}
-
-// ============ STEP 3: IMAGES ============
-
-window.handleImageUpload = function(event) {
-  const files = Array.from(event.target.files);
-
-  if (uploadedImages.length + files.length > 5) {
-    showToast("Maximum 5 photos allowed", "error");
-    return;
-  }
-
-  files.forEach(file => {
-    if (!file.type.startsWith("image/")) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      uploadedImages.push({
-        file,
-        preview: e.target.result
-      });
-      renderImagePreviews();
-    };
-    reader.readAsDataURL(file);
-  });
-};
-
-function renderImagePreviews() {
-  const container = document.getElementById("image-preview-container");
-  container.innerHTML = "";
-
-  uploadedImages.forEach((img, index) => {
-    const div = document.createElement("div");
-    div.className = "image-preview-item";
-    div.innerHTML = `
-      <img src="${img.preview}" alt="Preview ${index + 1}">
-      ${index === 0 ? '<span class="cover-badge">Cover Photo</span>' : ''}
-      <button class="remove-img-btn" onclick="removeImage(${index})">×</button>
-    `;
-    container.appendChild(div);
-  });
-
-  document.getElementById("image-count").textContent = uploadedImages.length;
-
-  // Enable next button if at least 1 image
-  document.getElementById("step3-next").disabled = uploadedImages.length === 0;
-}
-
-window.removeImage = function(index) {
-  uploadedImages.splice(index, 1);
-  renderImagePreviews();
-};
-
-// Drag and drop
-const fileUploadArea = document.getElementById("file-upload-area");
-if (fileUploadArea) {
-  fileUploadArea.addEventListener("dragover", (e) => {
-    e.preventDefault();
-    fileUploadArea.style.borderColor = "var(--orange)";
-    fileUploadArea.style.background = "var(--orange-lt)";
-  });
-
-  fileUploadArea.addEventListener("dragleave", () => {
-    fileUploadArea.style.borderColor = "#e5e7eb";
-    fileUploadArea.style.background = "white";
-  });
-
-  fileUploadArea.addEventListener("drop", (e) => {
-    e.preventDefault();
-    fileUploadArea.style.borderColor = "#e5e7eb";
-    fileUploadArea.style.background = "white";
-    const fileInput = document.getElementById("ad-images");
-    fileInput.files = e.dataTransfer.files;
-    handleImageUpload({ target: fileInput });
-  });
-}
-
-// ============ STEP NAVIGATION ============
-
-window.nextStep = function() {
-  if (currentStep === 1 && !selectedCategory) {
-    showToast("Please select a category", "error");
-    return;
-  }
-
-  if (currentStep === 2) {
-    const title    = document.getElementById("ad-title").value.trim();
-    const price    = document.getElementById("ad-price").value.trim();
-    const location = document.getElementById("ad-location").value;
-
-    if (!title || !price || !location) {
-      showToast("Please fill in all fields", "error");
-      return;
-    }
-  }
-
-  if (currentStep === 3 && uploadedImages.length === 0) {
-    showToast("Please upload at least 1 photo", "error");
-    return;
-  }
-
-  if (currentStep === 4) return; // Last step
-
-  // Hide current step
-  document.getElementById(`step-${currentStep}-content`).classList.remove("active");
-
-  // Show next step
-  currentStep++;
-  document.getElementById(`step-${currentStep}-content`).classList.add("active");
-
-  // Update step indicators
-  updateStepIndicators();
-
-  // Update review if on step 4
-  if (currentStep === 4) {
-    updateReview();
-  }
-
-  // Scroll to top
-  window.scrollTo(0, 0);
-};
-
-window.prevStep = function() {
-  if (currentStep === 1) return;
-
-  document.getElementById(`step-${currentStep}-content`).classList.remove("active");
-  currentStep--;
-  document.getElementById(`step-${currentStep}-content`).classList.add("active");
-
-  updateStepIndicators();
-  window.scrollTo(0, 0);
-};
-
-function updateStepIndicators() {
-  document.getElementById("current-step").textContent = currentStep;
-
-  for (let i = 1; i <= 4; i++) {
-    const indicator = document.getElementById(`step-${i}`);
-    if (i < currentStep) {
-      indicator.classList.add("completed");
-    } else if (i === currentStep) {
-      indicator.classList.remove("completed");
-      indicator.classList.add("active");
-    } else {
-      indicator.classList.remove("active", "completed");
-    }
-
-    const line = document.getElementById(`line-${i}`);
-    if (line) {
-      if (i < currentStep) {
-        line.classList.add("completed");
-      } else {
-        line.classList.remove("completed");
-      }
-    }
-  }
-}
-
-// ============ REVIEW ============
-
-function updateReview() {
-  const title       = document.getElementById("ad-title").value;
-  const desc        = document.getElementById("ad-description").value;
-  const price       = document.getElementById("ad-price").value;
-  const location    = document.getElementById("ad-location").value;
-  const category    = selectedCategory;
-
-  document.getElementById("review-cat").textContent = category.charAt(0).toUpperCase() + category.slice(1);
-  document.getElementById("review-title").textContent = title;
-  document.getElementById("review-price").textContent = "UGX " + Number(price).toLocaleString();
-  document.getElementById("review-location").textContent = "📍 " + location;
-  document.getElementById("review-desc").textContent = desc || "No description provided";
-
-  // Show first image
-  if (uploadedImages.length > 0) {
-    document.getElementById("review-image").innerHTML = `
-      <img src="${uploadedImages[0].preview}" alt="Cover">
-      <span style="position:absolute;bottom:10px;right:10px;background:var(--orange);color:white;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:700">${uploadedImages.length} photo${uploadedImages.length > 1 ? 's' : ''}</span>
-    `;
-  }
-}
-
-// ============ SUBMIT AD ============
-
-window.submitAd = async function() {
-  const submitBtn = document.getElementById("submit-btn");
-  submitBtn.textContent = "Posting...";
-  submitBtn.disabled = true;
+async function loadProduct() {
+  const grid = document.getElementById("product-page-grid");
+  if (!id || !grid) return;
 
   try {
-    // Check if user is logged in
-    if (!auth.currentUser) {
-      showToast("You must be logged in to post", "error");
-      submitBtn.textContent = "Post My Ad 🚀";
-      submitBtn.disabled = false;
+    const snap = await getDoc(doc(db, "products", id));
+
+    if (!snap.exists()) {
+      grid.innerHTML = `
+        <div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:#6b7280">
+          <p style="font-size:48px;margin-bottom:16px">😕</p>
+          <p style="font-size:18px;font-weight:700">Product not found</p>
+          <a href="index.html" style="color:#ff6600;font-weight:700;display:inline-block;margin-top:12px">← Back to listings</a>
+        </div>`;
       return;
     }
 
-    const title       = document.getElementById("ad-title").value.trim();
-    const desc        = document.getElementById("ad-description").value.trim();
-    const price       = document.getElementById("ad-price").value.trim();
-    const location    = document.getElementById("ad-location").value;
-    const category    = selectedCategory;
+    const p      = snap.data();
+    const images = Array.isArray(p.images) ? p.images : [];
+    const seller = p.seller || {};
+    let   active = 0;
 
-    // Upload all images
-    let imageUrls = [];
-    for (const imgObj of uploadedImages) {
-      const storageRef = ref(storage, `user-ads/${auth.currentUser.uid}/${Date.now()}_${imgObj.file.name}`);
-      await uploadBytes(storageRef, imgObj.file);
-      const url = await getDownloadURL(storageRef);
-      imageUrls.push(url);
-    }
+    // Update page title
+    document.title = `${p.name} — ZiBuy`;
 
-    // Save ad to Firestore
-    await addDoc(collection(db, "products"), {
-      name:        title,
-      description: desc,
-      price:       Number(price),
-      category,
-      location,
-      images:      imageUrls,
-      seller: {
-  name: auth.currentUser.email.split("@")[0],
-  phone: document.getElementById("seller-phone").value.trim(),
-  location: location
-},
-      userId:      auth.currentUser.uid,
-      userEmail:   auth.currentUser.email,
-      isUserPost:  true,
-      status:      "active",
-      views:       0,
-      createdAt:   new Date(),
-      expiresAt:   new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
-    });
+    // Build contact buttons HTML
+    const phone = (seller.phone || "").replace(/\D/g, "");
+    const waMsg = encodeURIComponent(`Hi, I saw *${p.name}* on ZiBuy for UGX ${Number(p.price).toLocaleString()}. Is it still available?`);
 
-    showToast("Your ad posted successfully! 🎉", "success");
+    const contactHTML = phone ? `
+      <div class="contact-btns" style="margin-top:16px">
+        <a class="contact-btn whatsapp-btn" href="https://wa.me/${phone}?text=${waMsg}" target="_blank">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.553 4.122 1.523 5.857L.057 23.8l6.088-1.439A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.788 9.788 0 01-5.002-1.368l-.36-.214-3.716.878.938-3.63-.235-.373A9.789 9.789 0 012.182 12C2.182 6.58 6.58 2.182 12 2.182S21.818 6.58 21.818 12 17.42 21.818 12 21.818z"/></svg>
+          WhatsApp Seller
+        </a>
+        <a class="contact-btn call-btn" href="tel:+${phone}">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.67A2 2 0 012 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+          Call Seller
+        </a>
+      </div>
+    ` : "";
 
-    // Redirect after 2 seconds
-    setTimeout(() => {
-      window.location.href = "index.html";
-    }, 2000);
+    grid.innerHTML = `
+      <!-- Images -->
+      <div class="product-page-images">
+        <img id="main-img" class="main-img" src="${images[0] || ''}" alt="${p.name}">
+        ${images.length > 1 ? `
+          <div class="product-page-thumbs" id="thumbs">
+            ${images.map((img, i) => `
+              <img src="${img}" class="${i === 0 ? 'active' : ''}" alt="thumb ${i+1}" onclick="switchImage(${i})">
+            `).join("")}
+          </div>` : ""}
+      </div>
+
+      <!-- Details -->
+      <div class="product-page-details">
+
+        <div class="seller-box">
+          <div class="seller-avatar">${(seller.name || "Z")[0].toUpperCase()}</div>
+          <div class="seller-info">
+            <h4>${seller.name || "ZiBuy Seller"}</h4>
+            <p>📍 ${seller.location || "Uganda"} · Verified Seller</p>
+          </div>
+        </div>
+
+        <p class="product-cat">${p.category || "Product"}</p>
+        <h1>${p.name}</h1>
+        <p class="product-page-price">UGX ${Number(p.price).toLocaleString()}</p>
+
+        <p class="product-desc">
+          ${p.description || "High quality product from ZiBuy marketplace. Contact seller for more details."}
+        </p>
+
+        <div class="product-page-actions">
+          <button class="cart-btn" style="font-size:16px;padding:16px;"
+            onclick="addToCart('${p.name.replace(/'/g,"\\'")}', ${p.price}, '${images[0] || ""}')">
+            🛒 Add to Cart
+          </button>
+          <button class="view-btn" style="font-size:16px;padding:16px;" onclick="toggleCart()">
+            View Cart
+          </button>
+        </div>
+
+        ${contactHTML}
+
+        <button onclick="messageButton('${seller.phone || currentUser?.email}', '${id}', '${p.name}')" style="width:100%;background:#9333ea;color:white;border:none;padding:14px;border-radius:12px;font-weight:800;cursor:pointer;margin-top:10px;font-family:inherit;font-size:15px">
+          💬 Send Message
+        </button>
+
+        <div style="margin-top:16px;padding:16px;background:#fff4ee;border-radius:12px;font-size:13px;color:#b45309">
+          🛡️ <strong>Safe buying tip:</strong> Meet the seller in a public place and check the item before paying.
+        </div>
+
+      </div>
+    `;
+
+    window.switchImage = function(index) {
+      active = index;
+      document.getElementById("main-img").src = images[index];
+      document.querySelectorAll("#thumbs img").forEach((img, i) =>
+        img.classList.toggle("active", i === index)
+      );
+    };
+
+    loadProductReviews(id);
+    loadSellerRating(p.userId);
 
   } catch (err) {
     console.error(err);
-    showToast("Failed to post ad: " + err.message, "error");
-    submitBtn.textContent = "Post My Ad 🚀";
-    submitBtn.disabled = false;
+    document.getElementById("product-page-grid").innerHTML = `
+      <div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:#6b7280">
+        <p style="font-size:18px;font-weight:700">Failed to load product</p>
+        <a href="index.html" style="color:#ff6600;font-weight:700;display:inline-block;margin-top:12px">← Back</a>
+      </div>`;
+  }
+}
+
+async function loadSellerRating(userId) {
+  try {
+    const { getDocs, query, where, collection } = await import("./firebase.js");
+    const { db } = await import("./firebase.js");
+    
+    const snapshot = await getDocs(query(collection(db, "reviews"), where("sellerId", "==", userId)));
+    
+    if (snapshot.size === 0) return;
+
+    let totalRating = 0;
+    snapshot.forEach((doc) => {
+      totalRating += doc.data().rating;
+    });
+
+    const avgRating = (totalRating / snapshot.size).toFixed(1);
+    const sellerInfoEl = document.querySelector(".seller-info p");
+    if (sellerInfoEl) {
+      sellerInfoEl.innerHTML = `📍 ${sellerInfoEl.textContent.split("·")[0]} · ⭐ ${avgRating} (${snapshot.size} reviews)`;
+    }
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+async function loadProductReviews(productId) {
+  try {
+    const { getDocs, query, where, collection } = await import("./firebase.js");
+    const { db } = await import("./firebase.js");
+    
+    const snapshot = await getDocs(query(collection(db, "reviews"), where("productId", "==", productId)));
+    const container = document.getElementById("product-reviews");
+    
+    if (snapshot.empty) {
+      container.innerHTML = "<p style='color:#6b7280;font-size:13px'>No reviews yet. Be the first!</p>";
+      return;
+    }
+
+    let html = "";
+    let totalRating = 0;
+
+    snapshot.forEach((doc) => {
+      const review = doc.data();
+      const stars = "⭐".repeat(review.rating);
+      const date = new Date(review.createdAt.toDate()).toLocaleDateString();
+      html += `
+        <div style="padding:12px;border-bottom:1px solid #e5e7eb;font-size:13px">
+          <p style="margin:0;font-weight:700">${stars} ${review.rating}/5</p>
+          <p style="margin:4px 0;color:#6b7280">${review.text}</p>
+          <p style="margin:4px 0;font-size:11px;color:#adb5bd">${review.reviewerEmail} • ${date}</p>
+        </div>
+      `;
+      totalRating += review.rating;
+    });
+
+    const avgRating = (totalRating / snapshot.size).toFixed(1);
+    container.innerHTML = `
+      <p style="font-weight:700;margin:0 0 8px">⭐ ${avgRating} (${snapshot.size} reviews)</p>
+      ${html}
+    `;
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+window.submitProductReview = async function() {
+  const { auth } = await import("./firebase.js");
+  const { addDoc, collection } = await import("./firebase.js");
+  const { db } = await import("./firebase.js");
+
+  if (!auth.currentUser) {
+    alert("Login to review");
+    return;
+  }
+
+  const rating = document.getElementById("review-rating").value;
+  const text = document.getElementById("review-text").value.trim();
+
+  if (!text) {
+    alert("Write a review");
+    return;
+  }
+
+  try {
+    await addDoc(collection(db, "reviews"), {
+      productId: id,
+      sellerId: currentUser?.uid || "",
+      rating: Number(rating),
+      text,
+      reviewerEmail: auth.currentUser.email,
+      createdAt: new Date()
+    });
+
+    document.getElementById("review-text").value = "";
+    alert("Review posted!");
+    loadProductReviews(id);
+  } catch (err) {
+    console.error(err);
+    alert("Failed to post review");
   }
 };
 
-// ============ IMPORT APP.JS FUNCTIONS ============
-// Cart functionality
-import "./app.js";
+loadProduct();
+
+window.messageButton = function(sellerName, productId, productName) {
+  const sellerEmail = sellerName.includes("@") ? sellerName : prompt("Seller email not found. Continue?");
+  if (!sellerEmail) return;
+  
+  import("./messages.js").then(({ startConversation }) => {
+    startConversation(sellerEmail, productId, productName);
+  });
+};
