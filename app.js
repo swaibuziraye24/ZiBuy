@@ -19,11 +19,15 @@ import { auth } from "./firebase.js";
 onAuthStateChanged(auth, (user) => {
   const postAdBtn = document.getElementById("post-ad-btn");
   const dashboardBtn = document.getElementById("dashboard-btn");
+  const messagesBtn = document.getElementById("messages-btn");
   if (postAdBtn) {
     postAdBtn.style.display = user ? "block" : "none";
   }
   if (dashboardBtn) {
     dashboardBtn.style.display = user ? "block" : "none";
+  }
+  if (messagesBtn) {
+    messagesBtn.style.display = user ? "block" : "none";
   }
 });
 
@@ -119,15 +123,8 @@ window.addToCart = function(name, price, image = "") {
 };
 
 window.changeQty = function(index, change) {
-
-  if (!cart[index]) return;
-
   cart[index].qty += change;
-
-  if (cart[index].qty <= 0) {
-    cart.splice(index, 1);
-  }
-
+  if (cart[index].qty <= 0) cart.splice(index, 1);
   saveCart();
   renderCart();
 };
@@ -170,11 +167,6 @@ window.checkout = async function() {
   }
 
   const checkoutBtn = document.querySelector(".checkout-btn");
-
-if (!checkoutBtn) {
-  showToast("Checkout button missing", "error");
-  return;
-}
   checkoutBtn.textContent = "Placing order...";
   checkoutBtn.disabled = true;
 
@@ -223,9 +215,7 @@ let modalImages = [];
 let modalCurrentImg = 0;
 
 window.openProduct = function(name, price, images, category, productId, seller) {
-  modalImages = Array.isArray(images)
-  ? images.filter(Boolean)
-  : [images].filter(Boolean);
+  modalImages = Array.isArray(images) ? images : [images];
   modalCurrentImg = 0;
 
   document.getElementById("modal-image").src        = modalImages[0] || "";
@@ -246,7 +236,7 @@ window.openProduct = function(name, price, images, category, productId, seller) 
 
   // WhatsApp + Call buttons
   const contactEl = document.getElementById("modal-contact-btns");
-  if (seller && seller.phone && seller.phone.trim() !== "") {
+  if (seller && seller.phone) {
     const phone    = seller.phone.replace(/\D/g, ""); // digits only
     const waMsg    = encodeURIComponent(`Hi, I saw *${name}* on ZiBuy for UGX ${Number(price).toLocaleString()}. Is it still available?`);
     contactEl.innerHTML = `
@@ -404,6 +394,26 @@ function updateActiveFiltersDisplay() {
   }
 }
 
+// ============ RESET FILTERS ============
+window.resetFilters = function() {
+  document.getElementById("price-min").value = 0;
+  document.getElementById("price-max").value = 100000000;
+  document.getElementById("location-filter").value = "";
+  document.querySelectorAll(".date-filter-btn").forEach((btn, i) => {
+    btn.classList.toggle("active", i === 0);
+  });
+  document.getElementById("sort-filter").value = "newest";
+  
+  filterState = {
+    minPrice: 0,
+    maxPrice: 100000000,
+    location: "",
+    dateFilter: "all",
+    sortBy: "newest"
+  };
+  
+  loadProducts();
+};
 
 // ============ SORT FILTER ============
 window.applySortFilter = function() {
@@ -411,6 +421,14 @@ window.applySortFilter = function() {
   loadProducts();
 };
 
+// ============ FILTER STATE ============
+let filterState = {
+  minPrice: 0,
+  maxPrice: 100000000,
+  location: "",
+  dateFilter: "all",
+  sortBy: "newest"
+};
 
 export async function loadProducts() {
   const grid = document.getElementById("products");
@@ -451,9 +469,7 @@ export async function loadProducts() {
 
       // Filter by date
       if (filterState.dateRange !== "all" && p.createdAt) {
-        const createdDate = p.createdAt?.toDate
-  ? p.createdAt.toDate()
-  : new Date();
+        const createdDate = p.createdAt.toDate();
         const now = new Date();
         const daysOld = (now - createdDate) / (1000 * 60 * 60 * 24);
 
@@ -479,38 +495,17 @@ export async function loadProducts() {
     // RENDER PRODUCTS
     productsArray.forEach(({ docSnap, data: p }) => {
       const images = Array.isArray(p.images) ? p.images : [];
-      const firstImg = images[0] || "images/placeholder.jpg";
+      const firstImg = images[0] || "";
 
       const card = document.createElement("div");
       card.className = "product-card";
 
       const seller = p.seller || {};
-      console.log("PRODUCT:", p);
-console.log("SELLER:", seller);
-console.log("PHONE:", seller.phone);
-
-      const safeSeller = {
-  name: String(seller.name || "").replace(/'/g, "\\'").replace(/"/g, "&quot;"),
-  phone: String(seller.phone || ""),
-  location: String(seller.location || "").replace(/'/g, "\\'").replace(/"/g, "&quot;")
-};
-
-
-      const safeName = String(p.name || "")
-  .replace(/'/g, "\\'")
-  .replace(/"/g, "&quot;");
 
       card.innerHTML = `
-        <div class="product-image-box" onclick='openProduct(
-  "${safeName}",
-  ${p.price},
-  ${JSON.stringify(images)},
-  "${p.category || ""}",
-  "${docSnap.id}",
-  ${JSON.stringify(safeSeller)}
-)'>
+        <div class="product-image-box" onclick="openProduct('${p.name.replace(/'/g,"\\'")}', ${p.price}, ${JSON.stringify(images)}, '${p.category || ""}', '${docSnap.id}', ${JSON.stringify(seller)})">
           <div class="slider">
-           ${images.filter(Boolean).map((img, i) =>
+            ${images.map((img, i) =>
               `<img src="${img}" class="product-image ${i === 0 ? 'active' : ''}" alt="${p.name}">`
             ).join("")}
           </div>
@@ -522,7 +517,7 @@ console.log("PHONE:", seller.phone);
           <p class="product-price">UGX ${Number(p.price).toLocaleString()}</p>
           ${p.location ? `<p class="product-seller-loc">📍 ${p.location}</p>` : ""}
           <div class="card-footer">
-            <button class="cart-btn" onclick='addToCart("${safeName}", ${p.price}, "${firstImg}")'>Add to Cart</button>
+            <button class="cart-btn" onclick="addToCart('${p.name.replace(/'/g,"\\'")}', ${p.price}, '${firstImg}')">Add to Cart</button>
             <button class="view-btn" onclick="window.location.href='product.html?id=${docSnap.id}'">View</button>
           </div>
         </div>
@@ -531,7 +526,7 @@ console.log("PHONE:", seller.phone);
       // Auto-rotate slider images
       if (images.length > 1) {
         let idx = 0;
-        const sliderInterval = setInterval(() => {
+        setInterval(() => {
           const imgs = card.querySelectorAll(".slider img");
           imgs[idx].classList.remove("active");
           idx = (idx + 1) % imgs.length;
