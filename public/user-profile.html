@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seller Profile — ZiBuy</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <a href="index.html"><h1 class="logo">Zi<span>Buy</span></h1></a>
+  <div style="margin-left:auto">
+    <button class="btn btn-dark" onclick="window.history.back()">← Back</button>
+  </div>
+</header>
+
+<div class="user-profile-wrap">
+  <!-- Profile Header -->
+  <div class="profile-header">
+    <div class="profile-avatar" id="profile-avatar">👤</div>
+    <div class="profile-info">
+      <h1 id="profile-name">Seller Name</h1>
+      <p id="profile-location">📍 Location</p>
+      <div class="profile-rating">
+        <span id="profile-rating">⭐ 0 (0 reviews)</span>
+        <span id="profile-verified" style="display:none;background:#10b981;color:white;padding:4px 8px;border-radius:6px;font-size:12px;font-weight:700">✅ Verified Seller</span>
+      </div>
+    </div>
+    <button onclick="messageProfile()" class="btn btn-orange" style="padding:12px 24px;white-space:nowrap">💬 Send Message</button>
+  </div>
+
+  <!-- Profile Stats -->
+  <div class="profile-stats">
+    <div class="stat-box">
+      <p class="stat-label">Products</p>
+      <p class="stat-value" id="stat-products">0</p>
+    </div>
+    <div class="stat-box">
+      <p class="stat-label">Reviews</p>
+      <p class="stat-value" id="stat-reviews">0</p>
+    </div>
+    <div class="stat-box">
+      <p class="stat-label">Rating</p>
+      <p class="stat-value" id="stat-rating">0.0</p>
+    </div>
+    <div class="stat-box">
+      <p class="stat-label">Member Since</p>
+      <p class="stat-value" id="stat-joined" style="font-size:13px">—</p>
+    </div>
+  </div>
+
+  <!-- Bio -->
+  <div class="profile-section">
+    <h2>About</h2>
+    <p id="profile-bio" style="color:#6b7280;line-height:1.6">No bio yet</p>
+  </div>
+
+  <!-- Contact Info -->
+  <div class="profile-section">
+    <h2>Contact</h2>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button onclick="contactWhatsApp()" class="contact-btn" style="background:#25d366;color:white">
+        📱 WhatsApp
+      </button>
+      <button onclick="contactPhone()" class="contact-btn" style="background:#111827;color:white">
+        ☎️ Call
+      </button>
+    </div>
+  </div>
+
+  <!-- Products -->
+  <div class="profile-section">
+    <h2>Products (<span id="product-count">0</span>)</h2>
+    <div id="seller-products" class="products"></div>
+  </div>
+
+  <!-- Reviews -->
+  <div class="profile-section">
+    <h2>Recent Reviews</h2>
+    <div id="seller-reviews" style="display:flex;flex-direction:column;gap:12px"></div>
+  </div>
+</div>
+
+<div id="overlay" class="overlay"></div>
+<div id="toast-container" class="toast-container"></div>
+
+<script type="module" src="user-profile.js"></script>
+</body>
+</html>
