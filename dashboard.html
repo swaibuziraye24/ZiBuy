@@ -38,6 +38,9 @@
       <button class="nav-item" onclick="switchTab('my-orders')">
         <span>📦</span> My Orders
       </button>
+      <button class="nav-item" onclick="switchTab('messages')">
+        <span>💬</span> Messages
+      </button>
       <button class="nav-item" onclick="switchTab('favorites')">
         <span>❤️</span> Favorites
       </button>
@@ -117,7 +120,16 @@
       <div id="my-orders-list" class="orders-list"></div>
     </div>
 
-    <!-- TAB 4: FAVORITES -->
+    <!-- TAB 4: MESSAGES -->
+    <div class="dashboard-tab" id="tab-messages">
+      <h2>Messages</h2>
+      <div style="text-align:center;padding:40px 20px">
+        <p style="font-size:32px;margin-bottom:12px">💬</p>
+        <p style="color:#6b7280">Go to <a href="messages.html" style="color:#ff6600;font-weight:700">Messages page</a> to chat with buyers and sellers</p>
+      </div>
+    </div>
+
+    <!-- TAB 5: FAVORITES -->
     <div class="dashboard-tab" id="tab-favorites">
       <h2>Saved Items</h2>
       <div id="favorites-list" class="ads-list"></div>
