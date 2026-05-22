@@ -1,0 +1,39 @@
+# ZiBuy Quick Deploy
+
+## 1. Install Firebase CLI
+npm install -g firebase-tools
+
+## 2. Login
+firebase login
+
+## 3. Deploy
+firebase deploy
+
+## Done! Live at: https://zibuy-5deae.web.app
+
+---
+
+## All Files Ready
+✅ index.html
+✅ product.html
+✅ post-ad.html
+✅ dashboard.html
+✅ messages.html
+✅ notifications.html
+✅ payment.html
+✅ app.js
+✅ product.js
+✅ post-ad.js
+✅ dashboard.js
+✅ messages.js
+✅ notifications-page.js
+✅ payment.js
+✅ reviews.js
+✅ auth.js
+✅ admin.js
+✅ firebase.js
+✅ style.css
+✅ firebase.json
+✅ .firebaserc
+
+Total: 21 files ready to deploy
