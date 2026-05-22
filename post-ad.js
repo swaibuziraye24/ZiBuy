@@ -308,10 +308,10 @@ window.submitAd = async function() {
       location,
       images:      imageUrls,
       seller: {
-        name:     auth.currentUser.email.split("@")[0],
-        phone:    "", // User can add later in dashboard
-        location: location
-      },
+  name: auth.currentUser.email.split("@")[0],
+  phone: document.getElementById("seller-phone").value.trim(),
+  location: location
+},
       userId:      auth.currentUser.uid,
       userEmail:   auth.currentUser.email,
       isUserPost:  true,
