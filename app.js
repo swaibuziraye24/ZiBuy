@@ -20,6 +20,7 @@ onAuthStateChanged(auth, (user) => {
   const postAdBtn = document.getElementById("post-ad-btn");
   const dashboardBtn = document.getElementById("dashboard-btn");
   const messagesBtn = document.getElementById("messages-btn");
+  const notificationsBtn = document.getElementById("notifications-btn");
   if (postAdBtn) {
     postAdBtn.style.display = user ? "block" : "none";
   }
@@ -28,6 +29,9 @@ onAuthStateChanged(auth, (user) => {
   }
   if (messagesBtn) {
     messagesBtn.style.display = user ? "block" : "none";
+  }
+  if (notificationsBtn) {
+    notificationsBtn.style.display = user ? "block" : "none";
   }
 });
 
@@ -157,54 +161,8 @@ window.checkout = async function() {
     return;
   }
 
-  const name     = document.getElementById("customer-name").value.trim();
-  const phone    = document.getElementById("customer-phone").value.trim();
-  const location = document.getElementById("customer-location").value.trim();
-
-  if (!name || !phone || !location) {
-    showToast("Please fill in your delivery details", "error");
-    return;
-  }
-
-  const checkoutBtn = document.querySelector(".checkout-btn");
-  checkoutBtn.textContent = "Placing order...";
-  checkoutBtn.disabled = true;
-
-  try {
-    let total = cart.reduce((sum, i) => sum + i.price * i.qty, 0);
-    const orderId = "ZB-" + Date.now();
-
-    await addDoc(collection(db, "orders"), {
-      orderId,
-      customerName:     name,
-      customerPhone:    phone,
-      customerLocation: location,
-      items:            cart,
-      total,
-      status:           "Pending",
-      paymentMethod:    "Cash On Delivery",
-      createdAt:        new Date()
-    });
-
-    showToast(`Order ${orderId} placed! 🎉`, "success");
-
-    cart = [];
-    saveCart();
-    renderCart();
-
-    document.getElementById("customer-name").value     = "";
-    document.getElementById("customer-phone").value    = "";
-    document.getElementById("customer-location").value = "";
-
-    window.closeCart();
-
-  } catch (err) {
-    console.error(err);
-    showToast("Checkout failed. Try again.", "error");
-  } finally {
-    checkoutBtn.textContent = "Place Order";
-    checkoutBtn.disabled    = false;
-  }
+  // Just redirect to payment page - they'll login there if needed
+  window.location.href = "payment.html";
 };
 
 // ============================================
@@ -393,6 +351,7 @@ function updateActiveFiltersDisplay() {
     container.innerHTML = filters.map(f => `<span class="active-filter-tag">${f}</span>`).join("");
   }
 }
+
 
 export async function loadProducts() {
   const grid = document.getElementById("products");
