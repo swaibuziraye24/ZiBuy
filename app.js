@@ -119,8 +119,15 @@ window.addToCart = function(name, price, image = "") {
 };
 
 window.changeQty = function(index, change) {
+
+  if (!cart[index]) return;
+
   cart[index].qty += change;
-  if (cart[index].qty <= 0) cart.splice(index, 1);
+
+  if (cart[index].qty <= 0) {
+    cart.splice(index, 1);
+  }
+
   saveCart();
   renderCart();
 };
@@ -163,6 +170,11 @@ window.checkout = async function() {
   }
 
   const checkoutBtn = document.querySelector(".checkout-btn");
+
+if (!checkoutBtn) {
+  showToast("Checkout button missing", "error");
+  return;
+}
   checkoutBtn.textContent = "Placing order...";
   checkoutBtn.disabled = true;
 
@@ -390,26 +402,6 @@ function updateActiveFiltersDisplay() {
   }
 }
 
-// ============ RESET FILTERS ============
-window.resetFilters = function() {
-  document.getElementById("price-min").value = 0;
-  document.getElementById("price-max").value = 100000000;
-  document.getElementById("location-filter").value = "";
-  document.querySelectorAll(".date-filter-btn").forEach((btn, i) => {
-    btn.classList.toggle("active", i === 0);
-  });
-  document.getElementById("sort-filter").value = "newest";
-  
-  filterState = {
-    minPrice: 0,
-    maxPrice: 100000000,
-    location: "",
-    dateFilter: "all",
-    sortBy: "newest"
-  };
-  
-  loadProducts();
-};
 
 // ============ SORT FILTER ============
 window.applySortFilter = function() {
@@ -417,14 +409,6 @@ window.applySortFilter = function() {
   loadProducts();
 };
 
-// ============ FILTER STATE ============
-let filterState = {
-  minPrice: 0,
-  maxPrice: 100000000,
-  location: "",
-  dateFilter: "all",
-  sortBy: "newest"
-};
 
 export async function loadProducts() {
   const grid = document.getElementById("products");
@@ -465,7 +449,9 @@ export async function loadProducts() {
 
       // Filter by date
       if (filterState.dateRange !== "all" && p.createdAt) {
-        const createdDate = p.createdAt.toDate();
+        const createdDate = p.createdAt?.toDate
+  ? p.createdAt.toDate()
+  : new Date();
         const now = new Date();
         const daysOld = (now - createdDate) / (1000 * 60 * 60 * 24);
 
@@ -491,17 +477,21 @@ export async function loadProducts() {
     // RENDER PRODUCTS
     productsArray.forEach(({ docSnap, data: p }) => {
       const images = Array.isArray(p.images) ? p.images : [];
-      const firstImg = images[0] || "";
+      const firstImg = images[0] || "images/placeholder.jpg";
 
       const card = document.createElement("div");
       card.className = "product-card";
 
       const seller = p.seller || {};
 
+      const safeName = String(p.name || "")
+  .replace(/'/g, "\\'")
+  .replace(/"/g, "&quot;");
+
       card.innerHTML = `
-        <div class="product-image-box" onclick="openProduct('${p.name.replace(/'/g,"\\'")}', ${p.price}, ${JSON.stringify(images)}, '${p.category || ""}', '${docSnap.id}', ${JSON.stringify(seller)})">
+        <div class="product-image-box" onclick="openProduct('${safeName}', ${p.price}, ${JSON.stringify(images)}, '${p.category || ""}', '${docSnap.id}', ${JSON.stringify(seller)})">
           <div class="slider">
-            ${images.map((img, i) =>
+           ${images.filter(Boolean).map((img, i) =>
               `<img src="${img}" class="product-image ${i === 0 ? 'active' : ''}" alt="${p.name}">`
             ).join("")}
           </div>
@@ -513,7 +503,7 @@ export async function loadProducts() {
           <p class="product-price">UGX ${Number(p.price).toLocaleString()}</p>
           ${p.location ? `<p class="product-seller-loc">📍 ${p.location}</p>` : ""}
           <div class="card-footer">
-            <button class="cart-btn" onclick="addToCart('${p.name.replace(/'/g,"\\'")}', ${p.price}, '${firstImg}')">Add to Cart</button>
+            <button class="cart-btn" onclick="addToCart('${safeName}', ${p.price}, '${firstImg}')">Add to Cart</button>
             <button class="view-btn" onclick="window.location.href='product.html?id=${docSnap.id}'">View</button>
           </div>
         </div>
@@ -522,7 +512,7 @@ export async function loadProducts() {
       // Auto-rotate slider images
       if (images.length > 1) {
         let idx = 0;
-        setInterval(() => {
+        const sliderInterval = setInterval(() => {
           const imgs = card.querySelectorAll(".slider img");
           imgs[idx].classList.remove("active");
           idx = (idx + 1) % imgs.length;
