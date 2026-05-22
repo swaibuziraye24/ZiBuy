@@ -193,7 +193,319 @@ button { font-family: var(--font); cursor: pointer; }
 .stat-pill span { font-size: 12px; opacity: .85; }
 
 /* ============================================
-   CATEGORIES STRIP
+   FILTER PANEL
+   ============================================ */
+
+.categories {
+  display: flex;
+  gap: 10px;
+  padding: 15px 20px;
+  background: white;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-bottom: 1px solid #f0f0f0;
+  position: relative;
+}
+
+.categories::-webkit-scrollbar { display: none; }
+
+.cat-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border: none;
+  background: var(--light);
+  padding: 9px 18px;
+  border-radius: 30px;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  color: var(--dark);
+  transition: .2s;
+  font-family: var(--font);
+}
+
+.cat-btn:hover,
+.cat-btn.active {
+  background: var(--orange);
+  color: white;
+}
+
+.filter-toggle-btn {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* Filter Panel */
+.filters-panel {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.6);
+  z-index: 9000;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+.filters-panel.active {
+  display: flex;
+}
+
+.filters-container {
+  background: white;
+  width: 100%;
+  max-width: 100%;
+  border-radius: 20px 20px 0 0;
+  padding: 24px;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp .3s ease;
+}
+
+@media (min-width: 1024px) {
+  .filters-panel {
+    position: static;
+    background: transparent;
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+  }
+
+  .filters-container {
+    background: white;
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    width: 260px;
+    position: sticky;
+    top: 20px;
+    animation: none;
+    max-height: calc(100vh - 40px);
+  }
+}
+
+.filter-group {
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.filter-group:last-child { 
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.filter-group h3 {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--dark);
+  margin-bottom: 12px;
+  text-transform: none;
+}
+
+.filter-group label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gray);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.filter-group select,
+.filter-group input[type="number"] {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: var(--font);
+  outline: none;
+  transition: border-color .2s;
+  margin-bottom: 8px;
+  background: white;
+}
+
+.filter-group select:focus,
+.filter-group input[type="number"]:focus {
+  border-color: var(--orange);
+}
+
+.price-inputs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.price-inputs input {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.price-inputs span {
+  color: var(--gray);
+  font-weight: 700;
+}
+
+.price-display {
+  font-size: 12px;
+  color: var(--gray);
+  margin-top: 8px;
+}
+
+.date-filter-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.date-filter-btn {
+  border: 1.5px solid #e5e7eb;
+  background: white;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: all .2s;
+  color: var(--dark);
+}
+
+.date-filter-btn:hover {
+  border-color: var(--orange);
+  color: var(--orange);
+}
+
+.date-filter-btn.active {
+  background: var(--orange);
+  color: white;
+  border-color: var(--orange);
+}
+
+.filter-checkboxes {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.filter-checkboxes label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 14px;
+  text-transform: none;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.filter-checkboxes input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--orange);
+}
+
+.filter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  margin-top: -8px;
+}
+
+.filter-header h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.filter-clear-btn {
+  border: none;
+  background: none;
+  color: var(--orange);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.filter-clear-btn:hover { 
+  color: var(--orange-dk);
+}
+
+.filter-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.filter-actions .btn {
+  flex: 1;
+  padding: 12px !important;
+  font-size: 14px !important;
+  border-radius: 10px !important;
+}
+
+.filter-btn-mobile {
+  display: none;
+}
+
+@media (max-width: 1023px) {
+  .filter-btn-mobile {
+    display: block;
+    border: none;
+    background: var(--light);
+    padding: 9px 16px;
+    border-radius: 30px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    margin-left: auto;
+  }
+}
+
+/* Products Section Layout */
+.products-section {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 20px;
+  padding: 0 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.filter-sidebar {
+  display: contents;
+}
+
+.products-main {
+  display: contents;
+}
+
+@media (max-width: 1023px) {
+  .products-section {
+    grid-template-columns: 1fr;
+    gap: 0;
+    padding: 0;
+  }
+
+  .filter-sidebar {
+    display: none;
+  }
+
+  .filters-panel.active .filters-container {
+    border-radius: 20px 20px 0 0;
+  }
+}
+
+/* ============================================
+   CATEGORIES
    ============================================ */
 .categories {
   display: flex;
@@ -1464,6 +1776,231 @@ footer {
 }
 
 /* ============================================
+   SEARCH FILTERS PANEL
+   ============================================ */
+
+.filters-bar {
+  background: white;
+  padding: 12px 24px;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  position: relative;
+}
+
+.filter-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1.5px solid #e5e7eb;
+  background: white;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 14px;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: all .2s;
+  color: var(--dark);
+  flex-shrink: 0;
+}
+
+.filter-toggle-btn:hover {
+  border-color: var(--orange);
+  color: var(--orange);
+}
+
+.filters-panel {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 24px;
+  background: white;
+  border-radius: 14px;
+  box-shadow: var(--shadow-lg);
+  padding: 20px;
+  width: 320px;
+  z-index: 100;
+  margin-top: 8px;
+}
+
+.filters-panel.active {
+  display: block;
+}
+
+.filter-group {
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.filter-group:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.filter-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--dark);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  margin-bottom: 10px;
+}
+
+/* Price inputs */
+.price-inputs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.price-inputs input {
+  flex: 1;
+  padding: 9px 12px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: var(--font);
+  outline: none;
+  transition: border-color .2s;
+}
+
+.price-inputs input:focus {
+  border-color: var(--orange);
+}
+
+.price-dash {
+  color: var(--gray);
+  font-weight: 700;
+}
+
+/* Price range slider */
+.price-slider-container {
+  position: relative;
+  margin-bottom: 10px;
+  height: 24px;
+}
+
+.price-slider {
+  position: absolute;
+  width: 100%;
+  height: 4px;
+  top: 10px;
+  border-radius: 2px;
+  background: #e5e7eb;
+  outline: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.price-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--orange);
+  cursor: pointer;
+  pointer-events: auto;
+  box-shadow: 0 2px 6px rgba(255, 102, 0, 0.3);
+}
+
+.price-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--orange);
+  cursor: pointer;
+  border: none;
+  pointer-events: auto;
+  box-shadow: 0 2px 6px rgba(255, 102, 0, 0.3);
+}
+
+#price-range-min {
+  z-index: 6;
+}
+
+.price-display {
+  font-size: 12px;
+  color: var(--gray);
+  font-weight: 600;
+}
+
+/* Selects */
+.filter-group select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: var(--font);
+  background: white;
+  outline: none;
+  cursor: pointer;
+  transition: border-color .2s;
+}
+
+.filter-group select:focus {
+  border-color: var(--orange);
+}
+
+/* Radio buttons */
+.filter-radios {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filter-radios label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--dark);
+  font-weight: 500;
+  cursor: pointer;
+  margin: 0;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.filter-radios input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--orange);
+}
+
+/* Active filters display */
+.active-filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+
+.active-filter-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--orange-lt);
+  color: var(--orange);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* ============================================
    SELLER PROFILE & CONTACT BUTTONS
    ============================================ */
 
@@ -2058,6 +2595,22 @@ footer {
 
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Filters mobile */
+  .filters-bar {
+    padding: 10px 12px;
+  }
+
+  .filters-panel {
+    left: 12px;
+    width: calc(100vw - 24px);
+    max-width: 320px;
+  }
+
+  .active-filters {
+    margin-left: 0;
+    width: 100%;
   }
 }
 
