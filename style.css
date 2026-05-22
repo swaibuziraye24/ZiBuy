@@ -1776,6 +1776,273 @@ footer {
 }
 
 /* ============================================
+   NOTIFICATIONS
+   ============================================ */
+
+.notifications-wrap {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 24px;
+  min-height: calc(100vh - 100px);
+}
+
+.notifications-wrap h1 {
+  font-family: var(--font-head);
+  font-size: 28px;
+  font-weight: 800;
+  margin-bottom: 20px;
+  color: var(--dark);
+}
+
+.notifications-filters {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.notif-filter {
+  border: 1.5px solid #e5e7eb;
+  background: white;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 14px;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: all .2s;
+  color: var(--dark);
+}
+
+.notif-filter:hover {
+  border-color: var(--orange);
+  color: var(--orange);
+}
+
+.notif-filter.active {
+  background: var(--orange);
+  color: white;
+  border-color: var(--orange);
+}
+
+.notifications-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.notification-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: var(--shadow);
+  transition: all .2s;
+  cursor: pointer;
+  position: relative;
+  border-left: 4px solid transparent;
+}
+
+.notification-item:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateX(4px);
+}
+
+.notification-item.unread {
+  background: #fffbeb;
+  border-left-color: var(--orange);
+}
+
+.notification-item.read {
+  opacity: .7;
+}
+
+.notification-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.notification-content {
+  flex: 1;
+}
+
+.notification-content h3 {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--dark);
+  margin-bottom: 4px;
+}
+
+.notification-content p {
+  font-size: 13px;
+  color: var(--gray);
+  line-height: 1.5;
+  margin-bottom: 6px;
+}
+
+.notification-time {
+  font-size: 11px;
+  color: #adb5bd;
+  font-weight: 600;
+}
+
+.unread-dot {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--orange);
+}
+
+/* ============================================
+   PAYMENT CHECKOUT
+   ============================================ */
+
+.checkout-wrap {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 24px;
+  min-height: calc(100vh - 100px);
+}
+
+.checkout-container h1 {
+  font-family: var(--font-head);
+  font-size: 28px;
+  font-weight: 800;
+  margin-bottom: 24px;
+  color: var(--dark);
+}
+
+.checkout-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.order-summary,
+.payment-form {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: var(--shadow);
+}
+
+.order-summary h2,
+.payment-form h2 {
+  font-size: 18px;
+  font-weight: 800;
+  margin-bottom: 16px;
+  color: var(--dark);
+}
+
+.summary-line {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 14px;
+  color: var(--gray);
+}
+
+.summary-line:last-child {
+  border-bottom: none;
+}
+
+.form-section {
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.form-section:last-child {
+  border-bottom: none;
+}
+
+.form-section h3 {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--dark);
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+
+.payment-form input,
+.payment-form select {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 10px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: var(--font);
+  outline: none;
+  transition: border-color .2s;
+  background: white;
+}
+
+.payment-form input:focus,
+.payment-form select:focus {
+  border-color: var(--orange);
+}
+
+.payment-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all .2s;
+  font-size: 14px;
+  color: var(--dark);
+}
+
+.payment-option:hover {
+  border-color: var(--orange);
+  background: var(--orange-lt);
+}
+
+.payment-option input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--orange);
+}
+
+.checkout-btn {
+  background: var(--orange);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 800;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: all .2s;
+}
+
+.checkout-btn:hover:not(:disabled) {
+  background: var(--orange-dk);
+}
+
+.checkout-btn:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .checkout-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================
    MESSAGING
    ============================================ */
 
