@@ -20,27 +20,37 @@ import { auth } from "./firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 
-onAuthStateChanged(auth, async (user) => {
+const ADMIN_EMAIL = "swaibuziraye22@gmail.com";
 
-  // User not logged in
+let authChecked = false;
+
+onAuthStateChanged(auth, (user) => {
+
+  // Prevent loop
+  if (authChecked) return;
+
+  authChecked = true;
+
+  // Not logged in
   if (!user) {
 
-    window.location.href = "index.html";
+    console.warn("No user logged in");
+
+    setTimeout(() => {
+      window.location.replace("index.html");
+    }, 500);
 
     return;
   }
 
-  // Wait for auth.js to fully initialize
-  await new Promise(resolve => setTimeout(resolve, 300));
-
-  // Check admin email directly
-  const ADMIN_EMAIL = "swaibuziraye22@gmail.com";
-
+  // Not admin
   if (user.email !== ADMIN_EMAIL) {
 
-    alert("Access denied.");
+    console.warn("Access denied");
 
-    window.location.href = "index.html";
+    setTimeout(() => {
+      window.location.replace("index.html");
+    }, 500);
 
     return;
   }
@@ -48,7 +58,6 @@ onAuthStateChanged(auth, async (user) => {
   console.log("✅ Admin access granted");
 
 });
-
 // ============ Image Preview ============
 
 export function previewImages(event) {
