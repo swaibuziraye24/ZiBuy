@@ -22,10 +22,17 @@ export let isAdmin = false;
 export let currentUser = null;
 
 onAuthStateChanged(auth, (user) => {
+
   currentUser = user;
   isAdmin = !!(user && user.email === ADMIN_EMAIL);
 
   updateAccountButton(user);
+
+  const adminBtn = document.getElementById("admin-verify-btn");
+
+if (adminBtn) {
+  adminBtn.style.display = isAdmin ? "inline-block" : "none";
+}
 
   // Hide admin panel if logged out
   if (!isAdmin) {
