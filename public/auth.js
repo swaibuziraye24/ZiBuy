@@ -58,39 +58,52 @@ export function closeAuthModal() {
   document.getElementById("auth-modal").classList.remove("open");
 }
 
-export async function customerRegister() {
-  const email    = document.getElementById("auth-email").value.trim();
-  const password = document.getElementById("auth-password").value.trim();
-
-  if (!email || !password) {
-    showToast("Please fill in all fields", "error");
-    return;
-  }
-
-  try {
-    await createUserWithEmailAndPassword(auth, email, password);
-    showToast("Account created! Welcome to ZiBuy 🎉", "success");
-    closeAuthModal();
-  } catch (err) {
-    showToast(err.message, "error");
-  }
+window.customerRegister = async function() {
+  // ... registration code ...
+  
+  // After successful registration, add same buttons:
+  document.getElementById("post-ad-btn").style.display = "block";
+  document.getElementById("dashboard-btn").style.display = "block";
+  document.getElementById("notifications-btn").style.display = "block";
+  document.getElementById("messages-btn").style.display = "block";
+  
+  alert("✅ Account created! You're now logged in");
+  closeAuthModal();
+  location.reload();
 }
 
-export async function customerLogin() {
-  const email    = document.getElementById("auth-email").value.trim();
+window.customerLogin = async function() {
+  const email = document.getElementById("auth-email").value.trim();
   const password = document.getElementById("auth-password").value.trim();
 
   if (!email || !password) {
-    showToast("Please fill in all fields", "error");
+    alert("Please fill all fields");
     return;
   }
 
   try {
-    await signInWithEmailAndPassword(auth, email, password);
-    showToast("Welcome back! 👋", "success");
+    const response = await signInWithEmailAndPassword(auth, email, password);
+    
+    // ✅ ADD THIS PART:
+    // Show the buttons for logged-in users
+    document.getElementById("post-ad-btn").style.display = "block";
+    document.getElementById("dashboard-btn").style.display = "block";
+    document.getElementById("notifications-btn").style.display = "block";
+    document.getElementById("messages-btn").style.display = "block";
+    document.getElementById("account-btn").textContent = "🚪 Logout";
+    
+    // Hide login button
+    document.getElementById("account-btn").onclick = function() {
+      auth.signOut();
+      location.reload();
+    };
+    
+    alert("✅ Login successful!");
     closeAuthModal();
+    location.reload(); // Refresh to show buttons
+    
   } catch (err) {
-    showToast("Invalid email or password", "error");
+    alert("❌ Login failed: " + err.message);
   }
 }
 
