@@ -157,3 +157,5 @@ window.closeAdminLoginModal = closeAdminLoginModal;
 window.adminLogin           = adminLogin;
 window.openAdminPanel       = openAdminPanel;
 window.closeAdminPanel      = closeAdminPanel;
+
+
