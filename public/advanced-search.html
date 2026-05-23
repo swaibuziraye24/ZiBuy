@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Advanced Search — ZiBuy</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <a href="index.html"><h1 class="logo">Zi<span>Buy</span></h1></a>
+  <div style="margin-left:auto">
+    <button class="btn btn-dark" onclick="window.history.back()">← Back</button>
+  </div>
+</header>
+
+<div class="advanced-search-wrap">
+  <h1>🔍 Advanced Search</h1>
+
+  <!-- Search History & Saved Searches -->
+  <div class="search-sidebar">
+    <h3>Recent Searches</h3>
+    <div id="search-history" style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px"></div>
+
+    <h3 style="margin-top:20px">Saved Searches</h3>
+    <div id="saved-searches" style="display:flex;flex-direction:column;gap:6px"></div>
+  </div>
+
+  <!-- Search Form -->
+  <div class="search-container">
+    <div class="search-filters">
+      <div class="filter-row">
+        <input type="text" id="search-keyword" placeholder="Search keywords..." onkeyup="updateSuggestions()">
+        <button onclick="performSearch()" class="btn btn-orange">🔍 Search</button>
+      </div>
+
+      <div class="filter-row">
+        <select id="search-category" onchange="updateSuggestions()">
+          <option value="">All Categories</option>
+          <option value="phones">📱 Phones</option>
+          <option value="laptops">💻 Laptops</option>
+          <option value="furniture">🪑 Furniture</option>
+          <option value="fashion">👕 Fashion</option>
+          <option value="vehicles">🚗 Vehicles</option>
+          <option value="realestate">🏠 Real Estate</option>
+          <option value="services">🛠️ Services</option>
+          <option value="electronics">⚡ Electronics</option>
+          <option value="books">📚 Books</option>
+          <option value="sports">⚽ Sports</option>
+          <option value="music">🎵 Music</option>
+          <option value="pets">🐕 Pets</option>
+          <option value="other">📦 Other</option>
+        </select>
+      </div>
+
+      <div class="filter-row">
+        <input type="number" id="search-price-min" placeholder="Min Price" onchange="performSearch()">
+        <input type="number" id="search-price-max" placeholder="Max Price" onchange="performSearch()">
+      </div>
+
+      <div class="filter-row">
+        <select id="search-location" onchange="performSearch()">
+          <option value="">All Uganda</option>
+          <option value="Kampala">Kampala</option>
+          <option value="Wakiso">Wakiso</option>
+          <option value="Mukono">Mukono</option>
+          <option value="Jinja">Jinja</option>
+          <option value="Mbarara">Mbarara</option>
+          <option value="Entebbe">Entebbe</option>
+        </select>
+
+        <select id="search-sort" onchange="performSearch()">
+          <option value="newest">Newest</option>
+          <option value="price-low">Price: Low-High</option>
+          <option value="price-high">Price: High-Low</option>
+          <option value="trending">Trending</option>
+        </select>
+      </div>
+
+      <div style="margin-top:12px">
+        <button onclick="saveSearch()" class="btn btn-outline" style="width:100%">💾 Save This Search</button>
+        <button onclick="clearFilters()" class="btn btn-outline" style="width:100%;margin-top:6px">Clear All</button>
+      </div>
+    </div>
+
+    <!-- Suggestions -->
+    <div id="suggestions-box" style="margin-top:16px;display:none">
+      <h3>Suggestions</h3>
+      <div id="suggestions-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px"></div>
+    </div>
+
+    <!-- Results -->
+    <div id="search-results" style="margin-top:20px"></div>
+  </div>
+</div>
+
+<div id="overlay" class="overlay"></div>
+<div id="toast-container" class="toast-container"></div>
+
+<script type="module" src="advanced-search.js"></script>
+</body>
+</html>
