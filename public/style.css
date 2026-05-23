@@ -4785,3 +4785,240 @@ table {
   }
 
 }
+
+/* =========================================
+   ADMIN PANEL PROFESSIONAL UI
+========================================= */
+
+.admin-box {
+  width: min(1000px, 95%);
+  max-height: 92vh;
+  overflow-y: auto;
+  border-radius: 18px;
+  background: #ffffff;
+  padding: 24px;
+}
+
+/* =========================================
+   ADMIN HEADER
+========================================= */
+
+.admin-header {
+  margin-bottom: 24px;
+}
+
+.admin-header h2 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 8px;
+}
+
+.admin-header p {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* =========================================
+   ADMIN STATS
+========================================= */
+
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
+  margin-bottom: 28px;
+}
+
+.admin-stat-card {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 20px;
+  transition: 0.2s ease;
+}
+
+.admin-stat-card:hover {
+  transform: translateY(-2px);
+}
+
+.admin-stat-card h3 {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 10px;
+}
+
+.admin-stat-card p {
+  font-size: 28px;
+  font-weight: 700;
+  color: #111827;
+}
+
+/* =========================================
+   PRODUCT FORM
+========================================= */
+
+.admin-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin-top: 24px;
+}
+
+.admin-form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-form-group.full-width {
+  grid-column: span 2;
+}
+
+.admin-form label {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #374151;
+}
+
+.admin-form input,
+.admin-form textarea,
+.admin-form select {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  padding: 14px;
+  font-size: 14px;
+  background: #fff;
+  transition: border-color 0.2s ease;
+}
+
+.admin-form input:focus,
+.admin-form textarea:focus,
+.admin-form select:focus {
+  outline: none;
+  border-color: #ff6600;
+}
+
+.admin-form textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+/* =========================================
+   IMAGE PREVIEW
+========================================= */
+
+#preview-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.preview-image {
+  width: 100%;
+  aspect-ratio: 1/1;
+  object-fit: cover;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+}
+
+/* =========================================
+   UPLOAD BUTTON
+========================================= */
+
+#upload-btn {
+  width: 100%;
+  background: #ff6600;
+  color: white;
+  border: none;
+  border-radius: 14px;
+  padding: 16px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+#upload-btn:hover {
+  opacity: 0.92;
+  transform: translateY(-1px);
+}
+
+#upload-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* =========================================
+   ORDER SECTION
+========================================= */
+
+#admin-orders {
+  margin-top: 32px;
+  display: grid;
+  gap: 16px;
+}
+
+.order-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 18px;
+  background: #fff;
+}
+
+.order-card h4 {
+  margin-bottom: 12px;
+  color: #111827;
+}
+
+.order-card p {
+  margin-bottom: 6px;
+  font-size: 14px;
+  color: #4b5563;
+}
+
+.order-status {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #fff7ed;
+  color: #ff6600;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* =========================================
+   MOBILE RESPONSIVE
+========================================= */
+
+@media (max-width: 768px) {
+
+  .admin-box {
+    width: 95%;
+    padding: 18px;
+  }
+
+  .admin-header h2 {
+    font-size: 22px;
+  }
+
+  .admin-form {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-form-group.full-width {
+    grid-column: span 1;
+  }
+
+  .admin-stat-card p {
+    font-size: 22px;
+  }
+
+  #upload-btn {
+    padding: 14px;
+  }
+
+}
