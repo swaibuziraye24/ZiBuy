@@ -138,10 +138,13 @@ window.previewImages = previewImages;
 // ============ Upload Product ============
 
  async function addProduct() {
-  if (!isAdmin) {
-    showToast("Admin access required", "error");
-    return;
-  }
+  // User must be logged in
+const user = auth.currentUser;
+
+if (!user) {
+  showToast("Please login first", "error");
+  return;
+}
 
   const name        = document.getElementById("product-name").value.trim();
   const price       = document.getElementById("product-price").value.trim();
@@ -178,9 +181,11 @@ window.previewImages = previewImages;
       category,
       description: desc || "Quality product from ZiBuy marketplace.",
       images:      imageUrls,
-      seller: {
-  name:     sellerName || "ZiBuy Seller",
-  phone:    sellerPhone,
+     seller: {
+  uid: user.uid,
+  email: user.email,
+  name: sellerName || user.email.split("@")[0],
+  phone: sellerPhone,
   location: sellerLoc || "Uganda"
 },
 
