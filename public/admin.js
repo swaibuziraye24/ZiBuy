@@ -146,7 +146,7 @@ window.addProduct = addProduct;
 
 // ============ Delete Product ============
 
-export async function deleteProduct(productId) {
+ async function deleteProduct(productId) {
   if (!isAdmin) return;
   if (!confirm("Delete this product?")) return;
   try {
@@ -162,7 +162,7 @@ window.deleteProduct = deleteProduct;
 
 // ============ Load Orders ============
 
-export async function loadOrders() {
+ async function loadOrders() {
   const container = document.getElementById("admin-orders");
   if (!container) return;
 
