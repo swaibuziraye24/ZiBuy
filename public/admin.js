@@ -26,66 +26,28 @@ onAuthStateChanged(auth, (user) => {
 
   // Wait for Firebase auth to finish
   if (user === undefined) return;
-
-  // Not logged in
+  
+    // Not logged in
   if (!user) {
 
-    document.body.innerHTML = `
-      <div style="
-        height:100vh;
-        display:flex;
-        justify-content:center;
-        align-items:center;
-        font-family:sans-serif;
-        flex-direction:column;
-        gap:16px;
-      ">
-        <h2>Please login as admin</h2>
-        <a href="index.html">
-          <button style="
-            padding:12px 20px;
-            border:none;
-            background:#ff6600;
-            color:white;
-            border-radius:8px;
-            cursor:pointer;
-          ">
-            Go Home
-          </button>
-        </a>
-      </div>
-    `;
+    window.location.replace("index.html");
 
     return;
   }
 
-  // Wrong account
+   // Wrong user
   if (user.email !== ADMIN_EMAIL) {
 
-    document.body.innerHTML = `
-      <div style="
-        height:100vh;
-        display:flex;
-        justify-content:center;
-        align-items:center;
-        font-family:sans-serif;
-        flex-direction:column;
-        gap:16px;
-      ">
-        <h2>Access denied</h2>
-        <p>You are not an admin.</p>
-      </div>
-    `;
+    window.location.replace("index.html");
 
     return;
   }
 
-  console.log("✅ Admin access granted");
+  const isAdmin = user.email === ADMIN_EMAIL;
 
-});
-// ============ Image Preview ============
+  // ============ Image Preview ============
 
-export function previewImages(event) {
+  function previewImages(event) {
   if (!event?.target?.files) return;
   const container = document.getElementById("preview-container");
   if (!container) return;
@@ -250,3 +212,5 @@ export async function loadOrders() {
 }
 
 window.loadOrders = loadOrders;
+
+});
