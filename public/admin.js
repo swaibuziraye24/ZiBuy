@@ -20,33 +20,6 @@ import { auth } from "./firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 
-onAuthStateChanged(auth, (user) => {
-
-  // Not logged in
-  if (!user) {
-
-    alert("Please login as admin.");
-
-    window.location.href = "index.html";
-
-    return;
-  }
-
-  // Not admin
-  if (!isAdmin) {
-
-    alert("Access denied.");
-
-    window.location.href = "index.html";
-
-    return;
-  }
-
-  console.log("Admin access granted");
-
-});
-
-
 // ============ Image Preview ============
 
 export function previewImages(event) {
