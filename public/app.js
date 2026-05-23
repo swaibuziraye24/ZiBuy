@@ -507,3 +507,9 @@ window.addEventListener("DOMContentLoaded", () => {
   renderCart();
   updateCartCount();
 });
+
+
+window.toggleCart = toggleCart;
+window.closeCart = closeCart;
+window.checkout = checkout;
+window.addToCart = addToCart;
