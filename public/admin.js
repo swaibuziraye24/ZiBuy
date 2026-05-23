@@ -26,6 +26,8 @@ import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/fi
 
 const ADMIN_EMAIL = "swaibuziraye22@gmail.com";
 
+let isAdmin = false;
+
 onAuthStateChanged(auth, (user) => {
 
   // Wait until Firebase finishes loading
@@ -103,8 +105,10 @@ onAuthStateChanged(auth, (user) => {
     return;
   }
 
-  // Admin verified
-  console.log("Admin authenticated");
+ // Admin verified
+isAdmin = true;
+
+console.log("Admin authenticated");
 
 });
 
@@ -275,3 +279,5 @@ window.deleteProduct = deleteProduct;
 }
 
 window.loadOrders = loadOrders;
+
+export { showToast, loadProducts, loadOrders };
