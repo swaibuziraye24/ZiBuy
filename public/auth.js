@@ -137,8 +137,19 @@ export async function adminLogin() {
 }
 
 export function openAdminPanel() {
-  document.getElementById("admin-modal").classList.add("open");
-  // Trigger order load (imported in admin.js)
+
+  const modal = document.getElementById("admin-modal");
+  const content = document.getElementById("admin-panel-content");
+
+  if (modal) {
+    modal.classList.add("open");
+  }
+
+  if (content) {
+    content.style.display = "block";
+  }
+
+  // Trigger order load
   window.loadOrders && window.loadOrders();
 }
 
