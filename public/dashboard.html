@@ -2,12 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#ff6600">
-<meta name="apple-mobile-web-app-capable" content="yes">
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#ff6600">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <title>My Dashboard — ZiBuy</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -17,8 +14,7 @@
 <header class="topbar">
   <a href="index.html"><h1 class="logo">Zi<span>Buy</span></h1></a>
   <div class="topbar-actions" style="margin-left:auto">
-    <button class="btn btn-outline" id="account-btn" onclick="openAuthModal()">Account</button>
-    <button class="btn btn-dark" onclick="customerLogout()">Logout</button>
+    <button class="btn btn-dark" onclick="window.location.href='index.html'">← Home</button>
   </div>
 </header>
 
@@ -29,28 +25,22 @@
   <aside class="dashboard-sidebar">
     <div class="user-profile-card">
       <div class="user-avatar">👤</div>
-      <h3 id="user-name">Loading...</h3>
-      <p id="user-email" class="user-email"></p>
+      <h3 id="user-email">User</h3>
+      <p class="user-email" id="user-email-display">Loading...</p>
     </div>
 
     <nav class="dashboard-nav">
-      <button class="nav-item active" onclick="switchTab('profile')">
-        <span>👤</span> My Profile
+      <button class="nav-item active" onclick="switchTab('my-ads')">
+        <span>📦</span>
+        <span>My Ads</span>
       </button>
-      <button class="nav-item" onclick="switchTab('my-ads')">
-        <span>📢</span> My Ads
+      <button class="nav-item" onclick="switchTab('orders')">
+        <span>🛒</span>
+        <span>My Orders</span>
       </button>
-      <button class="nav-item" onclick="switchTab('my-orders')">
-        <span>📦</span> My Orders
-      </button>
-      <button class="nav-item" onclick="switchTab('messages')">
-        <span>💬</span> Messages
-      </button>
-      <button class="nav-item" onclick="switchTab('favorites')">
-        <span>❤️</span> Favorites
-      </button>
-      <button class="nav-item" onclick="switchTab('settings')">
-        <span>⚙️</span> Settings
+      <button class="nav-item" onclick="switchTab('profile')">
+        <span>⚙️</span>
+        <span>Settings</span>
       </button>
     </nav>
   </aside>
@@ -58,123 +48,34 @@
   <!-- Main Content -->
   <main class="dashboard-content">
 
-    <!-- TAB 1: PROFILE -->
-    <div class="dashboard-tab active" id="tab-profile">
-      <h2>My Profile</h2>
-
-      <div class="profile-card">
-        <div class="profile-section">
-          <label>Full Name</label>
-          <p id="profile-name"></p>
-        </div>
-        <div class="profile-section">
-          <label>Email Address</label>
-          <p id="profile-email"></p>
-        </div>
-        <div class="profile-section">
-          <label>Phone Number (Optional)</label>
-          <p id="profile-phone"></p>
-          <button class="btn btn-outline" onclick="editPhone()" style="margin-top:8px">Edit Phone</button>
-        </div>
-        <div class="profile-section">
-          <label>Member Since</label>
-          <p id="profile-joined"></p>
-        </div>
-      </div>
-
-      <div class="stats-grid">
-        <div class="stat-box">
-          <div class="stat-num" id="stat-ads">0</div>
-          <div class="stat-label">Ads Posted</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-num" id="stat-views">0</div>
-          <div class="stat-label">Total Views</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-num" id="stat-orders">0</div>
-          <div class="stat-label">Purchases</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-num" id="stat-spent">0</div>
-          <div class="stat-label">Total Spent</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- TAB 2: MY ADS -->
-    <div class="dashboard-tab" id="tab-my-ads">
+    <!-- MY ADS TAB -->
+    <div class="dashboard-tab active" id="my-ads-tab">
       <div class="tab-header">
-        <h2>My Ads</h2>
-        <button class="btn btn-orange" onclick="window.location.href='post-ad.html'">+ Post New Ad</button>
+        <h2>📦 My Products</h2>
+        <a href="post-ad.html" class="btn btn-orange">+ Post New Ad</a>
       </div>
-
-      <div class="filter-tabs">
-        <button class="filter-tab active" onclick="filterMyAds('all')">All</button>
-        <button class="filter-tab" onclick="filterMyAds('active')">Active</button>
-        <button class="filter-tab" onclick="filterMyAds('sold')">Sold</button>
-        <button class="filter-tab" onclick="filterMyAds('expired')">Expired</button>
-      </div>
-
-<button 
-  class="btn btn-outline" 
-  onclick="editProduct('${ad.id}', '${ad.name}')">
-  ✏️ Edit
-</button>
-
-      <div id="my-ads-list" class="ads-list"></div>
-    </div>
-
-    <!-- TAB 3: MY ORDERS -->
-    <div class="dashboard-tab" id="tab-my-orders">
-      <h2>My Purchases</h2>
-      <div id="my-orders-list" class="orders-list"></div>
-    </div>
-
-    <!-- TAB 4: MESSAGES -->
-    <div class="dashboard-tab" id="tab-messages">
-      <h2>Messages</h2>
-      <div style="text-align:center;padding:40px 20px">
-        <p style="font-size:32px;margin-bottom:12px">💬</p>
-        <p style="color:#6b7280">Go to <a href="messages.html" style="color:#ff6600;font-weight:700">Messages page</a> to chat with buyers and sellers</p>
+      <div id="my-ads-list" class="ads-list">
+        <p style="text-align:center;padding:40px">Loading your products...</p>
       </div>
     </div>
 
-    <!-- TAB 5: FAVORITES -->
-    <div class="dashboard-tab" id="tab-favorites">
-      <h2>Saved Items</h2>
-      <div id="favorites-list" class="ads-list"></div>
+    <!-- ORDERS TAB -->
+    <div class="dashboard-tab" id="orders-tab">
+      <div class="tab-header">
+        <h2>🛒 My Orders</h2>
+      </div>
+      <div id="orders-list" class="orders-list">
+        <p style="text-align:center;padding:40px">Loading your orders...</p>
+      </div>
     </div>
 
-    <!-- TAB 5: SETTINGS -->
-    <div class="dashboard-tab" id="tab-settings">
-      <h2>Settings</h2>
-
-      <div class="settings-section">
-        <h3>Account</h3>
-        <button class="setting-item" onclick="openAuthModal()">
-          <span>Change Password</span>
-          <span style="color:var(--gray)">→</span>
-        </button>
+    <!-- PROFILE TAB -->
+    <div class="dashboard-tab" id="profile-tab">
+      <div class="tab-header">
+        <h2>⚙️ Account Settings</h2>
       </div>
-
-      <div class="settings-section">
-        <h3>Notifications</h3>
-        <div class="setting-toggle">
-          <span>Email Notifications</span>
-          <input type="checkbox" id="email-notif" checked>
-        </div>
-        <div class="setting-toggle">
-          <span>New Message Alerts</span>
-          <input type="checkbox" id="msg-notif" checked>
-        </div>
-      </div>
-
-      <div class="settings-section danger">
-        <h3>Danger Zone</h3>
-        <button class="btn" style="background:#fee2e2;color:#ef4444;border:none" onclick="deleteAccount()">
-          Delete My Account
-        </button>
+      <div id="profile-settings">
+        <p style="text-align:center;padding:40px">Loading settings...</p>
       </div>
     </div>
 
@@ -182,55 +83,22 @@
 
 </div>
 
-<!-- ============ EDIT PHONE MODAL ============ -->
-<div id="edit-phone-modal" class="modal">
-  <div class="modal-box">
-    <div class="modal-header">
-      <h2>Update Phone Number</h2>
-      <button class="modal-close" onclick="closeEditPhoneModal()">×</button>
-    </div>
-    <input type="tel" id="new-phone" placeholder="Your WhatsApp/Phone Number (e.g. 256701234567)">
-    <button class="full-btn" onclick="savePhone()">Save Phone Number</button>
-  </div>
-</div>
-
 <!-- ============ MODALS ============ -->
-<div id="overlay" class="overlay" onclick="closeEditPhoneModal()"></div>
+<div id="overlay" class="overlay" onclick="closeModal()"></div>
 <div id="toast-container" class="toast-container"></div>
 
-<!-- ============ AUTH MODAL ============ -->
-<div id="auth-modal" class="modal">
-  <div class="modal-box">
-    <div class="modal-header">
-      <h2>ZiBuy Account</h2>
-      <button class="modal-close" onclick="closeAuthModal()">×</button>
-    </div>
-    <input type="email" id="auth-email" placeholder="Email address">
-    <input type="password" id="auth-password" placeholder="Password">
-    <button class="full-btn" onclick="customerLogin()">Login</button>
-    <div class="modal-divider">— or —</div>
-    <button class="full-btn secondary" onclick="customerRegister()">Create Account</button>
-  </div>
-</div>
+<script type="module">
+  // Set user email display
+  import { auth } from "./firebase.js";
+  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-
-<!-- Edit Product Modal -->
-<div id="edit-product-modal" class="modal">
-  <div class="modal-box">
-    <div class="modal-header">
-      <h2>Edit Product</h2>
-      <button class="modal-close" onclick="closeEditModal()">×</button>
-    </div>
-    
-    <input type="text" id="edit-product-name" placeholder="Product name">
-    <input type="tel" id="seller-phone" placeholder="Your phone: 256701234567">
-    
-    <button class="full-btn" onclick="saveProductChanges()">Save Changes</button>
-  </div>
-</div>
-
-<script type="module" src="dashboard.js"></script>
-
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      document.getElementById("user-email").textContent = user.email.split("@")[0];
+      document.getElementById("user-email-display").textContent = user.email;
+    }
+  });
+</script>
 
 <script type="module" src="dashboard.js"></script>
 
