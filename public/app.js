@@ -513,3 +513,37 @@ window.toggleCart = toggleCart;
 window.closeCart = closeCart;
 window.checkout = checkout;
 window.addToCart = addToCart;
+
+
+// ============================================
+// SECRET ADMIN ACCESS
+// Click ZiBuy logo 5 times to open admin login
+// ============================================
+
+const secretAdminTrigger = document.getElementById("secret-admin-trigger");
+
+let adminTapCount = 0;
+
+if (secretAdminTrigger) {
+
+  secretAdminTrigger.addEventListener("click", () => {
+
+    adminTapCount++;
+
+    // Reset after 2 seconds
+    setTimeout(() => {
+      adminTapCount = 0;
+    }, 2000);
+
+    // Open admin after 5 clicks
+    if (adminTapCount >= 5) {
+
+      adminTapCount = 0;
+
+      openAdminLoginModal();
+
+    }
+
+  });
+
+}
