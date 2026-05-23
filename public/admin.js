@@ -179,11 +179,14 @@ window.previewImages = previewImages;
       description: desc || "Quality product from ZiBuy marketplace.",
       images:      imageUrls,
       seller: {
-        name:     sellerName  || "ZiBuy Seller",
-        phone:    sellerPhone,
-        location: sellerLoc   || "Uganda"
-      },
-      createdAt: new Date()
+  name:     sellerName || "ZiBuy Seller",
+  phone:    sellerPhone,
+  location: sellerLoc || "Uganda"
+},
+
+location: sellerLoc || "Uganda",
+
+createdAt: new Date()
     });
 
     showToast("Product uploaded successfully! 🎉", "success");
@@ -198,7 +201,15 @@ window.previewImages = previewImages;
     document.getElementById("product-image").value        = "";
     document.getElementById("preview-container").innerHTML = "";
 
-    loadProducts(); // Refresh product grid
+    // Refresh homepage products if available
+if (typeof loadProducts === "function") {
+  loadProducts();
+}
+
+// Small delay then refresh page
+setTimeout(() => {
+  window.location.reload();
+}, 1000);
 
   } catch (err) {
     console.error(err);
