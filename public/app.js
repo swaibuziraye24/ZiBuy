@@ -14,6 +14,44 @@ import {
 import "./auth.js";
 
 
+import { auth } from "./firebase.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+// Check if user is logged in when page loads
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    // User is logged in - show buttons
+    document.getElementById("post-ad-btn").style.display = "block";
+    document.getElementById("dashboard-btn").style.display = "block";
+    document.getElementById("notifications-btn").style.display = "block";
+    document.getElementById("messages-btn").style.display = "block";
+    
+    // Change account button to logout
+    const accountBtn = document.getElementById("account-btn");
+    accountBtn.textContent = "🚪 Logout";
+    accountBtn.onclick = function() {
+      auth.signOut().then(() => {
+        alert("Logged out!");
+        location.reload();
+      });
+    };
+  } else {
+    // User is NOT logged in - hide buttons
+    document.getElementById("post-ad-btn").style.display = "none";
+    document.getElementById("dashboard-btn").style.display = "none";
+    document.getElementById("notifications-btn").style.display = "none";
+    document.getElementById("messages-btn").style.display = "none";
+    
+    // Reset account button
+    const accountBtn = document.getElementById("account-btn");
+    accountBtn.textContent = "Account";
+    accountBtn.onclick = function() {
+      openAuthModal();
+    };
+  }
+});
+
+
 // ---- Show/Hide Post Ad button based on auth state ----
 import { auth } from "./firebase.js";
 onAuthStateChanged(auth, (user) => {
