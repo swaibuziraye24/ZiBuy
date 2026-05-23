@@ -20,6 +20,35 @@ import { auth } from "./firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 
+onAuthStateChanged(auth, async (user) => {
+
+  // User not logged in
+  if (!user) {
+
+    window.location.href = "index.html";
+
+    return;
+  }
+
+  // Wait for auth.js to fully initialize
+  await new Promise(resolve => setTimeout(resolve, 300));
+
+  // Check admin email directly
+  const ADMIN_EMAIL = "swaibuziraye22@gmail.com";
+
+  if (user.email !== ADMIN_EMAIL) {
+
+    alert("Access denied.");
+
+    window.location.href = "index.html";
+
+    return;
+  }
+
+  console.log("✅ Admin access granted");
+
+});
+
 // ============ Image Preview ============
 
 export function previewImages(event) {
