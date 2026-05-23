@@ -14,12 +14,18 @@ let currentUser = null;
 // Check if user is logged in
 onAuthStateChanged(auth, (user) => {
   currentUser = user;
+  
+  // Hide loading indicator
+  const authCheck = document.getElementById("auth-check");
+  if (authCheck) authCheck.style.display = "none";
+  
   if (!user) {
-    // Redirect to login if not authenticated
-    setTimeout(() => {
-      alert("You must login to post ads");
-      window.location.href = "index.html";
-    }, 500);
+    // Show login prompt
+    alert("❌ You must login first to post ads");
+    window.location.href = "index.html";
+  } else {
+    console.log("✅ User logged in as:", user.email);
+    // Form is ready to use
   }
 });
 
