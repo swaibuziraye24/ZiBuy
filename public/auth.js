@@ -34,12 +34,7 @@ if (adminBtn) {
   adminBtn.style.display = isAdmin ? "inline-block" : "none";
 }
 
-
-  // Hide admin panel if logged out
-  if (!isAdmin) {
-    const panel = document.getElementById("admin-modal");
-    if (panel) panel.classList.remove("open");
-  }
+ 
 });
 
 function updateAccountButton(user) {
