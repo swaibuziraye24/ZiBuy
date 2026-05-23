@@ -70,7 +70,7 @@ window.previewImages = previewImages;
 
 // ============ Upload Product ============
 
-export async function addProduct() {
+ async function addProduct() {
   if (!isAdmin) {
     showToast("Admin access required", "error");
     return;
