@@ -3,7 +3,7 @@
 // ============================================
 
 import {
-  db,
+  db, auth,
   collection, getDocs, addDoc
 } from "./firebase.js";
 
@@ -44,28 +44,6 @@ onAuthStateChanged(auth, (user) => {
     accountBtn.onclick = function() {
       openAuthModal();
     };
-  }
-});
-
-
-// ---- Show/Hide Post Ad button based on auth state ----
-import { auth } from "./firebase.js";
-onAuthStateChanged(auth, (user) => {
-  const postAdBtn = document.getElementById("post-ad-btn");
-  const dashboardBtn = document.getElementById("dashboard-btn");
-  const messagesBtn = document.getElementById("messages-btn");
-  const notificationsBtn = document.getElementById("notifications-btn");
-  if (postAdBtn) {
-    postAdBtn.style.display = user ? "block" : "none";
-  }
-  if (dashboardBtn) {
-    dashboardBtn.style.display = user ? "block" : "none";
-  }
-  if (messagesBtn) {
-    messagesBtn.style.display = user ? "block" : "none";
-  }
-  if (notificationsBtn) {
-    notificationsBtn.style.display = user ? "block" : "none";
   }
 });
 
@@ -449,35 +427,55 @@ export async function loadProducts() {
     }
 
     // RENDER PRODUCTS
-    productsArray.forEach(({ docSnap, data: p }) => {
-      const images = Array.isArray(p.images) ? p.images : [];
-      const firstImg = images[0] || "";
+productsArray.forEach(({ docSnap, data: p }) => {
+  const images = Array.isArray(p.images) ? p.images : [];
+  const firstImg = images[0] || "";
 
-      const card = document.createElement("div");
-      card.className = "product-card";
+  const card = document.createElement("div");
+  card.className = "product-card";
 
-      const seller = p.seller || {};
+  const seller = p.seller || {};
+  const phone = (seller.phone || "").replace(/\D/g, "");
+  const isCustomerProduct = p.isUserPost === true;
+  const hasPhone = phone.length > 0;
+  const waMsg = encodeURIComponent(`Hi, I'm interested in: ${p.name}`);
 
-      card.innerHTML = `
-        <div class="product-image-box" onclick="openProduct('${p.name.replace(/'/g,"\\'")}', ${p.price}, ${JSON.stringify(images)}, '${p.category || ""}', '${docSnap.id}', ${JSON.stringify(seller)})">
-          <div class="slider">
-            ${images.map((img, i) =>
-              `<img src="${img}" class="product-image ${i === 0 ? 'active' : ''}" alt="${p.name}">`
-            ).join("")}
-          </div>
-          <button class="save-btn" onclick="event.stopPropagation(); this.textContent = this.textContent === '🤍' ? '❤️' : '🤍'">🤍</button>
-        </div>
-        <div class="product-info">
-          <p class="product-cat">${p.category || ""}</p>
-          <h3 class="product-title">${p.name}</h3>
-          <p class="product-price">UGX ${Number(p.price).toLocaleString()}</p>
-          ${p.location ? `<p class="product-seller-loc">📍 ${p.location}</p>` : ""}
-          <div class="card-footer">
-            <button class="cart-btn" onclick="addToCart('${p.name.replace(/'/g,"\\'")}', ${p.price}, '${firstImg}')">Add to Cart</button>
-            <button class="view-btn" onclick="window.location.href='product.html?id=${docSnap.id}'">View</button>
-          </div>
-        </div>
-      `;
+  let footerHTML = "";
+  
+  // ✅ Show phone/WhatsApp ONLY for customer products with phone
+  if (isCustomerProduct && hasPhone) {
+    footerHTML = `
+      <a href="https://wa.me/${phone}?text=${waMsg}" target="_blank" class="btn-sm" style="background:#25D366;color:white;padding:8px;border:none;border-radius:8px;text-decoration:none;font-weight:700;font-size:12px;text-align:center;flex:1;cursor:pointer">💬</a>
+      <a href="tel:+${phone}" class="btn-sm" style="background:#ff6600;color:white;padding:8px;border:none;border-radius:8px;text-decoration:none;font-weight:700;font-size:12px;text-align:center;flex:1;cursor:pointer">📞</a>
+    `;
+  } else {
+    // ✅ Show cart for admin products or customer products without phone
+    footerHTML = `
+      <button class="cart-btn" onclick="event.stopPropagation(); addToCart('${p.name.replace(/'/g,"\\'")}', ${p.price}, '${firstImg}')">🛒</button>
+      <button class="view-btn" onclick="event.stopPropagation(); window.location.href='product.html?id=${docSnap.id}'">View</button>
+    `;
+  }
+
+  card.innerHTML = `
+    <div class="product-image-box" onclick="openProduct('${p.name.replace(/'/g,"\\'")}', ${p.price}, ${JSON.stringify(images)}, '${p.category || ""}', '${docSnap.id}', ${JSON.stringify(seller)})">
+      <div class="slider">
+        ${images.map((img, i) =>
+          `<img src="${img}" class="product-image ${i === 0 ? 'active' : ''}" alt="${p.name}">`
+        ).join("")}
+      </div>
+      ${p.isPremium ? '<span class="premium-badge">⭐ FEATURED</span>' : ''}
+      <button class="save-btn" onclick="event.stopPropagation(); this.textContent = this.textContent === '🤍' ? '❤️' : '🤍'">🤍</button>
+    </div>
+    <div class="product-info">
+      <p class="product-cat">${p.category || ""}</p>
+      <h3 class="product-title">${p.name}</h3>
+      <p class="product-price">UGX ${Number(p.price).toLocaleString()}</p>
+      ${p.location ? `<p class="product-seller-loc">📍 ${p.location}</p>` : ""}
+      <div class="card-footer">
+        ${footerHTML}
+      </div>
+    </div>
+  `;
 
       // Auto-rotate slider images
       if (images.length > 1) {
