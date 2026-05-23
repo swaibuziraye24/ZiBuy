@@ -365,155 +365,193 @@
 
 <!-- ============ ADMIN PANEL MODAL ============ -->
 <div id="admin-modal" class="modal">
- <div class="modal-box admin-box" id="admin-panel-content" style="display:none">
+
+  <div class="modal-box admin-box" id="admin-panel-content">
+
+    <!-- HEADER -->
     <div class="modal-header">
       <h2>📦 Seller Dashboard</h2>
-      <div style="display:flex;gap:8px">
- <button
-  id="admin-verify-btn"
-  class="btn btn-orange"
-  onclick="window.location.href='admin.html'"
-  style="padding:8px 12px;font-size:12px;display:none"
->
-  🛠️ Admin Panel
-</button>
-        <button class="btn btn-orange" onclick="window.location.href='admin-premium.html'" style="padding:8px 12px;font-size:12px">⭐ Premium Ads</button>
-        <button class="btn btn-orange" onclick="window.location.href='admin-verification.html'" style="padding:8px 12px;font-size:12px">✅ Verifications</button>
-        <button class="btn btn-orange" onclick="window.location.href='admin-analytics.html'" style="padding:8px 12px;font-size:12px">📊 Analytics</button>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+
+        <button
+          id="admin-verify-btn"
+          class="btn btn-orange"
+          onclick="window.location.href='admin.html'"
+          style="padding:8px 12px;font-size:12px;display:none"
+        >
+          🛠️ Admin Panel
+        </button>
+
+        <button
+          class="btn btn-orange"
+          onclick="window.location.href='admin-premium.html'"
+          style="padding:8px 12px;font-size:12px"
+        >
+          ⭐ Premium Ads
+        </button>
+
+        <button
+          class="btn btn-orange"
+          onclick="window.location.href='admin-verification.html'"
+          style="padding:8px 12px;font-size:12px"
+        >
+          ✅ Verifications
+        </button>
+
+        <button
+          class="btn btn-orange"
+          onclick="window.location.href='admin-analytics.html'"
+          style="padding:8px 12px;font-size:12px"
+        >
+          📊 Analytics
+        </button>
+
         <button class="modal-close" onclick="closeAdminPanel()">×</button>
+
       </div>
     </div>
 
-    <!-- Stats -->
+    <!-- STATS -->
     <div class="admin-stats-row">
+
       <div class="stat-card">
         <div class="stat-label">Total Orders</div>
         <div class="stat-value" id="total-orders">—</div>
       </div>
+
       <div class="stat-card">
         <div class="stat-label">Total Revenue</div>
         <div class="stat-value" id="total-revenue">—</div>
       </div>
+
     </div>
 
-    <!-- Upload Product -->
-<div class="admin-header">
-  <h2>Post New Ad</h2>
-  <p>Add products professionally to the ZiBuy marketplace</p>
-</div>
+    <!-- FORM HEADER -->
+    <div class="admin-header">
+      <h2>Post New Ad</h2>
+      <p>Add products professionally to the ZiBuy marketplace</p>
+    </div>
 
-<div class="admin-form">
+    <!-- FORM -->
+    <div class="admin-form">
 
-  <div class="admin-form-group">
-    <label>Product Name</label>
-    <input
-      type="text"
-      id="product-name"
-      placeholder="Enter product name"
-    >
-  </div>
+      <div class="admin-form-group">
+        <label>Product Name</label>
+        <input
+          type="text"
+          id="product-name"
+          placeholder="Enter product name"
+        >
+      </div>
 
-  <div class="admin-form-group">
-    <label>Price (UGX)</label>
-    <input
-      type="number"
-      id="product-price"
-      placeholder="Enter price in UGX"
-    >
-  </div>
+      <div class="admin-form-group">
+        <label>Price (UGX)</label>
+        <input
+          type="number"
+          id="product-price"
+          placeholder="Enter price in UGX"
+        >
+      </div>
 
-  <div class="admin-form-group">
-    <label>Category</label>
+      <div class="admin-form-group">
+        <label>Category</label>
 
-    <select id="product-category">
-      <option value="phones">📱 Phones</option>
-      <option value="electronics">💻 Electronics</option>
-      <option value="fashion">👗 Fashion</option>
-      <option value="shoes">👟 Shoes</option>
-      <option value="beauty">💄 Beauty</option>
-      <option value="bags">👜 Bags</option>
-      <option value="groceries">🛒 Groceries</option>
-      <option value="watches">⌚ Watches</option>
-      <option value="computers">🖥️ Computers</option>
-      <option value="gaming">🎮 Gaming</option>
-      <option value="home">🏠 Home</option>
-      <option value="accessories">💎 Accessories</option>
-    </select>
+        <select id="product-category">
+          <option value="phones">📱 Phones</option>
+          <option value="electronics">💻 Electronics</option>
+          <option value="fashion">👗 Fashion</option>
+          <option value="shoes">👟 Shoes</option>
+          <option value="beauty">💄 Beauty</option>
+          <option value="bags">👜 Bags</option>
+          <option value="groceries">🛒 Groceries</option>
+          <option value="watches">⌚ Watches</option>
+          <option value="computers">🖥️ Computers</option>
+          <option value="gaming">🎮 Gaming</option>
+          <option value="home">🏠 Home</option>
+          <option value="accessories">💎 Accessories</option>
+        </select>
+      </div>
 
-  </div>
+      <div class="admin-form-group">
+        <label>Seller Name</label>
+        <input
+          type="text"
+          id="seller-name"
+          placeholder="e.g. John Kato"
+        >
+      </div>
 
-  <div class="admin-form-group">
-    <label>Seller Name</label>
-    <input
-      type="text"
-      id="seller-name"
-      placeholder="e.g. John Kato"
-    >
-  </div>
+      <div class="admin-form-group">
+        <label>Seller Phone / WhatsApp</label>
+        <input
+          type="tel"
+          id="seller-phone"
+          placeholder="256701234567"
+        >
+      </div>
 
-  <div class="admin-form-group">
-  <label>Seller Phone / WhatsApp</label>
-  <input
-    type="tel"
-    id="seller-phone"
-    placeholder="256701234567"
-  >
-</div>
+      <div class="admin-form-group">
+        <label>Seller Location</label>
+        <input
+          type="text"
+          id="seller-location"
+          placeholder="Kampala, Ntinda"
+        >
+      </div>
 
-  <div class="admin-form-group">
-    <label>Seller Location</label>
-    <input
-      type="text"
-      id="seller-location"
-      placeholder="Kampala, Ntinda"
-    >
-  </div>
+      <div class="admin-form-group full-width">
+        <label>Description</label>
 
-  <div class="admin-form-group full-width">
-    <label>Description</label>
+        <textarea
+          id="product-desc"
+          placeholder="Write product description"
+          rows="4"
+        ></textarea>
+      </div>
 
-    <textarea
-      id="product-desc"
-      placeholder="Write product description"
-      rows="4"
-    ></textarea>
-  </div>
+      <div class="admin-form-group full-width">
+        <label>Product Images</label>
 
-  <div class="admin-form-group full-width">
-    <label>Product Images</label>
+        <input
+          type="file"
+          id="product-image"
+          multiple
+          accept="image/*"
+          onchange="previewImages(event)"
+        >
+      </div>
 
-    <input
-      type="file"
-      id="product-image"
-      multiple
-      accept="image/*"
-      onchange="previewImages(event)"
-    >
-  </div>
+      <div class="admin-form-group full-width">
+        <div id="preview-container"></div>
+      </div>
 
-  <div class="admin-form-group full-width">
-    <div id="preview-container"></div>
-  </div>
+      <div class="admin-form-group full-width">
+        <button
+          class="full-btn"
+          id="upload-btn"
+          onclick="addProduct()"
+        >
+          🚀 Post Ad
+        </button>
+      </div>
 
-  <div class="admin-form-group full-width">
-    <button
-      class="full-btn"
-      id="upload-btn"
-      onclick="addProduct()"
-    >
-     Post Ad
-    </button>
-  </div>
+    </div>
 
-</div>
+    <!-- ORDERS -->
+    <p class="admin-section-title" style="margin-top:24px">
+      Recent Orders
+    </p>
 
-    <!-- Orders -->
-    <p class="admin-section-title" style="margin-top:24px">Recent Orders</p>
     <div id="admin-orders"></div>
 
   </div>
+
 </div>
 
+<script type="module" src="auth.js"></script>
+<script type="module" src="admin.js"></script>
+<script type="module" src="app.js"></script>
 <script type="module" src="app.js"></script>
 
 </body>
