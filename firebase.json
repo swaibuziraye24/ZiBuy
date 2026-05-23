@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "public": "../dist/ngx-firebaseui-showcase/browser",
+    "public": "public",
     "rewrites": [
       {
         "source": "**",
