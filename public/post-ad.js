@@ -201,28 +201,22 @@ window.submitAd = async function() {
       imageUrls.push(downloadURL);
     }
 
-    // 2. Save product to Firestore
-    const productData = {
-      name: titleInput.value.trim(),
-      price: Number(priceInput.value),
-      category: selectedCategory,
-      description: descInput.value.trim(),
-      location: locationInput.value,
-      images: imageUrls,
-      seller: {
-        name: currentUser.email.split("@")[0],
-        phone: "", // User can update in dashboard
-        location: locationInput.value
-      },
-      userId: currentUser.uid,
-      userEmail: currentUser.email,
-      isUserPost: true,
-      status: "active",
-      views: 0,
-      isPremium: false,
-      createdAt: new Date(),
-      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
-    };
+const phoneInput = document.getElementById("seller-phone");
+const sellerPhone = phoneInput ? phoneInput.value.trim() : "";
+
+const productData = {
+  name: titleInput.value.trim(),
+  price: Number(priceInput.value),
+  category: selectedCategory,
+  description: descInput.value.trim(),
+  location: locationInput.value,
+  images: imageUrls,
+  seller: {
+    name: currentUser.email.split("@")[0],
+    phone: sellerPhone, // ✅ NOW HAS PHONE!
+    location: locationInput.value
+  }
+};
 
     const docRef = await addDoc(collection(db, "products"), productData);
 
