@@ -20,48 +20,42 @@ import { auth } from "./firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 
+// ============================================
+// ADMIN AUTH PROTECTION
+// ============================================
+
 const ADMIN_EMAIL = "swaibuziraye22@gmail.com";
-let isAdmin = false;
 
 onAuthStateChanged(auth, (user) => {
 
-  // User not logged in
-  if (!user) {
-    isAdmin = false;
-    return;
-  }
+  // Wait until Firebase finishes loading
+  if (user === undefined) return;
 
-  // Wrong account
-  if (user.email !== ADMIN_EMAIL) {
-    isAdmin = false;
+  // Not logged in
+  if (!user) {
 
     document.body.innerHTML = `
       <div style="
-        min-height:100vh;
         display:flex;
+        flex-direction:column;
         justify-content:center;
         align-items:center;
-        flex-direction:column;
+        height:100vh;
         font-family:Arial;
-        background:#f9fafb;
+        text-align:center;
+        padding:20px;
       ">
-        <h1 style="color:#dc2626;margin-bottom:10px">
-          Access Denied
-        </h1>
-
-        <p style="color:#6b7280;margin-bottom:20px">
-          Admin access only.
-        </p>
-
+        <h1>Access Denied</h1>
+        <p>Admin access only.</p>
         <button onclick="window.location.href='index.html'"
           style="
+            padding:12px 18px;
+            border:none;
             background:#ff6600;
             color:white;
-            border:none;
-            padding:12px 20px;
-            border-radius:10px;
+            border-radius:8px;
             cursor:pointer;
-            font-weight:bold;
+            margin-top:10px;
           ">
           Go Home
         </button>
@@ -71,8 +65,46 @@ onAuthStateChanged(auth, (user) => {
     return;
   }
 
-  isAdmin = true;
-  console.log("✅ Admin logged in");
+  // Safe email comparison
+  const currentEmail = user.email?.trim().toLowerCase();
+  const adminEmail   = ADMIN_EMAIL.trim().toLowerCase();
+
+  // Wrong admin
+  if (currentEmail !== adminEmail) {
+
+    document.body.innerHTML = `
+      <div style="
+        display:flex;
+        flex-direction:column;
+        justify-content:center;
+        align-items:center;
+        height:100vh;
+        font-family:Arial;
+        text-align:center;
+        padding:20px;
+      ">
+        <h1>Access Denied</h1>
+        <p>Admin access only.</p>
+        <button onclick="window.location.href='index.html'"
+          style="
+            padding:12px 18px;
+            border:none;
+            background:#ff6600;
+            color:white;
+            border-radius:8px;
+            cursor:pointer;
+            margin-top:10px;
+          ">
+          Go Home
+        </button>
+      </div>
+    `;
+
+    return;
+  }
+
+  // Admin verified
+  console.log("Admin authenticated");
 
 });
 
