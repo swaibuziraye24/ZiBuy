@@ -426,7 +426,7 @@ export async function loadProducts() {
       productsArray.sort((a, b) => Number(b.data.price) - Number(a.data.price));
     }
 
-    // RENDER PRODUCTS
+   // RENDER PRODUCTS
 productsArray.forEach(({ docSnap, data: p }) => {
   const images = Array.isArray(p.images) ? p.images : [];
   const firstImg = images[0] || "";
@@ -442,14 +442,14 @@ productsArray.forEach(({ docSnap, data: p }) => {
 
   let footerHTML = "";
   
-  // ✅ Show phone/WhatsApp ONLY for customer products with phone
   if (isCustomerProduct && hasPhone) {
+    // ✅ CUSTOMER PRODUCT WITH PHONE - SHOW BUTTONS
     footerHTML = `
       <a href="https://wa.me/${phone}?text=${waMsg}" target="_blank" class="btn-sm" style="background:#25D366;color:white;padding:8px;border:none;border-radius:8px;text-decoration:none;font-weight:700;font-size:12px;text-align:center;flex:1;cursor:pointer">💬</a>
       <a href="tel:+${phone}" class="btn-sm" style="background:#ff6600;color:white;padding:8px;border:none;border-radius:8px;text-decoration:none;font-weight:700;font-size:12px;text-align:center;flex:1;cursor:pointer">📞</a>
     `;
   } else {
-    // ✅ Show cart for admin products or customer products without phone
+    // ✅ ADMIN PRODUCT OR NO PHONE - SHOW CART
     footerHTML = `
       <button class="cart-btn" onclick="event.stopPropagation(); addToCart('${p.name.replace(/'/g,"\\'")}', ${p.price}, '${firstImg}')">🛒</button>
       <button class="view-btn" onclick="event.stopPropagation(); window.location.href='product.html?id=${docSnap.id}'">View</button>
@@ -457,7 +457,7 @@ productsArray.forEach(({ docSnap, data: p }) => {
   }
 
   card.innerHTML = `
-    <div class="product-image-box" onclick="openProduct('${p.name.replace(/'/g,"\\'")}', ${p.price}, ${JSON.stringify(images)}, '${p.category || ""}', '${docSnap.id}', ${JSON.stringify(seller)})">
+    <div class="product-image-box" ${!isCustomerProduct || !hasPhone ? `onclick="openProduct('${p.name.replace(/'/g,"\\'")}', ${p.price}, ${JSON.stringify(images)}, '${p.category || ""}', '${docSnap.id}', ${JSON.stringify(seller)})"` : ""} style="cursor: ${!isCustomerProduct || !hasPhone ? 'pointer' : 'default'}">
       <div class="slider">
         ${images.map((img, i) =>
           `<img src="${img}" class="product-image ${i === 0 ? 'active' : ''}" alt="${p.name}">`
@@ -470,6 +470,7 @@ productsArray.forEach(({ docSnap, data: p }) => {
       <p class="product-cat">${p.category || ""}</p>
       <h3 class="product-title">${p.name}</h3>
       <p class="product-price">UGX ${Number(p.price).toLocaleString()}</p>
+      ${seller.name ? `<p style="font-size:12px;color:#6b7280;margin-bottom:8px">👤 ${seller.name}</p>` : ""}
       ${p.location ? `<p class="product-seller-loc">📍 ${p.location}</p>` : ""}
       <div class="card-footer">
         ${footerHTML}
@@ -477,19 +478,19 @@ productsArray.forEach(({ docSnap, data: p }) => {
     </div>
   `;
 
-      // Auto-rotate slider images
-      if (images.length > 1) {
-        let idx = 0;
-        setInterval(() => {
-          const imgs = card.querySelectorAll(".slider img");
-          imgs[idx].classList.remove("active");
-          idx = (idx + 1) % imgs.length;
-          imgs[idx].classList.add("active");
-        }, 3000);
-      }
+  // Auto-rotate slider images
+  if (images.length > 1) {
+    let idx = 0;
+    setInterval(() => {
+      const imgs = card.querySelectorAll(".slider img");
+      imgs[idx].classList.remove("active");
+      idx = (idx + 1) % imgs.length;
+      imgs[idx].classList.add("active");
+    }, 3000);
+  }
 
-      grid.appendChild(card);
-    });
+  grid.appendChild(card);
+});
 
     if (productsArray.length === 0) {
       grid.innerHTML = `
