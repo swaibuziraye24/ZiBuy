@@ -21,29 +21,60 @@ import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/fi
 
 
 const ADMIN_EMAIL = "swaibuziraye22@gmail.com";
+let isAdmin = false;
 
 onAuthStateChanged(auth, (user) => {
 
-  // Wait for Firebase auth to finish
-  if (user === undefined) return;
-  
-    // Not logged in
+  // User not logged in
   if (!user) {
-
-    window.location.replace("index.html");
-
+    isAdmin = false;
     return;
   }
 
-   // Wrong user
+  // Wrong account
   if (user.email !== ADMIN_EMAIL) {
+    isAdmin = false;
 
-    window.location.replace("index.html");
+    document.body.innerHTML = `
+      <div style="
+        min-height:100vh;
+        display:flex;
+        justify-content:center;
+        align-items:center;
+        flex-direction:column;
+        font-family:Arial;
+        background:#f9fafb;
+      ">
+        <h1 style="color:#dc2626;margin-bottom:10px">
+          Access Denied
+        </h1>
+
+        <p style="color:#6b7280;margin-bottom:20px">
+          Admin access only.
+        </p>
+
+        <button onclick="window.location.href='index.html'"
+          style="
+            background:#ff6600;
+            color:white;
+            border:none;
+            padding:12px 20px;
+            border-radius:10px;
+            cursor:pointer;
+            font-weight:bold;
+          ">
+          Go Home
+        </button>
+      </div>
+    `;
 
     return;
   }
 
-  const isAdmin = user.email === ADMIN_EMAIL;
+  isAdmin = true;
+  console.log("✅ Admin logged in");
+
+});
 
   // ============ Image Preview ============
 
@@ -212,5 +243,3 @@ window.deleteProduct = deleteProduct;
 }
 
 window.loadOrders = loadOrders;
-
-});
