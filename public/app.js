@@ -12,7 +12,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 import "./auth.js";
-import "./admin.js";
+
 
 // ---- Show/Hide Post Ad button based on auth state ----
 import { auth } from "./firebase.js";
