@@ -136,7 +136,10 @@ export async function adminLogin() {
   }
 }
 
-export function openAdminPanel() {
+export async function openAdminPanel() {
+
+  // Load admin module only when needed
+  await import("./admin.js");
 
   const modal = document.getElementById("admin-modal");
   const content = document.getElementById("admin-panel-content");
@@ -149,8 +152,11 @@ export function openAdminPanel() {
     content.style.display = "block";
   }
 
-  // Trigger order load
-  window.loadOrders && window.loadOrders();
+  // Load orders
+  if (window.loadOrders) {
+    window.loadOrders();
+  }
+
 }
 
 export function closeAdminPanel() {
