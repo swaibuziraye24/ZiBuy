@@ -14,7 +14,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
 import { showToast, loadProducts } from "./app.js";
-import { isAdmin } from "./auth.js";
+
 
 import { auth } from "./firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
@@ -22,35 +22,60 @@ import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/fi
 
 const ADMIN_EMAIL = "swaibuziraye22@gmail.com";
 
-let authChecked = false;
-
 onAuthStateChanged(auth, (user) => {
 
-  // Prevent loop
-  if (authChecked) return;
-
-  authChecked = true;
+  // Wait for Firebase auth to finish
+  if (user === undefined) return;
 
   // Not logged in
   if (!user) {
 
-    console.warn("No user logged in");
-
-    setTimeout(() => {
-      window.location.replace("index.html");
-    }, 500);
+    document.body.innerHTML = `
+      <div style="
+        height:100vh;
+        display:flex;
+        justify-content:center;
+        align-items:center;
+        font-family:sans-serif;
+        flex-direction:column;
+        gap:16px;
+      ">
+        <h2>Please login as admin</h2>
+        <a href="index.html">
+          <button style="
+            padding:12px 20px;
+            border:none;
+            background:#ff6600;
+            color:white;
+            border-radius:8px;
+            cursor:pointer;
+          ">
+            Go Home
+          </button>
+        </a>
+      </div>
+    `;
 
     return;
   }
 
-  // Not admin
+  // Wrong account
   if (user.email !== ADMIN_EMAIL) {
 
-    console.warn("Access denied");
-
-    setTimeout(() => {
-      window.location.replace("index.html");
-    }, 500);
+    document.body.innerHTML = `
+      <div style="
+        height:100vh;
+        display:flex;
+        justify-content:center;
+        align-items:center;
+        font-family:sans-serif;
+        flex-direction:column;
+        gap:16px;
+      ">
+        <h2>Access denied</h2>
+        <p>You are not an admin.</p>
+      </div>
+    `;
 
     return;
   }
