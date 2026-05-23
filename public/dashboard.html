@@ -116,6 +116,12 @@
         <button class="filter-tab" onclick="filterMyAds('expired')">Expired</button>
       </div>
 
+<button 
+  class="btn btn-outline" 
+  onclick="editProduct('${ad.id}', '${ad.name}')">
+  ✏️ Edit
+</button>
+
       <div id="my-ads-list" class="ads-list"></div>
     </div>
 
@@ -206,6 +212,25 @@
     <button class="full-btn secondary" onclick="customerRegister()">Create Account</button>
   </div>
 </div>
+
+
+<!-- Edit Product Modal -->
+<div id="edit-product-modal" class="modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2>Edit Product</h2>
+      <button class="modal-close" onclick="closeEditModal()">×</button>
+    </div>
+    
+    <input type="text" id="edit-product-name" placeholder="Product name">
+    <input type="tel" id="seller-phone" placeholder="Your phone: 256701234567">
+    
+    <button class="full-btn" onclick="saveProductChanges()">Save Changes</button>
+  </div>
+</div>
+
+<script type="module" src="dashboard.js"></script>
+
 
 <script type="module" src="dashboard.js"></script>
 
