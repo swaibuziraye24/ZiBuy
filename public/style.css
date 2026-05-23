@@ -1,5 +1,35 @@
 /* ============================================
-   ZiBuy — Global Styles
+
+/* ============================================
+   GLOBAL RESPONSIVE RESET
+============================================ */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  overflow-x: hidden;
+  font-family: Arial, sans-serif;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+button,
+input,
+textarea,
+select {
+  font-family: inherit;
+}
+
+/* ZiBuy — Global Styles
    Jiji-inspired marketplace for Uganda 🇺🇬
    ============================================ */
 
@@ -39,15 +69,28 @@ button { font-family: var(--font); cursor: pointer; }
    TOP BAR
    ============================================ */
 .topbar {
+  width: 100%;
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 14px 24px;
-  background: var(--white);
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
   position: sticky;
   top: 0;
   z-index: 1000;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+}
+
+.topbar-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.logo {
+  font-size: 26px;
+  font-weight: 900;
 }
 
 .logo {
@@ -471,13 +514,12 @@ button { font-family: var(--font); cursor: pointer; }
 }
 
 /* Products Section Layout */
-.products-section {
+.products-grid,
+.product-grid,
+.category-grid {
   display: grid;
-  grid-template-columns: 260px 1fr;
-  gap: 20px;
-  padding: 0 20px;
-  max-width: 1400px;
-  margin: 0 auto;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
 }
 
 .filter-sidebar {
@@ -579,13 +621,17 @@ button { font-family: var(--font); cursor: pointer; }
 
 /* ---- Product Card ---- */
 .product-card {
-  background: var(--white);
-  border-radius: var(--radius);
+  width: 100%;
+  background: white;
+  border-radius: 14px;
   overflow: hidden;
-  box-shadow: var(--shadow);
-  transition: transform .3s, box-shadow .3s;
-  cursor: pointer;
-  position: relative;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+}
+
+.product-card img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
 }
 
 .product-card:hover {
@@ -3684,4 +3730,102 @@ footer {
   height: 20px;
   cursor: pointer;
   accent-color: var(--orange);
+}
+
+
+.btn,
+.full-btn,
+.cart-btn,
+.view-btn,
+.checkout-btn {
+  min-height: 46px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.post-ad-wrap {
+  width: 100%;
+  padding: 16px;
+}
+
+.post-ad-container {
+  width: 100%;
+max-width: 500px;
+  margin: auto;
+}
+
+input,
+textarea,
+select {
+  width: 100%;
+  padding: 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  font-size: 16px;
+  margin-bottom: 14px;
+}
+
+textarea {
+  resize: vertical;
+}
+
+/* ============================================
+   MOBILE RESPONSIVE FIXES
+============================================ */
+
+@media (max-width: 768px) {
+
+  .topbar {
+    padding: 12px;
+  }
+
+  .logo {
+    font-size: 22px;
+  }
+
+  .topbar-actions {
+    gap: 6px;
+  }
+
+  .btn {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .product-page-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .product-page-details {
+    padding: 14px;
+  }
+
+  .product-page-price {
+    font-size: 24px;
+  }
+
+  .contact-btns {
+    flex-direction: column;
+  }
+
+  .cart-sidebar {
+    width: 100%;
+    right: -100%;
+  }
+
+  .review-card {
+    flex-direction: column;
+  }
+
+  .step-indicator {
+    width: 34px;
+    height: 34px;
+  }
+
+  .category-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
 }
