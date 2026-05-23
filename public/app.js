@@ -12,9 +12,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 import "./auth.js";
-import "./post-ad.js";
-import "./dashboard.js";
-import "./admin.js";
+
 // Check if user is logged in when page loads
 onAuthStateChanged(auth, (user) => {
   if (user) {
