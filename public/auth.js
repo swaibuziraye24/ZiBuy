@@ -35,36 +35,6 @@ if (adminBtn) {
 }
 
 
-
-
-onAuthStateChanged(auth, (user) => {
-
-  // Not logged in
-  if (!user) {
-
-    alert("Please login as admin.");
-
-    window.location.href = "index.html";
-
-    return;
-  }
-
-  // Not admin
-  if (!isAdmin) {
-
-    alert("Access denied.");
-
-    window.location.href = "index.html";
-
-    return;
-  }
-
-  console.log("Admin access granted");
-
-});
-
-
-
   // Hide admin panel if logged out
   if (!isAdmin) {
     const panel = document.getElementById("admin-modal");
