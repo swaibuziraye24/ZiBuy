@@ -109,7 +109,6 @@ window.logoutCustomer = async function() {
 // ============================================
 // LOAD PRODUCTS FROM FIRESTORE
 // ============================================
-
 async function loadProducts() {
   try {
     const snapshot = await getDocs(collection(db, "products"));
@@ -138,14 +137,20 @@ async function loadProducts() {
             product.seller = product.seller || {};
             product.seller.isVerified = false;
           }
+        } else {
+          product.seller = product.seller || {};
+          product.seller.isVerified = false;
         }
 
         return product;
       })
     );
 
+    // Store all products globally for use in other functions
+    allProducts = products;
+
     loadFeaturedProducts();
-    renderProducts(products);
+    renderProducts();
   } catch (err) {
     console.error(err);
   }
@@ -252,7 +257,7 @@ function renderProducts() {
   container.innerHTML = filtered.map(p => {
     const images = p.images || [];
     const phone = (p.seller?.phone || "").replace(/\D/g, "");
-    const hasPhone = phone.length > 0 && p.isUserPost === true;
+    const hasPhone = phone && phone.length > 9;
 
     return `
   <div class="product-card">
@@ -269,8 +274,13 @@ function renderProducts() {
         ${p.seller?.isVerified ? '<span style="color:#10b981;font-weight:800;margin-left:4px">✅ Verified</span>' : ''}
       </div>
       <div class="card-footer">
-        <button class="cart-btn" onclick="addToCart('${p.name.replace(/'/g,"\\'")}', ${p.price}, '${images[0] || ""}')">🛒 Add</button>
-        <button class="view-btn" onclick="openProductModal('${p.id}')">View</button>
+        ${hasPhone ? `
+          <button class="cart-btn" onclick="messageWhatsApp('${phone}', '${p.name.replace(/'/g, "\\'")}', ${p.price})" style="font-size:12px">💬 Chat</button>
+          <button class="view-btn" onclick="messageCall('${phone}')" style="font-size:12px">☎️ Call</button>
+        ` : `
+          <button class="cart-btn" onclick="addToCart('${p.name.replace(/'/g,"\\'")}', ${p.price}, '${images[0] || ""}')">🛒 Add</button>
+          <button class="view-btn" onclick="openProductModal('${p.id}')">View</button>
+        `}
       </div>
     </div>
   </div>
@@ -279,7 +289,6 @@ function renderProducts() {
 
   document.getElementById("product-count").textContent = `${filtered.length} listings`;
 }
-
 // ============================================
 // CATEGORY FILTER
 // ============================================
@@ -534,13 +543,12 @@ window.closeProductModal = function() {
 // ============================================
 // SEARCH
 // ============================================
-
 window.searchProducts = function() {
-  const query = document.getElementById("search-input")?.value.toLowerCase() || "";
+  const searchQuery = document.getElementById("search-input")?.value.toLowerCase() || "";
   
   const filtered = allProducts.filter(p =>
-    p.name.toLowerCase().includes(query) ||
-    p.description.toLowerCase().includes(query)
+    p.name.toLowerCase().includes(searchQuery) ||
+    p.description.toLowerCase().includes(searchQuery)
   );
 
   const container = document.getElementById("products");
@@ -553,24 +561,29 @@ window.searchProducts = function() {
 
   // Render filtered results
   container.innerHTML = filtered.map(p => {
+    const images = p.images || [];
     const phone = (p.seller?.phone || "").replace(/\D/g, "");
-    const hasPhone = phone.length > 0 && p.isUserPost === true;
+    const hasPhone = phone && phone.length > 9;
 
     return `
       <div class="product-card">
         <div class="product-image-box">
-          <img src="${p.images?.[0] || ''}" alt="${p.name}">
+          <img src="${images[0] || ''}" alt="${p.name}">
         </div>
         <div class="product-info">
           <p class="product-cat">${p.category}</p>
           <h3 class="product-title">${p.name}</h3>
           <p class="product-price">UGX ${Number(p.price).toLocaleString()}</p>
+          <div class="product-seller-loc">
+            📍 ${p.seller?.location || "Uganda"}
+            ${p.seller?.isVerified ? '<span style="color:#10b981;font-weight:800;margin-left:4px">✅ Verified</span>' : ''}
+          </div>
           <div class="card-footer">
             ${hasPhone ? `
-              <button class="cart-btn" onclick="messageWhatsApp('${phone}', '${p.name}', ${p.price})">💬</button>
-              <button class="view-btn" onclick="messageCall('${phone}')">☎️</button>
+              <button class="cart-btn" onclick="messageWhatsApp('${phone}', '${p.name.replace(/'/g, "\\'")}', ${p.price})" style="font-size:12px">💬 Chat</button>
+              <button class="view-btn" onclick="messageCall('${phone}')" style="font-size:12px">☎️ Call</button>
             ` : `
-              <button class="cart-btn" onclick="addToCart('${p.name}', ${p.price}, '${p.images?.[0] || ''}')">🛒</button>
+              <button class="cart-btn" onclick="addToCart('${p.name.replace(/'/g,"\\'")}', ${p.price}, '${images[0] || ''}')">🛒 Add</button>
               <button class="view-btn" onclick="openProductModal('${p.id}')">View</button>
             `}
           </div>
@@ -579,7 +592,6 @@ window.searchProducts = function() {
     `;
   }).join("");
 };
-
 // ============================================
 // WHATSAPP & CALL
 // ============================================
