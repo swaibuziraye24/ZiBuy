@@ -16,58 +16,97 @@
 <!-- ============ TOP BAR ============ -->
 <header class="topbar">
 
-  <img
-  src="my_logo.png"
-  alt="ZiBuy Logo"
-  id="secret-admin-trigger"
-  class="zibuy-logo"
-/>
+  <!-- LOGO -->
+  <div class="topbar-left">
+    <img
+      src="my_logo.png"
+      alt="ZiBuy Logo"
+      id="secret-admin-trigger"
+      class="zibuy-logo"
+    />
+  </div>
+
+  <!-- SEARCH -->
   <div class="search-wrap">
-    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+    <svg class="search-icon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <circle cx="11" cy="11" r="8"/>
+      <path d="m21 21-4.35-4.35"/>
     </svg>
+
     <input
       type="text"
       id="search-input"
-      placeholder="Search phones, cars, shoes..."
+      placeholder="Search products on ZiBuy"
       onkeyup="searchProducts()"
     >
+
+    <button class="search-btn">
+      Search
+    </button>
   </div>
 
+  <!-- ACTIONS -->
   <div class="topbar-actions">
 
-
-    <button class="btn btn-orange" onclick="window.location.href='admin-boost-requests.html'" style="padding:8px 12px;font-size:12px;display:none" id="admin-boost-btn">💳 Boost Requests</button>
-
-    <button class="btn btn-orange" id="post-ad-btn" onclick="window.location.href='post-ad.html'" style="display:none">
-      + Post Ad
+    <button class="btn btn-orange"
+      onclick="window.location.href='admin-boost-requests.html'"
+      style="display:none"
+      id="admin-boost-btn">
+      💳
+      <span>Boost</span>
     </button>
 
-    <button class="btn btn-outline" id="messages-btn" onclick="window.location.href='messages.html'" style="display:none">
-      💬 Messages
+    <button class="btn btn-orange"
+      id="post-ad-btn"
+      onclick="window.location.href='post-ad.html'"
+      style="display:none">
+      ➕
+      <span>Post Ad</span>
     </button>
 
-    <button class="btn btn-outline" id="notifications-btn" onclick="window.location.href='notifications.html'" style="display:none">
-      🔔 Notifications
+    <button class="btn btn-outline"
+      id="messages-btn"
+      onclick="window.location.href='messages.html'"
+      style="display:none">
+      💬
+      <span>Messages</span>
     </button>
 
-    <button class="btn btn-outline" id="dashboard-btn" onclick="window.location.href='dashboard.html'" style="display:none">
-      📊 Dashboard
+    <button class="btn btn-outline"
+      id="notifications-btn"
+      onclick="window.location.href='notifications.html'"
+      style="display:none">
+      🔔
+      <span>Alerts</span>
     </button>
 
-    <button class="btn btn-outline" id="account-btn" onclick="openAuthModal()">
-      Account
+    <button class="btn btn-outline"
+      id="dashboard-btn"
+      onclick="window.location.href='dashboard.html'"
+      style="display:none">
+      📊
+      <span>Dashboard</span>
     </button>
 
+    <button class="btn btn-outline"
+      id="account-btn"
+      onclick="openAuthModal()">
+      👤
+      <span>Account</span>
+    </button>
+
+    <!-- CART -->
     <div class="cart-btn-wrap">
-      <button class="btn btn-orange" onclick="toggleCart()">
-        🛒 Cart
+      <button class="btn btn-orange cart-main-btn" onclick="toggleCart()">
+        🛒
+        <span>Cart</span>
       </button>
+
       <span class="cart-badge" id="cart-count">0</span>
     </div>
 
-
   </div>
+
 </header>
 
 <!-- ============ HERO ============ -->
