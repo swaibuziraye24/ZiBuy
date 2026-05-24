@@ -126,8 +126,16 @@ async function loadMyProducts() {
           <p class="ad-meta">📅 Posted: ${new Date(p.createdAt?.toDate?.() || p.createdAt).toLocaleDateString()}</p>
           
           <div class="ad-actions">
+          
             <button class="btn btn-sm btn-outline" onclick="editProduct('${p.id}')">✏️ Edit</button>
             <button class="btn btn-sm btn-outline" onclick="markSold('${p.id}')">📦 Mark Sold</button>
+
+            ${!p.isPremium ? `
+  <button class="btn btn-sm" style="background:#ff6600;color:white;border:none" onclick="boostFromDashboard('${p.id}', '${p.name}')">⭐ Boost</button>
+` : `
+  <button class="btn btn-sm" style="background:#10b981;color:white;border:none;cursor:default">✅ Featured</button>
+`}
+
             <button class="btn btn-sm" style="background:#ef4444;color:white;border:none" onclick="deleteProduct('${p.id}')">🗑️ Delete</button>
           </div>
         </div>
@@ -146,9 +154,15 @@ async function loadMyProducts() {
   }
 }
 
-// ============================================
-// EDIT PRODUCT
-// ============================================
+window.boostFromDashboard = function(productId, productName) {
+  window.location.href = `boost-product.html?productId=${productId}`;
+};
+
+
+// ============ EDIT PRODUCT ============
+window.editProduct = function(productId) {
+  window.location.href = `edit-product.html?id=${productId}`;
+};
 
 window.editProduct = function(productId) {
   // Redirect to product page with edit mode
