@@ -234,23 +234,36 @@ const productData = {
 
     const docRef = await addDoc(collection(db, "products"), productData);
 
-    // 3. Success - show message and redirect
-    alert("✅ Ad posted successfully!");
-    
-    // Clear form
-    titleInput.value = "";
-    descInput.value = "";
-    priceInput.value = "";
-    locationInput.value = "";
-    uploadedImages = [];
-    selectedCategory = "";
-    currentStep = 1;
+    // 3. Success - show message and offer boost
+const boostConfirm = confirm(
+  "✅ Ad posted successfully!\n\n" +
+  "Want to boost it to featured section?\n\n" +
+  "⭐ 7 Days - UGX 5,000\n" +
+  "⭐ 14 Days - UGX 8,000\n" +
+  "⭐ 30 Days - UGX 15,000\n\n" +
+  "Click OK to boost, Cancel to skip"
+);
 
-    // Redirect to dashboard or home
-    setTimeout(() => {
-      window.location.href = `dashboard.html?tab=my-ads`;
-    }, 1500);
+// Clear form
+titleInput.value = "";
+descInput.value = "";
+priceInput.value = "";
+locationInput.value = "";
+uploadedImages = [];
+selectedCategory = "";
+currentStep = 1;
 
+if (boostConfirm) {
+  // Redirect to boost page with product ID
+  setTimeout(() => {
+    window.location.href = `boost-product.html?productId=${docRef.id}`;
+  }, 500);
+} else {
+  // Just redirect to dashboard
+  setTimeout(() => {
+    window.location.href = `dashboard.html?tab=my-ads`;
+  }, 1500);
+}
   } catch (err) {
     console.error("Upload error:", err);
     alert("❌ Error posting ad: " + err.message);
