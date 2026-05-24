@@ -36,32 +36,39 @@ async function loadProduct() {
       return;
     }
 
-    const p = snap.data();
+   
+const p      = snap.data();
     const images = Array.isArray(p.images) ? p.images : [];
     const seller = p.seller || {};
-    let activeImage = 0;
+    let   active = 0;
 
-// Debug: Check if phone exists
-console.log("Seller data:", seller);
-console.log("Seller phone:", seller.phone);
-
+    // Update page title
     document.title = `${p.name} — ZiBuy`;
 
-   const phone = (seller.phone || "").replace(/\D/g, "");
-const waMsg = encodeURIComponent(`Hi, I saw *${p.name}* on ZiBuy for UGX ${Number(p.price).toLocaleString()}. Is it still available?`);
+    // Debug seller data
+    console.log("Product seller:", seller);
+    console.log("Seller phone raw:", seller.phone);
 
-console.log("Phone final:", phone); // Debug
+    // Build contact buttons HTML
+    const phone = (seller.phone || "").replace(/\D/g, "");
+    console.log("Phone cleaned:", phone);
+    
+    const waMsg = encodeURIComponent(`Hi, I saw *${p.name}* on ZiBuy for UGX ${Number(p.price).toLocaleString()}. Is it still available?`);
 
-const contactHTML = phone && phone.length > 9 ? `
-      <div style="display:flex;gap:10px;margin-top:16px">
-        <a class="contact-btn whatsapp-btn" href="https://wa.me/${phone}?text=${waMsg}" target="_blank" style="flex:1;padding:14px;background:#25d366;color:white;border:none;border-radius:12px;font-weight:700;text-decoration:none;text-align:center;cursor:pointer">
+    const contactHTML = (phone && phone.length > 9) ? `
+      <div class="contact-btns" style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
+        <a class="contact-btn whatsapp-btn" href="https://wa.me/${phone}?text=${waMsg}" target="_blank" style="flex:1;padding:14px;background:#25d366;color:white;border:none;border-radius:12px;font-weight:700;text-decoration:none;text-align:center;cursor:pointer;min-width:150px">
           📱 WhatsApp Seller
         </a>
-        <a class="contact-btn call-btn" href="tel:+${phone}" style="flex:1;padding:14px;background:#111827;color:white;border:none;border-radius:12px;font-weight:700;text-decoration:none;text-align:center;cursor:pointer">
+        <a class="contact-btn call-btn" href="tel:+${phone}" style="flex:1;padding:14px;background:#111827;color:white;border:none;border-radius:12px;font-weight:700;text-decoration:none;text-align:center;cursor:pointer;min-width:150px">
           ☎️ Call Seller
         </a>
       </div>
-    ` : `<div style="padding:16px;background:#fee2e2;border-radius:12px;color:#991b1b;font-size:13px;margin-top:16px">⚠️ Seller phone number not available</div>`;
+    ` : `
+      <div style="padding:16px;background:#fee2e2;border-radius:12px;color:#991b1b;font-size:13px;margin-top:16px">
+        ⚠️ Seller phone number not available
+      </div>
+    `;
 
     window.switchImage = function(index) {
       activeImage = index;
