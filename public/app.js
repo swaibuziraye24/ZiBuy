@@ -516,7 +516,7 @@ window.messageCall = function(phone) {
 // TOAST
 // ============================================
 
-function showToast(message) {
+export function showToast(message) {
   const container = document.getElementById("toast-container");
   if (!container) return;
 
