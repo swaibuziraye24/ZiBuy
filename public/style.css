@@ -5186,3 +5186,77 @@ table {
     }
   }
 }
+
+
+/* ============================================
+   FEATURED ADS
+============================================ */
+
+.featured-section{
+  margin-bottom:24px;
+  padding:20px;
+  border-radius:18px;
+  background:#fff7ed;
+  border:1px solid #fed7aa;
+}
+
+.featured-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  margin-bottom:18px;
+  flex-wrap:wrap;
+}
+
+.featured-title-wrap{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.featured-star{
+  font-size:28px;
+}
+
+.featured-title{
+  margin:0;
+  font-size:22px;
+  font-weight:800;
+  color:#111827;
+}
+
+.featured-subtitle{
+  margin:2px 0 0;
+  color:#6b7280;
+  font-size:13px;
+}
+
+.featured-count{
+  background:#ff6600;
+  color:white;
+  padding:8px 14px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:700;
+}
+
+.featured-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+  gap:16px;
+}
+
+.premium-badge{
+  position:absolute;
+  top:10px;
+  left:10px;
+  background:linear-gradient(135deg,#ff6600,#ff9500);
+  color:white;
+  padding:6px 12px;
+  border-radius:999px;
+  font-size:11px;
+  font-weight:800;
+  z-index:5;
+  box-shadow:0 4px 12px rgba(0,0,0,.15);
+}
