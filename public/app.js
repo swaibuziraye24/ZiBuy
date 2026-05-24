@@ -557,3 +557,29 @@ export function showToast(message) {
 // ============================================
 
 updateCartUI();
+
+
+// ============================================
+// ADMIN SECRET TRIGGER
+// ============================================
+
+let adminClickCount = 0;
+let adminClickTimeout;
+
+const logoBtn = document.getElementById("secret-admin-trigger");
+if (logoBtn) {
+  logoBtn.addEventListener("click", () => {
+    adminClickCount++;
+    
+    clearTimeout(adminClickTimeout);
+    
+    if (adminClickCount === 5) {
+      openAdminLoginModal();
+      adminClickCount = 0;
+    }
+    
+    adminClickTimeout = setTimeout(() => {
+      adminClickCount = 0;
+    }, 2000);
+  });
+}
