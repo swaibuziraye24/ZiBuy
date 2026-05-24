@@ -1,68 +1,119 @@
-<div class="verification-page">
+<body>
 
-  <div class="verification-card">
+<header class="topbar">
+  <a href="index.html">
+    <h1 class="logo">Zi<span>Buy</span></h1>
+  </a>
 
-    <h1>✅ Seller Verification</h1>
+  <button
+    class="btn btn-dark mobile-home-btn"
+    onclick="window.location.href='index.html'"
+  >
+    ← Home
+  </button>
+</header>
 
-    <p class="verify-subtitle">
-      Get verified on ZiBuy to build trust and sell faster.
-    </p>
+<div class="verify-page">
+
+  <div class="verify-card">
+
+    <div class="verify-header">
+
+      <div class="verify-icon">
+        ✅
+      </div>
+
+      <h1>Seller Verification</h1>
+
+      <p>
+        Become a trusted seller on ZiBuy and increase customer confidence.
+      </p>
+
+    </div>
 
     <div class="verify-benefits">
 
-      <div class="benefit">
-        🛡️ Trusted seller badge
+      <div class="benefit-card">
+        <span>🛡️</span>
+        <p>Trusted Seller Badge</p>
       </div>
 
-      <div class="benefit">
-        📈 More customer trust
+      <div class="benefit-card">
+        <span>📈</span>
+        <p>More Visibility</p>
       </div>
 
-      <div class="benefit">
-        ⭐ Better visibility
+      <div class="benefit-card">
+        <span>⭐</span>
+        <p>Increase Sales</p>
       </div>
 
     </div>
 
-    <input
-      type="text"
-      id="verify-name"
-      placeholder="Full Name"
-    >
+    <div class="verify-form">
 
-    <input
-      type="tel"
-      id="verify-phone"
-      placeholder="Phone Number"
-    >
+      <div class="form-group">
+        <label>Full Name</label>
+        <input
+          type="text"
+          id="verify-name"
+          placeholder="Enter your full name"
+        >
+      </div>
 
-    <input
-      type="text"
-      id="verify-location"
-      placeholder="Location"
-    >
+      <div class="form-group">
+        <label>Phone Number</label>
+        <input
+          type="tel"
+          id="verify-phone"
+          placeholder="256701234567"
+        >
+      </div>
 
-    <input
-      type="text"
-      id="verify-national-id"
-      placeholder="National ID Number"
-    >
+      <div class="form-group">
+        <label>Location</label>
+        <input
+          type="text"
+          id="verify-location"
+          placeholder="Kampala, Uganda"
+        >
+      </div>
 
-    <textarea
-      id="verify-about"
-      placeholder="Tell customers about yourself"
-      rows="4"
-    ></textarea>
+      <div class="form-group">
+        <label>National ID Number</label>
+        <input
+          type="text"
+          id="verify-national-id"
+          placeholder="CM123456789..."
+        >
+      </div>
 
-    <button
-      class="btn btn-orange"
-      onclick="submitVerification()"
-    >
-      Submit Verification
-    </button>
+      <div class="form-group">
+        <label>About You</label>
+        <textarea
+          id="verify-about"
+          rows="5"
+          placeholder="Tell buyers about yourself and your business..."
+        ></textarea>
+      </div>
 
-    <div id="verification-status"></div>
+      <button
+        class="submit-verify-btn"
+        onclick="submitVerification()"
+      >
+        Submit Verification
+      </button>
+
+      <div id="verification-status"></div>
+
+    </div>
 
   </div>
 
 </div>
+
+<div id="toast-container" class="toast-container"></div>
+
+<script type="module" src="seller-verification.js"></script>
+
+</body>
