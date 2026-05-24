@@ -170,6 +170,63 @@
     Filters
   </button>
 
+  <!-- Filter Panel -->
+  <div class="filters-panel" id="filters-panel">
+    <div class="filter-group">
+      <label class="filter-label">💰 Price Range</label>
+      <div class="price-inputs">
+        <input type="number" id="price-min" placeholder="Min UGX" value="0" onchange="updatePriceRange()">
+        <span class="price-dash">-</span>
+        <input type="number" id="price-max" placeholder="Max UGX" value="99999999" onchange="updatePriceRange()">
+      </div>
+    </div>
+
+    <div class="filter-group">
+      <label class="filter-label">📍 Location</label>
+      <select id="filter-location" onchange="applyFilters()">
+        <option value="">All Uganda</option>
+        <option value="Kampala">Kampala</option>
+        <option value="Wakiso">Wakiso</option>
+        <option value="Mukono">Mukono</option>
+        <option value="Jinja">Jinja</option>
+        <option value="Mbarara">Mbarara</option>
+        <option value="Entebbe">Entebbe</option>
+        <option value="Gulu">Gulu</option>
+        <option value="Mbale">Mbale</option>
+        <option value="Masaka">Masaka</option>
+        <option value="Fort Portal">Fort Portal</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label class="filter-label">📅 Posted</label>
+      <div class="filter-radios">
+        <label><input type="radio" name="date-filter" value="all" checked onchange="applyFilters()"> All Time</label>
+        <label><input type="radio" name="date-filter" value="7" onchange="applyFilters()"> Last 7 days</label>
+        <label><input type="radio" name="date-filter" value="30" onchange="applyFilters()"> Last 30 days</label>
+      </div>
+    </div>
+
+    <div class="filter-group">
+      <label class="filter-label">⬆️ Sort By</label>
+      <select id="filter-sort" onchange="applyFilters()">
+        <option value="newest">Newest First</option>
+        <option value="oldest">Oldest First</option>
+        <option value="price-low">Price: Low to High</option>
+        <option value="price-high">Price: High to Low</option>
+      </select>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="btn btn-outline" onclick="clearAllFilters()" style="flex:1">Reset</button>
+      <button class="btn btn-orange" onclick="toggleFilters()" style="flex:1">Done</button>
+    </div>
+  </div>
+
+  <!-- Active Filters Display -->
+  <div class="active-filters" id="active-filters"></div>
+</div>
+
   <div class="filters-panel" id="filters-panel">
 
     <!-- Price Range -->
