@@ -12,6 +12,10 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+
+import { db, auth, storage, collection, getDocs, addDoc, query, where } from "./firebase.js";
+
 let currentUser = null;
 
 // ============================================
@@ -76,76 +80,114 @@ async function checkExistingVerification() {
 // ============================================
 
 window.submitVerification = async function() {
+  const fullName = document.getElementById("full-name").value.trim();
+  const businessName = document.getElementById("business-name").value.trim();
+  const phone = document.getElementById("phone-number").value.trim();
+  const location = document.getElementById("location").value;
+  const bio = document.getElementById("bio").value.trim();
+  const idDoc = document.getElementById("id-document").files[0];
+  const licenseDoc = document.getElementById("business-license").files[0];
 
-  const name = document.getElementById("verify-name").value.trim();
-
-  const phone = document.getElementById("verify-phone").value.trim();
-
-  const location = document.getElementById("verify-location").value.trim();
-
-  const nationalId = document.getElementById("verify-national-id").value.trim();
-
-  const about = document.getElementById("verify-about").value.trim();
-
-  if (!name || !phone || !nationalId) {
-
-    alert("Please fill all required fields");
-
+  // Validation
+  if (!fullName || !businessName || !phone || !location || !idDoc) {
+    alert("❌ Please fill all required fields and upload ID document");
     return;
   }
 
-  try {
+  const btn = event.target;
+  btn.textContent = "Submitting...";
+  btn.disabled = true;
 
-    // Prevent duplicates
+  try {
+    // Check for duplicate
     const q = query(
-      collection(db, "verifications"),
+      collection(db, "seller_verifications"),
       where("email", "==", currentUser.email)
     );
 
     const existing = await getDocs(q);
 
-    if (!existing.empty) {
-
-      alert("You already submitted a verification request");
-
+    if (!existing.empty && existing.docs[0].data().status === "pending") {
+      alert("⏳ You already have a pending verification request");
+      btn.textContent = "Submit for Verification";
+      btn.disabled = false;
       return;
     }
 
-    // Submit request
-    await addDoc(collection(db, "verifications"), {
+    // Upload ID document
+    const idRef = ref(storage, `seller-verification/${currentUser.uid}/id-${Date.now()}`);
+    await uploadBytes(idRef, idDoc);
+    const idDocURL = await getDownloadURL(idRef);
 
-      uid: currentUser.uid,
+    // Upload business license if provided
+    let licenseURL = null;
+    if (licenseDoc) {
+      const licenseRef = ref(storage, `seller-verification/${currentUser.uid}/license-${Date.now()}`);
+      await uploadBytes(licenseRef, licenseDoc);
+      licenseURL = await getDownloadURL(licenseRef);
+    }
 
+    // Save to Firestore
+    const docRef = await addDoc(collection(db, "seller_verifications"), {
+      userId: currentUser.uid,
       email: currentUser.email,
-
-      fullName: name,
-
-      phone: phone,
-
-      location: location,
-
-      nationalId: nationalId,
-
-      about: about,
-
+      fullName,
+      businessName,
+      phone,
+      location,
+      bio,
+      idDocument: idDocURL,
+      businessLicense: licenseURL,
+      paymentAmount: 50000,
+      paymentStatus: "pending",
       status: "pending",
-
-      verified: false,
-
       createdAt: new Date()
-
     });
 
-    alert("Verification submitted successfully ✅");
+    // ========== WHATSAPP MESSAGE TO ADMIN ==========
+    const adminWhatsApp = "256790548910"; // ⭐ REPLACE WITH YOUR NUMBER
+    const verificationDetails = `
+🎉 *New Seller Verification Received!*
 
-    location.reload();
+📝 *Seller Information:*
+- Name: ${fullName}
+- Business: ${businessName}
+- Email: ${currentUser.email}
+- Phone: ${phone}
+- Location: ${location}
+
+💰 *Payment:*
+- Amount: UGX 50,000
+- Status: Pending Confirmation
+
+📄 *Documents:*
+- ID Document: ${idDocURL ? "✅ Uploaded" : "❌ Missing"}
+- Business License: ${licenseURL ? "✅ Uploaded" : "⚠️ Optional"}
+
+🔗 *Admin Action Required:*
+Approve or Reject in Admin Panel:
+https://zibuy-5deae.web.app/admin-verification.html
+
+⏳ *Verification ID:* ${docRef.id}
+    `;
+
+    const whatsappURL = `https://wa.me/${adminWhatsApp}?text=${encodeURIComponent(verificationDetails)}`;
+
+    // Show success message
+    alert("✅ Verification submitted! Opening WhatsApp to confirm payment...");
+
+    // Open WhatsApp
+    window.open(whatsappURL, "_blank");
+
+    // Redirect to dashboard
+    setTimeout(() => {
+      window.location.href = "dashboard.html";
+    }, 2000);
 
   } catch (err) {
-
-    console.error(err);
-
-    alert("Failed to submit verification");
-
+    console.error("Verification error:", err);
+    alert("❌ Submission failed: " + err.message);
+    btn.textContent = "Submit for Verification";
+    btn.disabled = false;
   }
-
 };
