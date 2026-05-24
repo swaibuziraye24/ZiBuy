@@ -1,106 +1,151 @@
-import { db, auth, storage, collection, addDoc, getDocs, query, where, setDoc, doc } from "./firebase.js";
-import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import {
+  db,
+  auth,
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  where
+} from "./firebase.js";
+
+import {
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 let currentUser = null;
 
-onAuthStateChanged(auth, (user) => {
-  currentUser = user;
+// ============================================
+// AUTH CHECK
+// ============================================
+
+onAuthStateChanged(auth, async (user) => {
+
   if (!user) {
+
     window.location.href = "index.html";
+
     return;
   }
+
+  currentUser = user;
+
   checkExistingVerification();
+
 });
 
+// ============================================
+// CHECK EXISTING REQUEST
+// ============================================
+
 async function checkExistingVerification() {
+
+  const statusBox = document.getElementById("verification-status");
+
   try {
-    const snapshot = await getDocs(query(
-      collection(db, "seller_verifications"),
-      where("userId", "==", currentUser.uid)
-    ));
+
+    const q = query(
+      collection(db, "verifications"),
+      where("email", "==", currentUser.email)
+    );
+
+    const snapshot = await getDocs(q);
 
     if (!snapshot.empty) {
-      const verification = snapshot.docs[0].data();
-      document.querySelector(".verification-form").style.display = "none";
-      document.getElementById("verification-status").style.display = "block";
-      
-      const statusMap = {
-        pending: "⏳ Pending Review",
-        approved: "✅ Verified",
-        rejected: "❌ Rejected"
-      };
-      
-      document.getElementById("status-text").textContent = statusMap[verification.status] || verification.status;
+
+      const data = snapshot.docs[0].data();
+
+      statusBox.innerHTML = `
+        <div class="verification-status-box ${data.status}">
+          Current Status:
+          <strong>${data.status.toUpperCase()}</strong>
+        </div>
+      `;
+
     }
+
   } catch (err) {
+
     console.error(err);
+
   }
+
 }
 
-window.submitVerification = async function() {
-  const fullName = document.getElementById("full-name").value.trim();
-  const businessName = document.getElementById("business-name").value.trim();
-  const phone = document.getElementById("phone-number").value.trim();
-  const location = document.getElementById("location").value;
-  const bio = document.getElementById("bio").value.trim();
-  const idDoc = document.getElementById("id-document").files[0];
+// ============================================
+// SUBMIT VERIFICATION
+// ============================================
 
-  if (!fullName || !businessName || !phone || !location || !idDoc) {
-    alert("Fill all required fields");
+window.submitVerification = async function() {
+
+  const name = document.getElementById("verify-name").value.trim();
+
+  const phone = document.getElementById("verify-phone").value.trim();
+
+  const location = document.getElementById("verify-location").value.trim();
+
+  const nationalId = document.getElementById("verify-national-id").value.trim();
+
+  const about = document.getElementById("verify-about").value.trim();
+
+  if (!name || !phone || !nationalId) {
+
+    alert("Please fill all required fields");
+
     return;
   }
 
-  const btn = event.target;
-  btn.textContent = "Uploading...";
-  btn.disabled = true;
-
   try {
-    // Upload ID document
-    const idRef = ref(storage, `seller-verification/${currentUser.uid}/id-${Date.now()}`);
-    await uploadBytes(idRef, idDoc);
-    const idUrl = await getDownloadURL(idRef);
 
-    // Upload business license if provided
-    let licenseUrl = null;
-    const licenseDoc = document.getElementById("business-license").files[0];
-    if (licenseDoc) {
-      const licenseRef = ref(storage, `seller-verification/${currentUser.uid}/license-${Date.now()}`);
-      await uploadBytes(licenseRef, licenseDoc);
-      licenseUrl = await getDownloadURL(licenseRef);
+    // Prevent duplicates
+    const q = query(
+      collection(db, "verifications"),
+      where("email", "==", currentUser.email)
+    );
+
+    const existing = await getDocs(q);
+
+    if (!existing.empty) {
+
+      alert("You already submitted a verification request");
+
+      return;
     }
 
-    // Create verification request
-    await addDoc(collection(db, "seller_verifications"), {
-      userId: currentUser.uid,
+    // Submit request
+    await addDoc(collection(db, "verifications"), {
+
+      uid: currentUser.uid,
+
       email: currentUser.email,
-      fullName,
-      businessName,
-      phone,
-      location,
-      bio,
-      idDocument: idUrl,
-      businessLicense: licenseUrl,
+
+      fullName: name,
+
+      phone: phone,
+
+      location: location,
+
+      nationalId: nationalId,
+
+      about: about,
+
       status: "pending",
+
+      verified: false,
+
       createdAt: new Date()
+
     });
 
-    // Update user seller info
-    await setDoc(doc(db, "users", currentUser.uid), {
-      isSellerVerified: false,
-      sellerVerificationStatus: "pending",
-      lastVerificationSubmit: new Date()
-    }, { merge: true });
+    alert("Verification submitted successfully ✅");
 
-    document.querySelector(".verification-form").style.display = "none";
-    document.getElementById("verification-status").style.display = "block";
-    document.getElementById("status-text").textContent = "⏳ Pending Review";
-    alert("Verification submitted! Check back in 24-48 hours.");
+    location.reload();
 
   } catch (err) {
+
     console.error(err);
-    alert("Submission failed");
-    btn.textContent = "Submit for Verification";
-    btn.disabled = false;
+
+    alert("Failed to submit verification");
+
   }
+
 };
