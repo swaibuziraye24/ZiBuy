@@ -6104,250 +6104,289 @@ table {
 
 
 /* ============================================
-   ZiBuy Responsive Logo
-============================================ */
+   JUMIA-STYLE TOPBAR REDESIGN
+   ============================================ */
 
-.zibuy-logo{
-  height:48px;
-  width:auto;
-  max-width:160px;
-  object-fit:contain;
-  cursor:pointer;
-  display:block;
-  transition:transform .2s ease;
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--white);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid #e5e7eb;
+  flex-wrap: wrap;
 }
 
-/* Hover effect for desktop */
-.zibuy-logo:hover{
-  transform:scale(1.03);
+/* Hamburger Menu (Mobile) */
+.topbar-menu {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--dark);
+  cursor: pointer;
+  padding: 8px;
+  flex-shrink: 0;
 }
 
-/* Tablet */
-@media(max-width:768px){
-
-  .zibuy-logo{
-    height:42px;
-    max-width:140px;
-  }
-
+.topbar-menu:hover {
+  background: var(--light);
+  border-radius: 8px;
 }
 
-/* Small phones like Samsung A05 */
-@media(max-width:480px){
-
-  .zibuy-logo{
-    height:36px;
-    max-width:120px;
-  }
-
+/* Logo */
+.logo {
+  font-family: var(--font-head);
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--orange);
+  text-decoration: none;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
-
-/* ======================================
-   ZIBUY TOPBAR — FIXED RESPONSIVE
-====================================== */
-
-.topbar{
-  position:sticky;
-  top:0;
-  z-index:999;
-  width:100%;
-  height:64px;
-
-  background:#fff;
-  border-bottom:1px solid #e5e7eb;
-
-  display:flex;
-  align-items:center;
-
-  padding:0 10px;
-  gap:8px;
-
-  overflow:hidden;
-  box-sizing:border-box;
+.logo span {
+  color: var(--dark);
 }
 
-/* LOGO */
-.zibuy-logo{
-  width:120px;
-  height:auto;
-  object-fit:contain;
-  flex-shrink:0;
-  cursor:pointer;
+.logo:hover {
+  opacity: 0.8;
 }
 
-/* SEARCH */
-.search-wrap{
-  flex:1;
-  min-width:0;
-
-  height:40px;
-
-  background:#f3f4f6;
-  border-radius:10px;
-
-  display:flex;
-  align-items:center;
-
-  padding:0 10px;
+/* Search Wrap */
+.search-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  background: var(--light);
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 0 12px;
+  gap: 8px;
+  min-width: 200px;
+  transition: border-color 0.2s;
 }
 
-.search-wrap svg{
-  width:16px;
-  height:16px;
-  color:#888;
-  flex-shrink:0;
+.search-wrap:focus-within {
+  border-color: var(--orange);
+  background: var(--white);
 }
 
-.search-wrap input{
-  flex:1;
-  min-width:0;
-
-  border:none;
-  outline:none;
-  background:none;
-
-  padding-left:8px;
-
-  font-size:14px;
+.search-wrap svg {
+  flex-shrink: 0;
+  color: var(--gray);
 }
 
-/* ACTIONS */
-.topbar-actions{
-  display:flex;
-  align-items:center;
-  gap:4px;
-
-  flex-shrink:0;
+.search-wrap input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 10px 0;
+  font-size: 13px;
+  font-family: var(--font);
+  outline: none;
+  color: var(--dark);
 }
 
-/* BUTTONS */
-.topbar .btn{
-  height:38px;
-  min-width:38px;
-
-  padding:0 8px;
-
-  border-radius:8px;
-
-  display:flex;
-  align-items:center;
-  justify-content:center;
-
-  white-space:nowrap;
-
-  font-size:13px;
+.search-wrap input::placeholder {
+  color: #adb5bd;
 }
 
-/* CART */
-.cart-btn-wrap{
-  position:relative;
+/* Top Icons Container */
+.topbar-icons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
-.cart-badge{
-  position:absolute;
-  top:-4px;
-  right:-4px;
-
-  background:#ff6600;
-  color:#fff;
-
-  min-width:18px;
-  height:18px;
-
-  border-radius:50%;
-
-  display:flex;
-  align-items:center;
-  justify-content:center;
-
-  font-size:10px;
-  font-weight:700;
+/* Icon Buttons */
+.topbar-icon {
+  background: none;
+  border: none;
+  color: var(--dark);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  min-width: 40px;
+  min-height: 40px;
 }
 
-/* ======================================
-   MOBILE
-====================================== */
-
-@media (max-width:768px){
-
-  .topbar{
-    padding:0 6px;
-    gap:5px;
-  }
-
-  .zibuy-logo{
-    width:95px;
-  }
-
-  .search-wrap{
-    height:36px;
-    padding:0 8px;
-  }
-
-  .search-wrap input{
-    font-size:12px;
-  }
-
-  .topbar .btn{
-    min-width:34px;
-    height:34px;
-
-    padding:0 6px;
-
-    font-size:0;
-  }
-
-  /* ICONS ONLY */
-  #account-btn::before{
-    content:"👤";
-    font-size:17px;
-  }
-
-  #messages-btn::before{
-    content:"💬";
-    font-size:17px;
-  }
-
-  #notifications-btn::before{
-    content:"🔔";
-    font-size:17px;
-  }
-
-  #dashboard-btn::before{
-    content:"📊";
-    font-size:17px;
-  }
-
-  #post-ad-btn::before{
-    content:"➕";
-    font-size:17px;
-  }
-
-  .cart-btn-wrap .btn{
-    font-size:16px !important;
-  }
-
+.topbar-icon:hover {
+  background: var(--light);
+  color: var(--orange);
 }
 
-/* ======================================
-   VERY SMALL PHONES
-====================================== */
+.topbar-icon:active {
+  transform: scale(0.95);
+}
 
-@media (max-width:480px){
+/* Cart Icon Badge */
+.cart-icon-wrap {
+  position: relative;
+}
 
-  .zibuy-logo{
-    width:78px;
+.cart-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: var(--orange);
+  color: white;
+  font-size: 10px;
+  font-weight: 800;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+}
+
+/* Mobile Menu Drawer */
+.mobile-menu-drawer {
+  display: none;
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 280px;
+  height: 100vh;
+  background: var(--white);
+  z-index: 2000;
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.15);
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  overflow-y: auto;
+}
+
+.mobile-menu-drawer.active {
+  display: flex;
+  flex-direction: column;
+  transform: translateX(0);
+}
+
+.mobile-menu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.mobile-menu-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.mobile-menu-header button {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--gray);
+}
+
+.mobile-menu-item {
+  background: none;
+  border: none;
+  padding: 14px 16px;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--dark);
+  font-family: var(--font);
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  transition: all 0.2s;
+}
+
+.mobile-menu-item:hover {
+  background: var(--light);
+  color: var(--orange);
+}
+
+/* Responsive Topbar */
+@media (max-width: 768px) {
+  .topbar {
+    gap: 8px;
+    padding: 10px 8px;
   }
 
-  .search-wrap{
-    height:34px;
+  .topbar-menu {
+    display: flex;
   }
 
-  .topbar .btn{
-    min-width:30px;
-    height:30px;
-    padding:0 4px;
+  .logo {
+    font-size: 18px;
   }
 
+  .search-wrap {
+    display: none;
+  }
+
+  .topbar-icons {
+    gap: 4px;
+  }
+
+  .topbar-icon {
+    min-width: 36px;
+    min-height: 36px;
+    padding: 6px;
+  }
+
+  .topbar-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .topbar {
+    padding: 8px 6px;
+  }
+
+  .logo {
+    font-size: 16px;
+  }
+
+  .topbar-icon {
+    min-width: 32px;
+    min-height: 32px;
+    padding: 4px;
+  }
+
+  .topbar-icon svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .cart-badge {
+    font-size: 9px;
+    width: 16px;
+    height: 16px;
+  }
+}
+
+/* Show search on desktop */
+@media (min-width: 769px) {
+  .search-wrap {
+    display: flex !important;
+  }
+
+  .topbar-menu {
+    display: none;
+  }
+
+  .mobile-menu-drawer {
+    display: none !important;
+  }
 }
