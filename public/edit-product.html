@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#ff6600">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Edit Product — ZiBuy</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .edit-container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-group label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #1f2937;
+      font-size: 14px;
+    }
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 12px;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 10px;
+      font-size: 14px;
+      font-family: inherit;
+      box-sizing: border-box;
+    }
+    .form-group textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #ff6600;
+      box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.1);
+    }
+    .image-gallery {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .image-item {
+      position: relative;
+      border-radius: 10px;
+      overflow: hidden;
+      aspect-ratio: 1;
+      background: #f3f4f6;
+    }
+    .image-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .image-remove {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      background: rgba(0, 0, 0, 0.6);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .image-remove:hover {
+      background: rgba(0, 0, 0, 0.8);
+    }
+    .upload-area {
+      border: 2px dashed #e5e7eb;
+      border-radius: 10px;
+      padding: 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .upload-area:hover {
+      border-color: #ff6600;
+      background: #fff7ed;
+    }
+    .upload-area.active {
+      border-color: #ff6600;
+      background: #fff7ed;
+    }
+    .button-group {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+    }
+    .btn {
+      flex: 1;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    .btn-orange {
+      background: #ff6600;
+      color: white;
+    }
+    .btn-orange:hover:not(:disabled) {
+      background: #e55a00;
+    }
+    .btn-outline {
+      border: 1.5px solid #e5e7eb;
+      color: #1f2937;
+      background: white;
+    }
+    .btn-outline:hover {
+      border-color: #ff6600;
+      background: #fff7ed;
+    }
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .auth-check {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    .loader {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #e5e7eb;
+      border-top: 4px solid #ff6600;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ============ TOP BAR ============ -->
+<header class="topbar">
+  <a href="index.html"><h1 class="logo">Zi<span>Buy</span></h1></a>
+  <div class="topbar-actions" style="margin-left:auto">
+    <button class="btn-outline" onclick="window.location.href='dashboard.html'" style="padding:8px 16px;border:1.5px solid #e5e7eb;border-radius:8px;cursor:pointer">← Back</button>
+  </div>
+</header>
+
+<!-- ============ AUTH CHECK ============ -->
+<div id="auth-check" class="auth-check">
+  <div class="loader"></div>
+</div>
+
+<!-- ============ EDIT PRODUCT PAGE ============ -->
+<div id="edit-content" style="display:none">
+  <div class="edit-container">
+    <h1 style="font-size:28px;font-weight:800;margin-bottom:24px">Edit Product</h1>
+
+    <form id="edit-form">
+      <!-- Product Name -->
+      <div class="form-group">
+        <label for="product-name">Product Name *</label>
+        <input type="text" id="product-name" required>
+      </div>
+
+      <!-- Price -->
+      <div class="form-group">
+        <label for="product-price">Price (UGX) *</label>
+        <input type="number" id="product-price" required min="0">
+      </div>
+
+      <!-- Category -->
+      <div class="form-group">
+        <label for="product-category">Category *</label>
+        <select id="product-category" required>
+          <option value="">Select Category</option>
+          <option value="Electronics">Electronics</option>
+          <option value="Fashion">Fashion</option>
+          <option value="Furniture">Furniture</option>
+          <option value="Home & Garden">Home & Garden</option>
+          <option value="Sports">Sports</option>
+          <option value="Books">Books</option>
+          <option value="Vehicles">Vehicles</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+
+      <!-- Description -->
+      <div class="form-group">
+        <label for="product-description">Description *</label>
+        <textarea id="product-description" required></textarea>
+      </div>
+
+      <!-- Location -->
+      <div class="form-group">
+        <label for="product-location">Location (City/Area) *</label>
+        <input type="text" id="product-location" required>
+      </div>
+
+      <!-- Phone Number -->
+      <div class="form-group">
+        <label for="seller-phone">Phone Number</label>
+        <input type="tel" id="seller-phone" placeholder="+256 700 000000">
+      </div>
+
+      <!-- Images -->
+      <div class="form-group">
+        <label>Product Images (Current: <span id="image-count">0</span>)</label>
+        
+        <!-- Current Images -->
+        <div id="current-images" class="image-gallery"></div>
+
+        <!-- Upload Area -->
+        <div class="upload-area" id="upload-area">
+          <p style="margin:0;font-size:32px;margin-bottom:8px">📸</p>
+          <p style="margin:0;font-weight:700">Click to upload new images</p>
+          <p style="margin:4px 0 0;color:#6b7280;font-size:13px">or drag and drop (max 5 total)</p>
+        </div>
+        <input type="file" id="image-input" multiple accept="image/*" style="display:none">
+      </div>
+
+      <!-- Buttons -->
+      <div class="button-group">
+        <button type="button" class="btn btn-outline" onclick="window.location.href='dashboard.html'">Cancel</button>
+        <button type="submit" class="btn btn-orange" id="save-btn">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="overlay" class="overlay"></div>
+<div id="toast-container" class="toast-container"></div>
+
+<script type="module">
+  import { db, auth, doc, getDoc, updateDoc, deleteObject, ref, storage, uploadBytes, getDownloadURL } from "./firebase.js";
+  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+  let currentUser = null;
+  let productId = null;
+  let currentImages = [];
+  let newImages = [];
+
+  const params = new URLSearchParams(window.location.search);
+  productId = params.get("id");
+
+  onAuthStateChanged(auth, async (user) => {
+    currentUser = user;
+    
+    if (!user) {
+      setTimeout(() => {
+        window.location.href = "index.html";
+      }, 1000);
+      return;
+    }
+
+    // Load product data
+    if (productId) {
+      try {
+        const snap = await getDoc(doc(db, "products", productId));
+        
+        if (!snap.exists()) {
+          alert("Product not found");
+          window.location.href = "dashboard.html";
+          return;
+        }
+
+        const product = snap.data();
+
+        // Verify ownership
+        if (product.userId !== currentUser.uid) {
+          alert("You can only edit your own products");
+          window.location.href = "dashboard.html";
+          return;
+        }
+
+        // Populate form
+        document.getElementById("product-name").value = product.name || "";
+        document.getElementById("product-price").value = product.price || "";
+        document.getElementById("product-category").value = product.category || "";
+        document.getElementById("product-description").value = product.description || "";
+        document.getElementById("product-location").value = product.location || "";
+        document.getElementById("seller-phone").value = product.seller?.phone || "";
+
+        // Load current images
+        currentImages = product.images || [];
+        renderCurrentImages();
+
+        // Hide auth check, show content
+        document.getElementById("auth-check").style.display = "none";
+        document.getElementById("edit-content").style.display = "block";
+
+      } catch (err) {
+        console.error("Error loading product:", err);
+        alert("Error loading product. Try again.");
+        window.location.href = "dashboard.html";
+      }
+    } else {
+      alert("Product ID not found");
+      window.location.href = "dashboard.html";
+    }
+  });
+
+  // ============ IMAGE HANDLING ============
+  function renderCurrentImages() {
+    const container = document.getElementById("current-images");
+    document.getElementById("image-count").textContent = currentImages.length;
+
+    container.innerHTML = currentImages.map((url, idx) => `
+      <div class="image-item">
+        <img src="${url}" alt="Product image">
+        <button type="button" class="image-remove" onclick="removeCurrentImage(${idx})">×</button>
+      </div>
+    `).join("");
+  }
+
+  window.removeCurrentImage = function(idx) {
+    currentImages.splice(idx, 1);
+    renderCurrentImages();
+  };
+
+  const uploadArea = document.getElementById("upload-area");
+  const imageInput = document.getElementById("image-input");
+
+  uploadArea.addEventListener("click", () => imageInput.click());
+
+  uploadArea.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    uploadArea.classList.add("active");
+  });
+
+  uploadArea.addEventListener("dragleave", () => {
+    uploadArea.classList.remove("active");
+  });
+
+  uploadArea.addEventListener("drop", (e) => {
+    e.preventDefault();
+    uploadArea.classList.remove("active");
+    handleFiles(e.dataTransfer.files);
+  });
+
+  imageInput.addEventListener("change", (e) => {
+    handleFiles(e.target.files);
+  });
+
+  function handleFiles(files) {
+    const maxTotal = 5;
+    const canAdd = maxTotal - currentImages.length - newImages.length;
+
+    if (canAdd <= 0) {
+      alert(`Maximum ${maxTotal} images allowed`);
+      return;
+    }
+
+    const filesToAdd = Array.from(files).slice(0, canAdd);
+
+    filesToAdd.forEach(file => {
+      if (file.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          newImages.push({ file, preview: e.target.result });
+          renderNewImages();
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  }
+
+  function renderNewImages() {
+    const container = document.getElementById("upload-area");
+    const total = currentImages.length + newImages.length;
+    
+    document.getElementById("image-count").textContent = total;
+
+    if (newImages.length === 0) {
+      container.innerHTML = `
+        <p style="margin:0;font-size:32px;margin-bottom:8px">📸</p>
+        <p style="margin:0;font-weight:700">Click to upload new images</p>
+        <p style="margin:4px 0 0;color:#6b7280;font-size:13px">or drag and drop (max 5 total)</p>
+      `;
+      return;
+    }
+
+    const html = newImages.map((img, idx) => `
+      <div class="image-item" style="margin-top:12px">
+        <img src="${img.preview}" alt="New image">
+        <button type="button" class="image-remove" onclick="removeNewImage(${idx})">×</button>
+      </div>
+    `).join("");
+
+    container.innerHTML = html + `
+      <p style="margin:12px 0 0;color:#16a34a;font-size:13px;font-weight:700">✓ ${newImages.length} new image(s) to upload</p>
+    `;
+  }
+
+  window.removeNewImage = function(idx) {
+    newImages.splice(idx, 1);
+    renderNewImages();
+  };
+
+  // ============ FORM SUBMISSION ============
+  document.getElementById("edit-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const saveBtn = document.getElementById("save-btn");
+    saveBtn.disabled = true;
+    saveBtn.textContent = "Saving...";
+
+    try {
+      let allImages = [...currentImages];
+
+      // Upload new images
+      if (newImages.length > 0) {
+        for (const img of newImages) {
+          const timestamp = Date.now();
+          const storagePath = `products/${currentUser.uid}/${timestamp}-${img.file.name}`;
+          const storageRef = ref(storage, storagePath);
+
+          const snapshot = await uploadBytes(storageRef, img.file);
+          const url = await getDownloadURL(snapshot.ref);
+          allImages.push(url);
+        }
+      }
+
+      // Update product in Firestore
+      await updateDoc(doc(db, "products", productId), {
+        name: document.getElementById("product-name").value,
+        price: Number(document.getElementById("product-price").value),
+        category: document.getElementById("product-category").value,
+        description: document.getElementById("product-description").value,
+        location: document.getElementById("product-location").value,
+        images: allImages,
+        seller: {
+          name: currentUser.displayName || "Seller",
+          phone: document.getElementById("seller-phone").value,
+          location: document.getElementById("product-location").value
+        },
+        updatedAt: new Date()
+      });
+
+      alert("✅ Product updated successfully!");
+      window.location.href = "dashboard.html?tab=my-ads";
+
+    } catch (err) {
+      console.error("Error saving product:", err);
+      alert("Error saving product: " + err.message);
+      saveBtn.disabled = false;
+      saveBtn.textContent = "Save Changes";
+    }
+  });
+
+  // Auto-hide auth check after 3 seconds
+  setTimeout(() => {
+    if (document.getElementById("auth-check").style.display !== "none") {
+      document.getElementById("auth-check").style.display = "none";
+      document.getElementById("edit-content").style.display = "block";
+    }
+  }, 3000);
+</script>
+
+</body>
+</html>
