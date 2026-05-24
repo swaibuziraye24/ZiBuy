@@ -5022,3 +5022,167 @@ table {
   }
 
 }
+
+
+/* ============================================
+   FILTER PANEL IMPROVEMENTS
+   ============================================ */
+
+.filters-panel {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border-radius: 14px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+  padding: 20px;
+  width: 100%;
+  max-width: 360px;
+  z-index: 100;
+  margin-top: 8px;
+  animation: slideDown 0.3s ease;
+}
+
+.filters-panel.active {
+  display: block;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.filter-group {
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.filter-group:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.filter-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--dark);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+}
+
+.filter-group select,
+.filter-group input[type="number"] {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: var(--font);
+  outline: none;
+  transition: border-color 0.2s;
+  background: white;
+  margin-bottom: 8px;
+}
+
+.filter-group select:focus,
+.filter-group input[type="number"]:focus {
+  border-color: var(--orange);
+}
+
+.price-inputs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.price-inputs input {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.price-dash {
+  color: var(--gray);
+  font-weight: 700;
+}
+
+.filter-radios {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filter-radios label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--dark);
+  font-weight: 500;
+  margin: 0;
+  cursor: pointer;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.filter-radios input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--orange);
+}
+
+.active-filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-left: 12px;
+}
+
+.active-filter-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--orange-lt);
+  color: var(--orange);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .filters-panel {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-width: none;
+    width: 100%;
+    border-radius: 20px 20px 0 0;
+    animation: slideUp 0.3s ease;
+  }
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+}
