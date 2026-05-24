@@ -585,6 +585,7 @@ if (logoBtn) {
 }
 
 const adminBoostBtn = document.getElementById("admin-boost-btn");
-if (adminBoostBtn && user?.email === "swaibuziraye22@gmail.com") {
+if (adminBoostBtn && currentUser?.email === "swaibuziraye22@gmail.com") {
   adminBoostBtn.style.display = "block";
 }
+
