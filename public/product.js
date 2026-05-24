@@ -122,14 +122,14 @@ const p      = snap.data();
     // ===== END ADDITION =====
 
     
-
-    window.switchImage = function(index) {
-      activeImage = index;
+window.switchImage = function(index) {
+      active = index;
       document.getElementById("main-img").src = images[index];
       document.querySelectorAll("#thumbs img").forEach((img, i) => {
         img.style.borderColor = i === index ? "#ff6600" : "transparent";
       });
     };
+   
 
     loadProductReviews(id);
 
