@@ -208,12 +208,14 @@ window.openVerification = async function(id) {
           ℹ️ Confirm payment received from WhatsApp before approving
         </div>
 
+        <!-- ===== PUT THE BUTTON CODE HERE ===== -->
         <div style="display:flex;gap:10px">
-          <button onclick="closeVerifyModal()" style="flex:1;padding:12px;border:1.5px solid #e5e7eb;background:white;border-radius:8px;cursor:pointer;font-weight:700">Close</button>
           ${verification.status === "pending" ? `
+            <button onclick="contactSellerWhatsApp('${verification.phone}', '${verification.fullName}')" style="flex:1;padding:12px;background:#25d366;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:700">💬 Message Seller</button>
             <button onclick="approveVerification('${id}')" style="flex:1;padding:12px;background:#10b981;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:700">✅ Approve</button>
             <button onclick="rejectVerification('${id}')" style="flex:1;padding:12px;background:#ef4444;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:700">❌ Reject</button>
           ` : `<span style="flex:1;text-align:center;padding:12px;color:#6b7280;font-weight:700;text-transform:capitalize">${verification.status}</span>`}
+          <button onclick="closeVerifyModal()" style="flex:1;padding:12px;border:1.5px solid #e5e7eb;background:white;border-radius:8px;cursor:pointer;font-weight:700">Close</button>
         </div>
       </div>
     `;
@@ -226,7 +228,6 @@ window.openVerification = async function(id) {
     alert("Failed to load verification details");
   }
 };
-
 // ============================================
 // CLOSE MODAL
 // ============================================
@@ -317,3 +318,14 @@ function showToast(message, type = "info") {
     toast.remove();
   }, 3000);
 }
+
+
+// ============================================
+// CONTACT SELLER VIA WHATSAPP
+// ============================================
+
+window.contactSellerWhatsApp = function(sellerPhone, sellerName) {
+  const message = `Hi ${sellerName},\n\nYour seller verification has been received. We'll review it within 24 hours.\n\nThank you! 🙏`;
+  const whatsappURL = `https://wa.me/${sellerPhone}?text=${encodeURIComponent(message)}`;
+  window.open(whatsappURL, "_blank");
+};
