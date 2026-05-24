@@ -190,16 +190,30 @@ window.submitAd = async function() {
     // 1. Upload images to Firebase Storage
     const imageUrls = [];
     
-    for (let i = 0; i < uploadedImages.length; i++) {
-      const file = uploadedImages[i];
-      const timestamp = Date.now();
-      const fileName = `products/${currentUser.uid}/${timestamp}-${i}-${file.name}`;
-      const storageRef = ref(storage, fileName);
+   for (let i = 0; i < uploadedImages.length; i++) {
+  const file = uploadedImages[i];
+  const timestamp = Date.now();
+  const fileName = `products/${currentUser.uid}/${timestamp}-${i}-${file.name}`;
+  const storageRef = ref(storage, fileName);
 
-      await uploadBytes(storageRef, file);
-      const downloadURL = await getDownloadURL(storageRef);
-      imageUrls.push(downloadURL);
-    }
+  try {
+    // Upload with metadata
+    const metadata = {
+      contentType: file.type,
+      cacheControl: 'public, max-age=31536000'
+    };
+    
+    await uploadBytes(storageRef, file, metadata);
+    const downloadURL = await getDownloadURL(storageRef);
+    
+    // Add token to URL to ensure access
+    imageUrls.push(downloadURL);
+    console.log("Image uploaded:", downloadURL);
+  } catch (uploadErr) {
+    console.error("Image upload error:", uploadErr);
+    throw new Error(`Failed to upload image ${i + 1}: ${uploadErr.message}`);
+  }
+}
 
 const phoneInput = document.getElementById("seller-phone");
 const sellerPhone = phoneInput ? phoneInput.value.trim() : "";
