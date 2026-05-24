@@ -110,22 +110,44 @@ window.logoutCustomer = async function() {
 // LOAD PRODUCTS FROM FIRESTORE
 // ============================================
 
-export async function loadProducts() {
+async function loadProducts() {
   try {
     const snapshot = await getDocs(collection(db, "products"));
-    allProducts = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
 
-    // Load featured ads first
-    await loadFeaturedProducts();
+    const products = await Promise.all(
+      snapshot.docs.map(async (docSnap) => {
+        const product = {
+          id: docSnap.id,
+          ...docSnap.data()
+        };
 
-    // Then render all products
-    renderProducts();
+        if (product.userId) {
+          try {
+            const verificationSnap = await getDocs(
+              query(
+                collection(db, "seller_verifications"),
+                where("userId", "==", product.userId),
+                where("status", "==", "approved")
+              )
+            );
 
+            product.seller = product.seller || {};
+            product.seller.isVerified = !verificationSnap.empty;
+          } catch (err) {
+            console.error("Verification check error:", err);
+            product.seller = product.seller || {};
+            product.seller.isVerified = false;
+          }
+        }
+
+        return product;
+      })
+    );
+
+    loadFeaturedProducts();
+    renderProducts(products);
   } catch (err) {
-    console.error("Error loading products:", err);
+    console.error(err);
   }
 }
 
@@ -228,33 +250,31 @@ function renderProducts() {
   }
 
   container.innerHTML = filtered.map(p => {
+    const images = p.images || [];
     const phone = (p.seller?.phone || "").replace(/\D/g, "");
     const hasPhone = phone.length > 0 && p.isUserPost === true;
 
     return `
-      <div class="product-card">
-        <div class="product-image-box">
-          <img src="${p.images?.[0] || ''}" alt="${p.name}">
-          <button class="save-btn" onclick="saveProduct('${p.id}')">💝</button>
-          ${p.isPremium ? '<span class="premium-badge">⭐ FEATURED</span>' : ''}
-        </div>
-        <div class="product-info">
-          <p class="product-cat">${p.category}</p>
-          <h3 class="product-title">${p.name}</h3>
-          <p class="product-price">UGX ${Number(p.price).toLocaleString()}</p>
-          ${p.seller?.location ? `<p class="product-seller-loc">📍 ${p.seller.location}</p>` : ''}
-          <div class="card-footer">
-            ${hasPhone ? `
-              <button class="cart-btn" onclick="messageWhatsApp('${phone}', '${p.name}', ${p.price})">💬</button>
-              <button class="view-btn" onclick="messageCall('${phone}')">☎️</button>
-            ` : `
-              <button class="cart-btn" onclick="addToCart('${p.name}', ${p.price}, '${p.images?.[0] || ''}')">🛒</button>
-              <button class="view-btn" onclick="openProductModal('${p.id}')">View</button>
-            `}
-          </div>
-        </div>
+  <div class="product-card">
+    <div class="product-image-box">
+      <img src="${images[0] || ''}" alt="${p.name}">
+      ${p.isPremium ? '<span class="premium-badge">⭐ FEATURED</span>' : ''}
+    </div>
+    <div class="product-info">
+      <p class="product-cat">${p.category}</p>
+      <h3 class="product-title">${p.name}</h3>
+      <p class="product-price">UGX ${Number(p.price).toLocaleString()}</p>
+      <div class="product-seller-loc">
+        📍 ${p.seller?.location || "Uganda"}
+        ${p.seller?.isVerified ? '<span style="color:#10b981;font-weight:800;margin-left:4px">✅ Verified</span>' : ''}
       </div>
-    `;
+      <div class="card-footer">
+        <button class="cart-btn" onclick="addToCart('${p.name.replace(/'/g,"\\'")}', ${p.price}, '${images[0] || ""}')">🛒 Add</button>
+        <button class="view-btn" onclick="openProductModal('${p.id}')">View</button>
+      </div>
+    </div>
+  </div>
+`;
   }).join("");
 
   document.getElementById("product-count").textContent = `${filtered.length} listings`;
