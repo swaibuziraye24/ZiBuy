@@ -1,119 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#ff6600">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Seller Verification — ZiBuy</title>
+  <link rel="stylesheet" href="style.css">
+</head>
 <body>
 
 <header class="topbar">
-  <a href="index.html">
-    <h1 class="logo">Zi<span>Buy</span></h1>
-  </a>
-
-  <button
-    class="btn btn-dark mobile-home-btn"
-    onclick="window.location.href='index.html'"
-  >
-    ← Home
-  </button>
+  <a href="index.html"><img src="my_logo.png" alt="ZiBuy" style="height:50px;width:auto;object-fit:contain"></a>
+  <div style="margin-left:auto">
+    <button class="btn btn-dark" onclick="window.location.href='dashboard.html'" style="padding:8px 16px">← Back</button>
+  </div>
 </header>
 
-<div class="verify-page">
+<div style="max-width:600px;margin:0 auto;padding:24px">
+  <h1 style="font-size:28px;font-weight:800;margin-bottom:8px">✅ Get Verified Seller Badge</h1>
+  <p style="color:#6b7280;margin-bottom:24px">Verification fee: <strong>UGX 50,000</strong></p>
 
-  <div class="verify-card">
-
-    <div class="verify-header">
-
-      <div class="verify-icon">
-        ✅
+  <form id="verify-form">
+    <!-- Personal Info -->
+    <div style="margin-bottom:20px">
+      <h3 style="font-weight:800;margin-bottom:12px">Personal Information</h3>
+      
+      <div style="margin-bottom:12px">
+        <label style="display:block;font-weight:700;margin-bottom:6px">Full Name *</label>
+        <input type="text" id="full-name" required style="width:100%;padding:12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;box-sizing:border-box">
       </div>
 
-      <h1>Seller Verification</h1>
+      <div style="margin-bottom:12px">
+        <label style="display:block;font-weight:700;margin-bottom:6px">Business Name *</label>
+        <input type="text" id="business-name" required style="width:100%;padding:12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;box-sizing:border-box">
+      </div>
 
-      <p>
-        Become a trusted seller on ZiBuy and increase customer confidence.
+      <div style="margin-bottom:12px">
+        <label style="display:block;font-weight:700;margin-bottom:6px">Phone Number *</label>
+        <input type="tel" id="phone-number" required placeholder="+256 700 000000" style="width:100%;padding:12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;box-sizing:border-box">
+      </div>
+
+      <div>
+        <label style="display:block;font-weight:700;margin-bottom:6px">Location *</label>
+        <select id="location" required style="width:100%;padding:12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;box-sizing:border-box">
+          <option value="">Select location</option>
+          <option value="Kampala">Kampala</option>
+          <option value="Wakiso">Wakiso</option>
+          <option value="Mukono">Mukono</option>
+          <option value="Jinja">Jinja</option>
+          <option value="Mbarara">Mbarara</option>
+          <option value="Entebbe">Entebbe</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Documents -->
+    <div style="margin-bottom:20px;padding:16px;background:#f9fafb;border-radius:12px;border:1.5px solid #e5e7eb">
+      <h3 style="font-weight:800;margin-bottom:12px">📋 Documents</h3>
+      
+      <div style="margin-bottom:12px">
+        <label style="display:block;font-weight:700;margin-bottom:6px">National ID / Passport (Image) *</label>
+        <input type="file" id="id-document" accept="image/*" required style="width:100%;padding:8px;border:1.5px solid #e5e7eb;border-radius:10px;font-family:inherit;box-sizing:border-box">
+      </div>
+
+      <div>
+        <label style="display:block;font-weight:700;margin-bottom:6px">Business License (Image) - Optional</label>
+        <input type="file" id="business-license" accept="image/*" style="width:100%;padding:8px;border:1.5px solid #e5e7eb;border-radius:10px;font-family:inherit;box-sizing:border-box">
+      </div>
+    </div>
+
+    <!-- Bio -->
+    <div style="margin-bottom:20px">
+      <label style="display:block;font-weight:700;margin-bottom:6px">About Your Business</label>
+      <textarea id="bio" placeholder="Tell us about your business..." rows="4" style="width:100%;padding:12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;box-sizing:border-box;resize:vertical"></textarea>
+    </div>
+
+    <!-- Payment Info -->
+    <div style="background:#fffbeb;border:1.5px solid #fde68a;border-radius:12px;padding:16px;margin-bottom:20px">
+      <h3 style="font-weight:800;margin:0 0 12px;color:#92400e">💳 Payment Details</h3>
+      <p style="margin:0 0 8px;color:#92400e;font-size:14px">
+        <strong>Amount:</strong> UGX 50,000
       </p>
-
+      <p style="margin:0;color:#92400e;font-size:13px">
+        After submitting, you'll get WhatsApp with payment instructions from our admin.
+      </p>
     </div>
 
-    <div class="verify-benefits">
-
-      <div class="benefit-card">
-        <span>🛡️</span>
-        <p>Trusted Seller Badge</p>
-      </div>
-
-      <div class="benefit-card">
-        <span>📈</span>
-        <p>More Visibility</p>
-      </div>
-
-      <div class="benefit-card">
-        <span>⭐</span>
-        <p>Increase Sales</p>
-      </div>
-
+    <!-- Terms -->
+    <div style="margin-bottom:20px">
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px">
+        <input type="checkbox" id="agree-terms" required style="width:18px;height:18px;cursor:pointer">
+        <span>I agree to the verification terms and conditions</span>
+      </label>
     </div>
 
-    <div class="verify-form">
+    <!-- Submit -->
+    <button type="submit" class="btn btn-orange" style="width:100%;padding:14px;font-size:16px;border:none;border-radius:10px;background:#ff6600;color:white;font-weight:700;cursor:pointer">
+      Submit Verification Request
+    </button>
+  </form>
 
-      <div class="form-group">
-        <label>Full Name</label>
-        <input
-          type="text"
-          id="verify-name"
-          placeholder="Enter your full name"
-        >
-      </div>
-
-      <div class="form-group">
-        <label>Phone Number</label>
-        <input
-          type="tel"
-          id="verify-phone"
-          placeholder="256701234567"
-        >
-      </div>
-
-      <div class="form-group">
-        <label>Location</label>
-        <input
-          type="text"
-          id="verify-location"
-          placeholder="Kampala, Uganda"
-        >
-      </div>
-
-      <div class="form-group">
-        <label>National ID Number</label>
-        <input
-          type="text"
-          id="verify-national-id"
-          placeholder="CM123456789..."
-        >
-      </div>
-
-      <div class="form-group">
-        <label>About You</label>
-        <textarea
-          id="verify-about"
-          rows="5"
-          placeholder="Tell buyers about yourself and your business..."
-        ></textarea>
-      </div>
-
-      <button
-        class="submit-verify-btn"
-        onclick="submitVerification()"
-      >
-        Submit Verification
-      </button>
-
-      <div id="verification-status"></div>
-
-    </div>
-
+  <div id="status-message" style="margin-top:20px;padding:16px;background:#f9fafb;border-radius:12px;display:none">
+    <p style="margin:0;color:#6b7280">Checking verification status...</p>
   </div>
-
 </div>
 
 <div id="toast-container" class="toast-container"></div>
 
-<script type="module" src="seller-verification.js"></script>
+<script type="module">
+  import { db, auth, collection, addDoc, getDocs, query, where } from "./firebase.js";
+  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+  let currentUser = null;
+
+  onAuthStateChanged(auth, async (user) => {
+    currentUser = user;
+    if (!user) {
+      window.location.href = "index.html";
+      return;
+    }
+
+    // Check existing verification
+    const snapshot = await getDocs(query(
+      collection(db, "seller_verifications"),
+      where("userId", "==", currentUser.uid)
+    ));
+
+    if (!snapshot.empty) {
+      const verification = snapshot.docs[0].data();
+      document.getElementById("verify-form").style.display = "none";
+      document.getElementById("status-message").style.display = "block";
+      
+      let statusText = `Status: <strong>${verification.status?.toUpperCase()}</strong>`;
+      if (verification.status === "approved") {
+        statusText += " ✅ You are now a verified seller!";
+      } else if (verification.status === "pending") {
+        statusText += " ⏳ Waiting for admin approval...";
+      } else if (verification.status === "rejected") {
+        statusText += " ❌ Please contact support";
+      }
+      
+      document.getElementById("status-message").innerHTML = statusText;
+      return;
+    }
+  });
+
+  document.getElementById("verify-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const btn = e.target.querySelector("button[type='submit']");
+    btn.textContent = "Processing...";
+    btn.disabled = true;
+
+    try {
+      const fullName = document.getElementById("full-name").value;
+      const businessName = document.getElementById("business-name").value;
+      const phone = document.getElementById("phone-number").value;
+      const location = document.getElementById("location").value;
+      const bio = document.getElementById("bio").value;
+      const idFile = document.getElementById("id-document").files[0];
+
+      if (!idFile) {
+        alert("Please upload your ID document");
+        btn.textContent = "Submit Verification Request";
+        btn.disabled = false;
+        return;
+      }
+
+      // Create verification request
+      await addDoc(collection(db, "seller_verifications"), {
+        userId: currentUser.uid,
+        email: currentUser.email,
+        fullName,
+        businessName,
+        phone,
+        location,
+        bio,
+        paymentAmount: 50000,
+        paymentStatus: "pending",
+        status: "pending",
+        createdAt: new Date()
+      });
+
+      // Send WhatsApp message
+      const adminPhone = "256701234567"; // YOUR ADMIN PHONE
+      const message = `🆕 NEW VERIFICATION REQUEST\n\n👤 Name: ${fullName}\n🏢 Business: ${businessName}\n📞 Phone: ${phone}\n📍 Location: ${location}\n\n💳 Payment: UGX 50,000\n📧 Email: ${currentUser.email}\n\nPlease review at: admin-verification.html`;
+      
+      window.location.href = `https://wa.me/${adminPhone}?text=${encodeURIComponent(message)}`;
+
+    } catch (err) {
+      console.error(err);
+      alert("Error: " + err.message);
+      btn.textContent = "Submit Verification Request";
+      btn.disabled = false;
+    }
+  });
+
+  function showToast(msg) {
+    const container = document.getElementById("toast-container");
+    const toast = document.createElement("div");
+    toast.style.cssText = "background:#ef4444;color:white;padding:14px 20px;border-radius:10px;margin-bottom:10px";
+    toast.textContent = msg;
+    container.appendChild(toast);
+    setTimeout(() => toast.remove(), 2000);
+  }
+</script>
 
 </body>
+</html>
