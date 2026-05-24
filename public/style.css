@@ -6106,19 +6106,37 @@ table {
 /* ============================================
    JUMIA-STYLE TOPBAR REDESIGN
    ============================================ */
-
-.topbar {
+.topbar-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  background: var(--white);
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border-bottom: 1px solid #e5e7eb;
-  flex-wrap: wrap;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/* Account Icon Button */
+.topbar-account-icon {
+  background: none;
+  border: none;
+  color: var(--dark);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  min-height: 40px;
+}
+
+.topbar-account-icon:hover {
+  background: var(--light);
+  color: var(--orange);
+}
+
+.topbar-account-icon:active {
+  transform: scale(0.95);
 }
 
 /* Hamburger Menu (Mobile) */
