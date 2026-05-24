@@ -1,325 +1,458 @@
-// ============================================
-// ZiBuy — Admin Verification System
-// ============================================
-
-import {
-  db,
-  auth,
-  collection,
-  getDocs,
-  doc,
-  updateDoc,
-  query,
-  where
-} from "./firebase.js";
-
-import {
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-// ============================================
-// ADMIN PROTECTION
-// ============================================
-
-const ADMIN_EMAIL = "swaibuziraye22@gmail.com";
-
-onAuthStateChanged(auth, (user) => {
-
-  if (!user) {
-    window.location.href = "index.html";
-    return;
-  }
-
-  const currentEmail = user.email?.trim().toLowerCase();
-
-  if (currentEmail !== ADMIN_EMAIL.toLowerCase()) {
-    window.location.href = "index.html";
-    return;
-  }
-
-  // Admin verified
-  loadVerificationRequests();
-
-});
-
-// ============================================
-// GLOBALS
-// ============================================
-
-let currentFilter = "pending";
-let currentVerificationId = null;
-
-// ============================================
-// LOAD VERIFICATION REQUESTS
-// ============================================
-
-async function loadVerificationRequests() {
-
-  const container = document.getElementById("verification-requests");
-
-  if (!container) return;
-
-  container.innerHTML = `
-    <p style="padding:20px;text-align:center">
-      Loading verification requests...
-    </p>
-  `;
-
-  try {
-
-    const q = query(
-      collection(db, "verifications"),
-      where("status", "==", currentFilter)
-    );
-
-    const snapshot = await getDocs(q);
-
-    container.innerHTML = "";
-
-    if (snapshot.empty) {
-
-      container.innerHTML = `
-        <div class="empty-state">
-          <div class="empty-icon">📭</div>
-          <p>No ${currentFilter} requests</p>
-        </div>
-      `;
-
-      return;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seller Verification | ZiBuy Admin</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
 
-    snapshot.forEach((docSnap) => {
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: #f3f4f6;
+      color: #111827;
+    }
 
-      const data = docSnap.data();
+    /* ============ HEADER ============ */
+    .admin-header {
+      background: white;
+      padding: 16px 24px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #ff6600;
+    }
 
-      container.innerHTML += `
-        <div class="verification-card">
+    .admin-header h1 {
+      font-size: 24px;
+      font-weight: 800;
+      color: #111827;
+    }
 
-          <div class="verification-top">
+    .admin-header p {
+      color: #6b7280;
+      font-size: 14px;
+      margin-top: 4px;
+    }
 
-            <div>
-              <h3>${data.fullName || "Unknown Seller"}</h3>
+    .admin-logout-btn {
+      background: #ef4444;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
 
-              <p>📧 ${data.email || "No Email"}</p>
+    .admin-logout-btn:hover {
+      background: #dc2626;
+    }
 
-              <p>📞 ${data.phone || "No Phone"}</p>
+    /* ============ CONTAINER ============ */
+    .admin-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 24px;
+    }
 
-              <p>📍 ${data.location || "Uganda"}</p>
-            </div>
+    /* ============ FILTERS ============ */
+    .filter-section {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
 
-            <span class="verification-status ${data.status}">
-              ${data.status}
-            </span>
+    .verify-filter {
+      padding: 10px 20px;
+      border: 2px solid #e5e7eb;
+      background: white;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 14px;
+      color: #6b7280;
+      transition: all 0.2s;
+    }
 
-          </div>
+    .verify-filter:hover {
+      border-color: #ff6600;
+      color: #ff6600;
+    }
 
-          <div class="verification-actions">
+    .verify-filter.active {
+      background: #ff6600;
+      color: white;
+      border-color: #ff6600;
+    }
 
-            <button
-              class="btn btn-orange"
-              onclick="openVerification('${docSnap.id}')"
-            >
-              View Details
-            </button>
+    /* ============ REQUESTS CONTAINER ============ */
+    #verification-requests {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
 
-          </div>
+    .verification-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
 
-        </div>
-      `;
+    .verification-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    }
 
-    });
+    .verification-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+      gap: 16px;
+    }
 
-  } catch (err) {
+    .verification-top h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
 
-    console.error(err);
+    .verification-top p {
+      font-size: 13px;
+      color: #6b7280;
+      margin-bottom: 4px;
+    }
 
-    container.innerHTML = `
-      <p style="color:red;padding:20px">
-        Failed to load requests
-      </p>
-    `;
-  }
-}
+    .verification-status {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
 
-// ============================================
-// FILTERS
-// ============================================
+    .verification-status.pending {
+      background: #fef3c7;
+      color: #92400e;
+    }
 
-window.filterVerifications = function(status) {
+    .verification-status.approved {
+      background: #dcfce7;
+      color: #16a34a;
+    }
 
-  currentFilter = status;
+    .verification-status.rejected {
+      background: #fee2e2;
+      color: #991b1b;
+    }
 
-  document.querySelectorAll(".verify-filter").forEach(btn => {
-    btn.classList.remove("active");
-  });
+    .verification-actions {
+      display: flex;
+      gap: 8px;
+    }
 
-  event.target.classList.add("active");
+    .btn {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
 
-  loadVerificationRequests();
-};
+    .btn-orange {
+      background: #ff6600;
+      color: white;
+    }
 
-// ============================================
-// OPEN VERIFICATION MODAL
-// ============================================
+    .btn-orange:hover {
+      background: #e55a00;
+    }
 
-window.openVerification = async function(id) {
+    .btn-green {
+      background: #10b981;
+      color: white;
+    }
 
-  currentVerificationId = id;
+    .btn-green:hover {
+      background: #059669;
+    }
 
-  try {
+    .btn-red {
+      background: #ef4444;
+      color: white;
+    }
 
-    const snapshot = await getDocs(collection(db, "verifications"));
+    .btn-red:hover {
+      background: #dc2626;
+    }
 
-    let verification = null;
+    /* ============ MODAL ============ */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
 
-    snapshot.forEach((docSnap) => {
+    .modal.open {
+      opacity: 1;
+      pointer-events: all;
+    }
 
-      if (docSnap.id === id) {
-        verification = {
-          id: docSnap.id,
-          ...docSnap.data()
-        };
+    .modal-content {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      width: 100%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .modal-header h2 {
+      font-size: 18px;
+      font-weight: 800;
+      margin: 0;
+    }
+
+    .modal-close-btn {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #6b7280;
+      transition: color 0.2s;
+    }
+
+    .modal-close-btn:hover {
+      color: #111827;
+    }
+
+    .verify-details {
+      margin: 20px 0;
+    }
+
+    .verify-details p {
+      margin-bottom: 16px;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .verify-details strong {
+      display: block;
+      color: #111827;
+      margin-bottom: 4px;
+      font-weight: 700;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .modal-actions button {
+      flex: 1;
+      padding: 12px;
+      border-radius: 8px;
+      border: none;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    /* ============ OVERLAY ============ */
+    #overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: transparent;
+      z-index: -1;
+      transition: z-index 0.3s;
+    }
+
+    #overlay.active {
+      z-index: 9998;
+    }
+
+    /* ============ TOAST ============ */
+    #toast-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 10000;
+      max-width: 400px;
+    }
+
+    .toast {
+      padding: 14px 20px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      font-weight: 700;
+      font-size: 14px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      animation: slideIn 0.3s ease-out;
+    }
+
+    .toast.success {
+      background: #10b981;
+      color: white;
+    }
+
+    .toast.error {
+      background: #ef4444;
+      color: white;
+    }
+
+    .toast.info {
+      background: #ff6600;
+      color: white;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    /* ============ EMPTY STATE ============ */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      background: white;
+      border-radius: 12px;
+    }
+
+    .empty-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+
+    .empty-state p {
+      color: #6b7280;
+      font-size: 14px;
+    }
+
+    /* ============ RESPONSIVE ============ */
+    @media (max-width: 768px) {
+      .admin-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
       }
 
-    });
-
-    if (!verification) return;
-
-    document.getElementById("modal-seller-name").textContent =
-      verification.fullName || "Seller";
-
-    document.getElementById("modal-content").innerHTML = `
-
-      <div class="verify-details">
-
-        <p><strong>Full Name:</strong><br>
-        ${verification.fullName || "-"}</p>
-
-        <p><strong>Email:</strong><br>
-        ${verification.email || "-"}</p>
-
-        <p><strong>Phone:</strong><br>
-        ${verification.phone || "-"}</p>
-
-        <p><strong>Location:</strong><br>
-        ${verification.location || "-"}</p>
-
-        <p><strong>National ID:</strong><br>
-        ${verification.nationalId || "-"}</p>
-
-        <p><strong>Status:</strong><br>
-        ${verification.status || "-"}</p>
-
-      </div>
-
-    `;
-
-    document.getElementById("modal-verify").classList.add("open");
-    document.getElementById("overlay").classList.add("active");
-
-  } catch (err) {
-
-    console.error(err);
-
-    showToast("Failed to load details", "error");
-  }
-};
-
-// ============================================
-// CLOSE MODAL
-// ============================================
-
-window.closeVerifyModal = function() {
-
-  document.getElementById("modal-verify").classList.remove("open");
-
-  document.getElementById("overlay").classList.remove("active");
-};
-
-// ============================================
-// APPROVE VERIFICATION
-// ============================================
-
-window.approveVerification = async function() {
-
-  if (!currentVerificationId) return;
-
-  try {
-
-    await updateDoc(
-      doc(db, "verifications", currentVerificationId),
-      {
-        status: "approved",
-        verified: true,
-        approvedAt: new Date()
+      .admin-logout-btn {
+        align-self: flex-end;
       }
-    );
 
-    showToast("Seller approved ✅", "success");
-
-    closeVerifyModal();
-
-    loadVerificationRequests();
-
-  } catch (err) {
-
-    console.error(err);
-
-    showToast("Approval failed", "error");
-  }
-};
-
-// ============================================
-// REJECT VERIFICATION
-// ============================================
-
-window.rejectVerification = async function() {
-
-  if (!currentVerificationId) return;
-
-  try {
-
-    await updateDoc(
-      doc(db, "verifications", currentVerificationId),
-      {
-        status: "rejected",
-        verified: false
+      .modal-content {
+        max-width: 100%;
       }
-    );
 
-    showToast("Seller rejected ❌", "info");
+      .verification-top {
+        flex-direction: column;
+      }
 
-    closeVerifyModal();
+      #toast-container {
+        left: 20px;
+        right: 20px;
+        max-width: none;
+      }
+    }
+  </style>
+</head>
+<body>
 
-    loadVerificationRequests();
+  <!-- HEADER -->
+  <div class="admin-header">
+    <div>
+      <h1>🔐 Seller Verification Hub</h1>
+      <p>Review and approve seller applications</p>
+    </div>
+    <button class="admin-logout-btn" onclick="logoutAdmin()">🚪 Logout</button>
+  </div>
 
-  } catch (err) {
+  <!-- MAIN CONTAINER -->
+  <div class="admin-container">
 
-    console.error(err);
+    <!-- FILTERS -->
+    <div class="filter-section">
+      <button class="verify-filter active" onclick="filterVerifications('pending')">⏳ Pending</button>
+      <button class="verify-filter" onclick="filterVerifications('approved')">✅ Approved</button>
+      <button class="verify-filter" onclick="filterVerifications('rejected')">❌ Rejected</button>
+      <button class="verify-filter" onclick="filterVerifications('all')">📋 All</button>
+    </div>
 
-    showToast("Rejection failed", "error");
-  }
-};
+    <!-- VERIFICATION REQUESTS -->
+    <div id="verification-requests">
+      <p style="padding:20px;text-align:center;color:#6b7280">Loading...</p>
+    </div>
 
-// ============================================
-// TOAST
-// ============================================
+  </div>
 
-function showToast(message, type = "info") {
+  <!-- OVERLAY -->
+  <div id="overlay"></div>
 
-  const container = document.getElementById("toast-container");
+  <!-- TOAST CONTAINER -->
+  <div id="toast-container"></div>
 
-  if (!container) return;
+  <!-- SCRIPTS -->
+  <script type="module">
+    import { auth } from "./firebase.js";
+    import { signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import "./admin-verification.js";
 
-  const toast = document.createElement("div");
+    window.logoutAdmin = async function() {
+      if (!confirm("Are you sure you want to logout?")) return;
+      try {
+        await signOut(auth);
+        window.location.href = "index.html";
+      } catch (err) {
+        console.error("Logout error:", err);
+        alert("Logout failed");
+      }
+    };
+  </script>
 
-  toast.className = `toast ${type}`;
-
-  toast.textContent = message;
-
-  container.appendChild(toast);
-
-  setTimeout(() => {
-    toast.remove();
-  }, 3000);
-}
+</body>
+</html>
