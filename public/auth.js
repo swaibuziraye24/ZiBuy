@@ -155,7 +155,6 @@ export async function customerLogout() {
 }
 
 // ============ Admin Login ============
-
 export async function adminLogin() {
   const email = document.getElementById("admin-email")?.value.trim();
   const password = document.getElementById("admin-password")?.value.trim();
@@ -176,7 +175,12 @@ export async function adminLogin() {
 
     isAdmin = true;
     closeAdminLoginModal();
-    openAdminPanel();
+    
+    // Wait a moment then open admin panel
+    setTimeout(() => {
+      openAdminPanel();
+    }, 500);
+    
     showToast("✅ Welcome Admin! 🔑");
   } catch (err) {
     alert("❌ Admin login failed: " + err.message);
@@ -184,23 +188,36 @@ export async function adminLogin() {
 }
 
 export async function openAdminPanel() {
-  // Load admin module only when needed
-  await import("./admin.js");
+  try {
+    // Get modal elements
+    const modal = document.getElementById("admin-modal");
+    const content = document.getElementById("admin-panel-content");
 
-  const modal = document.getElementById("admin-modal");
-  const content = document.getElementById("admin-panel-content");
+    if (!modal || !content) {
+      console.error("Admin modal elements not found");
+      alert("Error: Admin panel not found");
+      return;
+    }
 
-  if (modal) {
+    // Show modal
     modal.classList.add("open");
-  }
-
-  if (content) {
     content.style.display = "block";
-  }
 
-  // Load orders
-  if (window.loadOrders) {
-    window.loadOrders();
+    // Load admin.js module
+    try {
+      await import("./admin.js");
+      console.log("Admin module loaded");
+    } catch (err) {
+      console.warn("Admin module not available (optional):", err);
+    }
+
+    // Load orders if function exists
+    if (window.loadOrders) {
+      window.loadOrders();
+    }
+
+  } catch (err) {
+    console.error("Error opening admin panel:", err);
   }
 }
 
@@ -211,8 +228,8 @@ export function closeAdminPanel() {
   }
 }
 
-// ============ Expose to window for onclick handlers ============
 
+// Expose auth functions to window for onclick handlers
 window.openAuthModal = openAuthModal;
 window.closeAuthModal = closeAuthModal;
 window.customerRegister = customerRegister;
