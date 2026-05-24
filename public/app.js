@@ -7,6 +7,8 @@ import {
   collection, getDocs, addDoc, query, where
 } from "./firebase.js";
 
+import { auth } from "./firebase.js";
+
 import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
@@ -14,6 +16,8 @@ import {
 import { getFeaturedAds } from "./premium-ads.js";
 
 import "./auth.js";
+
+let currentUser = null;
 
 onAuthStateChanged(auth, (user) => {
   currentUser = user;
