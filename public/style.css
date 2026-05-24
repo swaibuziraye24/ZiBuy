@@ -5260,3 +5260,220 @@ table {
   z-index:5;
   box-shadow:0 4px 12px rgba(0,0,0,.15);
 }
+
+
+/* ============================================
+   SELLER VERIFICATION PAGE
+============================================ */
+
+.verify-page{
+  min-height:100vh;
+  background:#f8fafc;
+  display:flex;
+  justify-content:center;
+  padding:24px 16px;
+}
+
+.verify-card{
+  width:100%;
+  max-width:720px;
+  background:white;
+  border-radius:24px;
+  padding:32px;
+  box-shadow:0 10px 30px rgba(0,0,0,.08);
+}
+
+.verify-header{
+  text-align:center;
+  margin-bottom:28px;
+}
+
+.verify-icon{
+  width:72px;
+  height:72px;
+  margin:auto;
+  border-radius:50%;
+  background:#fff4ee;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:34px;
+  margin-bottom:16px;
+}
+
+.verify-header h1{
+  font-size:32px;
+  font-weight:800;
+  color:#111827;
+  margin-bottom:10px;
+}
+
+.verify-header p{
+  color:#6b7280;
+  font-size:15px;
+  line-height:1.6;
+}
+
+.verify-benefits{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:14px;
+  margin-bottom:28px;
+}
+
+.benefit-card{
+  background:#fff7ed;
+  border:1px solid #fed7aa;
+  border-radius:16px;
+  padding:18px;
+  text-align:center;
+}
+
+.benefit-card span{
+  font-size:28px;
+  display:block;
+  margin-bottom:10px;
+}
+
+.benefit-card p{
+  font-size:14px;
+  font-weight:700;
+  color:#111827;
+}
+
+.verify-form{
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+}
+
+.form-group{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.form-group label{
+  font-size:14px;
+  font-weight:700;
+  color:#111827;
+}
+
+.form-group input,
+.form-group textarea{
+  width:100%;
+  border:1px solid #d1d5db;
+  border-radius:14px;
+  padding:14px;
+  font-size:15px;
+  outline:none;
+  transition:.2s;
+  background:white;
+}
+
+.form-group input:focus,
+.form-group textarea:focus{
+  border-color:#ff6600;
+  box-shadow:0 0 0 4px rgba(255,102,0,.12);
+}
+
+.submit-verify-btn{
+  background:#ff6600;
+  color:white;
+  border:none;
+  border-radius:16px;
+  padding:16px;
+  font-size:16px;
+  font-weight:800;
+  cursor:pointer;
+  transition:.2s;
+}
+
+.submit-verify-btn:hover{
+  transform:translateY(-2px);
+  background:#e65c00;
+}
+
+.verification-status-box{
+  margin-top:20px;
+  padding:16px;
+  border-radius:16px;
+  text-align:center;
+  font-weight:800;
+}
+
+.verification-status-box.pending{
+  background:#fef3c7;
+  color:#92400e;
+}
+
+.verification-status-box.approved{
+  background:#dcfce7;
+  color:#166534;
+}
+
+.verification-status-box.rejected{
+  background:#fee2e2;
+  color:#991b1b;
+}
+
+/* ============================================
+   MOBILE RESPONSIVE
+============================================ */
+
+@media(max-width:768px){
+
+  .verify-card{
+    padding:22px;
+    border-radius:20px;
+  }
+
+  .verify-header h1{
+    font-size:26px;
+  }
+
+  .verify-benefits{
+    grid-template-columns:1fr;
+  }
+
+  .benefit-card{
+    padding:16px;
+  }
+
+  .submit-verify-btn{
+    width:100%;
+  }
+
+}
+
+@media(max-width:480px){
+
+  .verify-page{
+    padding:12px;
+  }
+
+  .verify-card{
+    padding:18px;
+    border-radius:18px;
+  }
+
+  .verify-header h1{
+    font-size:22px;
+  }
+
+  .verify-header p{
+    font-size:14px;
+  }
+
+  .form-group input,
+  .form-group textarea{
+    font-size:14px;
+    padding:13px;
+  }
+
+  .submit-verify-btn{
+    padding:14px;
+    font-size:15px;
+  }
+
+}
