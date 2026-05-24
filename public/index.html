@@ -16,17 +16,11 @@
 <!-- ============ TOP BAR ============ -->
 <header class="topbar">
 
-  <!-- Hamburger Menu (Mobile) -->
-  <button class="topbar-menu" onclick="toggleMobileMenu()">
-    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-      <path d="M3 12h18M3 6h18M3 18h18"/>
-    </svg>
-  </button>
-
+ 
   <!-- Logo -->
-  <a href="index.html" class="logo" id="secret-admin-trigger">
-    Zi<span>Buy</span>
-  </a>
+ <h1 class="logo" id="secret-admin-trigger">
+  Zi<span>Buy</span>
+</h1>
 
   <!-- Search Bar (Hidden on Mobile) -->
   <div class="search-wrap">
@@ -44,40 +38,32 @@
   <!-- Right Icons (Mobile-Friendly) -->
   <div class="topbar-icons">
 
-    <!-- Messages Icon -->
-    <button class="topbar-icon" id="messages-icon-btn" onclick="window.location.href='messages.html'" style="display:none" title="Messages">
-      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
-      </svg>
-    </button>
+<button class="btn btn-orange" id="post-ad-btn" onclick="window.location.href='post-ad.html'" style="display:none">
+  + Post Ad
+</button>
 
-    <!-- Notifications Icon -->
-    <button class="topbar-icon" id="notifications-icon-btn" onclick="window.location.href='notifications.html'" style="display:none" title="Notifications">
-      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/>
-      </svg>
-    </button>
+<button class="btn btn-outline" id="messages-btn" onclick="window.location.href='messages.html'" style="display:none">
+  💬 Messages
+</button>
 
-    <!-- Dashboard Icon -->
-    <button class="topbar-icon" id="dashboard-icon-btn" onclick="window.location.href='dashboard.html'" style="display:none" title="Dashboard">
-      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
-      </svg>
-    </button>
+<button class="btn btn-outline" id="notifications-btn" onclick="window.location.href='notifications.html'" style="display:none">
+  🔔 Notifications
+</button>
 
-    <!-- Post Ad Icon -->
-    <button class="topbar-icon" id="post-ad-icon-btn" onclick="window.location.href='post-ad.html'" style="display:none" title="Post Ad">
-      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path d="M12 5v14M5 12h14"/>
-      </svg>
-    </button>
+<button class="btn btn-outline" id="dashboard-btn" onclick="window.location.href='dashboard.html'" style="display:none">
+  📊 Dashboard
+</button>
 
-    <!-- Account/User Icon -->
-    <button class="topbar-icon" id="account-icon-btn" onclick="openAuthModal()" title="Account">
-      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"/>
-      </svg>
-    </button>
+<button class="btn btn-outline" id="account-btn" onclick="openAuthModal()">
+  Account
+</button>
+
+<div class="cart-btn-wrap">
+  <button class="btn btn-orange" onclick="toggleCart()">
+    🛒 Cart
+  </button>
+  <span class="cart-badge" id="cart-count">0</span>
+</div>
 
     <!-- Cart Icon -->
     <div class="cart-icon-wrap">
@@ -93,12 +79,7 @@
 
 </header>
 
-<!-- Mobile Menu Drawer -->
-<div class="mobile-menu-drawer" id="mobile-menu-drawer">
-  <div class="mobile-menu-header">
-    <h3>Menu</h3>
-    <button onclick="toggleMobileMenu()">✕</button>
-  </div>
+
   <button class="mobile-menu-item" id="mobile-post-ad" onclick="window.location.href='post-ad.html'; toggleMobileMenu()" style="display:none">
     ➕ Post Ad
   </button>
@@ -111,7 +92,7 @@
   <button class="mobile-menu-item" id="mobile-notifications" onclick="window.location.href='notifications.html'; toggleMobileMenu()" style="display:none">
     🔔 Notifications
   </button>
-  <<button class="btn btn-outline" id="account-btn" onclick="openAuthModal()">
+  <button class="btn btn-outline" id="account-btn" onclick="openAuthModal()">
   👤 Account
 </button>
 </div>
