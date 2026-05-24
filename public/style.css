@@ -6142,125 +6142,114 @@ table {
 
 }
 
+
 /* =========================================
-   JUMIA STYLE HEADER
+   ZIBUY MOBILE HEADER
+   JUMIA-STYLE LAYOUT
 ========================================= */
 
 .topbar{
+  background:#ffffff;
+  padding:10px 14px;
+  border-bottom:1px solid #ececec;
   position:sticky;
   top:0;
   z-index:999;
+}
+
+/* =========================================
+   TOP ROW
+========================================= */
+
+.mobile-topbar{
   display:flex;
   align-items:center;
-  gap:20px;
-  background:#fff;
-  padding:12px 20px;
-  border-bottom:1px solid #e5e7eb;
+  justify-content:space-between;
+  gap:12px;
 }
 
 /* =========================================
    LOGO
 ========================================= */
 
-.topbar-left{
-  display:flex;
-  align-items:center;
-}
-
 .zibuy-logo{
-  height:42px;
+  height:36px;
   width:auto;
   object-fit:contain;
   cursor:pointer;
+  display:block;
 }
 
 /* =========================================
-   SEARCH
+   ACTIONS
 ========================================= */
 
-.topbar-center{
-  flex:1;
-  display:flex;
-  justify-content:center;
-}
-
-.search-wrap{
-  width:100%;
-  max-width:720px;
-  height:46px;
-  background:#fff;
-  border:1px solid #d1d5db;
-  border-radius:6px;
+.mobile-actions{
   display:flex;
   align-items:center;
-  overflow:hidden;
+  gap:14px;
+}
+
+/* =========================================
+   ICON BUTTONS
+========================================= */
+
+.mobile-icon-btn{
+  background:none;
+  border:none;
+  color:#111827;
+  font-size:30px;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:0;
+  transition:0.2s;
+}
+
+.mobile-icon-btn:hover{
+  color:#ff6600;
+}
+
+/* =========================================
+   SEARCH BAR
+========================================= */
+
+.search-wrap{
+  margin-top:12px;
+  height:46px;
+  background:#ffffff;
+  border:1.5px solid #d1d5db;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  padding:0 14px;
+  transition:0.2s;
+}
+
+.search-wrap:focus-within{
+  border-color:#ff6600;
+  box-shadow:0 0 0 3px rgba(255,102,0,0.12);
 }
 
 .search-icon{
-  margin-left:14px;
   color:#6b7280;
+  flex-shrink:0;
 }
 
 .search-wrap input{
   flex:1;
   border:none;
   outline:none;
-  padding:0 14px;
-  font-size:15px;
   height:100%;
-}
-
-.search-btn{
-  height:100%;
-  border:none;
-  background:#f68b1e;
-  color:white;
-  font-weight:700;
-  padding:0 22px;
-  cursor:pointer;
-}
-
-/* =========================================
-   RIGHT BUTTONS
-========================================= */
-
-.topbar-actions{
-  display:flex;
-  align-items:center;
-  gap:8px;
-}
-
-.btn{
-  height:42px;
-  border:none;
-  background:transparent;
-  display:flex;
-  align-items:center;
-  gap:6px;
   padding:0 12px;
-  border-radius:6px;
-  cursor:pointer;
   font-size:14px;
-  font-weight:600;
-  transition:0.2s;
-}
-
-.btn:hover{
-  background:#f3f4f6;
-}
-
-.btn-orange{
-  background:#f68b1e;
-  color:white;
-}
-
-.btn-orange:hover{
-  background:#e07c15;
-}
-
-.btn-outline{
-  background:#fff;
   color:#111827;
+  background:transparent;
+}
+
+.search-wrap input::placeholder{
+  color:#9ca3af;
 }
 
 /* =========================================
@@ -6274,63 +6263,37 @@ table {
 .cart-badge{
   position:absolute;
   top:-5px;
-  right:-5px;
+  right:-8px;
+  background:#ff6600;
+  color:#ffffff;
   min-width:18px;
   height:18px;
   border-radius:50%;
-  background:#ef4444;
-  color:white;
-  font-size:11px;
-  font-weight:700;
   display:flex;
   align-items:center;
   justify-content:center;
+  font-size:11px;
+  font-weight:700;
   padding:0 4px;
-}
-
-/* =========================================
-   MOBILE
-========================================= */
-
-@media (max-width:900px){
-
-  .topbar{
-    flex-wrap:wrap;
-    gap:12px;
-  }
-
-  .topbar-center{
-    order:3;
-    width:100%;
-  }
-
-  .search-wrap{
-    max-width:none;
-  }
-
-  .btn span{
-    display:none;
-  }
-
-  .btn{
-    width:40px;
-    justify-content:center;
-    padding:0;
-  }
+  border:2px solid #fff;
 }
 
 /* =========================================
    SMALL PHONES
 ========================================= */
 
-@media (max-width:600px){
+@media (max-width:480px){
 
   .topbar{
-    padding:10px;
+    padding:8px 10px;
   }
 
   .zibuy-logo{
-    height:34px;
+    height:32px;
+  }
+
+  .mobile-icon-btn{
+    font-size:26px;
   }
 
   .search-wrap{
@@ -6341,14 +6304,4 @@ table {
     font-size:13px;
   }
 
-  .search-btn{
-    padding:0 14px;
-    font-size:12px;
-  }
-
-  .btn{
-    width:36px;
-    height:36px;
-    font-size:13px;
-  }
 }
