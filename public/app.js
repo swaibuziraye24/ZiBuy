@@ -506,87 +506,167 @@ export async function loadProducts() {
       productsArray.sort((a, b) => Number(b.data.price) - Number(a.data.price));
     }
 
-  
-  // ✅ ADD THIS - Load and display featured ads
-  try {
-    const featuredAds = await getFeaturedAds();
-    
-    if (featuredAds.length > 0) {
-      const featuredSection = document.createElement("div");
-featuredSection.id = "featured-section";
-      featuredSection.style.cssText = `
-        grid-column: 1 / -1;
-        background: linear-gradient(135deg, #fff4ee 0%, #fffbeb 100%);
-        border: 2px solid #ff6600;
-        border-radius: 16px;
-        padding: 20px;
-        margin-bottom: 16px;
-      `;
-      
-      let html = `
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
-          <span style="font-size:24px">⭐</span>
-          <h3 style="margin:0;font-size:18px;font-weight:800;color:#111827">Featured Ads</h3>
-          <span style="background:#ff6600;color:white;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:800">${featuredAds.length} Active</span>
-        </div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));gap:14px">
-      `;
-      
-      // Get product details for featured ads
-      for (const featured of featuredAds.slice(0, 6)) {
-        try {
-          const productSnap = await getDocs(query(
-            collection(db, "products"),
-            where("__name__", "==", featured.productId)
-          ));
-          
-          if (!productSnap.empty) {
-            const p = productSnap.docs[0].data();
-            const images = Array.isArray(p.images) ? p.images : [];
-            const firstImg = images[0] || "";
-            const seller = p.seller || {};
-            const phone = (seller.phone || "").replace(/\D/g, "");
-            const isCustomerProduct = p.isUserPost === true;
-            const hasPhone = phone.length > 0;
-            
-            html += `
-              <div class="product-card" style="position:relative">
-                <span class="premium-badge" style="position:absolute;top:10px;left:10px;background:linear-gradient(135deg, #ff6600, #ffa500);color:white;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:800;z-index:10">⭐ FEATURED</span>
-                <div class="product-image-box" onclick="openProduct('${p.name.replace(/'/g,"\\'")}', ${p.price}, ${JSON.stringify(images)}, '${p.category || ""}', '${productSnap.docs[0].id}', ${JSON.stringify(seller)})">
-                  <img src="${firstImg}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover">
-                  <button class="save-btn" onclick="event.stopPropagation(); this.textContent = this.textContent === '🤍' ? '❤️' : '🤍'">🤍</button>
-                </div>
-                <div class="product-info">
-                  <p class="product-cat">${p.category || ""}</p>
-                  <h3 class="product-title">${p.name}</h3>
-                  <p class="product-price">UGX ${Number(p.price).toLocaleString()}</p>
-                  <p style="font-size:12px;color:#6b7280;margin-bottom:8px">📍 ${p.location}</p>
-                  <div class="card-footer">
-                    ${isCustomerProduct && hasPhone ? `
-                      <a href="https://wa.me/${phone}?text=${encodeURIComponent(`Hi, interested in: ${p.name}`)}" target="_blank" class="btn-sm" style="background:#25D366;color:white;padding:8px;border:none;border-radius:8px;text-decoration:none;font-weight:700;font-size:12px;flex:1;text-align:center">💬</a>
-                      <a href="tel:+${phone}" class="btn-sm" style="background:#ff6600;color:white;padding:8px;border:none;border-radius:8px;text-decoration:none;font-weight:700;font-size:12px;flex:1;text-align:center">📞</a>
-                    ` : `
-                      <button class="cart-btn" onclick="event.stopPropagation(); addToCart('${p.name.replace(/'/g,"\\'")}', ${p.price}, '${firstImg}')">🛒</button>
-                      <button class="view-btn" onclick="event.stopPropagation(); window.location.href='product.html?id=${productSnap.docs[0].id}'">View</button>
-                    `}
-                  </div>
-                </div>
-              </div>
-            `;
-          }
-        } catch (err) {
-          console.error("Error loading featured product:", err);
-        }
-      }
-      
-      html += `</div>`;
-      featuredSection.innerHTML = html;
-      grid.parentElement.insertBefore(featuredSection, grid);
-    }
-  } catch (err) {
-    console.error("Featured ads error:", err);
+  // ============================================
+// FEATURED ADS SECTION
+// ============================================
+
+try {
+
+  // Remove old featured section first
+  const oldFeatured = document.getElementById("featured-section");
+  if (oldFeatured) {
+    oldFeatured.remove();
   }
 
+  const featuredAds = await getFeaturedAds();
+
+  if (featuredAds.length > 0) {
+
+    const featuredSection = document.createElement("section");
+    featuredSection.id = "featured-section";
+    featuredSection.className = "featured-section";
+
+    let html = `
+      <div class="featured-header">
+        <div class="featured-title-wrap">
+          <span class="featured-star">⭐</span>
+          <div>
+            <h2 class="featured-title">Featured Ads</h2>
+            <p class="featured-subtitle">
+              Promoted listings from trusted sellers
+            </p>
+          </div>
+        </div>
+
+        <span class="featured-count">
+          ${featuredAds.length} Active
+        </span>
+      </div>
+
+      <div class="featured-grid">
+    `;
+
+    // Load featured products
+    for (const featured of featuredAds.slice(0, 6)) {
+
+      try {
+
+        const productSnap = await getDocs(query(
+          collection(db, "products"),
+          where("__name__", "==", featured.productId)
+        ));
+
+        if (!productSnap.empty) {
+
+          const docData = productSnap.docs[0];
+          const p = docData.data();
+
+          const images = Array.isArray(p.images)
+            ? p.images
+            : [];
+
+          const firstImg = images[0] || "";
+
+          const seller = p.seller || {};
+
+          html += `
+            <div class="product-card">
+
+              <div
+                class="product-image-box"
+                onclick="openProduct(
+                  '${p.name.replace(/'/g, "\\'")}',
+                  ${p.price},
+                  ${JSON.stringify(images)},
+                  '${p.category || ""}',
+                  '${docData.id}',
+                  ${JSON.stringify(seller)}
+                )"
+              >
+
+                <img
+                  src="${firstImg}"
+                  alt="${p.name}"
+                  class="product-image active"
+                >
+
+                <span class="premium-badge">
+                  ⭐ Featured
+                </span>
+
+              </div>
+
+              <div class="product-info">
+
+                <p class="product-cat">
+                  ${p.category || ""}
+                </p>
+
+                <h3 class="product-title">
+                  ${p.name}
+                </h3>
+
+                <p class="product-price">
+                  UGX ${Number(p.price).toLocaleString()}
+                </p>
+
+                ${p.location ? `
+                  <p class="product-seller-loc">
+                    📍 ${p.location}
+                  </p>
+                ` : ""}
+
+                <div class="card-footer">
+
+                  <button
+                    class="cart-btn"
+                    onclick="event.stopPropagation(); addToCart(
+                      '${p.name.replace(/'/g, "\\'")}',
+                      ${p.price},
+                      '${firstImg}'
+                    )"
+                  >
+                    🛒
+                  </button>
+
+                  <button
+                    class="view-btn"
+                    onclick="event.stopPropagation();
+                    window.location.href='product.html?id=${docData.id}'"
+                  >
+                    View
+                  </button>
+
+                </div>
+
+              </div>
+
+            </div>
+          `;
+        }
+
+      } catch (err) {
+        console.error(err);
+      }
+
+    }
+
+    html += `
+      </div>
+    `;
+
+    featuredSection.innerHTML = html;
+
+    grid.parentElement.insertBefore(featuredSection, grid);
+
+  }
+
+} catch (err) {
+
+  console.error("Featured ads error:", err);
+
+}
+  
 
    // RENDER PRODUCTS
 productsArray.forEach(({ docSnap, data: p }) => {
