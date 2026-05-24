@@ -147,35 +147,42 @@
     document.getElementById("boost-btn").style.display = "block";
   };
 
-  window.processBoost = async function() {
-    if (!selectedPlan || !productId) {
-      alert("Please select a plan");
-      return;
-    }
+window.processBoost = async function() {
+  if (!selectedPlan || !productId) {
+    alert("Please select a plan");
+    return;
+  }
 
-    const btn = event.target;
-    btn.textContent = "Processing...";
-    btn.disabled = true;
+  const btn = event.target;
+  btn.textContent = "Processing...";
+  btn.disabled = true;
 
-    try {
-      // Boost the product
-      const success = await boostAd(productId, selectedPlan.days, selectedPlan.price);
+  try {
+    // Save boost request to Firestore (pending approval)
+    await addDoc(collection(db, "boost_requests"), {
+      productId: productId,
+      userId: currentUser.uid,
+      userEmail: currentUser.email,
+      days: selectedPlan.days,
+      price: selectedPlan.price,
+      status: "pending",
+      createdAt: new Date()
+    });
 
-      if (success) {
-        alert("✅ Product boosted! It's now featured on the homepage");
-        window.location.href = "dashboard.html?tab=my-ads";
-      } else {
-        alert("❌ Boost failed. Try again");
-        btn.textContent = "Continue to Payment";
-        btn.disabled = false;
-      }
-    } catch (err) {
-      console.error("Boost error:", err);
-      alert("Error: " + err.message);
-      btn.textContent = "Continue to Payment";
-      btn.disabled = false;
-    }
-  };
+    // Send to WhatsApp
+    const message = `Hi! I want to boost my product for ${selectedPlan.days} days. Price: UGX ${selectedPlan.price.toLocaleString()}. Please confirm payment details.`;
+    const adminPhone = "256790548910"; // YOUR ADMIN PHONE
+    
+    window.location.href = `https://wa.me/${adminPhone}?text=${encodeURIComponent(message)}`;
+
+  } catch (err) {
+    console.error("Error:", err);
+    alert("Error: " + err.message);
+    btn.textContent = "Continue to Payment";
+    btn.disabled = false;
+  }
+};
+
 </script>
 
 </body>
