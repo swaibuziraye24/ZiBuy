@@ -74,6 +74,20 @@ function setupAuthStateListener() {
       }
     }
 
+// ============================================
+// LOGOUT
+// ============================================
+
+window.logoutCustomer = async function() {
+  try {
+    await auth.signOut();
+    localStorage.removeItem("zibuy-cart");
+    window.location.href = "index.html";
+  } catch (err) {
+    console.error("Logout error:", err);
+  }
+};
+
     // Update cart button visibility
     const cartBtn = document.querySelector(".cart-btn-wrap");
     if (cartBtn && user) {
