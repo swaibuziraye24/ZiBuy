@@ -256,8 +256,6 @@ function renderProducts() {
 
   container.innerHTML = filtered.map(p => {
     const images = p.images || [];
-    const phone = (p.seller?.phone || "").replace(/\D/g, "");
-    const hasPhone = phone && phone.length > 9;
 
     return `
   <div class="product-card">
@@ -274,13 +272,8 @@ function renderProducts() {
         ${p.seller?.isVerified ? '<span style="color:#10b981;font-weight:800;margin-left:4px">✅ Verified</span>' : ''}
       </div>
       <div class="card-footer">
-        ${hasPhone ? `
-          <button class="cart-btn" onclick="messageWhatsApp('${phone}', '${p.name.replace(/'/g, "\\'")}', ${p.price})" style="font-size:12px">💬 Chat</button>
-          <button class="view-btn" onclick="messageCall('${phone}')" style="font-size:12px">☎️ Call</button>
-        ` : `
-          <button class="cart-btn" onclick="addToCart('${p.name.replace(/'/g,"\\'")}', ${p.price}, '${images[0] || ""}')">🛒 Add</button>
-          <button class="view-btn" onclick="openProductModal('${p.id}')">View</button>
-        `}
+        <button class="cart-btn" onclick="addToCart('${p.name.replace(/'/g,"\\'")}', ${p.price}, '${images[0] || ""}')">🛒 Add</button>
+        <button class="view-btn" onclick="openProductModal('${p.id}')">View</button>
       </div>
     </div>
   </div>
@@ -559,16 +552,14 @@ window.searchProducts = function() {
     return;
   }
 
-  // Render filtered results
-  container.innerHTML = filtered.map(p => {
+container.innerHTML = filtered.map(p => {
     const images = p.images || [];
-    const phone = (p.seller?.phone || "").replace(/\D/g, "");
-    const hasPhone = phone && phone.length > 9;
 
     return `
       <div class="product-card">
         <div class="product-image-box">
           <img src="${images[0] || ''}" alt="${p.name}">
+          ${p.isPremium ? '<span class="premium-badge">⭐ FEATURED</span>' : ''}
         </div>
         <div class="product-info">
           <p class="product-cat">${p.category}</p>
@@ -579,13 +570,8 @@ window.searchProducts = function() {
             ${p.seller?.isVerified ? '<span style="color:#10b981;font-weight:800;margin-left:4px">✅ Verified</span>' : ''}
           </div>
           <div class="card-footer">
-            ${hasPhone ? `
-              <button class="cart-btn" onclick="messageWhatsApp('${phone}', '${p.name.replace(/'/g, "\\'")}', ${p.price})" style="font-size:12px">💬 Chat</button>
-              <button class="view-btn" onclick="messageCall('${phone}')" style="font-size:12px">☎️ Call</button>
-            ` : `
-              <button class="cart-btn" onclick="addToCart('${p.name.replace(/'/g,"\\'")}', ${p.price}, '${images[0] || ''}')">🛒 Add</button>
-              <button class="view-btn" onclick="openProductModal('${p.id}')">View</button>
-            `}
+            <button class="cart-btn" onclick="addToCart('${p.name.replace(/'/g,"\\'")}', ${p.price}, '${images[0] || ''}')">🛒 Add</button>
+            <button class="view-btn" onclick="openProductModal('${p.id}')">View</button>
           </div>
         </div>
       </div>
