@@ -57,7 +57,7 @@ async function loadProfile() {
     const sellerName = products.length > 0 ? products[0].seller?.name || "Seller" : "Seller";
     const sellerLocation = products.length > 0 ? products[0].seller?.location || "Uganda" : "Uganda";
 
-    document.getElementById("profile-name").textContent = sellerName;
+  document.getElementById("profile-name").textContent = sellerName + (isVerified ? " ✅" : "");
     document.getElementById("profile-location").textContent = "📍 " + sellerLocation;
     document.getElementById("profile-rating").textContent = `⭐ ${avgRating} (${reviews.length} reviews)`;
     document.getElementById("stat-products").textContent = products.length;
@@ -66,6 +66,11 @@ async function loadProfile() {
 
     if (isVerified) {
       document.getElementById("profile-verified").style.display = "inline-block";
+      const avatarEl = document.getElementById("profile-avatar");
+      if (avatarEl) {
+        avatarEl.style.background = "linear-gradient(135deg, #10b981, #059669)";
+        avatarEl.style.boxShadow = "0 0 12px rgba(16, 185, 129, 0.3)";
+      }
     }
 
     // Set contact info
