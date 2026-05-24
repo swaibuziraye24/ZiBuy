@@ -16,93 +16,126 @@
 <!-- ============ TOP BAR ============ -->
 <header class="topbar">
 
-  <!-- LOGO -->
+  <!-- LEFT SIDE -->
   <div class="topbar-left">
+
     <img
       src="my_logo.png"
       alt="ZiBuy Logo"
       id="secret-admin-trigger"
       class="zibuy-logo"
     />
+
   </div>
 
-  <!-- SEARCH -->
-  <div class="search-wrap">
-    <svg class="search-icon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-      <circle cx="11" cy="11" r="8"/>
-      <path d="m21 21-4.35-4.35"/>
-    </svg>
+  <!-- CENTER SEARCH -->
+  <div class="topbar-center">
 
-    <input
-      type="text"
-      id="search-input"
-      placeholder="Search products on ZiBuy"
-      onkeyup="searchProducts()"
-    >
+    <div class="search-wrap">
 
-    <button class="search-btn">
-      Search
-    </button>
+      <svg class="search-icon"
+        width="18"
+        height="18"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        viewBox="0 0 24 24">
+
+        <circle cx="11" cy="11" r="8"/>
+        <path d="m21 21-4.35-4.35"/>
+
+      </svg>
+
+      <input
+        type="text"
+        id="search-input"
+        placeholder="Search products, brands and categories"
+        onkeyup="searchProducts()"
+      >
+
+      <button class="search-btn">
+        SEARCH
+      </button>
+
+    </div>
+
   </div>
 
-  <!-- ACTIONS -->
+  <!-- RIGHT SIDE -->
   <div class="topbar-actions">
 
-    <button class="btn btn-orange"
+    <button
+      class="btn btn-orange"
       onclick="window.location.href='admin-boost-requests.html'"
       style="display:none"
       id="admin-boost-btn">
-      💳
-      <span>Boost</span>
+
+      💳 <span>Boost</span>
+
     </button>
 
-    <button class="btn btn-orange"
+    <button
+      class="btn btn-orange"
       id="post-ad-btn"
       onclick="window.location.href='post-ad.html'"
       style="display:none">
-      ➕
-      <span>Post Ad</span>
+
+      + <span>Post Ad</span>
+
     </button>
 
-    <button class="btn btn-outline"
+    <button
+      class="btn btn-outline"
       id="messages-btn"
       onclick="window.location.href='messages.html'"
       style="display:none">
-      💬
-      <span>Messages</span>
+
+      💬 <span>Messages</span>
+
     </button>
 
-    <button class="btn btn-outline"
+    <button
+      class="btn btn-outline"
       id="notifications-btn"
       onclick="window.location.href='notifications.html'"
       style="display:none">
-      🔔
-      <span>Alerts</span>
+
+      🔔 <span>Alerts</span>
+
     </button>
 
-    <button class="btn btn-outline"
+    <button
+      class="btn btn-outline"
       id="dashboard-btn"
       onclick="window.location.href='dashboard.html'"
       style="display:none">
-      📊
-      <span>Dashboard</span>
+
+      📊 <span>Dashboard</span>
+
     </button>
 
-    <button class="btn btn-outline"
+    <button
+      class="btn btn-outline"
       id="account-btn"
       onclick="openAuthModal()">
-      👤
-      <span>Account</span>
+
+      👤 <span>Account</span>
+
     </button>
 
     <!-- CART -->
     <div class="cart-btn-wrap">
-      <button class="btn btn-orange cart-main-btn" onclick="toggleCart()">
-        🛒
-        <span>Cart</span>
+
+      <button
+        class="btn btn-orange"
+        onclick="toggleCart()">
+
+        🛒 <span>Cart</span>
+
       </button>
 
       <span class="cart-badge" id="cart-count">0</span>
+
     </div>
 
   </div>
