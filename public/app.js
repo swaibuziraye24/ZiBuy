@@ -453,32 +453,55 @@ window.openProductModal = function(productId) {
   const product = allProducts.find(p => p.id === productId);
   
   if (!product) {
+    console.error("Product not found:", productId);
     alert("Product not found");
     return;
   }
 
-  const modal = document.getElementById("product-modal");
-  if (!modal) {
-    alert("Modal not found");
-    return;
+  try {
+    // Get modal elements
+    const modal = document.getElementById("product-modal");
+    const overlay = document.getElementById("overlay");
+    const modalImage = document.getElementById("modal-image");
+    const modalName = document.getElementById("modal-name");
+    const modalPrice = document.getElementById("modal-price");
+    const modalCat = document.getElementById("modal-cat");
+    const modalCartBtn = document.getElementById("modal-cart-btn");
+    const modalViewBtn = document.getElementById("modal-view-btn");
+
+    if (!modal || !modalImage || !modalName) {
+      console.error("Modal elements missing");
+      return;
+    }
+
+    // Fill data
+    modalImage.src = product.images?.[0] || "https://via.placeholder.com/300";
+    modalName.textContent = product.name;
+    modalPrice.textContent = `UGX ${Number(product.price).toLocaleString()}`;
+    if (modalCat) modalCat.textContent = product.category || "Product";
+
+    // Set button actions
+    if (modalCartBtn) {
+      modalCartBtn.onclick = () => {
+        addToCart(product.name, product.price, product.images?.[0] || "");
+        closeProductModal();
+      };
+    }
+
+    if (modalViewBtn) {
+      modalViewBtn.onclick = () => {
+        window.location.href = `product.html?id=${productId}`;
+      };
+    }
+
+    // Show modal
+    modal.classList.add("open");
+    if (overlay) overlay.classList.add("active");
+
+  } catch (err) {
+    console.error("Modal error:", err);
+    alert("Error opening product details");
   }
-
-  // Fill modal with product data
-  const modalImage = document.getElementById("modal-image");
-  const modalName = document.getElementById("modal-name");
-  const modalPrice = document.getElementById("modal-price");
-  const modalCat = document.getElementById("modal-cat");
-
-  if (modalImage) modalImage.src = product.images?.[0] || "";
-  if (modalName) modalName.textContent = product.name;
-  if (modalPrice) modalPrice.textContent = `UGX ${Number(product.price).toLocaleString()}`;
-  if (modalCat) modalCat.textContent = product.category;
-
-  // Show modal
-  modal.classList.add("open");
-  
-  const overlay = document.getElementById("overlay");
-  if (overlay) overlay.classList.add("active");
 };
 
 window.closeProductModal = function() {
