@@ -36,7 +36,7 @@ onAuthStateChanged(auth, (user) => {
     
     if (accountBtn) {
       accountBtn.textContent = "🚪 Logout";
-      accountBtn.onclick = () => logoutCustomer();
+     accountBtn.onclick = () => customerLogout();
     }
   } else {
     // Hide buttons when logged out
