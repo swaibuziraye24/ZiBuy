@@ -6144,48 +6144,33 @@ table {
 
 
 /* =========================================
-   ZIBUY MODERN MOBILE TOPBAR
+   ZIBUY RESPONSIVE TOPBAR
 ========================================= */
 
 .topbar{
   position:sticky;
   top:0;
   z-index:999;
+  width:100%;
   height:68px;
   background:#fff;
+  border-bottom:1px solid #e5e7eb;
+
   display:flex;
   align-items:center;
-  gap:10px;
-  padding:0 12px;
-  border-bottom:1px solid #ececec;
-}
+  gap:12px;
 
-/* LEFT */
-.topbar-left{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  flex-shrink:0;
-}
-
-/* MENU */
-.menu-btn{
-  background:none;
-  border:none;
-  font-size:28px;
-  color:#ff6600;
-  cursor:pointer;
-  padding:0;
-  line-height:1;
+  padding:0 14px;
+  box-sizing:border-box;
 }
 
 /* LOGO */
 .zibuy-logo{
-  width:125px;
+  width:140px;
   height:auto;
   object-fit:contain;
   cursor:pointer;
-  display:block;
+  flex-shrink:0;
 }
 
 /* SEARCH */
@@ -6194,17 +6179,19 @@ table {
   height:42px;
   background:#f5f5f5;
   border-radius:10px;
+
   display:flex;
   align-items:center;
+
   padding:0 12px;
+
   min-width:0;
 }
 
-.search-icon{
+.search-wrap svg{
   width:18px;
   height:18px;
-  stroke:#888;
-  stroke-width:2;
+  color:#888;
   flex-shrink:0;
 }
 
@@ -6213,89 +6200,99 @@ table {
   border:none;
   outline:none;
   background:none;
+
   padding-left:8px;
+
   font-size:14px;
-  color:#111;
   min-width:0;
 }
 
-.search-wrap input::placeholder{
-  color:#888;
-}
-
-/* RIGHT */
+/* ACTIONS */
 .topbar-actions{
   display:flex;
   align-items:center;
-  gap:4px;
+  gap:6px;
   flex-shrink:0;
 }
 
-/* ICON BUTTONS */
-.top-icon-btn{
-  width:38px;
-  height:38px;
-  border:none;
-  background:none;
+/* BUTTONS */
+.topbar .btn{
+  height:40px;
+  min-width:40px;
+
+  padding:0 10px;
+
   border-radius:10px;
-  font-size:22px;
-  color:#ff6600;
-  cursor:pointer;
+
   display:flex;
   align-items:center;
   justify-content:center;
-  flex-shrink:0;
+
+  white-space:nowrap;
+
+  font-size:14px;
 }
 
 /* CART */
 .cart-btn-wrap{
   position:relative;
+  flex-shrink:0;
 }
 
 .cart-badge{
   position:absolute;
-  top:-4px;
-  right:-2px;
-  background:#ff6600;
-  color:#fff;
+  top:-5px;
+  right:-4px;
+
   min-width:18px;
   height:18px;
+
   border-radius:50%;
+
+  background:#ff6600;
+  color:#fff;
+
+  font-size:10px;
+  font-weight:700;
+
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:10px;
-  font-weight:700;
+
   padding:0 4px;
 }
 
-/* TABLETS */
-@media (max-width:768px){
+/* =========================================
+   TABLETS
+========================================= */
 
-  .mobile-hide{
-    display:none !important;
-  }
+@media (max-width:900px){
 
   .zibuy-logo{
-    width:110px;
+    width:120px;
+  }
+
+  .topbar{
+    gap:8px;
+    padding:0 10px;
   }
 
 }
 
-/* SMALL PHONES */
-@media (max-width:480px){
+/* =========================================
+   PHONES
+========================================= */
+
+@media (max-width:768px){
 
   .topbar{
+    height:62px;
     gap:6px;
     padding:0 8px;
   }
 
-  .menu-btn{
-    font-size:24px;
-  }
-
   .zibuy-logo{
-    width:95px;
+    width:100px;
   }
 
   .search-wrap{
@@ -6307,10 +6304,76 @@ table {
     font-size:13px;
   }
 
-  .top-icon-btn{
-    width:34px;
-    height:34px;
+  .topbar .btn{
+    height:36px;
+    min-width:36px;
+    padding:0 8px;
+    font-size:13px;
+  }
+
+  /* HIDE TEXT */
+  #account-btn,
+  #messages-btn,
+  #notifications-btn,
+  #dashboard-btn,
+  #post-ad-btn{
+    font-size:0;
+  }
+
+  #account-btn::before{
+    content:"👤";
     font-size:18px;
+  }
+
+  #messages-btn::before{
+    content:"💬";
+    font-size:18px;
+  }
+
+  #notifications-btn::before{
+    content:"🔔";
+    font-size:18px;
+  }
+
+  #dashboard-btn::before{
+    content:"📊";
+    font-size:18px;
+  }
+
+  #post-ad-btn::before{
+    content:"➕";
+    font-size:18px;
+  }
+
+}
+
+/* =========================================
+   SMALL PHONES
+========================================= */
+
+@media (max-width:480px){
+
+  .topbar{
+    gap:4px;
+    padding:0 6px;
+  }
+
+  .zibuy-logo{
+    width:82px;
+  }
+
+  .search-wrap{
+    height:34px;
+  }
+
+  .search-wrap input{
+    font-size:12px;
+  }
+
+  .topbar .btn{
+    min-width:32px;
+    height:32px;
+    padding:0 6px;
   }
 
 }
