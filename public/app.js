@@ -15,37 +15,43 @@ import { getFeaturedAds } from "./premium-ads.js";
 
 import "./auth.js";
 
-// Check if user is logged in when page loads
 onAuthStateChanged(auth, (user) => {
+  currentUser = user;
+  
   if (user) {
-    // User is logged in - show buttons
-    document.getElementById("post-ad-btn").style.display = "block";
-    document.getElementById("dashboard-btn").style.display = "block";
-    document.getElementById("notifications-btn").style.display = "block";
-    document.getElementById("messages-btn").style.display = "block";
-    
-    // Change account button to logout
+    // Only update if element exists
+    const postAdBtn = document.getElementById("post-ad-btn");
+    const dashboardBtn = document.getElementById("dashboard-btn");
+    const messagesBtn = document.getElementById("messages-btn");
+    const notificationsBtn = document.getElementById("notifications-btn");
     const accountBtn = document.getElementById("account-btn");
-    accountBtn.textContent = "🚪 Logout";
-    accountBtn.onclick = function() {
-      auth.signOut().then(() => {
-        alert("Logged out!");
-        location.reload();
-      });
-    };
+
+    if (postAdBtn) postAdBtn.style.display = "block";
+    if (dashboardBtn) dashboardBtn.style.display = "block";
+    if (messagesBtn) messagesBtn.style.display = "block";
+    if (notificationsBtn) notificationsBtn.style.display = "block";
+    
+    if (accountBtn) {
+      accountBtn.textContent = "🚪 Logout";
+      accountBtn.onclick = () => logoutCustomer();
+    }
   } else {
-    // User is NOT logged in - hide buttons
-    document.getElementById("post-ad-btn").style.display = "none";
-    document.getElementById("dashboard-btn").style.display = "none";
-    document.getElementById("notifications-btn").style.display = "none";
-    document.getElementById("messages-btn").style.display = "none";
-    
-    // Reset account button
+    // Hide buttons when logged out
+    const postAdBtn = document.getElementById("post-ad-btn");
+    const dashboardBtn = document.getElementById("dashboard-btn");
+    const messagesBtn = document.getElementById("messages-btn");
+    const notificationsBtn = document.getElementById("notifications-btn");
     const accountBtn = document.getElementById("account-btn");
-    accountBtn.textContent = "Account";
-    accountBtn.onclick = function() {
-      openAuthModal();
-    };
+
+    if (postAdBtn) postAdBtn.style.display = "none";
+    if (dashboardBtn) dashboardBtn.style.display = "none";
+    if (messagesBtn) messagesBtn.style.display = "none";
+    if (notificationsBtn) notificationsBtn.style.display = "none";
+    
+    if (accountBtn) {
+      accountBtn.textContent = "Account";
+      accountBtn.onclick = () => openAuthModal();
+    }
   }
 });
 
