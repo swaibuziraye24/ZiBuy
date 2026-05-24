@@ -22,8 +22,16 @@ onAuthStateChanged(auth, (user) => {
 // ============================================
 
 async function loadDashboard() {
+  console.log("Loading dashboard...");
   const tab = new URLSearchParams(window.location.search).get("tab") || "my-ads";
-  switchTab(tab);
+  
+  // Set user email display
+  if (currentUser) {
+    document.getElementById("user-email").textContent = currentUser.email.split("@")[0];
+    document.getElementById("user-email-display").textContent = currentUser.email;
+  }
+  
+  await switchTab(tab);
 }
 
 // ============================================
@@ -32,12 +40,20 @@ async function loadDashboard() {
 
 window.switchTab = async function(tab) {
   currentTab = tab;
+  console.log("Switching to tab:", tab);
   
   // Update tab buttons
   document.querySelectorAll(".nav-item").forEach(item => {
     item.classList.remove("active");
   });
-  event.target?.classList.add("active");
+  
+  // Find and activate the correct button
+  const buttons = document.querySelectorAll(".nav-item");
+  buttons.forEach(btn => {
+    if (btn.textContent.toLowerCase().includes(tab === "my-ads" ? "ads" : tab === "orders" ? "orders" : "settings")) {
+      btn.classList.add("active");
+    }
+  });
   
   // Update tab content
   document.querySelectorAll(".dashboard-tab").forEach(t => {
@@ -47,34 +63,37 @@ window.switchTab = async function(tab) {
   
   // Load content
   if (tab === "my-ads") {
-    loadMyProducts();
-  } else if (tab === "orders") {
-    loadMyOrders();
-  } else if (tab === "profile") {
-    loadProfileSettings();
+    await loadMyProducts();
   }
 };
 
-// ============================================
-// LOAD MY PRODUCTS
-// ============================================
-
 async function loadMyProducts() {
-  if (!currentUser) return;
+  if (!currentUser) {
+    console.warn("No current user");
+    return;
+  }
+
+  const container = document.getElementById("my-ads-list");
+  if (!container) {
+    console.error("Container not found");
+    return;
+  }
 
   try {
+    console.log("Loading products for user:", currentUser.uid);
+
     const snapshot = await getDocs(query(
       collection(db, "products"),
       where("userId", "==", currentUser.uid)
     ));
+
+    console.log("Found products:", snapshot.size);
 
     const products = snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     }));
 
-    const container = document.getElementById("my-ads-list");
-    
     if (products.length === 0) {
       container.innerHTML = `
         <div style="text-align:center;padding:40px 20px;color:#6b7280">
@@ -112,7 +131,13 @@ async function loadMyProducts() {
 
   } catch (err) {
     console.error("Load products error:", err);
-    document.getElementById("my-ads-list").innerHTML = `<p style="color:red">Error loading products: ${err.message}</p>`;
+    container.innerHTML = `
+      <div style="text-align:center;padding:40px 20px;background:#fee2e2;border-radius:12px">
+        <p style="color:#991b1b;font-weight:700">❌ Error loading products</p>
+        <p style="color:#991b1b;font-size:13px;margin-top:8px">${err.message}</p>
+        <button class="btn btn-outline" onclick="loadMyProducts()" style="margin-top:12px">Try Again</button>
+      </div>
+    `;
   }
 }
 
