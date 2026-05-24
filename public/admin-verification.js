@@ -26,32 +26,105 @@ async function loadVerifications() {
 }
 
 function renderVerifications() {
-  const container = document.getElementById("verification-requests");
-  const filtered = allVerifications.filter(v => v.status === currentFilter);
 
+  const container = document.getElementById("verification-requests");
+
+  if (!container) return;
+
+  const filtered = allVerifications.filter(
+    v => v.status === currentFilter
+  );
+
+  // Empty state
   if (filtered.length === 0) {
-    container.innerHTML = `<p style="text-align:center;color:#6b7280;padding:40px">No ${currentFilter} requests</p>`;
+
+    container.innerHTML = `
+      <div class="empty-verification">
+        <div style="font-size:50px">📭</div>
+        <h3>No ${currentFilter} requests</h3>
+        <p style="color:#6b7280">
+          There are currently no ${currentFilter} seller requests.
+        </p>
+      </div>
+    `;
+
     return;
   }
 
-  container.innerHTML = filtered.map(v => `
-    <div class="verification-request-card" onclick="openVerifyModal('${v.id}')">
-      <div>
-        <h3>${v.businessName}</h3>
-        <p>${v.fullName}</p>
-        <p style="font-size:12px;color:#6b7280">${new Date(v.createdAt.toDate()).toLocaleDateString()}</p>
+  // Render cards
+  container.innerHTML = filtered.map(v => {
+
+    const createdDate = v.createdAt?.toDate
+      ? v.createdAt.toDate().toLocaleDateString()
+      : "Unknown";
+
+    const statusColor =
+      v.status === "approved"
+        ? "#10b981"
+        : v.status === "rejected"
+        ? "#ef4444"
+        : "#f59e0b";
+
+    return `
+      <div class="verification-card">
+
+        <div class="verification-top">
+
+          <div class="verification-avatar">
+            ${v.fullName?.charAt(0)?.toUpperCase() || "S"}
+          </div>
+
+          <div class="verification-info">
+
+            <h3>${v.businessName || "Unknown Business"}</h3>
+
+            <p>👤 ${v.fullName || "Unknown Seller"}</p>
+
+            <p>📞 ${v.phone || "No Phone"}</p>
+
+            <p>📍 ${v.location || "Uganda"}</p>
+
+            <small>${createdDate}</small>
+
+          </div>
+
+          <span
+            class="verification-status"
+            style="background:${statusColor}"
+          >
+            ${v.status}
+          </span>
+
+        </div>
+
+        <button
+          class="view-verification-btn"
+          onclick="openVerifyModal('${v.id}')"
+        >
+          View Details
+        </button>
+
       </div>
-      <span style="background:${v.status === 'approved' ? '#10b981' : v.status === 'rejected' ? '#ef4444' : '#f59e0b'};color:white;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:700">
-        ${v.status.toUpperCase()}
-      </span>
-    </div>
-  `).join("");
+    `;
+
+  }).join("");
 }
 
 window.filterVerifications = function(filter) {
+
   currentFilter = filter;
-  document.querySelectorAll(".verify-filter").forEach(b => b.classList.remove("active"));
-  event.target.classList.add("active");
+
+  document.querySelectorAll(".verify-filter")
+    .forEach(btn => btn.classList.remove("active"));
+
+  const clickedBtn = document.querySelector(
+    `.verify-filter[onclick="filterVerifications('${filter}')"]`
+  );
+
+  if (clickedBtn) {
+    clickedBtn.classList.add("active");
+  }
+
   renderVerifications();
 };
 
@@ -101,7 +174,17 @@ window.openVerifyModal = async function(verificationId) {
 };
 
 window.closeVerifyModal = function() {
-  document.getElementById("modal-verify").classList.remove("open");
+
+  document
+    .getElementById("modal-verify")
+    .classList.remove("open");
+
+  const overlay = document.getElementById("overlay");
+
+  if (overlay) {
+    overlay.classList.remove("active");
+  }
+
   selectedVerification = null;
 };
 
