@@ -109,7 +109,12 @@ async function loadMyProducts() {
     container.innerHTML = products.map(p => `
       <div class="ad-item">
         <div class="ad-item-image">
-          <img src="${p.images?.[0] || 'https://via.placeholder.com/100'}" alt="${p.name}">
+         <img 
+  src="${p.images?.[0] || 'https://via.placeholder.com/100'}" 
+  alt="${p.name}"
+  onerror="this.src='https://via.placeholder.com/100?text=No+Image'"
+  style="width:100%;height:100%;object-fit:cover"
+>
           <span class="ad-status-badge ${p.status === 'active' ? 'active' : 'sold'}">
             ${p.status === 'active' ? '✅ Active' : '❌ Sold'}
           </span>
