@@ -451,17 +451,32 @@ window.checkout = function() {
 
 window.openProductModal = function(productId) {
   const product = allProducts.find(p => p.id === productId);
-  if (!product) return;
+  
+  if (!product) {
+    alert("Product not found");
+    return;
+  }
 
   const modal = document.getElementById("product-modal");
-  if (!modal) return;
+  if (!modal) {
+    alert("Modal not found");
+    return;
+  }
 
-  document.getElementById("modal-image").src = product.images?.[0] || "";
-  document.getElementById("modal-name").textContent = product.name;
-  document.getElementById("modal-price").textContent = `UGX ${Number(product.price).toLocaleString()}`;
-  document.getElementById("modal-cat").textContent = product.category;
+  // Fill modal with product data
+  const modalImage = document.getElementById("modal-image");
+  const modalName = document.getElementById("modal-name");
+  const modalPrice = document.getElementById("modal-price");
+  const modalCat = document.getElementById("modal-cat");
 
+  if (modalImage) modalImage.src = product.images?.[0] || "";
+  if (modalName) modalName.textContent = product.name;
+  if (modalPrice) modalPrice.textContent = `UGX ${Number(product.price).toLocaleString()}`;
+  if (modalCat) modalCat.textContent = product.category;
+
+  // Show modal
   modal.classList.add("open");
+  
   const overlay = document.getElementById("overlay");
   if (overlay) overlay.classList.add("active");
 };
@@ -473,7 +488,6 @@ window.closeProductModal = function() {
   if (modal) modal.classList.remove("open");
   if (overlay) overlay.classList.remove("active");
 };
-
 // ============================================
 // SEARCH
 // ============================================
