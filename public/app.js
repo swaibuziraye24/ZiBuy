@@ -506,14 +506,14 @@ export async function loadProducts() {
       productsArray.sort((a, b) => Number(b.data.price) - Number(a.data.price));
     }
 
-  // ✅ ADD THIS - Load and display featured ads
-
+  
   // ✅ ADD THIS - Load and display featured ads
   try {
     const featuredAds = await getFeaturedAds();
     
     if (featuredAds.length > 0) {
       const featuredSection = document.createElement("div");
+featuredSection.id = "featured-section";
       featuredSection.style.cssText = `
         grid-column: 1 / -1;
         background: linear-gradient(135deg, #fff4ee 0%, #fffbeb 100%);
@@ -587,19 +587,6 @@ export async function loadProducts() {
     console.error("Featured ads error:", err);
   }
 
-  // Show skeleton loaders
-  grid.innerHTML = Array(8).fill(`
-    <div class="skeleton">
-      <div class="skeleton-img"></div>
-      <div class="skeleton-body">
-        <div class="skeleton-line short"></div>
-        <div class="skeleton-line"></div>
-        <div class="skeleton-line short"></div>
-      </div>
-    </div>
-  `).join("");
-
-  // Rest of your loadProducts code...
 
    // RENDER PRODUCTS
 productsArray.forEach(({ docSnap, data: p }) => {
