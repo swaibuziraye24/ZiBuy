@@ -1,54 +1,325 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+// ============================================
+// ZiBuy — Admin Verification System
+// ============================================
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#ff6600">
-<meta name="apple-mobile-web-app-capable" content="yes">
+import {
+  db,
+  auth,
+  collection,
+  getDocs,
+  doc,
+  updateDoc,
+  query,
+  where
+} from "./firebase.js";
 
-  <title>Seller Verification — Admin — ZiBuy</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
+import {
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-<header class="topbar">
-  <a href="index.html"><h1 class="logo">Zi<span>Buy</span></h1></a>
-  <div style="margin-left:auto">
-    <button class="btn btn-dark" onclick="window.location.href='index.html'">← Home</button>
-  </div>
-</header>
+// ============================================
+// ADMIN PROTECTION
+// ============================================
 
-<div class="admin-verification-wrap">
-  <h1>✅ Seller Verification Requests</h1>
+const ADMIN_EMAIL = "swaibuziraye22@gmail.com";
 
-  <div class="verification-filters">
-    <button class="verify-filter active" onclick="filterVerifications('pending')">⏳ Pending</button>
-    <button class="verify-filter" onclick="filterVerifications('approved')">✅ Approved</button>
-    <button class="verify-filter" onclick="filterVerifications('rejected')">❌ Rejected</button>
-  </div>
+onAuthStateChanged(auth, (user) => {
 
-  <div id="verification-requests" class="verification-requests-list"></div>
-</div>
+  if (!user) {
+    window.location.href = "index.html";
+    return;
+  }
 
-<div id="modal-verify" class="modal">
-  <div class="modal-box" style="max-width:600px">
-    <div class="modal-header">
-      <h2 id="modal-seller-name">Seller Info</h2>
-      <button class="modal-close" onclick="closeVerifyModal()">×</button>
-    </div>
-    <div id="modal-content" style="max-height:400px;overflow-y:auto"></div>
-    <div style="display:flex;gap:10px;margin-top:20px">
-      <button onclick="approveVerification()" class="btn btn-orange" style="flex:1">✅ Approve</button>
-      <button onclick="rejectVerification()" class="btn btn-dark" style="flex:1">❌ Reject</button>
-    </div>
-  </div>
-</div>
+  const currentEmail = user.email?.trim().toLowerCase();
 
-<div id="overlay" class="overlay" onclick="closeVerifyModal()"></div>
-<div id="toast-container" class="toast-container"></div>
+  if (currentEmail !== ADMIN_EMAIL.toLowerCase()) {
+    window.location.href = "index.html";
+    return;
+  }
 
-<script type="module" src="admin-verification.js"></script>
-</body>
-</html>
+  // Admin verified
+  loadVerificationRequests();
+
+});
+
+// ============================================
+// GLOBALS
+// ============================================
+
+let currentFilter = "pending";
+let currentVerificationId = null;
+
+// ============================================
+// LOAD VERIFICATION REQUESTS
+// ============================================
+
+async function loadVerificationRequests() {
+
+  const container = document.getElementById("verification-requests");
+
+  if (!container) return;
+
+  container.innerHTML = `
+    <p style="padding:20px;text-align:center">
+      Loading verification requests...
+    </p>
+  `;
+
+  try {
+
+    const q = query(
+      collection(db, "verifications"),
+      where("status", "==", currentFilter)
+    );
+
+    const snapshot = await getDocs(q);
+
+    container.innerHTML = "";
+
+    if (snapshot.empty) {
+
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">📭</div>
+          <p>No ${currentFilter} requests</p>
+        </div>
+      `;
+
+      return;
+    }
+
+    snapshot.forEach((docSnap) => {
+
+      const data = docSnap.data();
+
+      container.innerHTML += `
+        <div class="verification-card">
+
+          <div class="verification-top">
+
+            <div>
+              <h3>${data.fullName || "Unknown Seller"}</h3>
+
+              <p>📧 ${data.email || "No Email"}</p>
+
+              <p>📞 ${data.phone || "No Phone"}</p>
+
+              <p>📍 ${data.location || "Uganda"}</p>
+            </div>
+
+            <span class="verification-status ${data.status}">
+              ${data.status}
+            </span>
+
+          </div>
+
+          <div class="verification-actions">
+
+            <button
+              class="btn btn-orange"
+              onclick="openVerification('${docSnap.id}')"
+            >
+              View Details
+            </button>
+
+          </div>
+
+        </div>
+      `;
+
+    });
+
+  } catch (err) {
+
+    console.error(err);
+
+    container.innerHTML = `
+      <p style="color:red;padding:20px">
+        Failed to load requests
+      </p>
+    `;
+  }
+}
+
+// ============================================
+// FILTERS
+// ============================================
+
+window.filterVerifications = function(status) {
+
+  currentFilter = status;
+
+  document.querySelectorAll(".verify-filter").forEach(btn => {
+    btn.classList.remove("active");
+  });
+
+  event.target.classList.add("active");
+
+  loadVerificationRequests();
+};
+
+// ============================================
+// OPEN VERIFICATION MODAL
+// ============================================
+
+window.openVerification = async function(id) {
+
+  currentVerificationId = id;
+
+  try {
+
+    const snapshot = await getDocs(collection(db, "verifications"));
+
+    let verification = null;
+
+    snapshot.forEach((docSnap) => {
+
+      if (docSnap.id === id) {
+        verification = {
+          id: docSnap.id,
+          ...docSnap.data()
+        };
+      }
+
+    });
+
+    if (!verification) return;
+
+    document.getElementById("modal-seller-name").textContent =
+      verification.fullName || "Seller";
+
+    document.getElementById("modal-content").innerHTML = `
+
+      <div class="verify-details">
+
+        <p><strong>Full Name:</strong><br>
+        ${verification.fullName || "-"}</p>
+
+        <p><strong>Email:</strong><br>
+        ${verification.email || "-"}</p>
+
+        <p><strong>Phone:</strong><br>
+        ${verification.phone || "-"}</p>
+
+        <p><strong>Location:</strong><br>
+        ${verification.location || "-"}</p>
+
+        <p><strong>National ID:</strong><br>
+        ${verification.nationalId || "-"}</p>
+
+        <p><strong>Status:</strong><br>
+        ${verification.status || "-"}</p>
+
+      </div>
+
+    `;
+
+    document.getElementById("modal-verify").classList.add("open");
+    document.getElementById("overlay").classList.add("active");
+
+  } catch (err) {
+
+    console.error(err);
+
+    showToast("Failed to load details", "error");
+  }
+};
+
+// ============================================
+// CLOSE MODAL
+// ============================================
+
+window.closeVerifyModal = function() {
+
+  document.getElementById("modal-verify").classList.remove("open");
+
+  document.getElementById("overlay").classList.remove("active");
+};
+
+// ============================================
+// APPROVE VERIFICATION
+// ============================================
+
+window.approveVerification = async function() {
+
+  if (!currentVerificationId) return;
+
+  try {
+
+    await updateDoc(
+      doc(db, "verifications", currentVerificationId),
+      {
+        status: "approved",
+        verified: true,
+        approvedAt: new Date()
+      }
+    );
+
+    showToast("Seller approved ✅", "success");
+
+    closeVerifyModal();
+
+    loadVerificationRequests();
+
+  } catch (err) {
+
+    console.error(err);
+
+    showToast("Approval failed", "error");
+  }
+};
+
+// ============================================
+// REJECT VERIFICATION
+// ============================================
+
+window.rejectVerification = async function() {
+
+  if (!currentVerificationId) return;
+
+  try {
+
+    await updateDoc(
+      doc(db, "verifications", currentVerificationId),
+      {
+        status: "rejected",
+        verified: false
+      }
+    );
+
+    showToast("Seller rejected ❌", "info");
+
+    closeVerifyModal();
+
+    loadVerificationRequests();
+
+  } catch (err) {
+
+    console.error(err);
+
+    showToast("Rejection failed", "error");
+  }
+};
+
+// ============================================
+// TOAST
+// ============================================
+
+function showToast(message, type = "info") {
+
+  const container = document.getElementById("toast-container");
+
+  if (!container) return;
+
+  const toast = document.createElement("div");
+
+  toast.className = `toast ${type}`;
+
+  toast.textContent = message;
+
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.remove();
+  }, 3000);
+}
