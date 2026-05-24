@@ -46,13 +46,15 @@ async function loadProduct() {
     const phone = (seller.phone || "").replace(/\D/g, "");
     const waMsg = encodeURIComponent(`Hi, I saw *${p.name}* on ZiBuy for UGX ${Number(p.price).toLocaleString()}. Is it still available?`);
 
-    const contactHTML = phone ? `
+   const contactHTML = phone ? `
       <div class="contact-btns" style="margin-top:16px">
-        <a class="contact-btn whatsapp-btn" href="https://wa.me/${phone}?text=${waMsg}" target="_blank" style="background:#25d366;color:white;display:flex;align-items:center;justify-content:center;padding:12px;border-radius:10px;font-weight:700;text-decoration:none">
-          📱 WhatsApp
+        <a class="contact-btn whatsapp-btn" href="https://wa.me/${phone}?text=${waMsg}" target="_blank">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.553 4.122 1.523 5.857L.057 23.8l6.088-1.439A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.788 9.788 0 01-5.002-1.368l-.36-.214-3.716.878.938-3.63-.235-.373A9.789 9.789 0 012.182 12C2.182 6.58 6.58 2.182 12 2.182S21.818 6.58 21.818 12 17.42 21.818 12 21.818z"/></svg>
+          WhatsApp Seller
         </a>
-        <a class="contact-btn call-btn" href="tel:+${phone}" style="background:#111827;color:white;display:flex;align-items:center;justify-content:center;padding:12px;border-radius:10px;font-weight:700;text-decoration:none">
-          📞 Call
+        <a class="contact-btn call-btn" href="tel:+${phone}">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.67A2 2 0 012 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+          Call Seller
         </a>
       </div>
     ` : "";
@@ -69,39 +71,13 @@ async function loadProduct() {
           </div>` : ""}
       </div>
 
-      <!-- Details -->
-      <div class="product-page-details">
-        <div class="seller-box" style="background:#f3f4f6;border-radius:12px;padding:16px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
-          <div style="width:44px;height:44px;background:#ff6600;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:800;flex-shrink:0">${(seller.name || "Z")[0].toUpperCase()}</div>
+      <div class="seller-box" style="background:${seller.isVerified ? '#d1fae5' : '#f3f4f6'};border-radius:12px;padding:16px;margin-bottom:20px;display:flex;align-items:center;gap:12px;border-left:4px solid ${seller.isVerified ? '#10b981' : '#ff6600'}">
+          <div style="width:44px;height:44px;background:${seller.isVerified ? '#10b981' : '#ff6600'};border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:800;flex-shrink:0;box-shadow:${seller.isVerified ? '0 0 12px rgba(16, 185, 129, 0.3)' : 'none'}">${(seller.name || "Z")[0].toUpperCase()}</div>
           <div>
-            <h4 style="margin:0;font-weight:700">${seller.name || "ZiBuy Seller"}</h4>
-            <p style="margin:4px 0 0;font-size:12px;color:#6b7280">📍 ${seller.location || "Uganda"}</p>
+            <h4 style="margin:0;font-weight:700;color:${seller.isVerified ? '#065f46' : '#111827'}">${seller.name || "ZiBuy Seller"} ${seller.isVerified ? '✅' : ''}</h4>
+            <p style="margin:4px 0 0;font-size:12px;color:${seller.isVerified ? '#059669' : '#6b7280'}">📍 ${seller.location || "Uganda"} ${seller.isVerified ? '· ✅ Verified Seller' : ''}</p>
           </div>
         </div>
-
-        <p class="product-cat" style="font-size:11px;font-weight:700;color:#ff6600;text-transform:uppercase;margin-bottom:8px">${p.category || "Product"}</p>
-        <h1 style="font-size:28px;font-weight:800;margin-bottom:14px">${p.name}</h1>
-        <p style="font-size:34px;font-weight:900;color:#ff6600;margin-bottom:24px">UGX ${Number(p.price).toLocaleString()}</p>
-
-        <p style="color:#6b7280;line-height:1.7;margin-bottom:28px">
-          ${p.description || "High quality product from ZiBuy marketplace. Contact seller for more details."}
-        </p>
-
-        <div style="display:flex;gap:12px;margin-bottom:16px">
-          <button class="cart-btn" style="flex:1;padding:16px;font-size:16px;background:#ff6600;color:white;border:none;border-radius:12px;font-weight:700;cursor:pointer" onclick="addToCart('${p.name.replace(/'/g,"\\'")}', ${p.price}, '${images[0] || ""}')">
-            🛒 Add to Cart
-          </button>
-          <button class="view-btn" style="flex:1;padding:16px;font-size:16px;border:1.5px solid #ff6600;color:#ff6600;background:white;border-radius:12px;font-weight:700;cursor:pointer" onclick="toggleCart()">
-            View Cart
-          </button>
-        </div>
-
-        ${contactHTML}
-
-        <div style="margin-top:16px;padding:16px;background:#fff4ee;border-radius:12px;font-size:13px;color:#b45309">
-          🛡️ <strong>Safe buying tip:</strong> Meet the seller in a public place and check the item before paying.
-        </div>
-      </div>
     `;
 
     window.switchImage = function(index) {
