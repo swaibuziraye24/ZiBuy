@@ -583,3 +583,8 @@ if (logoBtn) {
     }, 2000);
   });
 }
+
+const adminBoostBtn = document.getElementById("admin-boost-btn");
+if (adminBoostBtn && user?.email === "swaibuziraye22@gmail.com") {
+  adminBoostBtn.style.display = "block";
+}
