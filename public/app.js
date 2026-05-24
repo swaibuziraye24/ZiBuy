@@ -4,20 +4,14 @@
 
 import {
   db, auth,
-  collection, getDocs, addDoc
-} from "./firebase.js";
-
-import {
-  db, auth,
   collection, getDocs, addDoc, query, where
 } from "./firebase.js";
-
-import { getFeaturedAds } from "./premium-ads.js";
-
 
 import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+import { getFeaturedAds } from "./premium-ads.js";
 
 import "./auth.js";
 
