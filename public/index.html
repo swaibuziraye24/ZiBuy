@@ -19,12 +19,10 @@
   <!-- LEFT -->
   <div class="topbar-left">
 
-    <!-- MENU ICON -->
     <button class="menu-btn">
       ☰
     </button>
 
-    <!-- LOGO -->
     <img
       src="my_logo.png"
       alt="ZiBuy Logo"
@@ -34,8 +32,7 @@
 
   </div>
 
-
-  <!-- CENTER SEARCH -->
+  <!-- SEARCH -->
   <div class="search-wrap">
 
     <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -52,75 +49,70 @@
 
   </div>
 
-
   <!-- RIGHT -->
   <div class="topbar-actions">
-
-    <!-- ADMIN -->
-    <button
-      class="top-icon-btn"
-      onclick="window.location.href='admin-boost-requests.html'"
-      id="admin-boost-btn"
-      style="display:none"
-    >
-      💳
-    </button>
-
-    <!-- POST -->
-    <button
-      class="top-icon-btn"
-      id="post-ad-btn"
-      onclick="window.location.href='post-ad.html'"
-      style="display:none"
-    >
-      ➕
-    </button>
-
-    <!-- MESSAGES -->
-    <button
-      class="top-icon-btn"
-      id="messages-btn"
-      onclick="window.location.href='messages.html'"
-      style="display:none"
-    >
-      💬
-    </button>
-
-    <!-- NOTIFICATIONS -->
-    <button
-      class="top-icon-btn"
-      id="notifications-btn"
-      onclick="window.location.href='notifications.html'"
-      style="display:none"
-    >
-      🔔
-    </button>
-
-    <!-- DASHBOARD -->
-    <button
-      class="top-icon-btn"
-      id="dashboard-btn"
-      onclick="window.location.href='dashboard.html'"
-      style="display:none"
-    >
-      📊
-    </button>
 
     <!-- ACCOUNT -->
     <button
       class="top-icon-btn"
       id="account-btn"
       onclick="openAuthModal()"
+      title="Account"
     >
       👤
+    </button>
+
+    <!-- MESSAGES -->
+    <button
+      class="top-icon-btn mobile-hide"
+      id="messages-btn"
+      onclick="window.location.href='messages.html'"
+      style="display:none"
+      title="Messages"
+    >
+      💬
+    </button>
+
+    <!-- NOTIFICATIONS -->
+    <button
+      class="top-icon-btn mobile-hide"
+      id="notifications-btn"
+      onclick="window.location.href='notifications.html'"
+      style="display:none"
+      title="Notifications"
+    >
+      🔔
+    </button>
+
+    <!-- DASHBOARD -->
+    <button
+      class="top-icon-btn mobile-hide"
+      id="dashboard-btn"
+      onclick="window.location.href='dashboard.html'"
+      style="display:none"
+      title="Dashboard"
+    >
+      📊
+    </button>
+
+    <!-- POST AD -->
+    <button
+      class="top-icon-btn"
+      id="post-ad-btn"
+      onclick="window.location.href='post-ad.html'"
+      style="display:none"
+      title="Post Ad"
+    >
+      ➕
     </button>
 
     <!-- CART -->
     <div class="cart-btn-wrap">
 
       <button
-        class="top-icon-btn cart-btn-modern"
+        class="top-icon-btn"
         onclick="toggleCart()"
+        title="Cart"
       >
         🛒
       </button>
