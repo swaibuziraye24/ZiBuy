@@ -16,9 +16,15 @@
 <!-- ============ TOP BAR ============ -->
 <header class="topbar">
 
-  <!-- LEFT SIDE -->
-  <div class="topbar-left">
+  <!-- MOBILE TOP -->
+  <div class="mobile-topbar">
 
+    <!-- MENU -->
+    <button class="mobile-icon-btn">
+      ☰
+    </button>
+
+    <!-- LOGO -->
     <img
       src="my_logo.png"
       alt="ZiBuy Logo"
@@ -26,117 +32,89 @@
       class="zibuy-logo"
     />
 
-  </div>
-
-  <!-- CENTER SEARCH -->
-  <div class="topbar-center">
-
-    <div class="search-wrap">
-
-      <svg class="search-icon"
-        width="18"
-        height="18"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        viewBox="0 0 24 24">
-
-        <circle cx="11" cy="11" r="8"/>
-        <path d="m21 21-4.35-4.35"/>
-
-      </svg>
-
-      <input
-        type="text"
-        id="search-input"
-        placeholder="Search products, brands and categories"
-        onkeyup="searchProducts()"
-      >
-
-      <button class="search-btn">
-        SEARCH
-      </button>
-
-    </div>
-
-  </div>
-
-  <!-- RIGHT SIDE -->
-  <div class="topbar-actions">
-
-    <button
-      class="btn btn-orange"
-      onclick="window.location.href='admin-boost-requests.html'"
-      style="display:none"
-      id="admin-boost-btn">
-
-      💳 <span>Boost</span>
-
-    </button>
-
-    <button
-      class="btn btn-orange"
-      id="post-ad-btn"
-      onclick="window.location.href='post-ad.html'"
-      style="display:none">
-
-      + <span>Post Ad</span>
-
-    </button>
-
-    <button
-      class="btn btn-outline"
-      id="messages-btn"
-      onclick="window.location.href='messages.html'"
-      style="display:none">
-
-      💬 <span>Messages</span>
-
-    </button>
-
-    <button
-      class="btn btn-outline"
-      id="notifications-btn"
-      onclick="window.location.href='notifications.html'"
-      style="display:none">
-
-      🔔 <span>Alerts</span>
-
-    </button>
-
-    <button
-      class="btn btn-outline"
-      id="dashboard-btn"
-      onclick="window.location.href='dashboard.html'"
-      style="display:none">
-
-      📊 <span>Dashboard</span>
-
-    </button>
-
-    <button
-      class="btn btn-outline"
-      id="account-btn"
-      onclick="openAuthModal()">
-
-      👤 <span>Account</span>
-
-    </button>
-
-    <!-- CART -->
-    <div class="cart-btn-wrap">
+    <!-- RIGHT ICONS -->
+    <div class="mobile-actions">
 
       <button
-        class="btn btn-orange"
-        onclick="toggleCart()">
+        class="mobile-icon-btn"
+        id="account-btn"
+        onclick="openAuthModal()">
 
-        🛒 <span>Cart</span>
+        👤
 
       </button>
 
-      <span class="cart-badge" id="cart-count">0</span>
+      <div class="cart-btn-wrap">
+
+        <button
+          class="mobile-icon-btn"
+          onclick="toggleCart()">
+
+          🛒
+
+        </button>
+
+        <span class="cart-badge" id="cart-count">0</span>
+
+      </div>
 
     </div>
+
+  </div>
+
+  <!-- SEARCH -->
+  <div class="search-wrap">
+
+    <svg
+      class="search-icon"
+      width="18"
+      height="18"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      viewBox="0 0 24 24">
+
+      <circle cx="11" cy="11" r="8"/>
+      <path d="m21 21-4.35-4.35"/>
+
+    </svg>
+
+    <input
+      type="text"
+      id="search-input"
+      placeholder="Search products, brands and categories"
+      onkeyup="searchProducts()"
+    >
+
+  </div>
+
+  <!-- HIDDEN DESKTOP/AUTH BUTTONS -->
+  <div style="display:none">
+
+    <button
+      id="admin-boost-btn"
+      onclick="window.location.href='admin-boost-requests.html'">
+    </button>
+
+    <button
+      id="post-ad-btn"
+      onclick="window.location.href='post-ad.html'">
+    </button>
+
+    <button
+      id="messages-btn"
+      onclick="window.location.href='messages.html'">
+    </button>
+
+    <button
+      id="notifications-btn"
+      onclick="window.location.href='notifications.html'">
+    </button>
+
+    <button
+      id="dashboard-btn"
+      onclick="window.location.href='dashboard.html'">
+    </button>
 
   </div>
 
