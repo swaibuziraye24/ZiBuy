@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seller Verification</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="verify-box">
+
+  <h1>✅ Seller Verification</h1>
+
+  <input type="text" id="verify-name" placeholder="Full Name">
+
+  <input type="text" id="verify-phone" placeholder="Phone Number">
+
+  <input type="text" id="verify-nin" placeholder="National ID Number">
+
+  <label>National ID Photo</label>
+  <input type="file" id="verify-id-image" accept="image/*">
+
+  <label>Your Selfie</label>
+  <input type="file" id="verify-selfie" accept="image/*">
+
+  <button onclick="submitVerification()">
+    Submit Verification
+  </button>
+
+</div>
+
+<script type="module" src="verification.js"></script>
+
+</body>
+</html>
