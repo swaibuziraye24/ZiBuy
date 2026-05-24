@@ -100,7 +100,7 @@ window.logoutCustomer = async function() {
 // LOAD PRODUCTS FROM FIRESTORE
 // ============================================
 
-async function loadProducts() {
+export async function loadProducts() {
   try {
     const snapshot = await getDocs(collection(db, "products"));
     allProducts = snapshot.docs.map(doc => ({
