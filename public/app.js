@@ -654,3 +654,35 @@ if (adminBoostBtn && currentUser?.email === "swaibuziraye22@gmail.com") {
   adminBoostBtn.style.display = "block";
 }
 
+/* ============================================
+   JUMIA-STYLE TOPBAR - Mobile Menu Toggle
+   ============================================ */
+
+window.toggleMobileMenu = function() {
+  const drawer = document.getElementById("mobile-menu-drawer");
+  const overlay = document.getElementById("overlay");
+  
+  drawer.classList.toggle("active");
+  overlay.classList.toggle("active");
+};
+
+// Close menu when clicking overlay
+document.addEventListener("DOMContentLoaded", () => {
+  const overlay = document.getElementById("overlay");
+  if (overlay) {
+    overlay.addEventListener("click", () => {
+      const drawer = document.getElementById("mobile-menu-drawer");
+      if (drawer && drawer.classList.contains("active")) {
+        toggleMobileMenu();
+      }
+    });
+  }
+});
+
+// Close menu when user scrolls
+window.addEventListener("scroll", () => {
+  const drawer = document.getElementById("mobile-menu-drawer");
+  if (drawer && drawer.classList.contains("active")) {
+    toggleMobileMenu();
+  }
+});
