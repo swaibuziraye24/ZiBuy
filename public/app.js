@@ -39,12 +39,24 @@ function initApp() {
 }
 
 // ============================================
+// ============================================
 // AUTH STATE LISTENER
 // ============================================
 
 function setupAuthStateListener() {
   onAuthStateChanged(auth, (user) => {
     currentUser = user;
+    const ADMIN_EMAIL = "swaibuziraye22@gmail.com";
+
+    // Show boost requests button only for admin
+    const adminBoostBtn = document.getElementById("admin-boost-btn");
+    if (adminBoostBtn) {
+      if (user && user.email === ADMIN_EMAIL) {
+        adminBoostBtn.style.display = "block";
+      } else {
+        adminBoostBtn.style.display = "none";
+      }
+    }
 
     // Safely update all DOM elements
     const elements = {
@@ -54,7 +66,6 @@ function setupAuthStateListener() {
       "notifications-btn": user ? "block" : "none"
     };
 
-    // Update each element safely
     Object.keys(elements).forEach(id => {
       const el = document.getElementById(id);
       if (el) {
@@ -74,6 +85,14 @@ function setupAuthStateListener() {
       }
     }
 
+    // Update cart button visibility
+    const cartBtn = document.querySelector(".cart-btn-wrap");
+    if (cartBtn && user) {
+      cartBtn.style.display = "flex";
+    }
+  });
+}
+
 // ============================================
 // LOGOUT
 // ============================================
@@ -87,15 +106,6 @@ window.logoutCustomer = async function() {
     console.error("Logout error:", err);
   }
 };
-
-    // Update cart button visibility
-    const cartBtn = document.querySelector(".cart-btn-wrap");
-    if (cartBtn && user) {
-      cartBtn.style.display = "flex";
-    }
-  });
-}
-
 // ============================================
 // LOAD PRODUCTS FROM FIRESTORE
 // ============================================
