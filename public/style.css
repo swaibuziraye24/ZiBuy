@@ -5876,3 +5876,207 @@ table {
   }
 
 }
+
+
+/* ============================================
+   ADMIN VERIFICATION SYSTEM
+============================================ */
+
+.admin-verification-wrap{
+  max-width:1200px;
+  margin:auto;
+  padding:20px;
+}
+
+.admin-verification-wrap h1{
+  font-size:28px;
+  font-weight:800;
+  margin-bottom:20px;
+  color:#111827;
+}
+
+.verification-filters{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:20px;
+}
+
+.verify-filter{
+  border:none;
+  background:#f3f4f6;
+  padding:12px 18px;
+  border-radius:10px;
+  cursor:pointer;
+  font-size:14px;
+  font-weight:700;
+}
+
+.verify-filter.active{
+  background:#ff6600;
+  color:white;
+}
+
+.verification-requests-list{
+  display:grid;
+  gap:16px;
+}
+
+.verification-card{
+  background:white;
+  border-radius:16px;
+  padding:18px;
+  border:1px solid #e5e7eb;
+  box-shadow:0 4px 10px rgba(0,0,0,.05);
+}
+
+.verification-top{
+  display:flex;
+  align-items:flex-start;
+  gap:14px;
+}
+
+.verification-avatar{
+  width:55px;
+  height:55px;
+  border-radius:50%;
+  background:#ff6600;
+  color:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:22px;
+  font-weight:800;
+  flex-shrink:0;
+}
+
+.verification-info{
+  flex:1;
+}
+
+.verification-info h3{
+  margin:0 0 6px;
+  font-size:18px;
+  font-weight:800;
+  color:#111827;
+}
+
+.verification-info p{
+  margin:4px 0;
+  color:#4b5563;
+  font-size:14px;
+}
+
+.verification-info small{
+  color:#9ca3af;
+  font-size:12px;
+}
+
+.verification-status{
+  color:white;
+  padding:6px 12px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:700;
+  text-transform:uppercase;
+}
+
+.view-verification-btn{
+  margin-top:16px;
+  width:100%;
+  border:none;
+  background:#111827;
+  color:white;
+  padding:12px;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:700;
+  font-size:14px;
+}
+
+.view-verification-btn:hover{
+  opacity:.9;
+}
+
+/* ============================================
+   MODAL
+============================================ */
+
+#modal-verify .modal-box{
+  width:95%;
+  max-width:650px;
+  border-radius:18px;
+  padding:20px;
+}
+
+#modal-content{
+  font-size:15px;
+  line-height:1.6;
+}
+
+#modal-content p{
+  word-break:break-word;
+}
+
+#modal-content a{
+  color:#ff6600;
+  font-weight:700;
+  text-decoration:none;
+}
+
+/* ============================================
+   MOBILE
+============================================ */
+
+@media(max-width:768px){
+
+  .admin-verification-wrap{
+    padding:14px;
+  }
+
+  .admin-verification-wrap h1{
+    font-size:22px;
+  }
+
+  .verification-card{
+    padding:14px;
+  }
+
+  .verification-top{
+    flex-direction:column;
+  }
+
+  .verification-avatar{
+    width:50px;
+    height:50px;
+    font-size:20px;
+  }
+
+  .verification-info h3{
+    font-size:16px;
+  }
+
+  .verification-info p{
+    font-size:13px;
+  }
+
+  .verification-status{
+    align-self:flex-start;
+    margin-top:8px;
+  }
+
+  .view-verification-btn{
+    font-size:13px;
+    padding:11px;
+  }
+
+  #modal-verify .modal-box{
+    width:96%;
+    padding:16px;
+  }
+
+  #modal-content{
+    font-size:14px;
+  }
+
+}
