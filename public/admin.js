@@ -15,14 +15,10 @@ import {
 
 import { showToast, loadProducts } from "./app.js";
 
-
 import { auth } from "./firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-
-// ============================================
-// ADMIN AUTH PROTECTION
-// ============================================
 
 const ADMIN_EMAIL = "swaibuziraye22@gmail.com";
 
@@ -30,87 +26,20 @@ let isAdmin = false;
 
 onAuthStateChanged(auth, (user) => {
 
-  // Wait until Firebase finishes loading
-  if (user === undefined) return;
-
-  // Not logged in
   if (!user) {
-
-    document.body.innerHTML = `
-      <div style="
-        display:flex;
-        flex-direction:column;
-        justify-content:center;
-        align-items:center;
-        height:100vh;
-        font-family:Arial;
-        text-align:center;
-        padding:20px;
-      ">
-        <h1>Access Denied</h1>
-        <p>Admin access only.</p>
-        <button onclick="window.location.href='index.html'"
-          style="
-            padding:12px 18px;
-            border:none;
-            background:#ff6600;
-            color:white;
-            border-radius:8px;
-            cursor:pointer;
-            margin-top:10px;
-          ">
-          Go Home
-        </button>
-      </div>
-    `;
-
+    isAdmin = false;
     return;
   }
 
-  // Safe email comparison
   const currentEmail = user.email?.trim().toLowerCase();
-  const adminEmail   = ADMIN_EMAIL.trim().toLowerCase();
+  const adminEmail = ADMIN_EMAIL.trim().toLowerCase();
 
-  // Wrong admin
-  if (currentEmail !== adminEmail) {
+  isAdmin = currentEmail === adminEmail;
 
-    document.body.innerHTML = `
-      <div style="
-        display:flex;
-        flex-direction:column;
-        justify-content:center;
-        align-items:center;
-        height:100vh;
-        font-family:Arial;
-        text-align:center;
-        padding:20px;
-      ">
-        <h1>Access Denied</h1>
-        <p>Admin access only.</p>
-        <button onclick="window.location.href='index.html'"
-          style="
-            padding:12px 18px;
-            border:none;
-            background:#ff6600;
-            color:white;
-            border-radius:8px;
-            cursor:pointer;
-            margin-top:10px;
-          ">
-          Go Home
-        </button>
-      </div>
-    `;
-
-    return;
-  }
-
- // Admin verified
-isAdmin = true;
-
-console.log("Admin authenticated");
+  console.log("Admin:", isAdmin);
 
 });
+
 
   // ============ Image Preview ============
 
@@ -191,7 +120,7 @@ if (!user) {
 
 location: sellerLoc || "Uganda",
 
-createdAt: new Date()
+      createdAt: serverTimestamp(),
     });
 
     showToast("Product uploaded successfully! 🎉", "success");
