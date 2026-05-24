@@ -270,14 +270,17 @@ let filterState = {
   sortBy: "newest"
 };
 
-// ============ FILTER PANEL TOGGLE ============
 window.toggleFilters = function() {
   const panel = document.getElementById("filters-panel");
+  const overlay = document.getElementById("overlay");
+  
   if (panel) {
     panel.classList.toggle("active");
+    if (overlay) {
+      overlay.classList.toggle("active");
+    }
   }
 };
-
 // ============ UPDATE PRICE RANGE ============
 window.updatePriceRange = function() {
   let minVal = Number(document.getElementById("price-range-min").value);
@@ -335,32 +338,98 @@ window.resetFilters = function() {
     sortBy: "newest"
   };
 
+  // ✅ NEW: Clear active filters display
   updateActiveFiltersDisplay();
+  
+  // ✅ NEW: Reset price display
   document.getElementById("price-display-min").textContent = "0";
   document.getElementById("price-display-max").textContent = "99999999";
+  
+  // ✅ NEW: Close filter panel
+  const panel = document.getElementById("filters-panel");
+  if (panel) {
+    panel.classList.remove("active");
+  }
+  const overlay = document.getElementById("overlay");
+  if (overlay) {
+    overlay.classList.remove("active");
+  }
+  
+  // ✅ NEW: Show confirmation
+  showToast("Filters reset ✅", "success");
+  
+  // ✅ Reload products
   loadProducts();
 };
 
-// ============ UPDATE ACTIVE FILTERS DISPLAY ============
+
+window.resetPriceFilter = function() {
+  document.getElementById("price-min").value = 0;
+  document.getElementById("price-max").value = 99999999;
+  document.getElementById("price-range-min").value = 0;
+  document.getElementById("price-range-max").value = 99999999;
+  filterState.priceMin = 0;
+  filterState.priceMax = 99999999;
+  document.getElementById("price-display-min").textContent = "0";
+  document.getElementById("price-display-max").textContent = "99999999";
+  updateActiveFiltersDisplay();
+  loadProducts();
+};
+
+window.resetLocationFilter = function() {
+  document.getElementById("filter-location").value = "";
+  filterState.location = "";
+  updateActiveFiltersDisplay();
+  loadProducts();
+};
+
+window.resetDateFilter = function() {
+  document.querySelector("input[name='date-filter'][value='all']").checked = true;
+  filterState.dateRange = "all";
+  updateActiveFiltersDisplay();
+  loadProducts();
+};
+
+window.clearAllFilters = function() {
+  resetFilters();
+};
+
 function updateActiveFiltersDisplay() {
   const container = document.getElementById("active-filters");
+  if (!container) return;
+  
   const filters = [];
 
   if (filterState.priceMin > 0 || filterState.priceMax < 99999999) {
-    filters.push(`💰 UGX ${filterState.priceMin.toLocaleString()}-${filterState.priceMax.toLocaleString()}`);
+    filters.push(`
+      <span class="active-filter-tag">
+        💰 UGX ${filterState.priceMin.toLocaleString()}-${filterState.priceMax.toLocaleString()}
+        <button onclick="resetPriceFilter()" style="background:none;border:none;color:inherit;cursor:pointer;margin-left:4px">×</button>
+      </span>
+    `);
   }
   if (filterState.location) {
-    filters.push(`📍 ${filterState.location}`);
+    filters.push(`
+      <span class="active-filter-tag">
+        📍 ${filterState.location}
+        <button onclick="resetLocationFilter()" style="background:none;border:none;color:inherit;cursor:pointer;margin-left:4px">×</button>
+      </span>
+    `);
   }
   if (filterState.dateRange !== "all") {
     const dateLabels = { "7": "Last 7 days", "30": "Last 30 days" };
-    filters.push(`📅 ${dateLabels[filterState.dateRange] || "All time"}`);
+    filters.push(`
+      <span class="active-filter-tag">
+        📅 ${dateLabels[filterState.dateRange] || "All time"}
+        <button onclick="resetDateFilter()" style="background:none;border:none;color:inherit;cursor:pointer;margin-left:4px">×</button>
+      </span>
+    `);
   }
 
   if (filters.length === 0) {
     container.innerHTML = "";
   } else {
-    container.innerHTML = filters.map(f => `<span class="active-filter-tag">${f}</span>`).join("");
+    container.innerHTML = filters.join("");
   }
 }
 
