@@ -141,7 +141,13 @@ async function loadMyProducts() {
           <h3>${p.name}</h3>
           <p class="ad-price">UGX ${Number(p.price).toLocaleString()}</p>
           <p class="ad-meta">📍 ${p.location} · 👁️ ${p.views || 0} views</p>
-          <p class="ad-meta">📅 Posted: ${new Date(p.createdAt?.toDate?.() || p.createdAt).toLocaleDateString()}</p>
+          <p class="ad-meta">📅 Posted: ${
+  p.createdAt
+    ? new Date(
+        p.createdAt?.toDate?.() || p.createdAt
+      ).toLocaleDateString()
+    : "Unknown date"
+}
           
           <div class="ad-actions">
             <button class="btn btn-sm btn-edit" onclick="editProduct('${p.id}')">✏️ Edit</button>
