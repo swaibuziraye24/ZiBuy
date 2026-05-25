@@ -115,7 +115,7 @@ async function switchTab(tab) {
 }
 
 window.switchTab = switchTab;
-window.loadProfileSettings = loadProfileSettings;
+
 // ============================================
 // LOAD MY PRODUCTS
 // ============================================
@@ -420,43 +420,66 @@ async function loadMyOrders() {
 // LOAD PROFILE SETTINGS
 // ============================================
 
+// ============================================
+// LOAD PROFILE SETTINGS (WITH DEBUGGING)
+// ============================================
+
 async function loadProfileSettings() {
   debug("loadProfileSettings() called");
+  debug("currentUser exists:", !!currentUser);
+  debug("currentUser.email:", currentUser?.email);
   
   const container = document.getElementById("profile-settings");
+  debug("Container #profile-settings found:", !!container);
   
   if (!container) {
-    debug("❌ Container #profile-settings not found!");
-    debug("Available elements:", document.querySelectorAll("[id*='profile']").length);
-    alert("⚠️ Settings container not found. Check dashboard.html");
+    console.error("❌❌❌ CRITICAL: #profile-settings container NOT FOUND!");
+    console.error("Looking for alternatives...");
+    
+    // Try to find any container in profile-tab
+    const profileTab = document.getElementById("profile-tab");
+    console.error("profile-tab exists:", !!profileTab);
+    
+    if (profileTab) {
+      console.error("profile-tab HTML:", profileTab.innerHTML);
+    }
+    
+    alert("❌ SETTINGS CONTAINER NOT FOUND\n\nYour dashboard.html is missing the correct structure.\n\nCheck the console for details.");
     return;
   }
   
-  debug("Container found, rendering settings...");
-  
-  container.innerHTML = `
-    <div class="settings-section">
-      <h3>👤 Account Information</h3>
-      <div style="padding:12px;background:#f3f4f6;border-radius:10px;margin-bottom:12px">
-        <p style="margin:6px 0"><strong>Email:</strong> ${currentUser.email}</p>
-        <p style="margin:6px 0"><strong>User ID:</strong> ${currentUser.uid}</p>
-        <p style="margin:6px 0"><strong>Member Since:</strong> ${new Date(currentUser.metadata?.creationTime).toLocaleDateString()}</p>
+  try {
+    debug("Rendering settings for user:", currentUser.email);
+    
+    const settingsHTML = `
+      <div class="settings-section">
+        <h3>👤 Account Information</h3>
+        <div style="padding:12px;background:#f3f4f6;border-radius:10px;margin-bottom:12px">
+          <p style="margin:6px 0"><strong>Email:</strong> ${currentUser.email}</p>
+          <p style="margin:6px 0"><strong>User ID:</strong> ${currentUser.uid}</p>
+          <p style="margin:6px 0"><strong>Member Since:</strong> ${new Date(currentUser.metadata?.creationTime).toLocaleDateString()}</p>
+        </div>
       </div>
-    </div>
 
-    <div class="settings-section">
-      <h3>🔐 Security</h3>
-      <button class="btn btn-outline" onclick="changePassword()" style="width:100%;margin-bottom:8px">Change Password</button>
-      <button class="btn btn-outline" style="width:100%" onclick="logout()">Logout</button>
-    </div>
+      <div class="settings-section">
+        <h3>🔐 Security</h3>
+        <button class="btn btn-outline" onclick="changePassword()" style="width:100%;margin-bottom:8px">Change Password</button>
+        <button class="btn btn-outline" style="width:100%" onclick="logout()">Logout</button>
+      </div>
 
-    <div class="settings-section" style="border:1px solid #fee2e2;background:#fee2e2">
-      <h3 style="color:#991b1b">⚠️ Danger Zone</h3>
-      <button class="btn" style="background:#ef4444;color:white;width:100%" onclick="deleteAccount()">Delete My Account</button>
-    </div>
-  `;
-  
-  debug("✅ Settings rendered!");
+      <div class="settings-section" style="border:1px solid #fee2e2;background:#fee2e2">
+        <h3 style="color:#991b1b">⚠️ Danger Zone</h3>
+        <button class="btn" style="background:#ef4444;color:white;width:100%" onclick="deleteAccount()">Delete My Account</button>
+      </div>
+    `;
+    
+    container.innerHTML = settingsHTML;
+    debug("✅ Settings rendered successfully!");
+    
+  } catch (err) {
+    console.error("❌ Error rendering settings:", err);
+    container.innerHTML = `<p style="color:red;padding:20px">Error: ${err.message}</p>`;
+  }
 }
 
 // ============================================
