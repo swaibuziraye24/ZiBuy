@@ -175,7 +175,6 @@ function updateReview() {
 // ============================================
 // SUBMIT AD - UPLOAD TO FIREBASE
 // ============================================
-
 window.submitAd = async function() {
   if (!currentUser) {
     alert("You must be logged in to post ads");
@@ -190,80 +189,89 @@ window.submitAd = async function() {
     // 1. Upload images to Firebase Storage
     const imageUrls = [];
     
-   for (let i = 0; i < uploadedImages.length; i++) {
-  const file = uploadedImages[i];
-  const timestamp = Date.now();
-  const fileName = `products/${currentUser.uid}/${timestamp}-${i}-${file.name}`;
-  const storageRef = ref(storage, fileName);
+    for (let i = 0; i < uploadedImages.length; i++) {
+      const file = uploadedImages[i];
+      const timestamp = Date.now();
+      const fileName = `products/${currentUser.uid}/${timestamp}-${i}-${file.name}`;
+      const storageRef = ref(storage, fileName);
 
-  try {
-    // Upload with metadata
-    const metadata = {
-      contentType: file.type,
-      cacheControl: 'public, max-age=31536000'
+      try {
+        const metadata = {
+          contentType: file.type,
+          cacheControl: 'public, max-age=31536000'
+        };
+        
+        await uploadBytes(storageRef, file, metadata);
+        const downloadURL = await getDownloadURL(storageRef);
+        imageUrls.push(downloadURL);
+        console.log("Image uploaded:", downloadURL);
+      } catch (uploadErr) {
+        console.error("Image upload error:", uploadErr);
+        throw new Error(`Failed to upload image ${i + 1}: ${uploadErr.message}`);
+      }
+    }
+
+    const phoneInput = document.getElementById("seller-phone");
+    const sellerPhone = phoneInput ? phoneInput.value.trim() : "";
+
+    // 2. Create product object with ALL required fields
+    const productData = {
+      name: titleInput.value.trim(),
+      price: Number(priceInput.value),
+      category: selectedCategory,
+      description: descInput.value.trim(),
+      location: locationInput.value,
+      images: imageUrls,
+      
+      // 🔴 CRITICAL FIELDS:
+      userId: currentUser.uid,              // ✅ Required for dashboard query
+      userEmail: currentUser.email,         // ✅ Required for fallback query
+      status: "active",                     // ✅ Product status
+      views: 0,                             // ✅ View counter
+      isPremium: false,                     // ✅ Premium status
+      createdAt: new Date(),                // ✅ Timestamp
+      updatedAt: new Date(),                // ✅ Last update
+      
+      seller: {
+        name: currentUser.email.split("@")[0],
+        phone: sellerPhone,
+        location: locationInput.value,
+        isVerified: false
+      }
     };
-    
-    await uploadBytes(storageRef, file, metadata);
-    const downloadURL = await getDownloadURL(storageRef);
-    
-    // Add token to URL to ensure access
-    imageUrls.push(downloadURL);
-    console.log("Image uploaded:", downloadURL);
-  } catch (uploadErr) {
-    console.error("Image upload error:", uploadErr);
-    throw new Error(`Failed to upload image ${i + 1}: ${uploadErr.message}`);
-  }
-}
 
-const phoneInput = document.getElementById("seller-phone");
-const sellerPhone = phoneInput ? phoneInput.value.trim() : "";
-
-const productData = {
-  name: titleInput.value.trim(),
-  price: Number(priceInput.value),
-  category: selectedCategory,
-  description: descInput.value.trim(),
-  location: locationInput.value,
-  images: imageUrls,
-  seller: {
-    name: currentUser.email.split("@")[0],
-    phone: sellerPhone, // ✅ NOW HAS PHONE!
-    location: locationInput.value
-  }
-};
-
+    // 3. SAVE to Firestore - THIS LINE IS CRITICAL!
     const docRef = await addDoc(collection(db, "products"), productData);
+    console.log("Product saved with ID:", docRef.id);
 
-    // 3. Success - show message and offer boost
-const boostConfirm = confirm(
-  "✅ Ad posted successfully!\n\n" +
-  "Want to boost it to featured section?\n\n" +
-  "⭐ 7 Days - UGX 5,000\n" +
-  "⭐ 14 Days - UGX 8,000\n" +
-  "⭐ 30 Days - UGX 15,000\n\n" +
-  "Click OK to boost, Cancel to skip"
-);
+    // 4. Success - show message and offer boost
+    const boostConfirm = confirm(
+      "✅ Ad posted successfully!\n\n" +
+      "Want to boost it to featured section?\n\n" +
+      "⭐ 7 Days - UGX 5,000\n" +
+      "⭐ 14 Days - UGX 8,000\n" +
+      "⭐ 30 Days - UGX 15,000\n\n" +
+      "Click OK to boost, Cancel to skip"
+    );
 
-// Clear form
-titleInput.value = "";
-descInput.value = "";
-priceInput.value = "";
-locationInput.value = "";
-uploadedImages = [];
-selectedCategory = "";
-currentStep = 1;
+    // Clear form
+    titleInput.value = "";
+    descInput.value = "";
+    priceInput.value = "";
+    locationInput.value = "";
+    uploadedImages = [];
+    selectedCategory = "";
+    currentStep = 1;
 
-if (boostConfirm) {
-  // Redirect to boost page with product ID
-  setTimeout(() => {
-    window.location.href = `boost-product.html?productId=${docRef.id}`;
-  }, 500);
-} else {
-  // Just redirect to dashboard
-  setTimeout(() => {
-    window.location.href = `dashboard.html?tab=my-ads`;
-  }, 1500);
-}
+    if (boostConfirm) {
+      setTimeout(() => {
+        window.location.href = `boost-product.html?productId=${docRef.id}`;
+      }, 500);
+    } else {
+      setTimeout(() => {
+        window.location.href = `dashboard.html?tab=my-ads`;
+      }, 1500);
+    }
   } catch (err) {
     console.error("Upload error:", err);
     alert("❌ Error posting ad: " + err.message);
