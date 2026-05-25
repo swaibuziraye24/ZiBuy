@@ -80,7 +80,7 @@ async function switchTab(tab) {
     tabId = "my-ads-tab";
   } else if (tab === "orders") {
     tabId = "orders-tab";
-  } else if (tab === "settings") {
+  } else if (tab === "profile") {  // ✅ CHANGED: was "settings", now "profile"
     tabId = "profile-tab";
   }
 
@@ -100,14 +100,14 @@ async function switchTab(tab) {
     activeBtn.classList.add("active");
   }
 
-  // Load tab data - FIXED: Use correct function names
+  // Load tab data
   try {
     if (tab === "my-ads") {
       await loadMyProducts();
     } else if (tab === "orders") {
-      await loadMyOrders();  // ✅ FIXED: was loadOrders()
-    } else if (tab === "settings") {
-      await loadProfileSettings();  // ✅ FIXED: was loadSettings()
+      await loadMyOrders();
+    } else if (tab === "profile") {  // ✅ CHANGED: was "settings", now "profile"
+      await loadProfileSettings();
     }
   } catch (err) {
     debug("❌ switchTab error:", err);
