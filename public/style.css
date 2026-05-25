@@ -2024,15 +2024,102 @@ footer {
   background: #fafafa;
 }
 
+/* Dashboard mobile */
 @media (max-width: 768px) {
-  .stats-grid-4 {
-    grid-template-columns: repeat(2, 1fr);
+  .dashboard-wrap {
+    grid-template-columns: 1fr;
+    padding: 12px;
+    gap: 12px;
   }
-  
-  .analytics-card {
-    overflow-x: auto;
+
+  .dashboard-sidebar {
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    align-items: center;
+    background: white;
+    padding: 12px;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    order: -1;
+  }
+
+  .user-profile-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0;
+    box-shadow: none;
+    background: transparent;
+    text-align: left;
+    min-width: 140px;
+  }
+
+  .user-avatar {
+    width: 50px;
+    height: 50px;
+    font-size: 24px;
+    flex-shrink: 0;
+  }
+
+  .user-profile-card h3 {
+    font-size: 13px;
+    margin: 0;
+  }
+
+  .user-email {
+    font-size: 11px;
+    margin: 2px 0 0 !important;
+  }
+
+  .dashboard-nav {
+    display: flex;
+    flex-direction: row;
+    gap: 6px;
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
+    flex: 1;
+    justify-content: flex-end;
+  }
+
+  .nav-item {
+    padding: 8px 10px !important;
+    font-size: 11px !important;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .nav-item span:first-child {
+    display: none;
+  }
+
+  .dashboard-content h2 {
+    font-size: 18px;
+  }
+
+  .ads-list {
+    gap: 10px;
+  }
+
+  .ad-item {
+    grid-template-columns: 80px 1fr;
+    gap: 10px;
+  }
+
+  .ad-item-image {
+    height: 80px;
+  }
+
+  .orders-list {
+    gap: 10px;
+  }
+
+  .order-card {
+    padding: 12px;
   }
 }
+
 
 /* ============================================
    ADMIN ANALYTICS
@@ -6594,3 +6681,82 @@ table {
   }
 }
 
+/* Extra small phones - show sidebar horizontal */
+@media (max-width: 480px) {
+  .dashboard-sidebar {
+    flex-direction: row !important;
+    gap: 8px !important;
+    padding: 10px !important;
+    margin-bottom: 12px;
+  }
+
+  .user-profile-card {
+    min-width: 120px;
+    gap: 8px;
+  }
+
+  .user-avatar {
+    width: 45px;
+    height: 45px;
+    font-size: 20px;
+  }
+
+  .user-profile-card h3 {
+    font-size: 12px;
+  }
+
+  .user-email {
+    font-size: 10px;
+  }
+
+  .dashboard-nav {
+    flex: 1;
+    gap: 4px;
+  }
+
+  .nav-item {
+    padding: 6px 8px !important;
+    font-size: 10px !important;
+    min-width: auto;
+  }
+
+  .nav-item span {
+    display: inline;
+    margin-right: 2px;
+  }
+
+  .nav-item span:first-child {
+    display: inline !important;
+  }
+
+  .tab-header {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .tab-header .btn {
+    width: 100%;
+  }
+}
+
+/* Tiny phones */
+@media (max-width: 360px) {
+  .user-profile-card {
+    min-width: 100px;
+  }
+
+  .user-avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+  }
+
+  .dashboard-nav {
+    gap: 2px;
+  }
+
+  .nav-item {
+    padding: 5px 6px !important;
+    font-size: 9px !important;
+  }
+}
