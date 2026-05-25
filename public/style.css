@@ -6801,3 +6801,70 @@ table {
     height: 70px;
   }
 }
+
+/* ============================================
+   BOOST MODAL & OPTIONS
+   ============================================ */
+
+.boost-option {
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s;
+  background: white;
+}
+
+.boost-option:hover {
+  border-color: var(--orange);
+  background: var(--orange-lt);
+  transform: translateY(-2px);
+}
+
+.boost-option input[type="radio"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: var(--orange);
+  flex-shrink: 0;
+  margin-left: 12px;
+}
+
+/* Mobile boost options */
+@media (max-width: 768px) {
+  .boost-option {
+    padding: 14px;
+    border-radius: 10px;
+  }
+
+  .boost-option div p:first-child {
+    font-size: 15px;
+  }
+
+  .boost-option div p:last-child {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .boost-option {
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .boost-option div p:first-child {
+    font-size: 14px;
+  }
+
+  .boost-option div p:last-child {
+    font-size: 12px;
+  }
+
+  .boost-option input[type="radio"] {
+    width: 18px;
+    height: 18px;
+  }
+}
