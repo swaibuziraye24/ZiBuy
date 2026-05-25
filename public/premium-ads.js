@@ -87,47 +87,78 @@ window.showBoostModal = function(productId, productName) {
 
   const modal = document.createElement("div");
   modal.className = "modal open";
+  modal.id = "boost-modal-" + productId;
   modal.innerHTML = `
-    <div class="modal-box">
+    <div class="modal-box" style="max-width:500px">
       <div class="modal-header">
         <h2>⭐ Boost Your Ad</h2>
-        <button class="modal-close" onclick="this.parentElement.parentElement.remove()">×</button>
+        <button class="modal-close" onclick="document.getElementById('boost-modal-${productId}').remove()">×</button>
       </div>
       
-      <p style="color:#6b7280;margin-bottom:16px">Make your ad stand out! Get more visibility.</p>
+      <p style="color:#6b7280;margin-bottom:20px;font-size:15px">Make <strong>${productName}</strong> stand out! Get more visibility.</p>
 
-      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
+      <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px">
         <div class="boost-option" onclick="selectBoost(this, '${productId}', 7, 5000)">
           <div>
-            <p style="margin:0;font-weight:700">7 Days</p>
-            <p style="margin:4px 0 0;color:#6b7280;font-size:13px">UGX 5,000</p>
+            <p style="margin:0;font-weight:700;font-size:16px">7 Days</p>
+            <p style="margin:6px 0 0;color:#6b7280;font-size:14px">UGX 5,000</p>
           </div>
-          <input type="radio" name="boost">
+          <input type="radio" name="boost-${productId}">
         </div>
 
         <div class="boost-option" onclick="selectBoost(this, '${productId}', 14, 8000)">
           <div>
-            <p style="margin:0;font-weight:700">14 Days</p>
-            <p style="margin:4px 0 0;color:#6b7280;font-size:13px">UGX 8,000</p>
+            <p style="margin:0;font-weight:700;font-size:16px">14 Days</p>
+            <p style="margin:6px 0 0;color:#6b7280;font-size:14px">UGX 8,000</p>
           </div>
-          <input type="radio" name="boost">
+          <input type="radio" name="boost-${productId}">
         </div>
 
         <div class="boost-option" onclick="selectBoost(this, '${productId}', 30, 15000)">
           <div>
-            <p style="margin:0;font-weight:700">30 Days</p>
-            <p style="margin:4px 0 0;color:#6b7280;font-size:13px">UGX 15,000</p>
+            <p style="margin:0;font-weight:700;font-size:16px">30 Days</p>
+            <p style="margin:6px 0 0;color:#6b7280;font-size:14px">UGX 15,000</p>
           </div>
-          <input type="radio" name="boost">
+          <input type="radio" name="boost-${productId}">
         </div>
       </div>
 
-      <button class="btn btn-orange" onclick="processBoost()" style="width:100%;padding:12px">Boost Now</button>
+      <button class="btn btn-orange" onclick="processBoost('${productId}')" style="width:100%;padding:14px;font-size:15px">Boost Now 🚀</button>
     </div>
   `;
 
   document.body.appendChild(modal);
 };
+
+window.selectBoost = function(el, productId, days, price) {
+  document.querySelectorAll(`input[name="boost-${productId}"]`).forEach(r => r.checked = false);
+  el.querySelector("input").checked = true;
+  window.selectedBoost = { productId, days, price };
+};
+
+window.processBoost = async function(productId) {
+  if (!window.selectedBoost) {
+    alert("Select a plan");
+    return;
+  }
+
+  const { boostAd } = await import("./premium-ads.js");
+  
+  const success = await boostAd(
+    window.selectedBoost.productId,
+    window.selectedBoost.days,
+    window.selectedBoost.price
+  );
+
+  if (success) {
+    document.getElementById("boost-modal-" + productId)?.remove();
+    alert("✅ Ad boosted! It will show as featured now.");
+    location.reload();
+  } else {
+    alert("❌ Boost failed. Try again.");
+  }
+};
+
 
 window.selectBoost = function(el, productId, days, price) {
   document.querySelectorAll(".boost-option input").forEach(r => r.checked = false);
