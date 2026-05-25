@@ -36,39 +36,105 @@ onAuthStateChanged(auth, (user) => {
 });
 
 
+async function switchTab(tab) {
 
-function switchTab(tabName) {
+  console.log("🔄 Switching to:", tab);
 
-  // Hide all tab contents
-  document.querySelectorAll(".dashboard-tab-content").forEach(tab => {
-    tab.style.display = "none";
+  // Hide all tabs
+  document.querySelectorAll(".dashboard-tab").forEach(tabEl => {
+    tabEl.style.display = "none";
+    tabEl.classList.remove("active");
   });
 
-  // Remove active class
-  document.querySelectorAll(".dashboard-tab-btn").forEach(btn => {
+  // Remove active nav buttons
+  document.querySelectorAll(".dashboard-nav-btn").forEach(btn => {
     btn.classList.remove("active");
   });
 
-  // Show selected tab
-  const activeTab = document.getElementById(tabName);
+  let tabId = "";
 
-  if (activeTab) {
-    activeTab.style.display = "block";
+  if (tab === "my-ads") {
+    tabId = "my-ads-tab";
   }
 
-  // Activate clicked button
-  const activeBtn = document.querySelector(`[data-tab="${tabName}"]`);
+  else if (tab === "orders") {
+    tabId = "orders-tab";
+  }
+
+  else if (tab === "settings") {
+    tabId = "profile-tab";
+  }
+
+  const activeTab = document.getElementById(tabId);
+
+  if (!activeTab) {
+    console.error("❌ Tab not found:", tabId);
+    return;
+  }
+
+  activeTab.style.display = "block";
+  activeTab.classList.add("active");
+
+  // Activate nav button
+  const activeBtn = document.querySelector(`[data-tab="${tab}"]`);
 
   if (activeBtn) {
     activeBtn.classList.add("active");
   }
 
+  // Load tab data
+  try {
+
+    if (tab === "my-ads") {
+      await loadMyProducts();
+    }
+
+    else if (tab === "orders") {
+      await loadOrders();
+    }
+
+    else if (tab === "settings") {
+      loadSettings();
+    }
+
+  } catch (err) {
+
+    console.error("❌ switchTab error:", err);
+
+  }
 }
+
 window.switchTab = switchTab;
 
 // ============================================
 // LOAD DASHBOARD
 // ============================================
+
+
+async function loadDashboard() {
+
+  console.log("✅ Dashboard loading started");
+
+  const productsContainer = document.getElementById("my-products");
+  console.log("✅ Products container:", productsContainer);
+
+  try {
+
+    console.log("✅ Fetching products...");
+
+    const snapshot = await getDocs(
+      query(
+        collection(db, "products"),
+        where("userId", "==", currentUser.uid)
+      )
+    );
+
+    console.log("✅ Products found:", snapshot.size);
+
+  } catch (err) {
+    console.error("❌ Dashboard error:", err);
+  }
+}
 
 
 async function loadDashboard() {
