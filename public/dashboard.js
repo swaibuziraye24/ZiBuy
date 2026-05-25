@@ -115,7 +115,7 @@ async function switchTab(tab) {
 }
 
 window.switchTab = switchTab;
-
+window.loadProfileSettings = loadProfileSettings;
 // ============================================
 // LOAD MY PRODUCTS
 // ============================================
