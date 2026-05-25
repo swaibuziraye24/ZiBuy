@@ -5,6 +5,24 @@
 import { db, auth, collection, getDocs, query, where, deleteDoc, doc, updateDoc } from "./firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+
+// ============================================
+// ENABLE DETAILED LOGGING
+// ============================================
+
+console.log("📊 Dashboard.js loaded");
+
+const originalLog = console.log;
+window.debugDashboard = true;
+
+function debug(msg, data) {
+  if (window.debugDashboard) {
+    originalLog("🔍 [DASHBOARD]", msg, data || "");
+  }
+}
+
+
+
 let currentUser = null;
 let currentTab = "my-ads";
 
@@ -22,97 +40,79 @@ onAuthStateChanged(auth, (user) => {
 // ============================================
 
 async function loadDashboard() {
-  console.log("Loading dashboard...");
+  debug("loadDashboard() called");
+  debug("currentUser:", currentUser);
+  debug("currentUser.uid:", currentUser?.uid);
+  debug("currentUser.email:", currentUser?.email);
+
   const tab = new URLSearchParams(window.location.search).get("tab") || "my-ads";
+  debug("Tab from URL:", tab);
   
-  // Set user email display
   if (currentUser) {
-    document.getElementById("user-email").textContent = currentUser.email.split("@")[0];
-    document.getElementById("user-email-display").textContent = currentUser.email;
+    const nameEl = document.getElementById("user-email");
+    const emailEl = document.getElementById("user-email-display");
+    
+    debug("Setting user email display...");
+    debug("nameEl found:", !!nameEl);
+    debug("emailEl found:", !!emailEl);
+    
+    if (nameEl) nameEl.textContent = currentUser.email.split("@")[0];
+    if (emailEl) emailEl.textContent = currentUser.email;
   }
   
+  debug("Calling switchTab with:", tab);
   await switchTab(tab);
 }
 
-// ============================================
-// SWITCH TABS
-// ============================================
-
-window.switchTab = async function(tab) {
-  currentTab = tab;
-  console.log("Switching to tab:", tab);
-  
-  // Update nav buttons
-  document.querySelectorAll(".nav-item").forEach(item => {
-    item.classList.remove("active");
-  });
-  
-  document.querySelectorAll(".nav-item").forEach(btn => {
-    const btnText = btn.textContent.toLowerCase();
-    if (
-      (tab === "my-ads" && btnText.includes("ads")) ||
-      (tab === "orders" && btnText.includes("orders")) ||
-      (tab === "profile" && btnText.includes("settings"))
-    ) {
-      btn.classList.add("active");
-    }
-  });
-  
-  // Update tab visibility
-  document.querySelectorAll(".dashboard-tab").forEach(t => {
-    t.classList.remove("active");
-  });
-  document.getElementById(`${tab}-tab`)?.classList.add("active");
-  
-  // Load content based on tab
-  if (tab === "my-ads") {
-    await loadMyProducts();
-  } else if (tab === "orders") {
-    await loadMyOrders();
-  } else if (tab === "profile") {
-    loadProfileSettings();
-  }
-};
-  
-
 async function loadMyProducts() {
+  debug("loadMyProducts() called");
+  
   if (!currentUser) {
-    console.warn("No current user");
+    debug("❌ NO CURRENT USER!");
     return;
   }
 
   const container = document.getElementById("my-ads-list");
+  debug("Container found:", !!container);
+  
   if (!container) {
-    console.error("Container not found");
+    debug("❌ Container #my-ads-list not found!");
     return;
   }
 
   try {
-    console.log("Loading products for user:", currentUser.uid);
+    debug("Starting product query...");
+    debug("Querying by userId:", currentUser.uid);
 
-    // Try querying by userId first, then by userEmail if empty
     let snapshot = await getDocs(query(
       collection(db, "products"),
       where("userId", "==", currentUser.uid)
     ));
 
-    // If no results, try by email
+    debug("Query by userId returned:", snapshot.size, "products");
+
+    // Fallback to email query
     if (snapshot.empty) {
-      console.log("No products found by userId, trying userEmail...");
+      debug("No products found by userId, trying userEmail...");
       snapshot = await getDocs(query(
         collection(db, "products"),
         where("userEmail", "==", currentUser.email)
       ));
+      debug("Query by userEmail returned:", snapshot.size, "products");
     }
 
-    console.log("Found products:", snapshot.size);
+    const products = snapshot.docs.map(doc => {
+      debug("Product doc data:", doc.data());
+      return {
+        id: doc.id,
+        ...doc.data()
+      };
+    });
 
-    const products = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+    debug("Total products to display:", products.length);
 
     if (products.length === 0) {
+      debug("No products - showing empty state");
       container.innerHTML = `
         <div style="text-align:center;padding:40px 20px;color:#6b7280">
           <p style="font-size:48px;margin-bottom:12px">📦</p>
@@ -124,6 +124,8 @@ async function loadMyProducts() {
       return;
     }
 
+    debug("Rendering", products.length, "products...");
+    
     container.innerHTML = products.map(p => `
       <div class="ad-item">
         <div class="ad-item-image">
@@ -141,13 +143,7 @@ async function loadMyProducts() {
           <h3>${p.name}</h3>
           <p class="ad-price">UGX ${Number(p.price).toLocaleString()}</p>
           <p class="ad-meta">📍 ${p.location} · 👁️ ${p.views || 0} views</p>
-          <p class="ad-meta">📅 Posted: ${
-  p.createdAt
-    ? new Date(
-        p.createdAt?.toDate?.() || p.createdAt
-      ).toLocaleDateString()
-    : "Unknown date"
-}
+          <p class="ad-meta">📅 Posted: ${new Date(p.createdAt?.toDate?.() || p.createdAt).toLocaleDateString()}</p>
           
           <div class="ad-actions">
             <button class="btn btn-sm btn-edit" onclick="editProduct('${p.id}')">✏️ Edit</button>
@@ -163,8 +159,12 @@ async function loadMyProducts() {
       </div>
     `).join("");
 
+    debug("✅ Products rendered successfully!");
+
   } catch (err) {
-    console.error("Load products error:", err);
+    debug("❌ ERROR:", err.message);
+    debug("Full error:", err);
+    
     container.innerHTML = `
       <div style="text-align:center;padding:40px 20px;background:#fee2e2;border-radius:12px">
         <p style="color:#991b1b;font-weight:700">❌ Error loading products</p>
