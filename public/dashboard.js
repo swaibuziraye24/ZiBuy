@@ -72,32 +72,6 @@ window.switchTab = switchTab;
 
 
 async function loadDashboard() {
-
-  console.log("✅ Dashboard loading started");
-
-  const productsContainer = document.getElementById("my-products");
-  console.log("✅ Products container:", productsContainer);
-
-  try {
-
-    console.log("✅ Fetching products...");
-
-    const snapshot = await getDocs(
-      query(
-        collection(db, "products"),
-        where("userId", "==", currentUser.uid)
-      )
-    );
-
-    console.log("✅ Products found:", snapshot.size);
-
-  } catch (err) {
-    console.error("❌ Dashboard error:", err);
-  }
-}
-
-
-async function loadDashboard() {
   debug("loadDashboard() called");
   debug("currentUser:", currentUser);
   debug("currentUser.uid:", currentUser?.uid);
