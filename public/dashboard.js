@@ -42,30 +42,38 @@ window.switchTab = async function(tab) {
   currentTab = tab;
   console.log("Switching to tab:", tab);
   
-  // Update tab buttons
+  // Update nav buttons
   document.querySelectorAll(".nav-item").forEach(item => {
     item.classList.remove("active");
   });
   
-  // Find and activate the correct button
-  const buttons = document.querySelectorAll(".nav-item");
-  buttons.forEach(btn => {
-    if (btn.textContent.toLowerCase().includes(tab === "my-ads" ? "ads" : tab === "orders" ? "orders" : "settings")) {
+  document.querySelectorAll(".nav-item").forEach(btn => {
+    const btnText = btn.textContent.toLowerCase();
+    if (
+      (tab === "my-ads" && btnText.includes("ads")) ||
+      (tab === "orders" && btnText.includes("orders")) ||
+      (tab === "profile" && btnText.includes("settings"))
+    ) {
       btn.classList.add("active");
     }
   });
   
-  // Update tab content
+  // Update tab visibility
   document.querySelectorAll(".dashboard-tab").forEach(t => {
     t.classList.remove("active");
   });
   document.getElementById(`${tab}-tab`)?.classList.add("active");
   
-  // Load content
+  // Load content based on tab
   if (tab === "my-ads") {
     await loadMyProducts();
+  } else if (tab === "orders") {
+    await loadMyOrders();
+  } else if (tab === "profile") {
+    loadProfileSettings();
   }
 };
+  
 
 async function loadMyProducts() {
   if (!currentUser) {
@@ -82,10 +90,20 @@ async function loadMyProducts() {
   try {
     console.log("Loading products for user:", currentUser.uid);
 
-    const snapshot = await getDocs(query(
+    // Try querying by userId first, then by userEmail if empty
+    let snapshot = await getDocs(query(
       collection(db, "products"),
       where("userId", "==", currentUser.uid)
     ));
+
+    // If no results, try by email
+    if (snapshot.empty) {
+      console.log("No products found by userId, trying userEmail...");
+      snapshot = await getDocs(query(
+        collection(db, "products"),
+        where("userEmail", "==", currentUser.email)
+      ));
+    }
 
     console.log("Found products:", snapshot.size);
 
@@ -109,12 +127,12 @@ async function loadMyProducts() {
     container.innerHTML = products.map(p => `
       <div class="ad-item">
         <div class="ad-item-image">
-         <img 
-  src="${p.images?.[0] || 'https://via.placeholder.com/100'}" 
-  alt="${p.name}"
-  onerror="this.src='https://via.placeholder.com/100?text=No+Image'"
-  style="width:100%;height:100%;object-fit:cover"
->
+          <img 
+            src="${p.images?.[0] || 'https://via.placeholder.com/100'}" 
+            alt="${p.name}"
+            onerror="this.src='https://via.placeholder.com/100?text=No+Image'"
+            style="width:100%;height:100%;object-fit:cover"
+          >
           <span class="ad-status-badge ${p.status === 'active' ? 'active' : 'sold'}">
             ${p.status === 'active' ? '✅ Active' : '❌ Sold'}
           </span>
@@ -126,17 +144,14 @@ async function loadMyProducts() {
           <p class="ad-meta">📅 Posted: ${new Date(p.createdAt?.toDate?.() || p.createdAt).toLocaleDateString()}</p>
           
           <div class="ad-actions">
-          
-            <button class="btn btn-sm btn-outline" onclick="editProduct('${p.id}')">✏️ Edit</button>
-            <button class="btn btn-sm btn-outline" onclick="markSold('${p.id}')">📦 Mark Sold</button>
-
+            <button class="btn btn-sm btn-edit" onclick="editProduct('${p.id}')">✏️ Edit</button>
+            <button class="btn btn-sm btn-sold" onclick="markSold('${p.id}')">✓ Sold</button>
             ${!p.isPremium ? `
-  <button class="btn btn-sm" style="background:#ff6600;color:white;border:none" onclick="boostFromDashboard('${p.id}', '${p.name}')">⭐ Boost</button>
-` : `
-  <button class="btn btn-sm" style="background:#10b981;color:white;border:none;cursor:default">✅ Featured</button>
-`}
-
-            <button class="btn btn-sm" style="background:#ef4444;color:white;border:none" onclick="deleteProduct('${p.id}')">🗑️ Delete</button>
+              <button class="btn btn-sm btn-featured" onclick="boostFromDashboard('${p.id}', '${p.name.replace(/'/g, "\\'")}')">⭐ Boost</button>
+            ` : `
+              <button class="btn btn-sm" style="background:#10b981;color:white;border:none;cursor:default">✅ Featured</button>
+            `}
+            <button class="btn btn-sm btn-delete" onclick="deleteProduct('${p.id}')">🗑️ Delete</button>
           </div>
         </div>
       </div>
@@ -154,10 +169,96 @@ async function loadMyProducts() {
   }
 }
 
-window.boostFromDashboard = function(productId, productName) {
-  window.location.href = `boost-product.html?productId=${productId}`;
+window.boostFromDashboard = async function(productId, productName) {
+  const { boostAd } = await import("./premium-ads.js");
+  
+  if (!currentUser) {
+    alert("Please login first");
+    return;
+  }
+
+  const modal = document.createElement("div");
+  modal.className = "modal open";
+  modal.id = "boost-modal-" + productId;
+  modal.innerHTML = `
+    <div class="modal-box" style="max-width:480px">
+      <div class="modal-header">
+        <h2>⭐ Boost Your Ad</h2>
+        <button class="modal-close" onclick="document.getElementById('boost-modal-${productId}')?.remove()">×</button>
+      </div>
+      
+      <p style="color:#6b7280;margin-bottom:20px;font-size:15px">Make <strong>${productName}</strong> stand out and reach more buyers!</p>
+
+      <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px">
+        <div class="boost-option" onclick="selectBoostPlan(this, '${productId}', 7, 5000)">
+          <div>
+            <p style="margin:0;font-weight:700;font-size:16px">7 Days</p>
+            <p style="margin:6px 0 0;color:#6b7280;font-size:14px">UGX 5,000</p>
+          </div>
+          <input type="radio" name="boost-plan-${productId}">
+        </div>
+
+        <div class="boost-option" onclick="selectBoostPlan(this, '${productId}', 14, 8000)">
+          <div>
+            <p style="margin:0;font-weight:700;font-size:16px">14 Days</p>
+            <p style="margin:6px 0 0;color:#6b7280;font-size:14px">UGX 8,000</p>
+          </div>
+          <input type="radio" name="boost-plan-${productId}">
+        </div>
+
+        <div class="boost-option" onclick="selectBoostPlan(this, '${productId}', 30, 15000)">
+          <div>
+            <p style="margin:0;font-weight:700;font-size:16px">30 Days</p>
+            <p style="margin:6px 0 0;color:#6b7280;font-size:14px">UGX 15,000</p>
+          </div>
+          <input type="radio" name="boost-plan-${productId}">
+        </div>
+      </div>
+
+      <button class="btn btn-orange" onclick="confirmBoost('${productId}')" style="width:100%;padding:14px;font-size:15px;font-weight:800">Boost Now 🚀</button>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
 };
 
+window.selectBoostPlan = function(el, productId, days, price) {
+  document.querySelectorAll(`input[name="boost-plan-${productId}"]`).forEach(r => r.checked = false);
+  el.querySelector("input").checked = true;
+  window.selectedBoostPlan = { productId, days, price };
+};
+
+window.confirmBoost = async function(productId) {
+  if (!window.selectedBoostPlan) {
+    alert("❌ Please select a boost plan");
+    return;
+  }
+
+  if (!confirm(`Boost for ${window.selectedBoostPlan.days} days - UGX ${window.selectedBoostPlan.price.toLocaleString()}?`)) {
+    return;
+  }
+
+  try {
+    const { boostAd } = await import("./premium-ads.js");
+    
+    const success = await boostAd(
+      window.selectedBoostPlan.productId,
+      window.selectedBoostPlan.days,
+      window.selectedBoostPlan.price
+    );
+
+    if (success) {
+      document.getElementById("boost-modal-" + productId)?.remove();
+      alert("✅ Ad boosted successfully! It's now featured.");
+      loadMyProducts();
+    } else {
+      alert("❌ Boost failed. Please try again.");
+    }
+  } catch (err) {
+    console.error("Boost error:", err);
+    alert("❌ Error: " + err.message);
+  }
+};
 
 // ============ EDIT PRODUCT ============
 window.editProduct = function(productId) {
