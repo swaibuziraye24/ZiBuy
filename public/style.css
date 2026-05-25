@@ -3670,9 +3670,6 @@ footer {
   border: 1px solid #fee2e2;
 }
 
-/* ============================================
-   RESPONSIVE
-   ============================================ */
 @media (max-width: 768px) {
   .topbar { padding: 12px 16px; gap: 10px; }
   .logo { font-size: 22px; }
@@ -3685,31 +3682,99 @@ footer {
   .product-page-price { font-size: 26px; }
   .footer-top { flex-direction: column; }
 
-  /* Dashboard mobile */
+  /* Dashboard mobile - KEEP SIDEBAR VISIBLE */
   .dashboard-wrap {
     grid-template-columns: 1fr;
-    padding: 16px;
-  }
-  
-  .dashboard-sidebar {
-    display: flex;
-    flex-direction: row;
+    padding: 12px;
     gap: 12px;
+  }
+
+  .dashboard-sidebar {
+    display: flex !important;
+    flex-direction: row;
+    gap: 8px;
     align-items: center;
     background: white;
     padding: 12px;
     border-radius: 12px;
     box-shadow: var(--shadow);
     order: -1;
-    margin-bottom: 12px;
+    margin-bottom: 0;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .user-profile-card {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0;
+    box-shadow: none;
+    background: transparent;
+    text-align: left;
+    min-width: 130px;
+    flex-shrink: 0;
+  }
+
+  .user-avatar {
+    width: 48px;
+    height: 48px;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+
+  .user-profile-card h3 {
+    font-size: 13px;
+    margin: 0;
+    font-weight: 700;
+  }
+
+  .user-email {
+    font-size: 11px;
+    margin: 2px 0 0 !important;
+    color: var(--gray);
+  }
+
+  .dashboard-nav {
+    display: flex;
+    flex-direction: row;
+    gap: 6px;
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
+    flex: 1;
+    flex-shrink: 0;
+  }
+
+  .nav-item {
+    padding: 8px 10px !important;
+    font-size: 11px !important;
+    white-space: nowrap;
+    flex-shrink: 0;
+    min-width: fit-content;
+  }
+
+  .nav-item span:first-child {
+    display: inline;
+    margin-right: 2px;
+  }
+
+  .dashboard-content h2 {
+    font-size: 18px;
   }
 
   .ad-item {
-    grid-template-columns: 100px 1fr;
+    grid-template-columns: 80px 1fr;
+    gap: 10px;
   }
 
   .ad-item-image {
-    height: 100px;
+    height: 80px;
+  }
+
+  .orders-list {
+    gap: 10px;
   }
 
   .stats-grid {
@@ -3731,12 +3796,6 @@ footer {
     margin-left: 0;
     width: 100%;
   }
-}
-
-@media (max-width: 480px) {
-  .hero-stats { gap: 10px; }
-  .stat-pill { padding: 10px 14px; }
-  .cart-sidebar { width: 100vw; }
 }
 
 /* ============================================
@@ -6689,20 +6748,17 @@ table {
 /* Extra small phones - show sidebar horizontal */
 @media (max-width: 480px) {
   .dashboard-sidebar {
-    flex-direction: row !important;
-    gap: 8px !important;
+    gap: 6px !important;
     padding: 10px !important;
-    margin-bottom: 12px;
   }
 
   .user-profile-card {
-    min-width: 120px;
-    gap: 8px;
+    min-width: 110px;
   }
 
   .user-avatar {
-    width: 45px;
-    height: 45px;
+    width: 44px;
+    height: 44px;
     font-size: 20px;
   }
 
@@ -6715,22 +6771,33 @@ table {
   }
 
   .dashboard-nav {
-    flex: 1;
     gap: 4px;
   }
 
   .nav-item {
-    padding: 6px 8px !important;
+    padding: 7px 8px !important;
     font-size: 10px !important;
-    min-width: auto;
-  }
-
-  .nav-item span {
-    display: inline;
-    margin-right: 2px;
   }
 
   .nav-item span:first-child {
     display: inline !important;
+  }
+
+  .tab-header {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .tab-header .btn {
+    width: 100%;
+  }
+
+  .ad-item {
+    grid-template-columns: 70px 1fr;
+    gap: 8px;
+  }
+
+  .ad-item-image {
+    height: 70px;
   }
 }
