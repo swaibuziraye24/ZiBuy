@@ -234,6 +234,10 @@ async function loadMyProducts() {
 // BOOST PRODUCT
 // ============================================
 
+// ============================================
+// BOOST PRODUCT (SEND TO WHATSAPP)
+// ============================================
+
 window.boostFromDashboard = async function(productId, productName) {
   if (!currentUser) {
     alert("Please login first");
@@ -253,7 +257,7 @@ window.boostFromDashboard = async function(productId, productName) {
       <p style="color:#6b7280;margin-bottom:20px;font-size:15px">Make <strong>${productName}</strong> stand out and reach more buyers!</p>
 
       <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px">
-        <div class="boost-option" onclick="selectBoostPlan(this, '${productId}', 7, 5000)">
+        <div class="boost-option" onclick="selectBoostPlan(this, '${productId}', '${productName}', 7, 5000)">
           <div>
             <p style="margin:0;font-weight:700;font-size:16px">7 Days</p>
             <p style="margin:6px 0 0;color:#6b7280;font-size:14px">UGX 5,000</p>
@@ -261,7 +265,7 @@ window.boostFromDashboard = async function(productId, productName) {
           <input type="radio" name="boost-plan-${productId}">
         </div>
 
-        <div class="boost-option" onclick="selectBoostPlan(this, '${productId}', 14, 8000)">
+        <div class="boost-option" onclick="selectBoostPlan(this, '${productId}', '${productName}', 14, 8000)">
           <div>
             <p style="margin:0;font-weight:700;font-size:16px">14 Days</p>
             <p style="margin:6px 0 0;color:#6b7280;font-size:14px">UGX 8,000</p>
@@ -269,7 +273,7 @@ window.boostFromDashboard = async function(productId, productName) {
           <input type="radio" name="boost-plan-${productId}">
         </div>
 
-        <div class="boost-option" onclick="selectBoostPlan(this, '${productId}', 30, 15000)">
+        <div class="boost-option" onclick="selectBoostPlan(this, '${productId}', '${productName}', 30, 15000)">
           <div>
             <p style="margin:0;font-weight:700;font-size:16px">30 Days</p>
             <p style="margin:6px 0 0;color:#6b7280;font-size:14px">UGX 15,000</p>
@@ -278,47 +282,81 @@ window.boostFromDashboard = async function(productId, productName) {
         </div>
       </div>
 
-      <button class="btn btn-orange" onclick="confirmBoost('${productId}')" style="width:100%;padding:14px;font-size:15px;font-weight:800">Boost Now 🚀</button>
+      <button class="btn btn-orange" onclick="proceedToPayment()" style="width:100%;padding:14px;font-size:15px;font-weight:800">Pay via WhatsApp 💬</button>
     </div>
   `;
 
   document.body.appendChild(modal);
 };
 
-window.selectBoostPlan = function(el, productId, days, price) {
+window.selectBoostPlan = function(el, productId, productName, days, price) {
   document.querySelectorAll(`input[name="boost-plan-${productId}"]`).forEach(r => r.checked = false);
   el.querySelector("input").checked = true;
-  window.selectedBoostPlan = { productId, days, price };
+  window.selectedBoostPlan = { productId, productName, days, price };
 };
 
-window.confirmBoost = async function(productId) {
+window.proceedToPayment = async function() {
   if (!window.selectedBoostPlan) {
     alert("❌ Please select a boost plan");
     return;
   }
 
-  if (!confirm(`Boost for ${window.selectedBoostPlan.days} days - UGX ${window.selectedBoostPlan.price.toLocaleString()}?`)) {
-    return;
-  }
+  const { productId, productName, days, price } = window.selectedBoostPlan;
 
   try {
-    const { boostAd } = await import("./premium-ads.js");
-    
-    const success = await boostAd(
-      window.selectedBoostPlan.productId,
-      window.selectedBoostPlan.days,
-      window.selectedBoostPlan.price
+    // Save boost request to Firestore
+    const boostRequest = {
+      productId,
+      productName,
+      userId: currentUser.uid,
+      userEmail: currentUser.email,
+      days,
+      price,
+      status: "pending",  // Admin will change to "approved" or "rejected"
+      createdAt: new Date(),
+      approvedAt: null
+    };
+
+    const { addDoc } = await import("./firebase.js");
+    const { collection } = await import("./firebase.js");
+    const { db } = await import("./firebase.js");
+
+    const docRef = await addDoc(collection(db, "boost_requests"), boostRequest);
+    debug("Boost request saved with ID:", docRef.id);
+
+    // Close modal
+    const modal = document.getElementById("boost-modal-" + productId);
+    if (modal) modal.remove();
+
+    // WhatsApp message
+    const whatsappNumber = "256790548910"; // ⚠️ CHANGE THIS TO YOUR NUMBER!
+    const whatsappMessage = encodeURIComponent(
+      `Hi 👋\n\n` +
+      `I want to boost my product:\n\n` +
+      `📦 ${productName}\n` +
+      `⏱️ ${days} Days\n` +
+      `💰 UGX ${price.toLocaleString()}\n\n` +
+      `Please confirm payment & boost my ad!\n\n` +
+      `Boost Request ID: ${docRef.id}`
     );
 
-    if (success) {
-      document.getElementById("boost-modal-" + productId)?.remove();
-      alert("✅ Ad boosted successfully! It's now featured.");
-      loadMyProducts();
-    } else {
-      alert("❌ Boost failed. Please try again.");
-    }
+    // Open WhatsApp
+    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${whatsappMessage}`;
+    window.open(whatsappUrl, "_blank");
+
+    // Show confirmation message
+    alert(
+      `✅ Boost request created!\n\n` +
+      `📱 WhatsApp will open for payment\n` +
+      `💬 Send the message to confirm\n` +
+      `⏳ We'll boost your ad within 24 hours after payment\n\n` +
+      `Request ID: ${docRef.id}`
+    );
+
+    loadMyProducts();
+
   } catch (err) {
-    console.error("Boost error:", err);
+    console.error("Boost request error:", err);
     alert("❌ Error: " + err.message);
   }
 };
