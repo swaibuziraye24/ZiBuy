@@ -5,11 +5,6 @@
 import { db, auth, collection, getDocs, query, where, deleteDoc, doc, updateDoc } from "./firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-
-// ============================================
-// ENABLE DETAILED LOGGING
-// ============================================
-
 console.log("📊 Dashboard.js loaded");
 
 const originalLog = console.log;
@@ -21,13 +16,12 @@ function debug(msg, data) {
   }
 }
 
-
-
 let currentUser = null;
 let currentTab = "my-ads";
 
 onAuthStateChanged(auth, (user) => {
   currentUser = user;
+  debug("Auth state changed. User:", user?.email);
   if (!user) {
     window.location.href = "index.html";
     return;
@@ -35,113 +29,13 @@ onAuthStateChanged(auth, (user) => {
   loadDashboard();
 });
 
-
-async function switchTab(tab) {
-
-  console.log("🔄 Switching to:", tab);
-
-  // Hide all tabs
-  document.querySelectorAll(".dashboard-tab").forEach(tabEl => {
-    tabEl.style.display = "none";
-    tabEl.classList.remove("active");
-  });
-
-  // Remove active nav buttons
-  document.querySelectorAll(".dashboard-nav-btn").forEach(btn => {
-    btn.classList.remove("active");
-  });
-
-  let tabId = "";
-
-  if (tab === "my-ads") {
-    tabId = "my-ads-tab";
-  }
-
-  else if (tab === "orders") {
-    tabId = "orders-tab";
-  }
-
-  else if (tab === "settings") {
-    tabId = "profile-tab";
-  }
-
-  const activeTab = document.getElementById(tabId);
-
-  if (!activeTab) {
-    console.error("❌ Tab not found:", tabId);
-    return;
-  }
-
-  activeTab.style.display = "block";
-  activeTab.classList.add("active");
-
-  // Activate nav button
-  const activeBtn = document.querySelector(`[data-tab="${tab}"]`);
-
-  if (activeBtn) {
-    activeBtn.classList.add("active");
-  }
-
-  // Load tab data
-  try {
-
-    if (tab === "my-ads") {
-      await loadMyProducts();
-    }
-
-    else if (tab === "orders") {
-      await loadOrders();
-    }
-
-    else if (tab === "settings") {
-      loadSettings();
-    }
-
-  } catch (err) {
-
-    console.error("❌ switchTab error:", err);
-
-  }
-}
-
-window.switchTab = switchTab;
-
 // ============================================
-// LOAD DASHBOARD
+// LOAD DASHBOARD (SINGLE DEFINITION)
 // ============================================
-
-
-async function loadDashboard() {
-
-  console.log("✅ Dashboard loading started");
-
-  const productsContainer = document.getElementById("my-products");
-  console.log("✅ Products container:", productsContainer);
-
-  try {
-
-    console.log("✅ Fetching products...");
-
-    const snapshot = await getDocs(
-      query(
-        collection(db, "products"),
-        where("userId", "==", currentUser.uid)
-      )
-    );
-
-    console.log("✅ Products found:", snapshot.size);
-
-  } catch (err) {
-    console.error("❌ Dashboard error:", err);
-  }
-}
-
 
 async function loadDashboard() {
   debug("loadDashboard() called");
-  debug("currentUser:", currentUser);
-  debug("currentUser.uid:", currentUser?.uid);
-  debug("currentUser.email:", currentUser?.email);
+  debug("currentUser:", currentUser?.email);
 
   const tab = new URLSearchParams(window.location.search).get("tab") || "my-ads";
   debug("Tab from URL:", tab);
@@ -161,6 +55,70 @@ async function loadDashboard() {
   debug("Calling switchTab with:", tab);
   await switchTab(tab);
 }
+
+// ============================================
+// SWITCH TAB (FIXED FUNCTION NAMES)
+// ============================================
+
+async function switchTab(tab) {
+  debug("switchTab() called with:", tab);
+
+  // Hide all tabs
+  document.querySelectorAll(".dashboard-tab").forEach(tabEl => {
+    tabEl.style.display = "none";
+    tabEl.classList.remove("active");
+  });
+
+  // Remove active nav buttons
+  document.querySelectorAll(".nav-item").forEach(btn => {
+    btn.classList.remove("active");
+  });
+
+  let tabId = "";
+
+  if (tab === "my-ads") {
+    tabId = "my-ads-tab";
+  } else if (tab === "orders") {
+    tabId = "orders-tab";
+  } else if (tab === "settings") {
+    tabId = "profile-tab";
+  }
+
+  const activeTab = document.getElementById(tabId);
+
+  if (!activeTab) {
+    debug("❌ Tab not found:", tabId);
+    return;
+  }
+
+  activeTab.style.display = "block";
+  activeTab.classList.add("active");
+
+  // Activate nav button
+  const activeBtn = document.querySelector(`[data-tab="${tab}"]`);
+  if (activeBtn) {
+    activeBtn.classList.add("active");
+  }
+
+  // Load tab data - FIXED: Use correct function names
+  try {
+    if (tab === "my-ads") {
+      await loadMyProducts();
+    } else if (tab === "orders") {
+      await loadMyOrders();  // ✅ FIXED: was loadOrders()
+    } else if (tab === "settings") {
+      await loadProfileSettings();  // ✅ FIXED: was loadSettings()
+    }
+  } catch (err) {
+    debug("❌ switchTab error:", err);
+  }
+}
+
+window.switchTab = switchTab;
+
+// ============================================
+// LOAD MY PRODUCTS
+// ============================================
 
 async function loadMyProducts() {
   debug("loadMyProducts() called");
@@ -200,7 +158,7 @@ async function loadMyProducts() {
     }
 
     const products = snapshot.docs.map(doc => {
-      debug("Product doc data:", doc.data());
+      debug("Product doc:", doc.id, doc.data().name);
       return {
         id: doc.id,
         ...doc.data()
@@ -261,7 +219,6 @@ async function loadMyProducts() {
 
   } catch (err) {
     debug("❌ ERROR:", err.message);
-    debug("Full error:", err);
     
     container.innerHTML = `
       <div style="text-align:center;padding:40px 20px;background:#fee2e2;border-radius:12px">
@@ -273,9 +230,11 @@ async function loadMyProducts() {
   }
 }
 
+// ============================================
+// BOOST PRODUCT
+// ============================================
+
 window.boostFromDashboard = async function(productId, productName) {
-  const { boostAd } = await import("./premium-ads.js");
-  
   if (!currentUser) {
     alert("Please login first");
     return;
@@ -364,13 +323,11 @@ window.confirmBoost = async function(productId) {
   }
 };
 
-// ============ EDIT PRODUCT ============
-window.editProduct = function(productId) {
-  window.location.href = `edit-product.html?id=${productId}`;
-};
+// ============================================
+// EDIT PRODUCT (SINGLE DEFINITION)
+// ============================================
 
 window.editProduct = function(productId) {
-  // Redirect to product page with edit mode
   window.location.href = `product.html?id=${productId}&edit=true`;
 };
 
@@ -416,6 +373,8 @@ window.deleteProduct = async function(productId) {
 // ============================================
 
 async function loadMyOrders() {
+  debug("loadMyOrders() called");
+  
   if (!currentUser) return;
 
   try {
@@ -432,7 +391,7 @@ async function loadMyOrders() {
     const container = document.getElementById("orders-list");
     
     if (orders.length === 0) {
-      container.innerHTML = `<p style="text-align:center;color:#6b7280;padding:40px">No orders yet</p>`;
+      container.innerHTML = `<p style="text-align:center;color:#6b7280;padding:40px">📦 No orders yet</p>`;
       return;
     }
 
@@ -448,7 +407,7 @@ async function loadMyOrders() {
     `).join("");
 
   } catch (err) {
-    console.error("Load orders error:", err);
+    debug("❌ Load orders error:", err);
     document.getElementById("orders-list").innerHTML = `<p style="color:red">Error: ${err.message}</p>`;
   }
 }
@@ -458,6 +417,8 @@ async function loadMyOrders() {
 // ============================================
 
 async function loadProfileSettings() {
+  debug("loadProfileSettings() called");
+  
   const container = document.getElementById("profile-settings");
   
   container.innerHTML = `
@@ -489,7 +450,6 @@ async function loadProfileSettings() {
 
 window.changePassword = function() {
   alert("Password change feature coming soon");
-  // Can use Firebase updatePassword()
 };
 
 // ============================================
@@ -515,5 +475,4 @@ window.deleteAccount = function() {
   if (!confirm2) return;
 
   alert("Account deletion coming soon - Contact support");
-  // Can use Firebase deleteUser()
 };
