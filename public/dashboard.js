@@ -416,10 +416,23 @@ async function loadMyOrders() {
 // LOAD PROFILE SETTINGS
 // ============================================
 
+// ============================================
+// LOAD PROFILE SETTINGS
+// ============================================
+
 async function loadProfileSettings() {
   debug("loadProfileSettings() called");
   
   const container = document.getElementById("profile-settings");
+  
+  if (!container) {
+    debug("❌ Container #profile-settings not found!");
+    debug("Available elements:", document.querySelectorAll("[id*='profile']").length);
+    alert("⚠️ Settings container not found. Check dashboard.html");
+    return;
+  }
+  
+  debug("Container found, rendering settings...");
   
   container.innerHTML = `
     <div class="settings-section">
@@ -442,6 +455,8 @@ async function loadProfileSettings() {
       <button class="btn" style="background:#ef4444;color:white;width:100%" onclick="deleteAccount()">Delete My Account</button>
     </div>
   `;
+  
+  debug("✅ Settings rendered!");
 }
 
 // ============================================
