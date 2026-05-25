@@ -2,176 +2,31 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#ff6600">
-  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Boost Requests — ZiBuy Admin</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <header class="topbar">
-  <a href="index.html"><img src="my_logo.png" alt="ZiBuy" style="height:50px;width:auto;object-fit:contain"></a>
+  <a href="index.html"><h1 class="logo">Zi<span>Buy</span></h1></a>
   <div class="topbar-actions" style="margin-left:auto">
     <button class="btn btn-dark" onclick="window.location.href='index.html'">← Back</button>
   </div>
 </header>
 
-<div style="max-width:1000px;margin:0 auto;padding:24px">
-  <h1 style="font-size:28px;font-weight:800;margin-bottom:24px">⭐ Boost Requests (Admin Only)</h1>
-
-  <div style="display:flex;gap:10px;margin-bottom:24px">
-    <button class="btn-filter active" onclick="filterBoosts('pending')" style="padding:10px 16px;border:1.5px solid #ff6600;background:#ff6600;color:white;border-radius:8px;cursor:pointer;font-weight:700">Pending</button>
-    <button class="btn-filter" onclick="filterBoosts('approved')" style="padding:10px 16px;border:1.5px solid #e5e7eb;background:white;color:#111827;border-radius:8px;cursor:pointer;font-weight:700">Approved</button>
+<div style="max-width:1200px;margin:0 auto;padding:24px">
+  <h1>⭐ Boost Requests</h1>
+  
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;margin-top:24px" id="boost-requests-list">
+    <p style="text-align:center;padding:40px;color:#6b7280">Loading boost requests...</p>
   </div>
-
-  <div id="boost-requests-list" style="display:flex;flex-direction:column;gap:14px"></div>
 </div>
 
+<div id="overlay" class="overlay" onclick="closeModal()"></div>
 <div id="toast-container" class="toast-container"></div>
 
-<script type="module">
-  import { db, auth, collection, getDocs, query, where, updateDoc, doc } from "./firebase.js";
-  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-  const ADMIN_EMAIL = "swaibuziraye22@gmail.com";
-  let currentFilter = "pending";
-
-  onAuthStateChanged(auth, (user) => {
-    if (!user || user.email !== ADMIN_EMAIL) {
-      window.location.href = "index.html";
-      return;
-    }
-    loadBoostRequests();
-  });
-
-  async function loadBoostRequests() {
-    const container = document.getElementById("boost-requests-list");
-    container.innerHTML = "<p>Loading...</p>";
-
-    try {
-      const q = query(
-        collection(db, "boost_requests"),
-        where("status", "==", currentFilter)
-      );
-      
-      const snapshot = await getDocs(q);
-      container.innerHTML = "";
-
-      if (snapshot.empty) {
-        container.innerHTML = `<p style="text-align:center;color:#6b7280;padding:40px">No ${currentFilter} requests</p>`;
-        return;
-      }
-
-      snapshot.forEach((docSnap) => {
-        const req = docSnap.data();
-        container.innerHTML += `
-          <div style="background:white;border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-left:4px solid #ff6600">
-            <div style="display:flex;justify-content:space-between;align-items:start">
-              <div>
-                <h3 style="margin:0 0 8px;font-weight:800;color:#111827">Boost Request</h3>
-                <p style="margin:4px 0;color:#6b7280;font-size:13px">📧 ${req.userEmail}</p>
-                <p style="margin:4px 0;color:#6b7280;font-size:13px">⏱️ ${req.days} Days</p>
-                <p style="margin:8px 0 0;color:#ff6600;font-weight:800;font-size:16px">UGX ${req.price.toLocaleString()}</p>
-              </div>
-              ${req.status === "pending" ? `
-                <div style="display:flex;gap:8px;flex-direction:column">
-                  <button onclick="approveBoost('${docSnap.id}', '${req.productId}')" style="padding:10px 16px;background:#10b981;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-size:13px">
-                    ✅ Approve
-                  </button>
-                  <button onclick="rejectBoost('${docSnap.id}')" style="padding:10px 16px;background:#ef4444;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-size:13px">
-                    ❌ Reject
-                  </button>
-                </div>
-              ` : `
-                <span style="background:#dcfce7;color:#16a34a;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700">APPROVED</span>
-              `}
-            </div>
-          </div>
-        `;
-      });
-
-    } catch (err) {
-      console.error(err);
-      container.innerHTML = `<p style="color:#ef4444">Error loading requests</p>`;
-    }
-  }
-
-  window.filterBoosts = function(status) {
-    currentFilter = status;
-    document.querySelectorAll(".btn-filter").forEach(b => {
-      b.style.background = "white";
-      b.style.color = "#111827";
-      b.style.borderColor = "#e5e7eb";
-    });
-    event.target.style.background = "#ff6600";
-    event.target.style.color = "white";
-    event.target.style.borderColor = "#ff6600";
-    loadBoostRequests();
-  };
-
-  window.approveBoost = async function(requestId, productId) {
-    if (!confirm("Approve this boost request?")) return;
-
-    try {
-      // Update boost request
-      await updateDoc(doc(db, "boost_requests", requestId), {
-        status: "approved",
-        approvedAt: new Date()
-      });
-
-      // Update product to premium
-      const expiresAt = new Date();
-      const req = (await getDocs(query(collection(db, "boost_requests"), where("__name__", "==", requestId)))).docs[0];
-      expiresAt.setDate(expiresAt.getDate() + req.data().days);
-
-      await updateDoc(doc(db, "products", productId), {
-        isPremium: true,
-        premiumExpiresAt: expiresAt
-      });
-
-      showToast("✅ Boost approved!", "success");
-      loadBoostRequests();
-
-    } catch (err) {
-      console.error(err);
-      showToast("❌ Error: " + err.message, "error");
-    }
-  };
-
-  window.rejectBoost = async function(requestId) {
-    if (!confirm("Reject this boost request?")) return;
-
-    try {
-      await updateDoc(doc(db, "boost_requests", requestId), {
-        status: "rejected"
-      });
-
-      showToast("❌ Boost rejected", "info");
-      loadBoostRequests();
-
-    } catch (err) {
-      console.error(err);
-      showToast("❌ Error: " + err.message, "error");
-    }
-  };
-
-  function showToast(msg, type) {
-    const container = document.getElementById("toast-container");
-    const toast = document.createElement("div");
-    toast.style.cssText = `
-      background: ${type === "success" ? "#10b981" : type === "error" ? "#ef4444" : "#ff6600"};
-      color: white;
-      padding: 14px 20px;
-      border-radius: 10px;
-      margin-bottom: 10px;
-      font-weight: 700;
-    `;
-    toast.textContent = msg;
-    container.appendChild(toast);
-    setTimeout(() => toast.remove(), 2000);
-  }
-</script>
+<script type="module" src="admin-boost-requests.js"></script>
 
 </body>
 </html>
