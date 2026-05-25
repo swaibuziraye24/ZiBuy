@@ -3690,13 +3690,18 @@ footer {
     grid-template-columns: 1fr;
     padding: 16px;
   }
-
+  
   .dashboard-sidebar {
-    display: none;
-  }
-
-  .dashboard-content h2 {
-    font-size: 20px;
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    align-items: center;
+    background: white;
+    padding: 12px;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    order: -1;
+    margin-bottom: 12px;
   }
 
   .ad-item {
@@ -6727,36 +6732,5 @@ table {
 
   .nav-item span:first-child {
     display: inline !important;
-  }
-
-  .tab-header {
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .tab-header .btn {
-    width: 100%;
-  }
-}
-
-/* Tiny phones */
-@media (max-width: 360px) {
-  .user-profile-card {
-    min-width: 100px;
-  }
-
-  .user-avatar {
-    width: 40px;
-    height: 40px;
-    font-size: 18px;
-  }
-
-  .dashboard-nav {
-    gap: 2px;
-  }
-
-  .nav-item {
-    padding: 5px 6px !important;
-    font-size: 9px !important;
   }
 }
