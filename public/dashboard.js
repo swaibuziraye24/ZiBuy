@@ -35,6 +35,37 @@ onAuthStateChanged(auth, (user) => {
   loadDashboard();
 });
 
+
+
+function switchTab(tabName) {
+
+  // Hide all tab contents
+  document.querySelectorAll(".dashboard-tab-content").forEach(tab => {
+    tab.style.display = "none";
+  });
+
+  // Remove active class
+  document.querySelectorAll(".dashboard-tab-btn").forEach(btn => {
+    btn.classList.remove("active");
+  });
+
+  // Show selected tab
+  const activeTab = document.getElementById(tabName);
+
+  if (activeTab) {
+    activeTab.style.display = "block";
+  }
+
+  // Activate clicked button
+  const activeBtn = document.querySelector(`[data-tab="${tabName}"]`);
+
+  if (activeBtn) {
+    activeBtn.classList.add("active");
+  }
+
+}
+window.switchTab = switchTab;
+
 // ============================================
 // LOAD DASHBOARD
 // ============================================
