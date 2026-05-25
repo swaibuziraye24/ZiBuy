@@ -73,16 +73,15 @@
   </div>
 </div>
 
-  <!-- SETTINGS/PROFILE TAB -->
+<!-- SETTINGS TAB -->
 <div class="dashboard-tab" id="profile-tab">
   <div class="tab-header">
     <h2>⚙️ Account Settings</h2>
   </div>
   <div id="profile-settings">
-    <p style="text-align:center;padding:40px">Loading settings...</p>
+    <p style="text-align:center;padding:40px;color:#6b7280">Loading settings...</p>
   </div>
 </div>
-
   </main>
 
 </div>
@@ -105,6 +104,21 @@
 </script>
 
 <script type="module" src="dashboard.js"></script>
+
+<script>
+  // Quick test to verify containers exist
+  window.testDashboard = function() {
+    console.log("✅ my-ads-list exists:", !!document.getElementById("my-ads-list"));
+    console.log("✅ orders-list exists:", !!document.getElementById("orders-list"));
+    console.log("✅ profile-settings exists:", !!document.getElementById("profile-settings"));
+    console.log("✅ my-ads-tab exists:", !!document.getElementById("my-ads-tab"));
+    console.log("✅ orders-tab exists:", !!document.getElementById("orders-tab"));
+    console.log("✅ profile-tab exists:", !!document.getElementById("profile-tab"));
+  };
+  
+  // Run test after page loads
+  window.addEventListener('load', testDashboard);
+</script>
 
 </body>
 </html>
