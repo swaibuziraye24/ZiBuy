@@ -1,18 +1,27 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Business Requests — ZiBuy</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Business Requests — ZiBuy Admin</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="admin-wrap">
+<header class="topbar">
+  <a href="index.html"><h1 class="logo">Zi<span>Buy</span></h1></a>
+  <div style="margin-left:auto">
+    <button class="btn btn-dark" onclick="window.location.href='index.html'">← Back</button>
+  </div>
+</header>
 
+<div class="admin-wrap" style="max-width:1000px;margin:0 auto;padding:24px">
   <h1>💼 Business Upgrade Requests</h1>
-
-  <div id="business-requests"></div>
-
+  <div id="requests-container"></div>
 </div>
+
+<div id="overlay" class="overlay"></div>
+<div id="toast-container" class="toast-container"></div>
 
 <script type="module" src="admin-business-requests.js"></script>
 
