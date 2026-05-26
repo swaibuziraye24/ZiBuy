@@ -28,21 +28,23 @@ window.submitReport = async function () {
 
   try {
 
-    await addDoc(collection(db, "reports"), {
+  await addDoc(collection(db, "reports"), {
 
-      productId,
-      reason,
-      description,
+  productId,
+  reason,
+  description,
 
-      reportedBy: auth.currentUser
-        ? auth.currentUser.uid
-        : "anonymous",
+  reportedBy: auth.currentUser
+    ? auth.currentUser.uid
+    : "anonymous",
 
-      createdAt: new Date(),
+  createdAt: new Date(),
 
-      status: "pending"
+  status: "pending",
 
-    });
+  resolved: false
+
+});
 
     alert("✅ Report submitted successfully");
 
