@@ -42,5 +42,7 @@ export {
   app, db, auth, storage,
   collection, getDocs, addDoc,
   doc, getDoc, query, where,
-  orderBy, deleteDoc, updateDoc
+  orderBy, deleteDoc, updateDoc,
+setDoc,
+serverTimestamp
 };
