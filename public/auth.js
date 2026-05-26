@@ -14,7 +14,11 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 import { showToast } from "./app.js";
-
+import {
+  db,
+  collection,
+  addDoc
+} from "./firebase.js";
 import {
   doc,
   setDoc,
@@ -138,6 +142,19 @@ await setDoc(doc(db, "users", response.user.uid), {
       const btn = document.getElementById(id);
       if (btn) btn.style.display = "block";
     });
+
+
+// Create user profile
+await addDoc(collection(db, "users"), {
+  userId: response.user.uid,
+  email: response.user.email,
+  accountType: "normal",
+  businessApproved: false,
+  subscriptionActive: false,
+  maxAds: 5,
+  createdAt: new Date()
+});
+
 
     alert("✅ Account created! You're now logged in");
     closeAuthModal();
