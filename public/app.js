@@ -6,7 +6,10 @@ import { db, auth, collection, getDocs, addDoc, query, where } from "./firebase.
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFeaturedAds } from "./premium-ads.js";
 import "./auth.js";
-
+import {
+  deleteDoc,
+  doc
+} from "./firebase.js";
 // ============================================
 // GLOBALS
 // ============================================
@@ -272,15 +275,29 @@ function renderProducts() {
         ${p.seller?.isVerified ? '<span style="color:#10b981;font-weight:800;margin-left:4px">✅ Verified</span>' : ''}
       </div>
       <div class="card-footer">
-        <button class="cart-btn" onclick="addToCart('${p.name.replace(/'/g,"\\'")}', ${p.price}, '${images[0] || ""}')">🛒 Add</button>
-        <button class="view-btn" onclick="openProductModal('${p.id}')">View</button>
-      </div>
+  <button class="cart-btn" onclick="addToCart('${p.name.replace(/'/g,"\\'")}', ${p.price}, '${images[0] || ""}')">
+    🛒 Add
+  </button>
+
+  <button class="view-btn" onclick="openProductModal('${p.id}')">
+    View
+  </button>
+</div>
+
+${currentUser?.email === "swaibuziraye22@gmail.com" ? `
+  <button 
+    class="admin-delete-btn"
+    onclick="deleteProduct('${p.id}')">
+    🗑 Delete Ad
+  </button>
+` : ""}
     </div>
   </div>
 `;
   }).join("");
 
   document.getElementById("product-count").textContent = `${filtered.length} listings`;
+
 }
 // ============================================
 // CATEGORY FILTER
@@ -654,3 +671,26 @@ if (adminBoostBtn && currentUser?.email === "swaibuziraye22@gmail.com") {
   adminBoostBtn.style.display = "block";
 }
 
+window.deleteProduct = async function(productId) {
+
+  const confirmDelete = confirm("Delete this ad permanently?");
+
+  if (!confirmDelete) return;
+
+  try {
+
+    await deleteDoc(doc(db, "products", productId));
+
+    allProducts = allProducts.filter(p => p.id !== productId);
+
+    renderProducts();
+
+    alert("✅ Ad deleted");
+
+  } catch (err) {
+
+    console.error(err);
+    alert("❌ Failed to delete");
+
+  }
+};
