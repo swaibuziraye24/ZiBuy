@@ -75,7 +75,7 @@ window.submitBusinessUpgrade = async function() {
       `Please confirm payment.`
     );
 
-    const whatsappUrl = `https://wa.me/256701234567?text=${whatsappMessage}`;
+    const whatsappUrl = `https://wa.me/256790548910?text=${whatsappMessage}`;
     window.open(whatsappUrl, "_blank");
 
     // Show confirmation
