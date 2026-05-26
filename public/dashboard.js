@@ -594,15 +594,3 @@ window.upgradeToBusiness = async function() {
 
 };
 
-export {
-  db,
-  auth,
-  collection,
-  addDoc,
-  getDocs,
-  updateDoc,
-  doc,
-  query,
-  where,
-  serverTimestamp
-};
