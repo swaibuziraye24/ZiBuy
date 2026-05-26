@@ -191,7 +191,12 @@ window.submitAd = async function() {
 // CHECK ACCOUNT LIMITS
 // ========================================
 
-const usersSnapshot = await getDocs(collection(db, "users"));
+
+// ✅ NEW - read only YOUR document
+const usersSnapshot = await getDocs(query(
+  collection(db, "users"),
+  where("email", "==", currentUser.email)
+));
 
 let currentAccount = null;
 
