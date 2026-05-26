@@ -455,13 +455,7 @@ async function loadMyOrders() {
   }
 }
 
-// ============================================
-// LOAD PROFILE SETTINGS
-// ============================================
 
-// ============================================
-// LOAD PROFILE SETTINGS
-// ============================================
 
 // ============================================
 // LOAD PROFILE SETTINGS (WITH DEBUGGING)
@@ -515,6 +509,23 @@ async function loadProfileSettings() {
         <button class="btn" style="background:#ef4444;color:white;width:100%" onclick="deleteAccount()">Delete My Account</button>
       </div>
     `;
+
+
+    // Show account type and upgrade button
+const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+if (userDoc.exists()) {
+  const userData = userDoc.data();
+  const accountType = userData.accountType || "normal";
+  
+  document.getElementById("account-type-display").textContent = 
+    accountType === "business" ? "💼 Business Account" : "👤 Regular Account";
+  
+  if (accountType === "normal") {
+    document.getElementById("upgrade-btn").style.display = "block";
+  } else {
+    document.getElementById("business-status").style.display = "block";
+  }
+}
     
     container.innerHTML = settingsHTML;
     debug("✅ Settings rendered successfully!");
