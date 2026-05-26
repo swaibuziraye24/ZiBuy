@@ -277,9 +277,29 @@ function renderProducts() {
       <h3 class="product-title">${p.name}</h3>
       <p class="product-price">UGX ${Number(p.price).toLocaleString()}</p>
       <div class="product-seller-loc">
-        📍 ${p.seller?.location || "Uganda"}
-        ${p.seller?.isVerified ? '<span style="color:#10b981;font-weight:800;margin-left:4px">✅ Verified</span>' : ''}
-      </div>
+
+  <span
+    onclick="openSellerShop('${p.userId}')"
+    style="
+      cursor:pointer;
+      font-weight:700;
+      color:#ff6600;
+    "
+  >
+    🏪 ${p.seller?.name || "Seller"}
+  </span>
+
+  <br>
+
+  📍 ${p.seller?.location || "Uganda"}
+
+  ${
+    p.seller?.isVerified
+    ? '<span style="color:#10b981;font-weight:800;margin-left:4px">✅ Verified</span>'
+    : ''
+  }
+
+</div>
       <div class="card-footer">
   <button class="cart-btn" onclick="addToCart('${p.name.replace(/'/g,"\\'")}', ${p.price}, '${images[0] || ""}')">
     🛒 Add
@@ -318,6 +338,14 @@ window.filterCategory = function(category) {
   event?.target?.classList.add("active");
 
   renderProducts();
+
+window.openSellerShop = function(userId) {
+
+  window.location.href =
+    `shop.html?seller=${userId}`;
+
+};
+
 };
 
 // ============================================
