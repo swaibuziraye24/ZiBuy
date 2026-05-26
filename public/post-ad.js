@@ -216,8 +216,13 @@ usersSnapshot.forEach((docSnap) => {
 });
 
 if (!currentAccount) {
-  alert("Account data not found");
-  return;
+
+  // Create fallback free account
+  currentAccount = {
+    accountType: "normal",
+    maxAds: 5
+  };
+
 }
 
 // Count current user ads
