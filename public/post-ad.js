@@ -250,8 +250,11 @@ if (
 
 
   const btn = document.getElementById("submit-ad-btn");
+
+if (btn) {
   btn.textContent = "Publishing...";
   btn.disabled = true;
+}
 
   try {
     // 1. Upload images to Firebase Storage
@@ -340,10 +343,15 @@ if (
         window.location.href = `dashboard.html?tab=my-ads`;
       }, 1500);
     }
+
   } catch (err) {
-    console.error("Upload error:", err);
-    alert("❌ Error posting ad: " + err.message);
+  console.error("Upload error:", err);
+  alert("❌ Error posting ad: " + err.message);
+
+  if (btn) {
     btn.textContent = "Post My Ad 🚀";
     btn.disabled = false;
   }
+}
+
 };
