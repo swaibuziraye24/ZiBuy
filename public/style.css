@@ -7303,3 +7303,24 @@ table {
   padding: 10px;
   font-size: 13px;
 }
+
+.footer{
+  background:#111827;
+  color:white;
+  padding:20px;
+  display:flex;
+  justify-content:center;
+  gap:20px;
+  flex-wrap:wrap;
+  margin-top:40px;
+}
+
+.footer a{
+  color:white;
+  text-decoration:none;
+  font-size:14px;
+}
+
+.footer a:hover{
+  color:#ff6600;
+}
