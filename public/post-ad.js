@@ -5,6 +5,12 @@
 import { db, auth, collection, addDoc, storage } from "./firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+import {
+  getDocs,
+  query,
+  where
+} from "./firebase.js";
+
 
 let currentStep = 1;
 let selectedCategory = "";
@@ -180,6 +186,58 @@ window.submitAd = async function() {
     alert("You must be logged in to post ads");
     return;
   }
+
+// ========================================
+// CHECK ACCOUNT LIMITS
+// ========================================
+
+const usersSnapshot = await getDocs(collection(db, "users"));
+
+let currentAccount = null;
+
+usersSnapshot.forEach((docSnap) => {
+
+  const data = docSnap.data();
+
+  if (data.userId === currentUser.uid) {
+
+    currentAccount = {
+      id: docSnap.id,
+      ...data
+    };
+
+  }
+
+});
+
+if (!currentAccount) {
+  alert("Account data not found");
+  return;
+}
+
+// Count current user ads
+const productsSnapshot = await getDocs(
+  query(
+    collection(db, "products"),
+    where("userId", "==", currentUser.uid)
+  )
+);
+
+const totalAds = productsSnapshot.size;
+
+// Restrict normal users
+if (
+  currentAccount.accountType === "normal" &&
+  totalAds >= currentAccount.maxAds
+) {
+
+  alert(
+    `⚠️ Free accounts can only post ${currentAccount.maxAds} ads.\n\nUpgrade to Business Account for more posting limits.`
+  );
+
+  return;
+}
+
 
   const btn = event.target;
   btn.textContent = "Publishing...";
