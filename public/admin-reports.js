@@ -146,9 +146,43 @@ window.deleteProduct = async function(productId) {
 
   try {
 
-    await deleteDoc(
-      doc(db, "products", productId)
-    );
+
+    const reportsSnapshot = await getDocs(
+  collection(db, "reports")
+);
+
+let totalReports = 0;
+
+reportsSnapshot.forEach((docSnap) => {
+
+  const data = docSnap.data();
+
+  if (
+    data.productId === productId
+    && data.resolved !== true
+  ) {
+    totalReports++;
+  }
+
+});
+
+    if (totalReports >= 3) {
+
+  await updateDoc(
+    doc(db, "products", productId),
+    {
+      hidden: true,
+      hiddenReason: "Too many reports"
+    }
+  );
+
+} else {
+
+  await deleteDoc(
+    doc(db, "products", productId)
+  );
+
+}
 
     alert("✅ Product deleted");
 
