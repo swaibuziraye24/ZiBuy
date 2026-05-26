@@ -1,78 +1,169 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Shop — ZiBuy</title>
-  <link rel="stylesheet" href="style.css">
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<title>ZiBuy Shop</title>
+
+<style>
+
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:#f5f5f5;
+}
+
+.shop-header{
+  background:#ff6600;
+  color:white;
+  padding:30px 20px;
+}
+
+.shop-name{
+  font-size:32px;
+  font-weight:800;
+}
+
+.shop-meta{
+  margin-top:10px;
+  opacity:0.95;
+}
+
+.products-grid{
+  padding:20px;
+  display:grid;
+  grid-template-columns:
+  repeat(auto-fit,minmax(220px,1fr));
+  gap:18px;
+}
+
+.product-card{
+  background:white;
+  border-radius:14px;
+  overflow:hidden;
+  box-shadow:0 2px 10px rgba(0,0,0,0.08);
+}
+
+.product-card img{
+  width:100%;
+  height:220px;
+  object-fit:cover;
+}
+
+.product-info{
+  padding:14px;
+}
+
+.product-title{
+  font-size:16px;
+  font-weight:700;
+  margin-bottom:8px;
+}
+
+.product-price{
+  color:#ff6600;
+  font-weight:800;
+  font-size:18px;
+}
+
+.empty{
+  text-align:center;
+  padding:50px;
+}
+
+</style>
+
 </head>
+
 <body>
 
-<header class="topbar">
-  <a href="index.html"><h1 class="logo">Zi<span>Buy</span></h1></a>
-  <div class="topbar-actions" style="margin-left:auto">
-    <button class="btn btn-dark" onclick="window.history.back()">← Back</button>
-  </div>
-</header>
-
-<!-- SHOP BANNER & PROFILE -->
 <div class="shop-header">
-  <div class="shop-banner" id="shop-banner"></div>
-  <div class="shop-profile-section">
-    <div class="shop-avatar" id="shop-logo"></div>
-    <div class="shop-info">
-      <h1 id="shop-name">Loading...</h1>
-      <p id="shop-category" class="shop-category"></p>
-      <div class="shop-stats">
-        <div class="stat">
-          <span class="stat-label">⭐ Rating</span>
-          <span class="stat-value" id="shop-rating">0</span>
-        </div>
-        <div class="stat">
-          <span class="stat-label">📦 Products</span>
-          <span class="stat-value" id="shop-products">0</span>
-        </div>
-        <div class="stat">
-          <span class="stat-label">👥 Followers</span>
-          <span class="stat-value" id="shop-followers">0</span>
-        </div>
-        <div class="stat">
-          <span class="stat-label">⚡ Trust</span>
-          <span class="stat-value" id="shop-trust">0</span>
-        </div>
-      </div>
-    </div>
-    <div class="shop-actions">
-      <button class="btn btn-orange" onclick="followShop()">👥 Follow Shop</button>
-      <button class="btn btn-outline" onclick="contactSeller()">💬 Contact</button>
-    </div>
+
+  <div class="shop-name" id="shop-name">
+    Loading shop...
   </div>
-</div>
 
-<!-- SHOP DESCRIPTION -->
-<div class="shop-description-section">
-  <h2>About Shop</h2>
-  <p id="shop-description"></p>
-  <div class="shop-contact-info">
-    <p id="shop-location"></p>
-    <p id="shop-phone"></p>
+  <div class="shop-meta" id="shop-meta">
   </div>
+
 </div>
 
-<!-- SHOP PRODUCTS -->
-<div class="shop-products-section">
-  <h2>Products from this shop</h2>
-  <div id="shop-products-list" class="products"></div>
+<div
+  style="
+    background:white;
+    margin:20px;
+    padding:20px;
+    border-radius:14px;
+  "
+>
+
+  <h2 style="margin-top:0">
+    ⭐ Seller Reviews
+  </h2>
+
+  <div id="reviews-list">
+
+    <p>No reviews yet</p>
+
+  </div>
+
+  <hr style="margin:20px 0">
+
+  <h3>Leave a Review</h3>
+
+  <select
+    id="review-rating"
+    style="
+      width:100%;
+      padding:12px;
+      margin-bottom:12px;
+      border-radius:8px;
+    "
+  >
+    <option value="5">⭐⭐⭐⭐⭐ 5 Stars</option>
+    <option value="4">⭐⭐⭐⭐ 4 Stars</option>
+    <option value="3">⭐⭐⭐ 3 Stars</option>
+    <option value="2">⭐⭐ 2 Stars</option>
+    <option value="1">⭐ 1 Star</option>
+  </select>
+
+  <textarea
+    id="review-text"
+    placeholder="Write your review..."
+    style="
+      width:100%;
+      height:100px;
+      padding:12px;
+      border-radius:8px;
+      margin-bottom:12px;
+      box-sizing:border-box;
+    "
+  ></textarea>
+
+  <button
+    onclick="submitSellerReview()"
+    style="
+      background:#ff6600;
+      color:white;
+      border:none;
+      padding:14px 18px;
+      border-radius:10px;
+      font-weight:700;
+      cursor:pointer;
+    "
+  >
+    Submit Review
+  </button>
+
 </div>
 
-<!-- SHOP REVIEWS -->
-<div class="shop-reviews-section">
-  <h2>Shop Reviews</h2>
-  <div id="shop-reviews" class="reviews-list"></div>
+<div class="products-grid" id="shop-products">
 </div>
-
-<div id="overlay" class="overlay" onclick="closeModal()"></div>
-<div id="toast-container" class="toast-container"></div>
 
 <script type="module" src="shop.js"></script>
 
