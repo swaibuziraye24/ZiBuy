@@ -59,7 +59,7 @@ window.submitBusinessUpgrade = async function() {
       phone: businessPhone,
       website: businessWebsite,
       logo: logoUrl,
-      price: 10000,
+      price: 50000,
       status: "pending",
       createdAt: new Date()
     };
@@ -71,7 +71,7 @@ window.submitBusinessUpgrade = async function() {
       `Hello, I want to upgrade to a Business Account.\n\n` +
       `Request ID: ${requestId}\n` +
       `Business Name: ${businessName}\n` +
-      `Amount: UGX 10,000\n\n` +
+      `Amount: UGX 50,000\n\n` +
       `Please confirm payment.`
     );
 
