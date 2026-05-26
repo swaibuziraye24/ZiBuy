@@ -8,9 +8,10 @@ import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/fireba
 import {
   getDocs,
   query,
-  where
+  where,
+  getDoc,
+  doc
 } from "./firebase.js";
-
 
 let currentStep = 1;
 let selectedCategory = "";
@@ -193,36 +194,22 @@ window.submitAd = async function() {
 
 
 // ✅ NEW - read only YOUR document
-const usersSnapshot = await getDocs(query(
-  collection(db, "users"),
-  where("email", "==", currentUser.email)
-));
-
 let currentAccount = null;
 
-usersSnapshot.forEach((docSnap) => {
-
-  const data = docSnap.data();
-
-  if (data.userId === currentUser.uid) {
-
-    currentAccount = {
-      id: docSnap.id,
-      ...data
-    };
-
+try {
+  const userDocSnap = await getDoc(doc(db, "users", currentUser.uid));
+  if (userDocSnap.exists()) {
+    currentAccount = userDocSnap.data();
   }
-
-});
+} catch (err) {
+  console.warn("User data fetch failed:", err);
+}
 
 if (!currentAccount) {
-
-  // Create fallback free account
   currentAccount = {
     accountType: "normal",
     maxAds: 5
   };
-
 }
 
 // Count current user ads
