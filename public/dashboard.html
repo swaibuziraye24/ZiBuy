@@ -82,19 +82,14 @@
     <p style="text-align:center;padding:40px;color:#6b7280">Loading settings...</p>
   </div>
 
+<!-- Add this inside the profile-settings section -->
 <div class="settings-section">
-  <h3>🏢 Business Account</h3>
-
-  <p style="color:#6b7280;margin-bottom:15px">
-    Upgrade to a Business Account and post more ads, get verified, and grow your business on ZiBuy.
-  </p>
-
-  <button
-    class="btn btn-orange"
-    onclick="upgradeBusinessAccount()"
-    style="width:100%">
-    🚀 Upgrade to Business
+  <h3>📦 Account Type</h3>
+  <p id="account-type-display" style="font-size:14px;color:#6b7280;margin-bottom:16px">Loading...</p>
+  <button id="upgrade-btn" class="btn btn-orange" onclick="window.location.href='business-upgrade.html'" style="display:none">
+    💼 Upgrade to Business
   </button>
+  <p id="business-status" style="font-size:13px;color:#10b981;display:none">✅ Business Account Active</p>
 </div>
 
 </div>
