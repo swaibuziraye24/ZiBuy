@@ -5,6 +5,12 @@
 import { db, auth, collection, getDocs, query, where, deleteDoc, doc, updateDoc } from "./firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+import {
+  addDoc,
+  collection,
+  serverTimestamp
+} from "./firebase.js";
+
 console.log("📊 Dashboard.js loaded");
 
 const originalLog = console.log;
@@ -551,4 +557,56 @@ window.deleteAccount = function() {
   if (!confirm2) return;
 
   alert("Account deletion coming soon - Contact support");
+};
+
+window.upgradeBusinessAccount = async function() {
+
+  if (!currentUser) {
+    alert("Please login first");
+    return;
+  }
+
+  try {
+
+    // SAVE REQUEST TO FIRESTORE
+    await addDoc(collection(db, "business_requests"), {
+
+      userId: currentUser.uid,
+      email: currentUser.email,
+
+      status: "pending",
+
+      createdAt: serverTimestamp()
+
+    });
+
+    // WHATSAPP MESSAGE
+    const phone = "256790548910"; // ⚠️ CHANGE THIS TO YOUR NUMBER!
+
+    const message = encodeURIComponent(
+`Hello ZiBuy Admin,
+
+I have submitted a Business Account upgrade request.
+
+My email is:
+${currentUser.email}
+
+Please guide me on payment.
+
+Thank you.`
+    );
+
+    window.open(
+      `https://wa.me/${phone}?text=${message}`,
+      "_blank"
+    );
+
+    alert("✅ Upgrade request submitted");
+
+  } catch (err) {
+
+    console.error(err);
+    alert("Failed to submit request");
+
+  }
 };
