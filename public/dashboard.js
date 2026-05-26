@@ -7,7 +7,6 @@ import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/fi
 
 import {
   addDoc,
-  collection,
   serverTimestamp
 } from "./firebase.js";
 
