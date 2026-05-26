@@ -232,11 +232,17 @@ function renderProducts() {
   if (!container) return;
 
   let filtered = allProducts.filter(p => {
-    if (currentCategory !== "all" && p.category !== currentCategory) return false;
-    if (p.price < filterState.priceMin || p.price > filterState.priceMax) return false;
-    if (filterState.location && p.location !== filterState.location) return false;
-    return true;
-  });
+
+  // Hide blocked products
+  if (p.hidden === true) return false;
+
+  if (currentCategory !== "all" && p.category !== currentCategory) return false;
+  if (p.price < filterState.priceMin || p.price > filterState.priceMax) return false;
+  if (filterState.location && p.location !== filterState.location) return false;
+
+  return true;
+
+});
 
   // Sort
   if (filterState.sortBy === "price-low") {
