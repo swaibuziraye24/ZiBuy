@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shop — ZiBuy</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <a href="index.html"><h1 class="logo">Zi<span>Buy</span></h1></a>
+  <div class="topbar-actions" style="margin-left:auto">
+    <button class="btn btn-dark" onclick="window.history.back()">← Back</button>
+  </div>
+</header>
+
+<!-- SHOP BANNER & PROFILE -->
+<div class="shop-header">
+  <div class="shop-banner" id="shop-banner"></div>
+  <div class="shop-profile-section">
+    <div class="shop-avatar" id="shop-logo"></div>
+    <div class="shop-info">
+      <h1 id="shop-name">Loading...</h1>
+      <p id="shop-category" class="shop-category"></p>
+      <div class="shop-stats">
+        <div class="stat">
+          <span class="stat-label">⭐ Rating</span>
+          <span class="stat-value" id="shop-rating">0</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">📦 Products</span>
+          <span class="stat-value" id="shop-products">0</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">👥 Followers</span>
+          <span class="stat-value" id="shop-followers">0</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">⚡ Trust</span>
+          <span class="stat-value" id="shop-trust">0</span>
+        </div>
+      </div>
+    </div>
+    <div class="shop-actions">
+      <button class="btn btn-orange" onclick="followShop()">👥 Follow Shop</button>
+      <button class="btn btn-outline" onclick="contactSeller()">💬 Contact</button>
+    </div>
+  </div>
+</div>
+
+<!-- SHOP DESCRIPTION -->
+<div class="shop-description-section">
+  <h2>About Shop</h2>
+  <p id="shop-description"></p>
+  <div class="shop-contact-info">
+    <p id="shop-location"></p>
+    <p id="shop-phone"></p>
+  </div>
+</div>
+
+<!-- SHOP PRODUCTS -->
+<div class="shop-products-section">
+  <h2>Products from this shop</h2>
+  <div id="shop-products-list" class="products"></div>
+</div>
+
+<!-- SHOP REVIEWS -->
+<div class="shop-reviews-section">
+  <h2>Shop Reviews</h2>
+  <div id="shop-reviews" class="reviews-list"></div>
+</div>
+
+<div id="overlay" class="overlay" onclick="closeModal()"></div>
+<div id="toast-container" class="toast-container"></div>
+
+<script type="module" src="shop.js"></script>
+
+</body>
+</html>
