@@ -7235,3 +7235,71 @@ table {
     padding: 20px 16px;
   }
 }
+
+/* Business Request Cards */
+.request-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.request-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.request-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.status-badge.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-badge.approved {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status-badge.rejected {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.request-details {
+  margin-bottom: 16px;
+}
+
+.request-details p {
+  margin: 8px 0;
+  font-size: 14px;
+}
+
+.request-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.request-actions .btn {
+  flex: 1;
+  padding: 10px;
+  font-size: 13px;
+}
