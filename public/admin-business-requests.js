@@ -61,42 +61,89 @@ async function loadRequests() {
   });
 }
 
+
 window.approveBusiness = async function(requestId, userId) {
-
   try {
+    const { addDoc } = await import("./firebase.js");
+    
+    // Get the request data
+    const requestSnap = await getDocs(collection(db, "business_requests"));
+    let businessData = null;
+    let userDocId = null;
 
-    // Approve request
+    for (const doc of requestSnap.docs) {
+      if (doc.id === requestId) {
+        businessData = doc.data();
+        break;
+      }
+    }
+
+    if (!businessData) {
+      alert("❌ Request not found");
+      return;
+    }
+
+    // 1. Approve the business request
     await updateDoc(doc(db, "business_requests", requestId), {
-      status: "approved"
+      status: "approved",
+      approvedAt: new Date(),
+      approvedBy: "swaibuziraye22@gmail.com"
     });
 
-    // Update user account
+    // 2. Update user account
     const usersSnapshot = await getDocs(collection(db, "users"));
-
-    usersSnapshot.forEach(async (userDoc) => {
-
+    
+    for (const userDoc of usersSnapshot.docs) {
       const userData = userDoc.data();
-
-      if (userData.userId === userId) {
-
+      if (userData.email === businessData.email) {
         await updateDoc(doc(db, "users", userDoc.id), {
           accountType: "business",
           businessApproved: true,
           subscriptionActive: true,
-          maxAds: 50
+          maxAds: 50,  // Business can post 50 ads
+          businessActivatedAt: new Date()
         });
-
+        userDocId = userDoc.id;
+        break;
       }
+    }
 
-    });
+    // 3. Create business shop profile
+    const shopProfile = {
+      userId: userId,
+      userEmail: businessData.email,
+      shopName: businessData.shopName || businessData.businessName,
+      description: businessData.description || "",
+      category: businessData.category || "General",
+      logo: businessData.logo || "https://via.placeholder.com/150?text=Shop+Logo",
+      banner: businessData.banner || "https://via.placeholder.com/1200x300?text=Shop+Banner",
+      location: businessData.location || "",
+      phone: businessData.phone || "",
+      website: businessData.website || "",
+      
+      // Stats
+      followers: 0,
+      rating: 0,
+      totalReviews: 0,
+      totalProducts: 0,
+      totalSales: 0,
+      responseTime: 0,
+      trustScore: 100,
+      
+      // Status
+      verified: true,
+      verifiedAt: new Date(),
+      status: "active",
+      createdAt: new Date()
+    };
 
-    alert("✅ Business account approved");
+    await addDoc(collection(db, "business_profiles"), shopProfile);
 
+    alert("✅ Business account approved!\n\n Shop profile created.\n Seller can now post up to 50 ads.");
     loadRequests();
 
   } catch (err) {
-    console.error(err);
-    alert("Approval failed");
+    console.error("Approval error:", err);
+    alert("❌ Approval failed: " + err.message);
   }
-
 };
