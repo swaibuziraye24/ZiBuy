@@ -559,7 +559,7 @@ window.deleteAccount = function() {
   alert("Account deletion coming soon - Contact support");
 };
 
-window.upgradeBusinessAccount = async function() {
+window.upgradeToBusiness = async function() {
 
   if (!currentUser) {
     alert("Please login first");
@@ -568,45 +568,41 @@ window.upgradeBusinessAccount = async function() {
 
   try {
 
-    // SAVE REQUEST TO FIRESTORE
+    // Save request in Firebase
     await addDoc(collection(db, "business_requests"), {
-
       userId: currentUser.uid,
       email: currentUser.email,
-
       status: "pending",
-
-      createdAt: serverTimestamp()
-
+      requestedAt: new Date(),
+      subscriptionPlan: "pending-payment"
     });
 
-    // WHATSAPP MESSAGE
-    const phone = "256790548910"; // ⚠️ CHANGE THIS TO YOUR NUMBER!
-
-    const message = encodeURIComponent(
-`Hello ZiBuy Admin,
-
-I have submitted a Business Account upgrade request.
-
-My email is:
-${currentUser.email}
-
-Please guide me on payment.
-
-Thank you.`
+    // Open your WhatsApp
+    const phone = "256790548910"; // YOUR NUMBER
+    const msg = encodeURIComponent(
+      `Hello Admin, I want to upgrade to a ZiBuy Business Account.\n\nEmail: ${currentUser.email}`
     );
 
-    window.open(
-      `https://wa.me/${phone}?text=${message}`,
-      "_blank"
-    );
+    window.open(`https://wa.me/${phone}?text=${msg}`, "_blank");
 
-    alert("✅ Upgrade request submitted");
+    alert("✅ Request submitted. Complete payment on WhatsApp.");
 
   } catch (err) {
-
     console.error(err);
     alert("Failed to submit request");
-
   }
+
+};
+
+export {
+  db,
+  auth,
+  collection,
+  addDoc,
+  getDocs,
+  updateDoc,
+  doc,
+  query,
+  where,
+  serverTimestamp
 };
