@@ -2,7 +2,8 @@
 //   ZiBuy — Customer Dashboard
 // ============================================
 
-import { db, auth, collection, getDocs, query, where, deleteDoc, doc, updateDoc } from "./firebase.js";
+// ✅ NEW
+import { db, auth, collection, getDocs, query, where, updateDoc, doc, getDoc } from "./firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 import {
