@@ -249,7 +249,7 @@ if (
 }
 
 
-  const btn = event.target;
+  const btn = document.getElementById("submit-ad-btn");
   btn.textContent = "Publishing...";
   btn.disabled = true;
 
