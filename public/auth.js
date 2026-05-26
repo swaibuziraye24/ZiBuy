@@ -89,7 +89,6 @@ export function closeAdminLoginModal() {
 }
 
 // ============ Customer Registration ============
-
 window.customerRegister = async function() {
   const email = document.getElementById("auth-email")?.value.trim();
   const password = document.getElementById("auth-password")?.value.trim();
@@ -102,39 +101,26 @@ window.customerRegister = async function() {
   try {
     const response = await createUserWithEmailAndPassword(auth, email, password);
     
-
-await setDoc(doc(db, "users", response.user.uid), {
-
-  uid: response.user.uid,
-  email: response.user.email,
-
-  // ACCOUNT TYPE
-  accountType: "normal",
-
-  // VERIFICATION
-  isSellerVerified: false,
-
-  // ADS
-  adsLimit: 10,
-
-  // SUBSCRIPTION
-  subscription: {
-    active: false,
-    plan: null,
-    expiresAt: null
-  },
-
-  // BUSINESS PROFILE
-  businessProfile: {
-    businessName: "",
-    description: "",
-    logo: "",
-    location: ""
-  },
-
-  createdAt: serverTimestamp()
-
-});
+    // Create user profile in Firestore
+    await setDoc(doc(db, "users", response.user.uid), {
+      uid: response.user.uid,
+      email: response.user.email,
+      accountType: "normal",
+      isSellerVerified: false,
+      adsLimit: 10,
+      subscription: {
+        active: false,
+        plan: null,
+        expiresAt: null
+      },
+      businessProfile: {
+        businessName: "",
+        description: "",
+        logo: "",
+        location: ""
+      },
+      createdAt: serverTimestamp()
+    });
 
     // Show auth-gated buttons
     const buttons = ["post-ad-btn", "dashboard-btn", "notifications-btn", "messages-btn"];
@@ -143,22 +129,10 @@ await setDoc(doc(db, "users", response.user.uid), {
       if (btn) btn.style.display = "block";
     });
 
-
-// Create user profile
-await addDoc(collection(db, "users"), {
-  userId: response.user.uid,
-  email: response.user.email,
-  accountType: "normal",
-  businessApproved: false,
-  subscriptionActive: false,
-  maxAds: 5,
-  createdAt: new Date()
-});
-
-
     alert("✅ Account created! You're now logged in");
     closeAuthModal();
     location.reload();
+    
   } catch (err) {
     alert("❌ Registration failed: " + err.message);
   }
