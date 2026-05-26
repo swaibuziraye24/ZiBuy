@@ -74,6 +74,11 @@ async function loadReports() {
             ${report.description}
           </p>
 
+<div class="report-meta">
+  Seller ID:
+  ${report.reportedBy || "Unknown"}
+</div>
+
           <div class="report-actions">
 
             <button
@@ -167,6 +172,64 @@ reportsSnapshot.forEach((docSnap) => {
 });
 
     if (totalReports >= 3) {
+
+// Seller strike system
+const userRef = doc(db, "users", productData.userId);
+
+const usersSnapshot = await getDocs(
+  collection(db, "users")
+);
+
+let currentStrikes = 0;
+
+usersSnapshot.forEach((docSnap) => {
+
+  const data = docSnap.data();
+
+  if (data.userId === productData.userId) {
+    currentStrikes = data.strikes || 0;
+  }
+
+});
+
+await updateDoc(userRef, {
+  strikes: currentStrikes + 1
+});
+
+// Auto ban seller after 3 strikes
+if (currentStrikes + 1 >= 3) {
+
+  await updateDoc(userRef, {
+    banned: true,
+    bannedAt: new Date()
+  });
+
+}
+
+// Get product details first
+const productRef = doc(db, "products", productId);
+
+const productsSnapshot = await getDocs(
+  collection(db, "products")
+);
+
+let productData = null;
+
+productsSnapshot.forEach((docSnap) => {
+
+  if (docSnap.id === productId) {
+    productData = {
+      id: docSnap.id,
+      ...docSnap.data()
+    };
+  }
+
+});
+
+if (!productData) {
+  alert("Product not found");
+  return;
+}
 
   await updateDoc(
     doc(db, "products", productId),
