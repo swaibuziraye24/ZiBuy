@@ -15,6 +15,12 @@ import {
 
 import { showToast } from "./app.js";
 
+import {
+  doc,
+  setDoc,
+  serverTimestamp
+} from "./firebase.js";
+
 const ADMIN_EMAIL = "swaibuziraye22@gmail.com";
 
 // ---- Track auth state globally ----
@@ -92,6 +98,40 @@ window.customerRegister = async function() {
   try {
     const response = await createUserWithEmailAndPassword(auth, email, password);
     
+
+await setDoc(doc(db, "users", response.user.uid), {
+
+  uid: response.user.uid,
+  email: response.user.email,
+
+  // ACCOUNT TYPE
+  accountType: "normal",
+
+  // VERIFICATION
+  isSellerVerified: false,
+
+  // ADS
+  adsLimit: 10,
+
+  // SUBSCRIPTION
+  subscription: {
+    active: false,
+    plan: null,
+    expiresAt: null
+  },
+
+  // BUSINESS PROFILE
+  businessProfile: {
+    businessName: "",
+    description: "",
+    logo: "",
+    location: ""
+  },
+
+  createdAt: serverTimestamp()
+
+});
+
     // Show auth-gated buttons
     const buttons = ["post-ad-btn", "dashboard-btn", "notifications-btn", "messages-btn"];
     buttons.forEach(id => {
