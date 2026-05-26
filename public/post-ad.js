@@ -205,6 +205,17 @@ try {
   console.warn("User data fetch failed:", err);
 }
 
+// Prevent banned users
+if (currentAccount?.banned === true) {
+
+  alert(
+    "⚠️ Your ZiBuy account has been restricted due to policy violations."
+  );
+
+  return;
+}
+
+
 if (!currentAccount) {
   currentAccount = {
     accountType: "normal",
