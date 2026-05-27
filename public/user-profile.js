@@ -13,7 +13,6 @@ async function loadProfile() {
     let userEmail = email;
     let userData = null;
 
-    // Get user by ID if provided
     if (userId) {
       const userSnap = await getDoc(doc(db, "users", userId));
       if (userSnap.exists()) {
@@ -22,7 +21,6 @@ async function loadProfile() {
       }
     }
 
-    // Get products by seller
     const productsSnap = await getDocs(query(
       collection(db, "products"),
       where("userId", "==", userId)
@@ -33,50 +31,65 @@ async function loadProfile() {
       ...doc.data()
     }));
 
-    // Get reviews
     const reviewsSnap = await getDocs(query(
       collection(db, "reviews"),
       where("sellerId", "==", userId)
     ));
 
     const reviews = reviewsSnap.docs.map(doc => doc.data());
-    const avgRating = reviews.length > 0 
+    const avgRating = reviews.length > 0
       ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
       : 0;
 
-    // Get verification status
     const verificationSnap = await getDocs(query(
       collection(db, "seller_verifications"),
       where("userId", "==", userId)
     ));
 
-    const isVerified = !verificationSnap.empty && 
+    const isVerified = !verificationSnap.empty &&
                        verificationSnap.docs[0].data().status === "approved";
 
-    // Render profile
-    const sellerName = products.length > 0 ? products[0].seller?.name || "Seller" : "Seller";
+    const sellerName     = products.length > 0 ? products[0].seller?.name     || "Seller" : "Seller";
     const sellerLocation = products.length > 0 ? products[0].seller?.location || "Uganda" : "Uganda";
 
-  document.getElementById("profile-name").textContent = sellerName + (isVerified ? " ✅" : "");
+    document.getElementById("profile-name").textContent     = sellerName + (isVerified ? " ✅" : "");
     document.getElementById("profile-location").textContent = "📍 " + sellerLocation;
-    document.getElementById("profile-rating").textContent = `⭐ ${avgRating} (${reviews.length} reviews)`;
-    document.getElementById("stat-products").textContent = products.length;
-    document.getElementById("stat-reviews").textContent = reviews.length;
-    document.getElementById("stat-rating").textContent = avgRating;
+    document.getElementById("profile-rating").textContent   = `⭐ ${avgRating} (${reviews.length} reviews)`;
+    document.getElementById("stat-products").textContent    = products.length;
+    document.getElementById("stat-reviews").textContent     = reviews.length;
+    document.getElementById("stat-rating").textContent      = avgRating;
 
     if (isVerified) {
       document.getElementById("profile-verified").style.display = "inline-block";
       const avatarEl = document.getElementById("profile-avatar");
       if (avatarEl) {
-        avatarEl.style.background = "linear-gradient(135deg, #10b981, #059669)";
-        avatarEl.style.boxShadow = "0 0 12px rgba(16, 185, 129, 0.3)";
+        avatarEl.style.background  = "linear-gradient(135deg, #10b981, #059669)";
+        avatarEl.style.boxShadow   = "0 0 12px rgba(16, 185, 129, 0.3)";
       }
     }
+
+    // Plan badge
+    try {
+      const { fetchUserPlan } = await import("./business-plans.js");
+      const plan = await fetchUserPlan(userId);
+      if (plan.id !== "free") {
+        const badge  = document.getElementById("profile-plan-badge");
+        const styles = {
+          bronze: "background:#fef3c7;color:#92400e",
+          silver: "background:#f1f5f9;color:#475569",
+          gold:   "background:#fffbeb;color:#b45309"
+        };
+        badge.setAttribute("style",
+          `display:inline-block;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:800;${styles[plan.id] || ""}`
+        );
+        badge.textContent = `${plan.icon} ${plan.name}`;
+      }
+    } catch (e) { console.warn(e); }
 
     // Set contact info
     window.sellerPhone = products.length > 0 ? products[0].seller?.phone : "";
     window.sellerEmail = userEmail;
-    window.sellerName = sellerName;
+    window.sellerName  = sellerName;
 
     // Render products
     const productsContainer = document.getElementById("seller-products");
@@ -101,7 +114,7 @@ async function loadProfile() {
     } else {
       reviewsContainer.innerHTML = reviews.slice(0, 5).map(r => `
         <div style="padding:14px;background:#f9fafb;border-radius:10px;border-left:4px solid #ff6600">
-          <p style="margin:0;font-weight:700">${'⭐'.repeat(r.rating)}</p>
+          <p style="margin:0;font-weight:700">${"⭐".repeat(r.rating)}</p>
           <p style="margin:6px 0 0;color:#6b7280;font-size:13px">${r.text}</p>
           <p style="margin:6px 0 0;font-size:11px;color:#adb5bd">${r.reviewerEmail} • ${new Date(r.createdAt.toDate()).toLocaleDateString()}</p>
         </div>
