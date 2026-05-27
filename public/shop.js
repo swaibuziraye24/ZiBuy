@@ -26,57 +26,46 @@ const sellerId =
 let followDocumentId = null;
 
 loadShop();
+console.log("shop.js loaded");
 loadSellerReviews();
 checkFollowStatus();
-// loadReviews(); // Uncomment if you want to load reviews
 
 async function loadShop() {
+
+  console.log("Loading shop...");
 
   const container =
     document.getElementById("shop-products");
 
+  if (!container) {
+    console.error("Container not found");
+    return;
+  }
+
   try {
 
-   const snapshot = await getDocs(
-  query(
-    collection(db, "products"),
-    where("userId", "==", sellerId)
-  )
-);
+    const snapshot = await getDocs(
+      query(
+        collection(db, "products"),
+        where("userId", "==", sellerId)
+      )
+    );
 
-console.log("Products found:", snapshot.size);
+    console.log(
+      "Products found:",
+      snapshot.size
+    );
 
-let products = [];
+    const products = [];
 
-snapshot.forEach((docSnap) => {
+    snapshot.forEach((docSnap) => {
 
-  const data = docSnap.data();
+      products.push({
+        id: docSnap.id,
+        ...docSnap.data()
+      });
 
-  console.log("Product:", data);
-
-  products.push({
-    id: docSnap.id,
-    ...data
-  });
-
-});
-
-console.log("Products found:", snapshot.size);
-
-let products = [];
-
-snapshot.forEach((docSnap) => {
-
-  const data = docSnap.data();
-
-  console.log("Product:", data);
-
-  products.push({
-    id: docSnap.id,
-    ...data
-  });
-
-});
+    });
 
     if (products.length === 0) {
 
@@ -89,147 +78,50 @@ snapshot.forEach((docSnap) => {
       return;
     }
 
-    let products = [];
-
-    snapshot.forEach((docSnap) => {
-
-      products.push({
-        id: docSnap.id,
-        ...docSnap.data()
-      });
-
-    });
-
-    const seller =
-      products[0].seller || {};
-
-    document.getElementById("shop-name")
-    .innerHTML = `
-      🏪 ${seller.name || "ZiBuy Seller"}
-
-      ${
-        seller.isVerified
-        ? '<span style="font-size:18px">✅</span>'
-        : ''
-      }
-    `;
-
-    document.getElementById("shop-meta")
-    .innerHTML = `
-      📍 ${seller.location || "Uganda"}
-      •
-      ${products.length} listings
-    `;
-
-const businessSnapshot =
-  await getDocs(
-
-    query(
-      collection(
-        db,
-        "business_profiles"
-      ),
-      where(
-        "userId",
-        "==",
-        sellerId
-      )
-    )
-
-  );
-
-if (!businessSnapshot.empty) {
-
-  const business =
-    businessSnapshot.docs[0]
-    .data();
-
-  // Banner
-  if (business.banner) {
-
-    document
-    .getElementById("shop-header")
-    .style.backgroundImage =
-      `url(${business.banner})`;
-
-    document
-    .getElementById("shop-header")
-    .style.backgroundSize =
-      "cover";
-
-    document
-    .getElementById("shop-header")
-    .style.backgroundPosition =
-      "center";
-
-  }
-
-  // Logo + name
-  document
-  .getElementById("shop-name")
-  .innerHTML = `
-
-    <img
-      src="${business.logo}"
-      style="
-        width:90px;
-        height:90px;
-        border-radius:50%;
-        object-fit:cover;
-        border:4px solid white;
-        margin-bottom:12px;
-      "
-    >
-
-    <br>
-
-    🏪
-    ${business.businessName}
-
-  `;
-
-}
-
     container.innerHTML =
       products.map((p) => `
 
-      <div class="product-card">
+        <div class="product-card">
 
-        <img
-          src="${p.images?.[0] || ''}"
-        >
+          <img
+            src="${p.images?.[0] || ''}"
+            alt="${p.name || ''}"
+          >
 
-        <div class="product-info">
+          <div class="product-info">
 
-          <div class="product-title">
-            ${p.name}
-          </div>
+            <div class="product-title">
+              ${p.name || "No name"}
+            </div>
 
-          <div class="product-price">
-            UGX ${Number(p.price)
-              .toLocaleString()}
+            <div class="product-price">
+              UGX ${Number(
+                p.price || 0
+              ).toLocaleString()}
+            </div>
+
           </div>
 
         </div>
 
-      </div>
-
-    `).join("");
+      `).join("");
 
   } catch (err) {
 
-    console.error(err);
+    console.error(
+      "SHOP ERROR:",
+      err
+    );
 
     container.innerHTML = `
       <div class="empty">
-        Failed to load shop
+        Failed to load products
       </div>
     `;
 
   }
 
 }
-
 
 async function loadSellerReviews() {
 
