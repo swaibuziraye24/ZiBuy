@@ -19,9 +19,38 @@ body{
 }
 
 .shop-header{
-  background:#ff6600;
+  background:
+    linear-gradient(
+      135deg,
+      #ff6600,
+      #ff8533
+    );
+
   color:white;
+
   padding:30px 20px;
+
+  position:relative;
+
+  overflow:hidden;
+}
+
+
+.shop-header::after{
+  content:"";
+
+  position:absolute;
+
+  top:-40px;
+  right:-40px;
+
+  width:140px;
+  height:140px;
+
+  background:
+    rgba(255,255,255,0.12);
+
+  border-radius:50%;
 }
 
 .shop-name{
@@ -51,8 +80,12 @@ body{
 }
 
 .product-card:hover{
-  transform:translateY(-4px);
-  box-shadow:0 6px 18px rgba(0,0,0,0.12);
+  transform:translateY(-4px) scale(1.01);
+  box-shadow:0 8px 22px rgba(0,0,0,0.14);
+}
+
+.product-card:active{
+  transform:scale(0.98);
 }
 
 .product-card img{
@@ -101,6 +134,15 @@ body{
 .shop-meta{
   margin-top:8px;
   opacity:0.95;
+}
+
+.shop-stats{
+  display:flex;
+  gap:18px;
+  margin-top:14px;
+  font-size:15px;
+  font-weight:600;
+  flex-wrap:wrap;
 }
 
 #follow-btn{
@@ -164,10 +206,24 @@ body{
       Loading shop...
     </div>
 
-    <div
-      class="shop-meta"
-      id="shop-meta"
-    ></div>
+    <div class="shop-meta" id="shop-meta">
+</div>
+
+<div
+  class="shop-stats"
+>
+  <div>
+    👥
+    <span id="followers-count">
+      0
+    </span>
+    followers
+  </div>
+
+  <div id="shop-rating">
+    ⭐ 0.0
+  </div>
+</div>
 
     <div style="
       margin-top:10px;
