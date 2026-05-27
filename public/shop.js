@@ -7,7 +7,8 @@ import {
   deleteDoc,
   doc,
   query,
-  where
+  where,
+  onSnapshot
 } from "./firebase.js";
 
 import {
@@ -15,6 +16,8 @@ import {
   getSellerReviews,
   renderStars
 } from "./review.js";
+
+import { onSnapshot } from "./firebase.js";
 
 
 console.log("toggleFollowShop:", window.toggleFollowShop);
@@ -35,6 +38,8 @@ loadShop();
 console.log("shop.js loaded");
 loadSellerReviews();
 checkFollowStatus();
+listenToFollowers();
+loadShopHeader();
 
 async function loadShop() {
 
@@ -130,6 +135,34 @@ async function loadShop() {
 }
 
 
+async function loadShopHeader() {
+  const container = document.getElementById("shop-name");
+  const meta = document.getElementById("shop-meta");
+
+  try {
+    const snapshot = await getDocs(
+      query(
+        collection(db, "users"),
+        where("uid", "==", sellerId)
+      )
+    );
+
+    if (snapshot.empty) return;
+
+    const seller = snapshot.docs[0].data();
+
+    container.textContent = seller.name || "ZiBuy Shop";
+
+    meta.innerHTML = `
+      📍 ${seller.location || "Uganda"}  
+      ${seller.isVerified ? "✅ Verified Seller" : ""}
+    `;
+
+  } catch (err) {
+    console.error("Shop header error:", err);
+  }
+}
+
 
 async function loadSellerReviews() {
 
@@ -140,7 +173,7 @@ async function loadSellerReviews() {
 
   const data =
     await getSellerReviews(sellerId);
-
+loadSellerRating();
   if (data.reviews.length === 0) {
 
     container.innerHTML =
@@ -149,34 +182,30 @@ async function loadSellerReviews() {
     return;
   }
 
-  container.innerHTML =
-    data.reviews.map((review) => `
+ container.innerHTML =
+  data.reviews.map((review) => `
+    <div style="
+      padding:15px;
+      border-radius:12px;
+      margin-bottom:12px;
+      background:#fafafa;
+      border:1px solid #eee;
+    ">
 
-      <div
-        style="
-          padding:12px 0;
-          border-bottom:1px solid #eee;
-        "
-      >
-
-        <div
-          style="
-            color:#ff6600;
-            font-weight:700;
-          "
-        >
-          ${renderStars(review.rating)}
-        </div>
-
-        <p>${review.text}</p>
-
-        <small style="color:#666">
-          ${review.reviewerEmail || "Anonymous"}
-        </small>
-
+      <div style="color:#ff6600; font-weight:700;">
+        ${renderStars(review.rating)}
       </div>
 
-    `).join("");
+      <p style="margin:8px 0;">
+        ${review.text}
+      </p>
+
+      <small style="color:#777;">
+        ${review.reviewerEmail || "Anonymous"}
+      </small>
+
+    </div>
+  `).join("");
 
 }
 
@@ -257,6 +286,22 @@ async function checkFollowStatus() {
 }
 
 
+function setFollowState(state) {
+  const btn = document.getElementById("follow-btn");
+
+  if (!btn) return;
+
+  if (state) {
+    btn.textContent = "✓ Following";
+    btn.style.background = "#10b981";
+    btn.style.color = "white";
+  } else {
+    btn.textContent = "Follow Shop";
+    btn.style.background = "white";
+    btn.style.color = "#ff6600";
+  }
+}
+
 window.toggleFollowShop = async function () {
 
   if (!auth.currentUser) {
@@ -275,6 +320,7 @@ window.toggleFollowShop = async function () {
         doc(db, "shop_followers", followDocumentId)
       );
 
+      setFollowState(false);
       followDocumentId = null;
 
       btn.textContent = "Follow Shop";
@@ -296,6 +342,7 @@ window.toggleFollowShop = async function () {
     );
 
     followDocumentId = docRef.id;
+    setFollowState(true);
 
     btn.textContent = "✓ Following";
     btn.style.background = "#10b981";
@@ -307,6 +354,67 @@ window.toggleFollowShop = async function () {
   }
 };
 
+
+function updateFollowButton(isFollowing) {
+  const btn = document.getElementById("follow-btn");
+
+  if (!btn) return;
+
+  if (isFollowing) {
+    btn.textContent = "✓ Following";
+    btn.style.background = "#10b981";
+    btn.style.color = "white";
+  } else {
+    btn.textContent = "Follow Shop";
+    btn.style.background = "white";
+    btn.style.color = "#ff6600";
+  }
+}
+
+function listenToFollowers() {
+  const q = query(
+    collection(db, "shop_followers"),
+    where("shopId", "==", sellerId)
+  );
+
+  onSnapshot(q, (snapshot) => {
+    document.getElementById("followers-count").textContent =
+      snapshot.size;
+  });
+}
+
+
+function listenFollowers() {
+  const q = query(
+    collection(db, "shop_followers"),
+    where("shopId", "==", sellerId)
+  );
+
+  onSnapshot(q, (snapshot) => {
+    const el = document.getElementById("followers-count");
+    if (el) el.textContent = snapshot.size;
+  });
+}
+
+listenFollowers();
+
+
+async function loadSellerRating() {
+  const data = await getSellerReviews(sellerId);
+
+  const ratings = data.reviews.map(r => r.rating);
+
+  if (ratings.length === 0) return;
+
+  const avg =
+    ratings.reduce((a, b) => a + b, 0) / ratings.length;
+
+  const meta = document.getElementById("shop-meta");
+
+  meta.innerHTML += `
+    <div>⭐ ${avg.toFixed(1)} / 5 rating</div>
+  `;
+}
 
 // 👇 ADD THIS AT THE VERY BOTTOM OF shop.js
 
