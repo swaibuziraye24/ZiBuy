@@ -18,38 +18,28 @@ import {
 
 import { onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-console.log("toggleFollowShop:", window.toggleFollowShop);
+const params = new URLSearchParams(window.location.search);
+const sellerId = params.get("seller");
 
-
-const params =
-  new URLSearchParams(window.location.search);
-
-const sellerId =
-  params.get("seller");
-  console.log("Seller ID:", sellerId);
+console.log("Seller ID:", sellerId);
 
 let followDocumentId = null;
 let isFollowing = false;
 
-
+/* ---------------- INIT ---------------- */
 loadShop();
-console.log("shop.js loaded");
 loadSellerReviews();
 checkFollowStatus();
 listenToFollowers();
 loadShopHeader();
 
+/* ---------------- SHOP PRODUCTS ---------------- */
 async function loadShop() {
-
-  console.log("Loading shop...");
 
   const container =
     document.getElementById("shop-products");
 
-  if (!container) {
-    console.error("Container not found");
-    return;
-  }
+  if (!container) return;
 
   try {
 
@@ -60,100 +50,67 @@ async function loadShop() {
       )
     );
 
-    console.log(
-      "Products found:",
-      snapshot.size
-    );
-
     const products = [];
 
     snapshot.forEach((docSnap) => {
-
       products.push({
         id: docSnap.id,
         ...docSnap.data()
       });
-
     });
 
     if (products.length === 0) {
-
-      container.innerHTML = `
-        <div class="empty">
-          No products found
-        </div>
-      `;
-
+      container.innerHTML =
+        `<div class="empty">No products found</div>`;
       return;
     }
 
-    container.innerHTML =
-      products.map((p) => `
-
-        <div class="product-card">
-
-          <img
-            src="${p.images?.[0] || ''}"
-            alt="${p.name || ''}"
-          >
-
-          <div class="product-info">
-
-            <div class="product-title">
-              ${p.name || "No name"}
-            </div>
-
-            <div class="product-price">
-              UGX ${Number(
-                p.price || 0
-              ).toLocaleString()}
-            </div>
-
+    container.innerHTML = products.map((p) => `
+      <div class="product-card">
+        <img src="${p.images?.[0] || ''}" />
+        <div class="product-info">
+          <div class="product-title">${p.name || "No name"}</div>
+          <div class="product-price">
+            UGX ${Number(p.price || 0).toLocaleString()}
           </div>
-
         </div>
-
-      `).join("");
+      </div>
+    `).join("");
 
   } catch (err) {
-
-    console.error(
-      "SHOP ERROR:",
-      err
-    );
-
-    container.innerHTML = `
-      <div class="empty">
-        Failed to load products
-      </div>
-    `;
-
+    console.error("SHOP ERROR:", err);
   }
-
 }
 
-
+/* ---------------- SHOP HEADER (FIXED) ---------------- */
 async function loadShopHeader() {
-  const container = document.getElementById("shop-name");
-  const meta = document.getElementById("shop-meta");
+
+  const nameEl = document.getElementById("shop-name");
+  const metaEl = document.getElementById("shop-meta");
 
   try {
+
     const snapshot = await getDocs(
       query(
-        collection(db, "users"),
-        where("uid", "==", sellerId)
+        collection(db, "shops"),
+        where("ownerId", "==", sellerId)
       )
     );
 
-    if (snapshot.empty) return;
+    if (snapshot.empty) {
 
-    const seller = snapshot.docs[0].data();
+      nameEl.textContent = "ZiBuy Shop";
+      metaEl.textContent = "📍 Uganda";
+      return;
+    }
 
-    container.textContent = seller.name || "ZiBuy Shop";
+    const shop = snapshot.docs[0].data();
 
-    meta.innerHTML = `
-      📍 ${seller.location || "Uganda"}  
-      ${seller.isVerified ? "✅ Verified Seller" : ""}
+    nameEl.textContent = shop.name || "ZiBuy Shop";
+
+    metaEl.innerHTML = `
+      📍 ${shop.location || "Uganda"}
+      ${shop.isVerified ? "✅ Verified" : ""}
     `;
 
   } catch (err) {
@@ -161,7 +118,7 @@ async function loadShopHeader() {
   }
 }
 
-
+/* ---------------- REVIEWS ---------------- */
 async function loadSellerReviews() {
 
   const container =
@@ -169,45 +126,25 @@ async function loadSellerReviews() {
 
   if (!container) return;
 
-  const data =
-    await getSellerReviews(sellerId);
-loadSellerRating();
+  const data = await getSellerReviews(sellerId);
+
   if (data.reviews.length === 0) {
-
-    container.innerHTML =
-      "<p>No reviews yet</p>";
-
+    container.innerHTML = "<p>No reviews yet</p>";
     return;
   }
 
- container.innerHTML =
-  data.reviews.map((review) => `
-    <div style="
-      padding:15px;
-      border-radius:12px;
-      margin-bottom:12px;
-      background:#fafafa;
-      border:1px solid #eee;
-    ">
-
+  container.innerHTML = data.reviews.map((review) => `
+    <div style="padding:15px; margin-bottom:10px; background:#fafafa; border:1px solid #eee; border-radius:12px;">
       <div style="color:#ff6600; font-weight:700;">
         ${renderStars(review.rating)}
       </div>
-
-      <p style="margin:8px 0;">
-        ${review.text}
-      </p>
-
-      <small style="color:#777;">
-        ${review.reviewerEmail || "Anonymous"}
-      </small>
-
+      <p>${review.text}</p>
+      <small>${review.reviewerEmail || "Anonymous"}</small>
     </div>
   `).join("");
-
 }
 
-
+/* ---------------- SUBMIT REVIEW ---------------- */
 window.submitSellerReview = async function () {
 
   const rating =
@@ -216,10 +153,7 @@ window.submitSellerReview = async function () {
   const text =
     document.getElementById("review-text").value.trim();
 
-  if (!text) {
-    alert("Write a review");
-    return;
-  }
+  if (!text) return alert("Write a review");
 
   const success = await submitReview(
     sellerId,
@@ -233,60 +167,38 @@ window.submitSellerReview = async function () {
     document.getElementById("review-text").value = "";
     loadSellerReviews();
   } else {
-    alert("Failed to submit review");
+    alert("Failed");
   }
 };
 
+/* ---------------- FOLLOW SYSTEM ---------------- */
 async function checkFollowStatus() {
 
   if (!auth.currentUser) return;
 
-  try {
+  const snapshot = await getDocs(
+    query(
+      collection(db, "shop_followers"),
+      where("shopId", "==", sellerId),
+      where("userId", "==", auth.currentUser.uid)
+    )
+  );
 
-    const snapshot = await getDocs(
-
-      query(
-        collection(db, "shop_followers"),
-        where("shopId", "==", sellerId),
-        where("userId", "==", auth.currentUser.uid)
-      )
-
-    );
-
-    const btn =
-      document.getElementById("follow-btn");
-
-    if (!snapshot.empty) {
-
-      followDocumentId =
-        snapshot.docs[0].id;
-
-        isFollowing = true;
-
-
-      btn.textContent =
-        "✓ Following";
-
-      btn.style.background =
-        "#10b981";
-
-      btn.style.color =
-        "white";
-
-    }
-
-  } catch (err) {
-
-    console.error(err);
-
-  }
-
-}
-
-
-function setFollowState(state) {
   const btn = document.getElementById("follow-btn");
 
+  if (!btn) return;
+
+  if (!snapshot.empty) {
+
+    followDocumentId = snapshot.docs[0].id;
+    setFollowState(true);
+  }
+}
+
+/* ---------------- FOLLOW ACTION ---------------- */
+function setFollowState(state) {
+
+  const btn = document.getElementById("follow-btn");
   if (!btn) return;
 
   if (state) {
@@ -302,33 +214,19 @@ function setFollowState(state) {
 
 window.toggleFollowShop = async function () {
 
-  if (!auth.currentUser) {
-    alert("Login first");
-    return;
-  }
-
-  const btn = document.getElementById("follow-btn");
+  if (!auth.currentUser) return alert("Login first");
 
   try {
 
-    // UNFOLLOW
     if (followDocumentId) {
 
-      await deleteDoc(
-        doc(db, "shop_followers", followDocumentId)
-      );
+      await deleteDoc(doc(db, "shop_followers", followDocumentId));
 
-      setFollowState(false);
       followDocumentId = null;
-
-      btn.textContent = "Follow Shop";
-      btn.style.background = "white";
-      btn.style.color = "#ff6600";
-
+      setFollowState(false);
       return;
     }
 
-    // FOLLOW
     const docRef = await addDoc(
       collection(db, "shop_followers"),
       {
@@ -342,80 +240,40 @@ window.toggleFollowShop = async function () {
     followDocumentId = docRef.id;
     setFollowState(true);
 
-    btn.textContent = "✓ Following";
-    btn.style.background = "#10b981";
-    btn.style.color = "white";
-
   } catch (err) {
     console.error(err);
-    alert("Failed");
   }
 };
 
-
-function updateFollowButton(isFollowing) {
-  const btn = document.getElementById("follow-btn");
-
-  if (!btn) return;
-
-  if (isFollowing) {
-    btn.textContent = "✓ Following";
-    btn.style.background = "#10b981";
-    btn.style.color = "white";
-  } else {
-    btn.textContent = "Follow Shop";
-    btn.style.background = "white";
-    btn.style.color = "#ff6600";
-  }
-}
-
+/* ---------------- FOLLOWERS LIVE ---------------- */
 function listenToFollowers() {
+
   const q = query(
     collection(db, "shop_followers"),
     where("shopId", "==", sellerId)
   );
 
   onSnapshot(q, (snapshot) => {
-    document.getElementById("followers-count").textContent =
-      snapshot.size;
+
+    const el = document.getElementById("followers-count");
+    if (el) el.textContent = snapshot.size;
+
   });
 }
 
-
+/* ---------------- RATING ---------------- */
 async function loadSellerRating() {
+
   const data = await getSellerReviews(sellerId);
 
   const ratings = data.reviews.map(r => r.rating);
 
-  if (ratings.length === 0) return;
+  if (!ratings.length) return;
 
   const avg =
     ratings.reduce((a, b) => a + b, 0) / ratings.length;
 
   const meta = document.getElementById("shop-meta");
 
-  meta.innerHTML += `
-    <div>⭐ ${avg.toFixed(1)} / 5 rating</div>
-  `;
+  meta.innerHTML += `<div>⭐ ${avg.toFixed(1)} / 5 rating</div>`;
 }
-
-// 👇 ADD THIS AT THE VERY BOTTOM OF shop.js
-
-document.addEventListener("DOMContentLoaded", () => {
-  const btn = document.getElementById("follow-btn");
-
-  if (btn) {
-    btn.addEventListener("click", toggleFollowShop);
-  }
-});
-
-
-document.addEventListener("DOMContentLoaded", () => {
-  const btn = document.getElementById("submit-review-btn");
-
-  if (btn) {
-    btn.addEventListener("click", submitSellerReview);
-  }
-});
-
-console.log("submitSellerReview:", window.submitSellerReview);
