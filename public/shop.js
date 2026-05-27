@@ -86,8 +86,11 @@ async function loadShop() {
 /* ---------------- SHOP HEADER (FIXED) ---------------- */
 async function loadShopHeader() {
 
-  const nameEl = document.getElementById("shop-name");
-  const metaEl = document.getElementById("shop-meta");
+  const nameEl =
+    document.getElementById("shop-name");
+
+  const metaEl =
+    document.getElementById("shop-meta");
 
   try {
 
@@ -100,14 +103,38 @@ async function loadShopHeader() {
 
     if (snapshot.empty) {
 
-      nameEl.textContent = "ZiBuy Shop";
-      metaEl.textContent = "📍 Uganda";
+      nameEl.textContent =
+        "ZiBuy Shop";
+
+      metaEl.textContent =
+        "📍 Uganda";
+
       return;
     }
 
-    const shop = snapshot.docs[0].data();
+    const shop =
+      snapshot.docs[0].data();
 
-    nameEl.textContent = shop.name || "ZiBuy Shop";
+    /* LOGO + BANNER */
+
+    const logo =
+      document.getElementById("shop-logo");
+
+    const banner =
+      document.getElementById("shop-banner");
+
+    if (logo && shop.logoUrl) {
+      logo.src = shop.logoUrl;
+    }
+
+    if (banner && shop.bannerUrl) {
+      banner.src = shop.bannerUrl;
+    }
+
+    /* SHOP INFO */
+
+    nameEl.textContent =
+      shop.name || "ZiBuy Shop";
 
     metaEl.innerHTML = `
       📍 ${shop.location || "Uganda"}
@@ -115,10 +142,14 @@ async function loadShopHeader() {
     `;
 
   } catch (err) {
-    console.error("Shop header error:", err);
+
+    console.error(
+      "Shop header error:",
+      err
+    );
+
   }
 }
-
 /* ---------------- REVIEWS ---------------- */
 async function loadSellerReviews() {
 
