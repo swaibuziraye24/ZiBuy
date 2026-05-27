@@ -3,13 +3,8 @@
 // ============================================
 
 // ✅ NEW
-import { db, auth, collection, getDocs, query, where, updateDoc, doc, getDoc } from "./firebase.js";
+import { db, auth, collection, getDocs, addDoc, query, where, updateDoc, deleteDoc, doc, getDoc, serverTimestamp  } from "./firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-import {
-  addDoc,
-  serverTimestamp
-} from "./firebase.js";
 
 console.log("📊 Dashboard.js loaded");
 
@@ -322,10 +317,6 @@ window.proceedToPayment = async function() {
       createdAt: new Date(),
       approvedAt: null
     };
-
-    const { addDoc } = await import("./firebase.js");
-    const { collection } = await import("./firebase.js");
-    const { db } = await import("./firebase.js");
 
     const docRef = await addDoc(collection(db, "boost_requests"), boostRequest);
     debug("Boost request saved with ID:", docRef.id);
