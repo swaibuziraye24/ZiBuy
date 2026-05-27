@@ -21,6 +21,7 @@ const params =
 
 const sellerId =
   params.get("seller");
+  console.log("Seller ID:", sellerId);
 
 let followDocumentId = null;
 
@@ -36,16 +37,48 @@ async function loadShop() {
 
   try {
 
-    const snapshot = await getDocs(
+   const snapshot = await getDocs(
+  query(
+    collection(db, "products"),
+    where("userId", "==", sellerId)
+  )
+);
 
-      query(
-        collection(db, "products"),
-        where("userId", "==", sellerId)
-      )
+console.log("Products found:", snapshot.size);
 
-    );
+let products = [];
 
-    if (snapshot.empty) {
+snapshot.forEach((docSnap) => {
+
+  const data = docSnap.data();
+
+  console.log("Product:", data);
+
+  products.push({
+    id: docSnap.id,
+    ...data
+  });
+
+});
+
+console.log("Products found:", snapshot.size);
+
+let products = [];
+
+snapshot.forEach((docSnap) => {
+
+  const data = docSnap.data();
+
+  console.log("Product:", data);
+
+  products.push({
+    id: docSnap.id,
+    ...data
+  });
+
+});
+
+    if (products.length === 0) {
 
       container.innerHTML = `
         <div class="empty">
