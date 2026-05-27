@@ -67,7 +67,13 @@ async function loadShop() {
     }
 
     container.innerHTML = products.map((p) => `
-      <div class="product-card">
+      <div
+  class="product-card"
+  onclick="
+    window.location.href=
+    'product.html?id=${p.id}'
+  "
+>
         <img src="${p.images?.[0] || ''}" />
         <div class="product-info">
           <div class="product-title">${p.name || "No name"}</div>
