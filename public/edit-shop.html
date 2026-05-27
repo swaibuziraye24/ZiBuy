@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<title>Edit Shop</title>
+
+<style>
+
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:#f5f5f5;
+}
+
+.container{
+  max-width:800px;
+  margin:auto;
+  padding:20px;
+}
+
+.card{
+  background:white;
+  padding:24px;
+  border-radius:14px;
+  margin-bottom:20px;
+}
+
+input,
+textarea{
+  width:100%;
+  padding:14px;
+  margin-bottom:14px;
+  border-radius:10px;
+  border:1px solid #ddd;
+  box-sizing:border-box;
+}
+
+textarea{
+  height:120px;
+}
+
+button{
+  background:#ff6600;
+  color:white;
+  border:none;
+  padding:14px 18px;
+  border-radius:10px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.preview{
+  width:100%;
+  border-radius:12px;
+  margin-bottom:12px;
+}
+
+.logo-preview{
+  width:120px;
+  height:120px;
+  border-radius:50%;
+  object-fit:cover;
+  margin-bottom:12px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="card">
+
+    <h2>🏪 Customize Shop</h2>
+
+    <input
+      type="text"
+      id="business-name"
+      placeholder="Business Name"
+    >
+
+    <textarea
+      id="business-description"
+      placeholder="Describe your business"
+    ></textarea>
+
+    <label>Shop Logo</label>
+
+    <img
+      id="logo-preview"
+      class="logo-preview"
+    >
+
+    <input
+      type="file"
+      id="logo-input"
+      accept="image/*"
+    >
+
+    <label>Shop Banner</label>
+
+    <img
+      id="banner-preview"
+      class="preview"
+    >
+
+    <input
+      type="file"
+      id="banner-input"
+      accept="image/*"
+    >
+
+    <button onclick="saveShopProfile()">
+      Save Shop
+    </button>
+
+  </div>
+
+</div>
+
+<script
+type="module"
+src="edit-shop.js"
+></script>
+
+</body>
+</html>
