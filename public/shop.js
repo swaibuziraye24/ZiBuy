@@ -18,6 +18,10 @@ import {
 
 import { onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+import {
+  expireOldAds
+} from "./ad-expiry.js";
+
 const params = new URLSearchParams(window.location.search);
 const sellerId = params.get("seller");
 
@@ -33,6 +37,7 @@ checkFollowStatus();
 listenToFollowers();
 loadShopHeader();
 loadSellerRating();
+expireOldAds();
 
 /* ---------------- SHOP PRODUCTS ---------------- */
 async function loadShop() {
@@ -47,7 +52,8 @@ async function loadShop() {
     const snapshot = await getDocs(
       query(
         collection(db, "products"),
-        where("userId", "==", sellerId)
+        where("userId", "==", sellerId),
+        where("status", "==", "active")
       )
     );
 
