@@ -24,6 +24,8 @@ const sellerId =
   console.log("Seller ID:", sellerId);
 
 let followDocumentId = null;
+let isFollowing = false;
+
 
 loadShop();
 console.log("shop.js loaded");
@@ -122,6 +124,11 @@ async function loadShop() {
   }
 
 }
+
+
+
+checkFollowStatus();
+
 
 async function loadSellerReviews() {
 
@@ -237,6 +244,9 @@ async function checkFollowStatus() {
       followDocumentId =
         snapshot.docs[0].id;
 
+        isFollowing = true;
+
+
       btn.textContent =
         "✓ Following";
 
@@ -255,6 +265,94 @@ async function checkFollowStatus() {
   }
 
 }
+
+window.toggleFollowShop = async function () {
+
+if (!auth.currentUser) {
+
+```
+alert("Please login first");
+return;
+```
+
+}
+
+const btn =
+document.getElementById("follow-btn");
+
+try {
+
+```
+// UNFOLLOW
+if (isFollowing) {
+
+  await deleteDoc(
+    doc(
+      db,
+      "shop_followers",
+      followDocumentId
+    )
+  );
+
+  isFollowing = false;
+  followDocumentId = null;
+
+  btn.textContent =
+    "Follow Shop";
+
+  btn.style.background =
+    "white";
+
+  btn.style.color =
+    "#ff6600";
+
+  return;
+
+}
+
+// FOLLOW
+const newFollow =
+  await addDoc(
+    collection(db, "shop_followers"),
+    {
+      shopId: sellerId,
+      userId: auth.currentUser.uid,
+      userEmail:
+        auth.currentUser.email,
+      createdAt: new Date()
+    }
+  );
+
+followDocumentId =
+  newFollow.id;
+
+isFollowing = true;
+
+btn.textContent =
+  "✓ Following";
+
+btn.style.background =
+  "#10b981";
+
+btn.style.color =
+  "white";
+```
+
+} catch (err) {
+
+```
+console.error(err);
+
+alert(
+  "Failed to update follow status"
+);
+```
+
+}
+
+};
+
+
 
 window.toggleFollowShop = async function() {
 
