@@ -61,8 +61,32 @@ async function loadShop() {
     });
 
     if (products.length === 0) {
-      container.innerHTML =
-        `<div class="empty">No products found</div>`;
+     container.innerHTML = `
+  <div class="empty">
+
+    <div style="
+      font-size:60px;
+      margin-bottom:12px;
+    ">
+      📦
+    </div>
+
+    <h2 style="
+      margin:0;
+      color:#333;
+    ">
+      No Products Yet
+    </h2>
+
+    <p style="
+      color:#777;
+      margin-top:10px;
+    ">
+      This shop has not uploaded products yet.
+    </p>
+
+  </div>
+`;
       return;
     }
 
@@ -74,11 +98,21 @@ async function loadShop() {
     'product.html?id=${p.id}'
   "
 >
-        <img src="${p.images?.[0] || ''}" />
+        <img
+  src="${
+    p.images?.length
+      ? p.images[0]
+      : 'https://via.placeholder.com/400x300?text=ZiBuy'
+  }"
+  alt="${p.name || ''}"
+  loading="lazy"
+>
         <div class="product-info">
           <div class="product-title">${p.name || "No name"}</div>
           <div class="product-price">
-            UGX ${Number(p.price || 0).toLocaleString()}
+           UGX ${new Intl.NumberFormat().format(
+  p.price || 0
+)}
           </div>
         </div>
       </div>
@@ -325,7 +359,13 @@ async function loadSellerRating() {
   const avg =
     ratings.reduce((a, b) => a + b, 0) / ratings.length;
 
-  const meta = document.getElementById("shop-meta");
+  const ratingEl =
+  document.getElementById("shop-rating");
 
-  meta.innerHTML += `<div>⭐ ${avg.toFixed(1)} / 5 rating</div>`;
+if (ratingEl) {
+
+  ratingEl.textContent =
+    `⭐ ${avg.toFixed(1)} / 5`;
+
+}
 }
