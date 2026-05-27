@@ -14,10 +14,9 @@ import {
   submitReview,
   getSellerReviews,
   renderStars
-} from "./review.js";
+} from "./reviews.js";
 
-import { onSnapshot } from "./firebase.js";
-
+import { onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 console.log("toggleFollowShop:", window.toggleFollowShop);
 
@@ -381,21 +380,6 @@ function listenToFollowers() {
       snapshot.size;
   });
 }
-
-
-function listenFollowers() {
-  const q = query(
-    collection(db, "shop_followers"),
-    where("shopId", "==", sellerId)
-  );
-
-  onSnapshot(q, (snapshot) => {
-    const el = document.getElementById("followers-count");
-    if (el) el.textContent = snapshot.size;
-  });
-}
-
-listenFollowers();
 
 
 async function loadSellerRating() {
