@@ -32,6 +32,7 @@ loadSellerReviews();
 checkFollowStatus();
 listenToFollowers();
 loadShopHeader();
+loadSellerRating();
 
 /* ---------------- SHOP PRODUCTS ---------------- */
 async function loadShop() {
@@ -176,22 +177,36 @@ async function checkFollowStatus() {
 
   if (!auth.currentUser) return;
 
-  const snapshot = await getDocs(
-    query(
-      collection(db, "shop_followers"),
-      where("shopId", "==", sellerId),
-      where("userId", "==", auth.currentUser.uid)
-    )
-  );
+  try {
 
-  const btn = document.getElementById("follow-btn");
+    const snapshot = await getDocs(
+      query(
+        collection(db, "shop_followers"),
+        where("shopId", "==", sellerId),
+        where("userId", "==", auth.currentUser.uid)
+      )
+    );
 
-  if (!btn) return;
+    if (!snapshot.empty) {
 
-  if (!snapshot.empty) {
+      followDocumentId =
+        snapshot.docs[0].id;
 
-    followDocumentId = snapshot.docs[0].id;
-    setFollowState(true);
+      setFollowState(true);
+
+    } else {
+
+      setFollowState(false);
+
+    }
+
+  } catch (err) {
+
+    console.error(
+      "Follow status error:",
+      err
+    );
+
   }
 }
 
