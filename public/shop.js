@@ -16,7 +16,7 @@ import {
   renderStars
 } from "./review.js";
 
-console.log("shop.js loaded");
+
 console.log("toggleFollowShop:", window.toggleFollowShop);
 
 
@@ -181,20 +181,16 @@ async function loadSellerReviews() {
 }
 
 
-window.submitSellerReview = async function() {
+window.submitSellerReview = async function () {
 
   const rating =
     document.getElementById("review-rating").value;
 
   const text =
-    document.getElementById("review-text")
-    .value
-    .trim();
+    document.getElementById("review-text").value.trim();
 
   if (!text) {
-
     alert("Write a review");
-
     return;
   }
 
@@ -206,19 +202,12 @@ window.submitSellerReview = async function() {
   );
 
   if (success) {
-
     alert("✅ Review submitted");
-
     document.getElementById("review-text").value = "";
-
     loadSellerReviews();
-
   } else {
-
     alert("Failed to submit review");
-
   }
-
 };
 
 async function checkFollowStatus() {
@@ -328,3 +317,14 @@ document.addEventListener("DOMContentLoaded", () => {
     btn.addEventListener("click", toggleFollowShop);
   }
 });
+
+
+document.addEventListener("DOMContentLoaded", () => {
+  const btn = document.getElementById("submit-review-btn");
+
+  if (btn) {
+    btn.addEventListener("click", submitSellerReview);
+  }
+});
+
+console.log("submitSellerReview:", window.submitSellerReview);
