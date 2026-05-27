@@ -7324,3 +7324,21 @@ table {
 .footer a:hover{
   color:#ff6600;
 }
+
+/* ============================================
+   BUSINESS PLAN BADGES
+   ============================================ */
+.plan-badge-free   { background:#f3f4f6; color:#6b7280; }
+.plan-badge-bronze { background:#fef3c7; color:#92400e; }
+.plan-badge-silver { background:#f1f5f9; color:#475569; }
+.plan-badge-gold   { background:#fffbeb; color:#b45309; }
+
+.plan-tier-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 800;
+}
