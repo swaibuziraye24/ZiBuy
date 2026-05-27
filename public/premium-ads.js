@@ -136,29 +136,50 @@ window.selectBoost = function(el, productId, days, price) {
   window.selectedBoost = { productId, days, price };
 };
 
-window.processBoost = async function(productId) {
+window.processBoost = async function() {
   if (!window.selectedBoost) {
-    alert("Select a plan");
+    alert("Select a boost plan");
     return;
   }
 
-  const { boostAd } = await import("./premium-ads.js");
-  
-  const success = await boostAd(
-    window.selectedBoost.productId,
-    window.selectedBoost.days,
-    window.selectedBoost.price
-  );
+  const { productId, days, price } = window.selectedBoost;
+  const ZIBUY_WHATSAPP = "256790548910"; // ← replace with your number
 
-  if (success) {
-    document.getElementById("boost-modal-" + productId)?.remove();
-    alert("✅ Ad boosted! It will show as featured now.");
-    location.reload();
-  } else {
-    alert("❌ Boost failed. Try again.");
+  try {
+    // Save pending boost record
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + days);
+
+    await addDoc(collection(db, "premium_ads"), {
+      productId,
+      userId:    currentUser.uid,
+      days,
+      price,
+      status:    "pending_payment",
+      createdAt: new Date(),
+      expiresAt,
+      clicks:    0
+    });
+
+    const msg = encodeURIComponent(
+      `⭐ *ZiBuy Ad Boost Request*\n\n` +
+      `Product ID: ${productId}\n` +
+      `Plan: ${days} Days\n` +
+      `Amount: *UGX ${price.toLocaleString()}*\n\n` +
+      `User: ${currentUser.email}\n\n` +
+      `Please confirm payment to activate boost.`
+    );
+
+    window.open(`https://wa.me/${ZIBUY_WHATSAPP}?text=${msg}`, "_blank");
+
+    document.querySelectorAll(".modal").forEach(m => m.remove());
+    alert("✅ Boost request sent! We'll activate it after payment confirmation on WhatsApp.");
+
+  } catch (err) {
+    console.error(err);
+    alert("Boost request failed. Try again.");
   }
 };
-
 
 window.selectBoost = function(el, productId, days, price) {
   document.querySelectorAll(".boost-option input").forEach(r => r.checked = false);
