@@ -51,42 +51,23 @@ function loadCheckout() {
 }
 
 function showPaymentDetails() {
-  const selected = document.querySelector("input[name='payment']:checked").value;
-  const container = document.getElementById("payment-details");
-
-  if (selected === "cod") {
-    container.innerHTML = `
-      <div style="background:#fffbeb;border:1px solid #fde68a;padding:14px;border-radius:10px;color:#92400e;font-size:13px;margin-top:16px">
-        ℹ️ Pay the driver when your order arrives
-      </div>
-    `;
-  } else if (selected === "mobile") {
-    container.innerHTML = `
-      <div style="margin-top:16px">
-        <label style="display:block;font-size:14px;font-weight:700;margin-bottom:8px">Phone Number</label>
-        <input type="tel" id="phone-number" placeholder="256701234567" style="width:100%;padding:10px;border:1.5px solid #e5e7eb;border-radius:10px;font-family:inherit">
-        <p style="font-size:12px;color:#6b7280;margin-top:8px">MTN or Airtel Mobile Money. You'll receive a prompt.</p>
-      </div>
-    `;
-  } else if (selected === "card") {
-    container.innerHTML = `
-      <div style="margin-top:16px;background:#f3f4f6;padding:14px;border-radius:10px">
-        <input type="text" placeholder="Card Number" maxlength="19" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:8px;font-family:inherit">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <input type="text" placeholder="MM/YY" maxlength="5" style="padding:10px;border:1px solid #e5e7eb;border-radius:8px;font-family:inherit">
-          <input type="text" placeholder="CVV" maxlength="3" style="padding:10px;border:1px solid #e5e7eb;border-radius:8px;font-family:inherit">
-        </div>
-      </div>
-    `;
-  }
+  document.getElementById("payment-details").innerHTML = `
+    <div style="background:#e7f9ef;border:1px solid #86efac;padding:14px;border-radius:10px;color:#166534;font-size:13px;margin-top:16px;display:flex;align-items:center;gap:10px">
+      <span style="font-size:20px">💬</span>
+      <span>After placing your order you'll be redirected to WhatsApp to confirm payment with our team.</span>
+    </div>
+  `;
 }
 
+
+// ── ZiBuy Admin WhatsApp ─────────────────────
+const ZIBUY_WHATSAPP = "256790548910"; // ← replace with your number
+
 window.placeOrder = async function() {
-  const name = document.getElementById("delivery-name").value.trim();
-  const phone = document.getElementById("delivery-phone").value.trim();
-  const address = document.getElementById("delivery-address").value.trim();
+  const name     = document.getElementById("delivery-name").value.trim();
+  const phone    = document.getElementById("delivery-phone").value.trim();
+  const address  = document.getElementById("delivery-address").value.trim();
   const location = document.getElementById("delivery-location").value;
-  const payment = document.querySelector("input[name='payment']:checked").value;
 
   if (!name || !phone || !address || !location) {
     alert("Please fill all delivery details");
@@ -98,51 +79,50 @@ window.placeOrder = async function() {
   btn.disabled = true;
 
   try {
-    let total = 0;
-    cart.forEach(item => total += item.price * item.qty);
-    total += 5000; // delivery
-
+    let subtotal = 0;
+    cart.forEach(item => subtotal += item.price * item.qty);
+    const total   = subtotal + 5000;
     const orderId = "ZB-" + Date.now();
 
-    // Create order
+    // Save pending order to Firestore
     await addDoc(collection(db, "orders"), {
       orderId,
-      userEmail: currentUser.email,
-      customerName: name,
-      customerPhone: phone,
+      userEmail:        currentUser.email,
+      customerName:     name,
+      customerPhone:    phone,
       customerLocation: location,
-      deliveryAddress: address,
-      items: cart,
+      deliveryAddress:  address,
+      items:            cart,
       total,
-      paymentMethod: payment,
-      status: "Pending",
-      createdAt: new Date()
+      paymentMethod:    "whatsapp",
+      status:           "pending_payment",
+      createdAt:        new Date()
     });
-
-    // Save transaction if not COD
-    if (payment !== "cod") {
-      await addDoc(collection(db, "transactions"), {
-        orderId,
-        amount: total,
-        method: payment,
-        status: "pending",
-        createdAt: new Date()
-      });
-    }
 
     // Clear cart
     localStorage.removeItem("zibuy-cart");
 
-    // Show success
-    document.body.innerHTML = `
-      <div style="text-align:center;padding:60px 20px">
-        <p style="font-size:48px;margin-bottom:16px">✅</p>
-        <h1 style="font-size:24px;font-weight:800;margin-bottom:8px">Order Placed!</h1>
-        <p style="color:#6b7280;margin-bottom:20px">Order ID: <strong>${orderId}</strong></p>
-        <p style="color:#6b7280;margin-bottom:20px">We'll contact you shortly to confirm delivery</p>
-        <a href="index.html" class="btn btn-orange" style="display:inline-block;padding:12px 24px">← Back to Home</a>
-      </div>
-    `;
+    // Build WhatsApp message
+    const itemLines = cart.map(i =>
+      `• ${i.name} x${i.qty} — UGX ${(i.price * i.qty).toLocaleString()}`
+    ).join("\n");
+
+    const msg = encodeURIComponent(
+      `🛒 *New ZiBuy Order*\n` +
+      `Order ID: *${orderId}*\n\n` +
+      `*Items:*\n${itemLines}\n\n` +
+      `Subtotal: UGX ${subtotal.toLocaleString()}\n` +
+      `Delivery: UGX 5,000\n` +
+      `*Total: UGX ${total.toLocaleString()}*\n\n` +
+      `*Delivery Details:*\n` +
+      `Name: ${name}\n` +
+      `Phone: ${phone}\n` +
+      `Address: ${address}\n` +
+      `Location: ${location}`
+    );
+
+    window.location.href = `https://wa.me/${ZIBUY_WHATSAPP}?text=${msg}`;
+
   } catch (err) {
     console.error(err);
     alert("Order failed. Try again.");
