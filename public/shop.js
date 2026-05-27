@@ -4,6 +4,8 @@ import {
   collection,
   getDocs,
   addDoc,
+  deleteDoc,
+  doc,
   query,
   where
 } from "./firebase.js";
@@ -20,8 +22,11 @@ const params =
 const sellerId =
   params.get("seller");
 
+let followDocumentId = null;
+
 loadShop();
 loadSellerReviews();
+checkFollowStatus();
 // loadReviews(); // Uncomment if you want to load reviews
 
 async function loadShop() {
@@ -209,6 +214,125 @@ window.submitSellerReview = async function() {
   } else {
 
     alert("Failed to submit review");
+
+  }
+
+};
+
+async function checkFollowStatus() {
+
+  if (!auth.currentUser) return;
+
+  try {
+
+    const snapshot = await getDocs(
+
+      query(
+        collection(db, "shop_followers"),
+        where("shopId", "==", sellerId),
+        where("userId", "==", auth.currentUser.uid)
+      )
+
+    );
+
+    const btn =
+      document.getElementById("follow-btn");
+
+    if (!snapshot.empty) {
+
+      followDocumentId =
+        snapshot.docs[0].id;
+
+      btn.textContent =
+        "✓ Following";
+
+      btn.style.background =
+        "#10b981";
+
+      btn.style.color =
+        "white";
+
+    }
+
+  } catch (err) {
+
+    console.error(err);
+
+  }
+
+}
+
+window.toggleFollowShop = async function() {
+
+  if (!auth.currentUser) {
+
+    alert("Login first");
+
+    return;
+  }
+
+  const btn =
+    document.getElementById("follow-btn");
+
+  try {
+
+    // Unfollow
+    if (followDocumentId) {
+
+      await deleteDoc(
+        doc(
+          db,
+          "shop_followers",
+          followDocumentId
+        )
+      );
+
+      followDocumentId = null;
+
+      btn.textContent =
+        "Follow Shop";
+
+      btn.style.background =
+        "white";
+
+      btn.style.color =
+        "#ff6600";
+
+      return;
+    }
+
+    // Follow
+    const docRef = await addDoc(
+      collection(db, "shop_followers"),
+      {
+
+        shopId: sellerId,
+
+        userId: auth.currentUser.uid,
+
+        userEmail: auth.currentUser.email,
+
+        createdAt: new Date()
+
+      }
+    );
+
+    followDocumentId = docRef.id;
+
+    btn.textContent =
+      "✓ Following";
+
+    btn.style.background =
+      "#10b981";
+
+    btn.style.color =
+      "white";
+
+  } catch (err) {
+
+    console.error(err);
+
+    alert("Failed");
 
   }
 
