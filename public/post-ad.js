@@ -188,168 +188,123 @@ window.submitAd = async function() {
     return;
   }
 
-// ========================================
-// CHECK ACCOUNT LIMITS
-// ========================================
-
-
-// ✅ NEW - read only YOUR document
-let currentAccount = null;
-
-try {
-  const userDocSnap = await getDoc(doc(db, "users", currentUser.uid));
-  if (userDocSnap.exists()) {
-    currentAccount = userDocSnap.data();
+  // ── 1. Check banned status ──────────────────
+  let userDoc = null;
+  try {
+    const userSnap = await getDoc(doc(db, "users", currentUser.uid));
+    if (userSnap.exists()) userDoc = userSnap.data();
+  } catch (err) {
+    console.warn("User fetch failed:", err);
   }
-} catch (err) {
-  console.warn("User data fetch failed:", err);
-}
 
-// Prevent banned users
-if (currentAccount?.banned === true) {
+  if (userDoc?.banned === true) {
+    alert("⚠️ Your ZiBuy account has been restricted due to policy violations.");
+    return;
+  }
 
-  alert(
-    "⚠️ Your ZiBuy account has been restricted due to policy violations."
-  );
+  // ── 2. Check plan ad limits ─────────────────
+  try {
+    const { canPostAd } = await import("./business-plans.js");
+    const check = await canPostAd(currentUser.uid);
 
-  return;
-}
+    if (!check.allowed) {
+      const go = confirm(
+        `⚠️ You've used all ${check.limit} ads on your ${check.plan} plan.\n\nUpgrade your plan to post more ads.\n\nGo to upgrade page?`
+      );
+      if (go) window.location.href = "business-plans.html";
+      return;
+    }
+  } catch (err) {
+    console.warn("Plan check skipped:", err);
+  }
 
-
-if (!currentAccount) {
-  currentAccount = {
-    accountType: "normal",
-    maxAds: 5
-  };
-}
-
-// Count current user ads
-const productsSnapshot = await getDocs(
-  query(
-    collection(db, "products"),
-    where("userId", "==", currentUser.uid)
-  )
-);
-
-const totalAds = productsSnapshot.size;
-
-// Restrict normal users
-if (
-  currentAccount.accountType === "normal" &&
-  totalAds >= currentAccount.maxAds
-) {
-
-  alert(
-    `⚠️ Free accounts can only post ${currentAccount.maxAds} ads.\n\nUpgrade to Business Account for more posting limits.`
-  );
-
-  return;
-}
-
-
+  // ── 3. Lock button ──────────────────────────
   const btn = document.getElementById("submit-ad-btn");
-
-if (btn) {
-  btn.textContent = "Publishing...";
-  btn.disabled = true;
-}
+  if (btn) {
+    btn.textContent = "Publishing...";
+    btn.disabled = true;
+  }
 
   try {
-    // 1. Upload images to Firebase Storage
+    // ── 4. Upload images ────────────────────────
     const imageUrls = [];
-    
+
     for (let i = 0; i < uploadedImages.length; i++) {
-      const file = uploadedImages[i];
-      const timestamp = Date.now();
-      const fileName = `products/${currentUser.uid}/${timestamp}-${i}-${file.name}`;
+      const file      = uploadedImages[i];
+      const fileName  = `products/${currentUser.uid}/${Date.now()}-${i}-${file.name}`;
       const storageRef = ref(storage, fileName);
 
       try {
-        const metadata = {
+        await uploadBytes(storageRef, file, {
           contentType: file.type,
-          cacheControl: 'public, max-age=31536000'
-        };
-        
-        await uploadBytes(storageRef, file, metadata);
-        const downloadURL = await getDownloadURL(storageRef);
-        imageUrls.push(downloadURL);
-        console.log("Image uploaded:", downloadURL);
+          cacheControl: "public, max-age=31536000"
+        });
+        imageUrls.push(await getDownloadURL(storageRef));
       } catch (uploadErr) {
-        console.error("Image upload error:", uploadErr);
         throw new Error(`Failed to upload image ${i + 1}: ${uploadErr.message}`);
       }
     }
 
-    const phoneInput = document.getElementById("seller-phone");
-    const sellerPhone = phoneInput ? phoneInput.value.trim() : "";
+    // ── 5. Build product object ─────────────────
+    const sellerPhone = document.getElementById("seller-phone")?.value.trim() || "";
 
-    // 2. Create product object with ALL required fields
     const productData = {
-      name: titleInput.value.trim(),
-      price: Number(priceInput.value),
-      category: selectedCategory,
+      name:        titleInput.value.trim(),
+      price:       Number(priceInput.value),
+      category:    selectedCategory,
       description: descInput.value.trim(),
-      location: locationInput.value,
-      images: imageUrls,
-      
-      // 🔴 CRITICAL FIELDS:
-      userId: currentUser.uid,              // ✅ Required for dashboard query
-      userEmail: currentUser.email,         // ✅ Required for fallback query
-      status: "active",                     // ✅ Product status
-      views: 0,                             // ✅ View counter
-      isPremium: false,                     // ✅ Premium status
-      createdAt: new Date(),                // ✅ Timestamp
-      updatedAt: new Date(),                // ✅ Last update
-      
+      location:    locationInput.value,
+      images:      imageUrls,
+      userId:      currentUser.uid,
+      userEmail:   currentUser.email,
+      status:      "active",
+      views:       0,
+      isPremium:   false,
+      createdAt:   new Date(),
+      updatedAt:   new Date(),
       seller: {
-        name: currentUser.email.split("@")[0],
-        phone: sellerPhone,
-        location: locationInput.value,
+        name:       currentUser.email.split("@")[0],
+        phone:      sellerPhone,
+        location:   locationInput.value,
         isVerified: false
       }
     };
 
-    // 3. SAVE to Firestore - THIS LINE IS CRITICAL!
+    // ── 6. Save to Firestore ────────────────────
     const docRef = await addDoc(collection(db, "products"), productData);
-    console.log("Product saved with ID:", docRef.id);
+    console.log("Product saved:", docRef.id);
 
-    // 4. Success - show message and offer boost
+    // ── 7. Reset form ───────────────────────────
+    titleInput.value    = "";
+    descInput.value     = "";
+    priceInput.value    = "";
+    locationInput.value = "";
+    uploadedImages      = [];
+    selectedCategory    = "";
+    currentStep         = 1;
+
+    // ── 8. Offer boost ──────────────────────────
     const boostConfirm = confirm(
       "✅ Ad posted successfully!\n\n" +
-      "Want to boost it to featured section?\n\n" +
-      "⭐ 7 Days - UGX 5,000\n" +
-      "⭐ 14 Days - UGX 8,000\n" +
-      "⭐ 30 Days - UGX 15,000\n\n" +
+      "Want to boost it to the featured section?\n\n" +
+      "⭐ 7 Days  — UGX 5,000\n" +
+      "⭐ 14 Days — UGX 8,000\n" +
+      "⭐ 30 Days — UGX 15,000\n\n" +
       "Click OK to boost, Cancel to skip"
     );
 
-    // Clear form
-    titleInput.value = "";
-    descInput.value = "";
-    priceInput.value = "";
-    locationInput.value = "";
-    uploadedImages = [];
-    selectedCategory = "";
-    currentStep = 1;
-
-    if (boostConfirm) {
-      setTimeout(() => {
-        window.location.href = `boost-product.html?productId=${docRef.id}`;
-      }, 500);
-    } else {
-      setTimeout(() => {
-        window.location.href = `dashboard.html?tab=my-ads`;
-      }, 1500);
-    }
+    setTimeout(() => {
+      window.location.href = boostConfirm
+        ? `boost-product.html?productId=${docRef.id}`
+        : `dashboard.html?tab=my-ads`;
+    }, 500);
 
   } catch (err) {
-  console.error("Upload error:", err);
-  alert("❌ Error posting ad: " + err.message);
-
-  if (btn) {
-    btn.textContent = "Post My Ad 🚀";
-    btn.disabled = false;
+    console.error("Upload error:", err);
+    alert("❌ Error posting ad: " + err.message);
+    if (btn) {
+      btn.textContent = "Post My Ad 🚀";
+      btn.disabled    = false;
+    }
   }
-}
-
 };
