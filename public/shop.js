@@ -88,6 +88,75 @@ async function loadShop() {
       ${products.length} listings
     `;
 
+const businessSnapshot =
+  await getDocs(
+
+    query(
+      collection(
+        db,
+        "business_profiles"
+      ),
+      where(
+        "userId",
+        "==",
+        sellerId
+      )
+    )
+
+  );
+
+if (!businessSnapshot.empty) {
+
+  const business =
+    businessSnapshot.docs[0]
+    .data();
+
+  // Banner
+  if (business.banner) {
+
+    document
+    .getElementById("shop-header")
+    .style.backgroundImage =
+      `url(${business.banner})`;
+
+    document
+    .getElementById("shop-header")
+    .style.backgroundSize =
+      "cover";
+
+    document
+    .getElementById("shop-header")
+    .style.backgroundPosition =
+      "center";
+
+  }
+
+  // Logo + name
+  document
+  .getElementById("shop-name")
+  .innerHTML = `
+
+    <img
+      src="${business.logo}"
+      style="
+        width:90px;
+        height:90px;
+        border-radius:50%;
+        object-fit:cover;
+        border:4px solid white;
+        margin-bottom:12px;
+      "
+    >
+
+    <br>
+
+    🏪
+    ${business.businessName}
+
+  `;
+
+}
+
     container.innerHTML =
       products.map((p) => `
 
