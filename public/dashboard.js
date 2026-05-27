@@ -62,10 +62,10 @@ async function loadDashboard() {
 }
 
 // ============================================
-// SWITCH TAB (FIXED)
+// SWITCH TAB
 // ============================================
 
-window.switchTab = async function(tabName) {
+async function switchTab(tabName) {
 
   debug("switchTab() called with:", tabName);
 
@@ -94,11 +94,9 @@ window.switchTab = async function(tabName) {
     tabId = "profile-tab";
   }
 
-  const activeTab =
-    document.getElementById(tabId);
+  const activeTab = document.getElementById(tabId);
 
   if (!activeTab) {
-
     debug("❌ Tab not found:", tabId);
     return;
   }
@@ -107,10 +105,9 @@ window.switchTab = async function(tabName) {
   activeTab.classList.add("active");
 
   // Activate nav button
-  const activeBtn =
-    document.querySelector(
-      `[data-tab="${tabName}"]`
-    );
+  const activeBtn = document.querySelector(
+    `[data-tab="${tabName}"]`
+  );
 
   if (activeBtn) {
     activeBtn.classList.add("active");
@@ -133,13 +130,13 @@ window.switchTab = async function(tabName) {
 
   } catch (err) {
 
-    debug(
-      "❌ switchTab error:",
-      err
-    );
+    debug("❌ switchTab error:", err);
 
   }
-};
+}
+
+// MAKE FUNCTION GLOBAL
+window.switchTab = switchTab;
 
 // ============================================
 // LOAD MY PRODUCTS
