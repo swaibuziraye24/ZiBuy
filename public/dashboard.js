@@ -6,6 +6,10 @@
 import { db, auth, collection, getDocs, addDoc, query, where, updateDoc, deleteDoc, doc, getDoc, serverTimestamp  } from "./firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+import { runSubscriptionExpiryCheck } from "./subscription-check.js";
+
+runSubscriptionExpiryCheck();
+
 console.log("📊 Dashboard.js loaded");
 
 const originalLog = console.log;
