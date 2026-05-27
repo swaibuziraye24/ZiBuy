@@ -13,20 +13,30 @@ content="width=device-width, initial-scale=1.0">
 
 <style>
 
+*{
+  box-sizing:border-box;
+}
+
 body{
   margin:0;
   font-family:Arial,sans-serif;
   background:#f5f5f5;
 }
 
+/* ================= HEADER ================= */
+
 .header{
   background:#ff6600;
   color:white;
-  padding:25px;
+  padding:25px 20px;
+  position:sticky;
+  top:0;
+  z-index:100;
 }
 
 .header h1{
   margin:0;
+  font-size:28px;
 }
 
 .search-box{
@@ -37,30 +47,64 @@ body{
   width:100%;
   padding:14px;
   border:none;
-  border-radius:10px;
+  border-radius:12px;
   font-size:16px;
-  box-sizing:border-box;
+  outline:none;
 }
+
+/* ================= SHOPS GRID ================= */
 
 .shops-grid{
   padding:20px;
   display:grid;
   grid-template-columns:
-  repeat(auto-fit,minmax(250px,1fr));
+  repeat(auto-fit,minmax(260px,1fr));
   gap:18px;
 }
 
+/* ================= SHOP CARD ================= */
+
 .shop-card{
   background:white;
-  border-radius:14px;
+  border-radius:16px;
   padding:20px;
   box-shadow:0 2px 10px rgba(0,0,0,0.08);
   cursor:pointer;
   transition:0.2s;
+  border:1px solid #eee;
 }
 
 .shop-card:hover{
-  transform:translateY(-3px);
+  transform:translateY(-4px);
+  box-shadow:0 6px 18px rgba(0,0,0,0.12);
+}
+
+.shop-top{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+/* SHOP AVATAR */
+
+.shop-avatar{
+  width:60px;
+  height:60px;
+  border-radius:50%;
+  background:#ff6600;
+  color:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:24px;
+  font-weight:800;
+  flex-shrink:0;
+}
+
+/* SHOP INFO */
+
+.shop-info{
+  flex:1;
 }
 
 .shop-name{
@@ -70,19 +114,37 @@ body{
 }
 
 .shop-meta{
-  margin-top:10px;
+  margin-top:8px;
   color:#666;
+  font-size:14px;
 }
 
+/* BUTTON */
+
 .shop-btn{
-  margin-top:16px;
+  margin-top:18px;
+  width:100%;
   background:#ff6600;
   color:white;
   border:none;
-  padding:12px 16px;
-  border-radius:10px;
+  padding:13px;
+  border-radius:12px;
   font-weight:700;
   cursor:pointer;
+  font-size:15px;
+  transition:0.2s;
+}
+
+.shop-btn:hover{
+  opacity:0.9;
+}
+
+/* EMPTY STATE */
+
+.empty-state{
+  text-align:center;
+  padding:60px 20px;
+  color:#666;
 }
 
 </style>
@@ -90,6 +152,8 @@ body{
 </head>
 
 <body>
+
+<!-- ================= HEADER ================= -->
 
 <div class="header">
 
@@ -108,11 +172,20 @@ body{
 
 </div>
 
+<!-- ================= SHOPS CONTAINER ================= -->
+
 <div
   class="shops-grid"
   id="shops-container"
 >
+
+  <div class="empty-state">
+    Loading shops...
+  </div>
+
 </div>
+
+<!-- ================= SCRIPT ================= -->
 
 <script
 type="module"
