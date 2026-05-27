@@ -130,19 +130,23 @@ body{
     👥 <span id="followers-count">0</span> followers
   </div>
 
-  <button id="follow-btn"
-    style="
-      margin-top:16px;
-      background:white;
-      color:#ff6600;
-      border:none;
-      padding:12px 18px;
-      border-radius:10px;
-      font-weight:700;
-      cursor:pointer;
-    ">
-    Follow Shop
-  </button>
+<button
+  id="follow-btn"
+  onclick="toggleFollowShop()"
+  style="
+    margin-top:16px;
+    background:white;
+    color:#ff6600;
+    border:none;
+    padding:12px 18px;
+    border-radius:10px;
+    font-weight:700;
+    cursor:pointer;
+  "
+>
+  Follow Shop
+</button>
+  
 
 </div>
 
@@ -200,6 +204,7 @@ body{
 
   <button
   id="submit-review-btn"
+  onclick="submitSellerReview()"
   style="
     background:#ff6600;
     color:white;
