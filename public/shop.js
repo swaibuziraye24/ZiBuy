@@ -16,6 +16,10 @@ import {
   renderStars
 } from "./review.js";
 
+console.log("shop.js loaded");
+console.log("toggleFollowShop:", window.toggleFollowShop);
+
+
 const params =
   new URLSearchParams(window.location.search);
 
@@ -264,79 +268,63 @@ async function checkFollowStatus() {
 }
 
 
-
-window.toggleFollowShop = async function() {
+window.toggleFollowShop = async function () {
 
   if (!auth.currentUser) {
-
     alert("Login first");
-
     return;
   }
 
-  const btn =
-    document.getElementById("follow-btn");
+  const btn = document.getElementById("follow-btn");
 
   try {
 
-    // Unfollow
+    // UNFOLLOW
     if (followDocumentId) {
 
       await deleteDoc(
-        doc(
-          db,
-          "shop_followers",
-          followDocumentId
-        )
+        doc(db, "shop_followers", followDocumentId)
       );
 
       followDocumentId = null;
 
-      btn.textContent =
-        "Follow Shop";
-
-      btn.style.background =
-        "white";
-
-      btn.style.color =
-        "#ff6600";
+      btn.textContent = "Follow Shop";
+      btn.style.background = "white";
+      btn.style.color = "#ff6600";
 
       return;
     }
 
-    // Follow
+    // FOLLOW
     const docRef = await addDoc(
       collection(db, "shop_followers"),
       {
-
         shopId: sellerId,
-
         userId: auth.currentUser.uid,
-
         userEmail: auth.currentUser.email,
-
         createdAt: new Date()
-
       }
     );
 
     followDocumentId = docRef.id;
 
-    btn.textContent =
-      "✓ Following";
-
-    btn.style.background =
-      "#10b981";
-
-    btn.style.color =
-      "white";
+    btn.textContent = "✓ Following";
+    btn.style.background = "#10b981";
+    btn.style.color = "white";
 
   } catch (err) {
-
     console.error(err);
-
     alert("Failed");
-
   }
-
 };
+
+
+// 👇 ADD THIS AT THE VERY BOTTOM OF shop.js
+
+document.addEventListener("DOMContentLoaded", () => {
+  const btn = document.getElementById("follow-btn");
+
+  if (btn) {
+    btn.addEventListener("click", toggleFollowShop);
+  }
+});
