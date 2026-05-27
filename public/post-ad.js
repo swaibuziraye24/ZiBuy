@@ -13,6 +13,12 @@ import {
   doc
 } from "./firebase.js";
 
+import {
+  canUserPost
+} from "./subscription-check.js";
+
+import { updateDoc } from "./firebase.js";
+
 let currentStep = 1;
 let selectedCategory = "";
 let uploadedImages = [];
@@ -202,21 +208,75 @@ window.submitAd = async function() {
     return;
   }
 
-  // ── 2. Check plan ad limits ─────────────────
-  try {
-    const { canPostAd } = await import("./business-plans.js");
-    const check = await canPostAd(currentUser.uid);
+  // ── 2. CHECK SUBSCRIPTION LIMITS (NEW SYSTEM) ─────────────────
+try {
 
-    if (!check.allowed) {
-      const go = confirm(
-        `⚠️ You've used all ${check.limit} ads on your ${check.plan} plan.\n\nUpgrade your plan to post more ads.\n\nGo to upgrade page?`
-      );
-      if (go) window.location.href = "business-plans.html";
-      return;
-    }
-  } catch (err) {
-    console.warn("Plan check skipped:", err);
+  const q = query(
+    collection(db, "business_subscriptions"),
+    where("userId", "==", currentUser.uid)
+  );
+
+  const snap = await getDocs(q);
+
+  if (snap.empty) {
+    alert("❌ No subscription found. Please activate a plan.");
+    return;
   }
+
+  const subDoc = snap.docs[0];
+  const sub = subDoc.data();
+
+  const now = new Date();
+
+  // 1. Check active
+  if (!sub.active) {
+    alert("⚠️ Your subscription is inactive.");
+    return;
+  }
+
+  // 2. Check expiry
+  const end = sub.endDate?.toDate?.();
+
+if (!end || end < now || !sub.active) {
+  alert("⛔ Subscription expired or inactive.");
+  return;
+}
+
+  // ── 2. REAL SUBSCRIPTION CHECK ──────────────
+
+try {
+
+  const check =
+    await canUserPost(currentUser.uid);
+
+  if (!check.allowed) {
+
+    alert(
+      `⚠️ Your ${check.plan} plan has reached its ad limit.`
+    );
+
+    window.location.href =
+      "business-plans.html";
+
+    return;
+  }
+
+} catch (err) {
+
+  console.error(
+    "Subscription check failed:",
+    err
+  );
+
+}
+
+  // SAVE subscription info for later update
+  window._subscriptionDocId = subDoc.id;
+  window._subscriptionData = sub;
+
+} catch (err) {
+  console.warn("Subscription check failed:", err);
+}
 
   // ── 3. Lock button ──────────────────────────
   const btn = document.getElementById("submit-ad-btn");
@@ -248,6 +308,26 @@ window.submitAd = async function() {
     // ── 5. Build product object ─────────────────
     const sellerPhone = document.getElementById("seller-phone")?.value.trim() || "";
 
+// ── PLAN AD EXPIRY ───────────────────────
+
+const { getActiveSubscription } =
+  await import("./subscription-check.js");
+
+const subscription =
+  await getActiveSubscription(
+    currentUser.uid
+  );
+
+const adDays =
+  subscription.details.adDays || 30;
+
+const expiresAt =
+  new Date();
+
+expiresAt.setDate(
+  expiresAt.getDate() + adDays
+);
+
     const productData = {
       name:        titleInput.value.trim(),
       price:       Number(priceInput.value),
@@ -262,6 +342,7 @@ window.submitAd = async function() {
       isPremium:   false,
       createdAt:   new Date(),
       updatedAt:   new Date(),
+      expiresAt,
       seller: {
         name:       currentUser.email.split("@")[0],
         phone:      sellerPhone,
@@ -272,6 +353,25 @@ window.submitAd = async function() {
 
     // ── 6. Save to Firestore ────────────────────
     const docRef = await addDoc(collection(db, "products"), productData);
+
+// ── UPDATE ADS COUNT ───────────────────────
+try {
+  if (window._subscriptionDocId) {
+
+    const subRef = doc(
+      db,
+      "business_subscriptions",
+      window._subscriptionDocId
+    );
+
+    await updateDoc(subRef, {
+      usedAds: (window._subscriptionData.usedAds || 0) + 1
+    });
+  }
+} catch (err) {
+  console.warn("Failed updating subscription:", err);
+}
+
     console.log("Product saved:", docRef.id);
 
     // ── 7. Reset form ───────────────────────────
