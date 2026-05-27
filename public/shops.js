@@ -33,26 +33,20 @@ async function loadShops() {
         uniqueShops[product.userId] = {
 
           userId: product.userId,
-
-          seller:
-            product.seller || {},
-
+          seller: product.seller || {},
           totalProducts: 1
 
         };
 
       } else {
 
-        uniqueShops[
-          product.userId
-        ].totalProducts++;
+        uniqueShops[product.userId].totalProducts++;
 
       }
 
     });
 
-    allShops =
-      Object.values(uniqueShops);
+    allShops = Object.values(uniqueShops);
 
     renderShops(allShops);
 
@@ -83,40 +77,20 @@ function renderShops(shops) {
   container.innerHTML =
     shops.map((shop) => `
 
-      <div
-        class="shop-card"
-        onclick="
-          window.location.href=
-          'shop.html?seller=${shop.userId}'
-        "
-      >
+      <div class="shop-card"
+        onclick="window.location.href='shop.html?seller=${shop.userId}'">
 
         <div class="shop-name">
-
-          🏪
-          ${shop.seller.name || "ZiBuy Shop"}
-
-          ${
-            shop.seller.isVerified
-            ? "✅"
-            : ""
-          }
-
+          🏪 ${shop.seller.name || "ZiBuy Shop"}
+          ${shop.seller.isVerified ? "✅" : ""}
         </div>
 
         <div class="shop-meta">
-
-          📍
-          ${shop.seller.location || "Uganda"}
-
+          📍 ${shop.seller.location || "Uganda"}
         </div>
 
         <div class="shop-meta">
-
-          📦
-          ${shop.totalProducts}
-          listings
-
+          📦 ${shop.totalProducts} listings
         </div>
 
         <button class="shop-btn">
@@ -129,20 +103,18 @@ function renderShops(shops) {
 
 }
 
-window.searchShops = function() {
+window.searchShops = function () {
 
   const value =
     document.getElementById("shop-search")
-    .value
-    .toLowerCase();
+      .value
+      .toLowerCase();
 
   const filtered =
     allShops.filter((shop) => {
 
       const name =
-        (
-          shop.seller.name || ""
-        ).toLowerCase();
+        (shop.seller.name || "").toLowerCase();
 
       return name.includes(value);
 
