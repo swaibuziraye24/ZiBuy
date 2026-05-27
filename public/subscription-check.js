@@ -139,3 +139,60 @@ export async function canUserPost(userId) {
   };
 
 }
+
+
+/* =========================================
+   EXPIRE OLD SUBSCRIPTIONS
+========================================= */
+
+export async function runSubscriptionExpiryCheck() {
+
+  try {
+
+    const snapshot = await getDocs(
+      query(
+        collection(db, "business_accounts"),
+        where("status", "==", "active")
+      )
+    );
+
+    const now = new Date();
+
+    for (const sub of snapshot.docs) {
+
+      const data = sub.data();
+
+      if (data.endDate) {
+
+        const endDate = data.endDate.toDate();
+
+        if (now > endDate) {
+
+          await updateDoc(
+            doc(db, "business_accounts", sub.id),
+            {
+              status: "expired"
+            }
+          );
+
+          console.log(
+            "Expired subscription:",
+            sub.id
+          );
+
+        }
+
+      }
+
+    }
+
+  } catch (err) {
+
+    console.error(
+      "Subscription expiry check failed:",
+      err
+    );
+
+  }
+
+}
