@@ -250,6 +250,7 @@ function renderCurrentBanner() {
   });
 }
 
+
 // ── RENDER PLANS (UNCHANGED) ────────────────
 function renderPlans() {
   const grid = document.getElementById("plans-grid");
@@ -275,6 +276,28 @@ function renderPlans() {
     `;
   }).join("");
 }
+
+window.setBilling = function(cycle) {
+
+  billingCycle = cycle;
+
+  document
+    .getElementById("btn-monthly")
+    ?.classList.toggle(
+      "active",
+      cycle === "monthly"
+    );
+
+  document
+    .getElementById("btn-annual")
+    ?.classList.toggle(
+      "active",
+      cycle === "annual"
+    );
+
+  renderPlans();
+};
+
 
 // ── REMAINING CODE (UNCHANGED) ──────────────
 // I did NOT touch upgrade logic to avoid breaking your system
