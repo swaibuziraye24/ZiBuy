@@ -65,7 +65,7 @@ async function loadDashboard() {
 // SWITCH TAB (FIXED FUNCTION NAMES)
 // ============================================
 
-async function switchTab(tab) {
+window.switchTab = function(tabName) {
   debug("switchTab() called with:", tab);
 
   // Hide all tabs
