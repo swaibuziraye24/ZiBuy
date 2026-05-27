@@ -65,7 +65,7 @@ async function loadDashboard() {
 // SWITCH TAB
 // ============================================
 
-async function switchTab(tabName) {
+window.switchTab = async function(tabName) {
 
   debug("switchTab() called with:", tabName);
 
@@ -135,8 +135,7 @@ async function switchTab(tabName) {
   }
 }
 
-// MAKE FUNCTION GLOBAL
-window.switchTab = switchTab;
+
 
 // ============================================
 // LOAD MY PRODUCTS
