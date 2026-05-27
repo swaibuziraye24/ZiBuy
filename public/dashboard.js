@@ -62,11 +62,12 @@ async function loadDashboard() {
 }
 
 // ============================================
-// SWITCH TAB (FIXED FUNCTION NAMES)
+// SWITCH TAB (FIXED)
 // ============================================
 
-window.switchTab = function(tabName) {
-  debug("switchTab() called with:", tab);
+window.switchTab = async function(tabName) {
+
+  debug("switchTab() called with:", tabName);
 
   // Hide all tabs
   document.querySelectorAll(".dashboard-tab").forEach(tabEl => {
@@ -81,17 +82,23 @@ window.switchTab = function(tabName) {
 
   let tabId = "";
 
-  if (tab === "my-ads") {
+  if (tabName === "my-ads") {
     tabId = "my-ads-tab";
-  } else if (tab === "orders") {
+  }
+
+  else if (tabName === "orders") {
     tabId = "orders-tab";
-  } else if (tab === "profile") {  // ✅ CHANGED: was "settings", now "profile"
+  }
+
+  else if (tabName === "profile") {
     tabId = "profile-tab";
   }
 
-  const activeTab = document.getElementById(tabId);
+  const activeTab =
+    document.getElementById(tabId);
 
   if (!activeTab) {
+
     debug("❌ Tab not found:", tabId);
     return;
   }
@@ -100,26 +107,39 @@ window.switchTab = function(tabName) {
   activeTab.classList.add("active");
 
   // Activate nav button
-  const activeBtn = document.querySelector(`[data-tab="${tab}"]`);
+  const activeBtn =
+    document.querySelector(
+      `[data-tab="${tabName}"]`
+    );
+
   if (activeBtn) {
     activeBtn.classList.add("active");
   }
 
   // Load tab data
   try {
-    if (tab === "my-ads") {
+
+    if (tabName === "my-ads") {
       await loadMyProducts();
-    } else if (tab === "orders") {
+    }
+
+    else if (tabName === "orders") {
       await loadMyOrders();
-    } else if (tab === "profile") {  // ✅ CHANGED: was "settings", now "profile"
+    }
+
+    else if (tabName === "profile") {
       await loadProfileSettings();
     }
-  } catch (err) {
-    debug("❌ switchTab error:", err);
-  }
-}
 
-window.switchTab = switchTab;
+  } catch (err) {
+
+    debug(
+      "❌ switchTab error:",
+      err
+    );
+
+  }
+};
 
 // ============================================
 // LOAD MY PRODUCTS
