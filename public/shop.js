@@ -7,8 +7,7 @@ import {
   deleteDoc,
   doc,
   query,
-  where,
-  onSnapshot
+  where
 } from "./firebase.js";
 
 import {
