@@ -64,7 +64,8 @@ function setupAuthStateListener() {
     // Safely update all DOM elements
     const elements = {
       "post-ad-btn": user ? "block" : "none",
-      "dashboard-btn": user ? "block" : "none",
+     "dashboard-btn": user ? "block" : "none",
+     "upgrade-btn":   user ? "block" : "none", 
       "messages-btn": user ? "block" : "none",
       "notifications-btn": user ? "block" : "none"
     };
