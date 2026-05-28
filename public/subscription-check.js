@@ -8,7 +8,7 @@ import {
   doc
 } from "./firebase.js";
 
-import { PLANS } from "./business-plans.js";
+import { PLANS } from "./plans-data.js";
 
 /* =========================================
    GET ACTIVE SUBSCRIPTION
