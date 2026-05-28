@@ -2,42 +2,350 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ZiBuy Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#111827">
+  <title>Admin Panel — ZiBuy</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    body { background: #f1f5f9; }
+
+    .admin-topbar {
+      background: #111827;
+      color: white;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+    }
+    .admin-topbar h1 { font-size: 18px; font-weight: 800; margin: 0; color: #ff6600; }
+    .admin-topbar span { font-size: 13px; color: #9ca3af; }
+    .admin-topbar .ml { margin-left: auto; display: flex; gap: 10px; }
+
+    .admin-layout {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      min-height: calc(100vh - 56px);
+    }
+
+    /* Sidebar */
+    .admin-sidebar {
+      background: #1f2937;
+      padding: 20px 0;
+    }
+    .admin-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 20px;
+      color: #9ca3af;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      font-family: var(--font);
+      transition: .2s;
+    }
+    .admin-nav-item:hover  { background: #374151; color: white; }
+    .admin-nav-item.active { background: #ff6600; color: white; }
+    .admin-nav-item span   { font-size: 18px; }
+
+    /* Main */
+    .admin-main { padding: 24px; }
+
+    .admin-section { display: none; }
+    .admin-section.active { display: block; }
+
+    /* KPI row */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .kpi-card {
+      background: white;
+      border-radius: 14px;
+      padding: 18px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      border-left: 4px solid var(--orange);
+    }
+    .kpi-label { font-size: 12px; color: var(--gray); font-weight: 700; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+    .kpi-value { font-size: 28px; font-weight: 900; color: var(--dark); }
+
+    /* Data table */
+    .admin-card {
+      background: white;
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      margin-bottom: 20px;
+    }
+    .admin-card h2 { font-size: 16px; font-weight: 800; color: var(--dark); margin: 0 0 16px; }
+
+    .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .data-table th {
+      padding: 10px 12px;
+      text-align: left;
+      background: #f9fafb;
+      font-weight: 800;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      color: var(--gray);
+      border-bottom: 2px solid #e5e7eb;
+    }
+    .data-table td {
+      padding: 12px;
+      border-bottom: 1px solid #f0f0f0;
+      color: var(--dark);
+      vertical-align: middle;
+    }
+    .data-table tr:hover td { background: #fafafa; }
+    .data-table tr:last-child td { border-bottom: none; }
+
+    .plan-chip {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .chip-free   { background: #f3f4f6; color: #6b7280; }
+    .chip-bronze { background: #fef3c7; color: #92400e; }
+    .chip-silver { background: #f1f5f9; color: #475569; }
+    .chip-gold   { background: #fffbeb; color: #b45309; }
+    .chip-pending  { background: #dbeafe; color: #1e40af; }
+    .chip-expired  { background: #fee2e2; color: #991b1b; }
+    .chip-approved { background: #dcfce7; color: #166534; }
+    .chip-rejected { background: #fee2e2; color: #991b1b; }
+
+    .action-btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 7px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: var(--font);
+      transition: .15s;
+    }
+    .btn-approve { background: #dcfce7; color: #166534; }
+    .btn-approve:hover { background: #16a34a; color: white; }
+    .btn-reject  { background: #fee2e2; color: #991b1b; }
+    .btn-reject:hover  { background: #ef4444; color: white; }
+    .btn-ban     { background: #fee2e2; color: #991b1b; }
+    .btn-unban   { background: #dcfce7; color: #166534; }
+
+    .plan-select {
+      padding: 6px 10px;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 12px;
+      font-family: var(--font);
+      outline: none;
+      background: white;
+      cursor: pointer;
+    }
+    .plan-select:focus { border-color: var(--orange); }
+
+    .search-input {
+      width: 100%;
+      max-width: 320px;
+      padding: 10px 14px;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 10px;
+      font-family: var(--font);
+      font-size: 13px;
+      outline: none;
+      margin-bottom: 16px;
+    }
+    .search-input:focus { border-color: var(--orange); }
+
+    .empty-row td { text-align: center; padding: 40px; color: var(--gray); }
+
+    @media (max-width: 768px) {
+      .admin-layout { grid-template-columns: 1fr; }
+      .admin-sidebar { display: flex; overflow-x: auto; padding: 10px; gap: 4px; }
+      .admin-nav-item { padding: 10px 14px; white-space: nowrap; border-radius: 8px; }
+      .kpi-value { font-size: 22px; }
+    }
+  </style>
 </head>
 <body>
 
-<header class="topbar">
-  <a href="index.html">
-    <h1 class="logo">Zi<span>Buy</span></h1>
-  </a>
-
-  <div style="margin-left:auto">
-    <button class="btn btn-dark" onclick="window.location.href='index.html'">
-      ← Back
-    </button>
+<!-- ── TOPBAR ── -->
+<div class="admin-topbar">
+  <h1>⚙️ ZiBuy Admin</h1>
+  <span id="admin-email-display"></span>
+  <div class="ml">
+    <button class="btn btn-outline" style="font-size:13px;padding:8px 14px"
+      onclick="window.location.href='index.html'">← Site</button>
+    <button class="btn btn-dark" style="font-size:13px;padding:8px 14px"
+      onclick="adminLogout()">Logout</button>
   </div>
-</header>
-
-<div style="padding:24px">
-
-  <h1>🛠️ ZiBuy Admin Dashboard</h1>
-
-  <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap">
-
-    <button
-      class="btn btn-orange"
-      onclick="window.location.href='seller-verification.html'"
-    >
-      ✅ Seller Verifications
-    </button>
-
-  </div>
-
 </div>
 
-<script type="module" src="admin.js"></script>
+<div class="admin-layout">
 
+  <!-- ── SIDEBAR ── -->
+  <aside class="admin-sidebar">
+    <button class="admin-nav-item active" onclick="showSection('overview',this)">
+      <span>📊</span> Overview
+    </button>
+    <button class="admin-nav-item" onclick="showSection('users',this)">
+      <span>👥</span> Users & Plans
+    </button>
+    <button class="admin-nav-item" onclick="showSection('subscriptions',this)">
+      <span>💼</span> Subscriptions
+    </button>
+    <button class="admin-nav-item" onclick="showSection('boosts',this)">
+      <span>⭐</span> Boost Requests
+    </button>
+    <button class="admin-nav-item" onclick="showSection('ads',this)">
+      <span>📦</span> All Ads
+    </button>
+    <button class="admin-nav-item" onclick="showSection('orders',this)">
+      <span>🛍️</span> Orders
+    </button>
+  </aside>
+
+  <!-- ── MAIN ── -->
+  <main class="admin-main">
+
+    <!-- ══ OVERVIEW ══════════════════════════════ -->
+    <div class="admin-section active" id="section-overview">
+      <h2 style="font-size:22px;font-weight:800;margin-bottom:20px">Overview</h2>
+      <div class="kpi-row">
+        <div class="kpi-card"><div class="kpi-label">Total Users</div><div class="kpi-value" id="kpi-users">—</div></div>
+        <div class="kpi-card" style="border-color:#10b981"><div class="kpi-label">Paid Plans</div><div class="kpi-value" id="kpi-paid">—</div></div>
+        <div class="kpi-card" style="border-color:#8b5cf6"><div class="kpi-label">Active Ads</div><div class="kpi-value" id="kpi-ads">—</div></div>
+        <div class="kpi-card" style="border-color:#f59e0b"><div class="kpi-label">Pending Boosts</div><div class="kpi-value" id="kpi-boosts">—</div></div>
+        <div class="kpi-card" style="border-color:#ef4444"><div class="kpi-label">Total Orders</div><div class="kpi-value" id="kpi-orders">—</div></div>
+      </div>
+
+      <!-- Recent activity -->
+      <div class="admin-card">
+        <h2>🔔 Pending Actions</h2>
+        <div id="pending-actions">
+          <p style="color:var(--gray);font-size:14px">Loading…</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ USERS & PLANS ═══════════════════════ -->
+    <div class="admin-section" id="section-users">
+      <h2 style="font-size:22px;font-weight:800;margin-bottom:20px">Users & Plans</h2>
+      <input class="search-input" type="text" id="user-search" placeholder="Search by email…" oninput="filterUsers()">
+      <div class="admin-card">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Email</th>
+              <th>Plan</th>
+              <th>Ads Posted</th>
+              <th>Verified</th>
+              <th>Status</th>
+              <th>Change Plan</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="users-table-body">
+            <tr class="empty-row"><td colspan="7">Loading users…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══ SUBSCRIPTIONS ═══════════════════════ -->
+    <div class="admin-section" id="section-subscriptions">
+      <h2 style="font-size:22px;font-weight:800;margin-bottom:20px">Subscriptions</h2>
+      <div class="admin-card">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Plan</th>
+              <th>Billing</th>
+              <th>Amount</th>
+              <th>Start</th>
+              <th>Expires</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="subs-table-body">
+            <tr class="empty-row"><td colspan="8">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══ BOOST REQUESTS ══════════════════════ -->
+    <div class="admin-section" id="section-boosts">
+      <h2 style="font-size:22px;font-weight:800;margin-bottom:20px">Boost Requests</h2>
+      <div class="admin-card">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>User</th>
+              <th>Days</th>
+              <th>Amount</th>
+              <th>Requested</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="boosts-table-body">
+            <tr class="empty-row"><td colspan="7">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══ ALL ADS ═════════════════════════════ -->
+    <div class="admin-section" id="section-ads">
+      <h2 style="font-size:22px;font-weight:800;margin-bottom:20px">All Ads</h2>
+      <input class="search-input" type="text" id="ads-search" placeholder="Search ads…" oninput="filterAds()">
+      <div class="admin-card">
+        <table class="data-table">
+          <thead>
+            <tr><th>Image</th><th>Name</th><th>Price</th><th>Seller</th><th>Status</th><th>Expires</th><th>Action</th></tr>
+          </thead>
+          <tbody id="ads-table-body">
+            <tr class="empty-row"><td colspan="7">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══ ORDERS ══════════════════════════════ -->
+    <div class="admin-section" id="section-orders">
+      <h2 style="font-size:22px;font-weight:800;margin-bottom:20px">Orders</h2>
+      <div class="admin-card">
+        <table class="data-table">
+          <thead>
+            <tr><th>Order ID</th><th>Customer</th><th>Total</th><th>Payment</th><th>Status</th><th>Date</th><th>Update Status</th></tr>
+          </thead>
+          <tbody id="orders-table-body">
+            <tr class="empty-row"><td colspan="7">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+
+<script type="module" src="admin.js"></script>
 </body>
 </html>
