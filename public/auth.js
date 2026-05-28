@@ -246,10 +246,10 @@ export async function openAdminPanel() {
     content.style.display = "block";
 
     try {
-      await import("./admin.js");
-    } catch (err) {
-      console.warn("admin.js optional:", err);
-    }
+  await import("/admin.js");
+} catch (err) {
+  console.warn("admin.js optional:", err);
+}
 
     if (window.loadOrders) {
       window.loadOrders();
