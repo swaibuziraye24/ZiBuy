@@ -10,7 +10,7 @@ import {
   ref,
   uploadBytes,
   getDownloadURL
-} from "./firebase.js";
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
 let logoFile = null;
 let bannerFile = null;
