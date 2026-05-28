@@ -936,4 +936,6 @@ window.allProducts = allProducts;
   }
 };
 
-
+window.openSubscriptions = function () {
+  window.location.href = "admin-subscriptions.html";
+};
