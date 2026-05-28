@@ -20,15 +20,20 @@ let allOrders = [];
 
 // ── Auth guard ────────────────────────────────
 onAuthStateChanged(auth, async (user) => {
-  if (!user || user.email !== ADMIN_EMAIL) {
+  if (!user) return;
+
+  const email = (user.email || "").toLowerCase();
+  const adminEmail = ADMIN_EMAIL.toLowerCase();
+
+  if (email !== adminEmail) {
     alert("Access denied. Admins only.");
     window.location.href = "index.html";
     return;
   }
+
   document.getElementById("admin-email-display").textContent = user.email;
   await loadAll();
 });
-
 window.adminLogout = () => signOut(auth).then(() => window.location.href = "index.html");
 
 // ── Section switching ─────────────────────────
