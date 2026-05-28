@@ -14,6 +14,8 @@ export const PLAN_SCORE = {
    GET USER SUBSCRIPTION
 ========================= */
 export async function getUserPlan(userId) {
+  if (!userId) return "free"; // 🔥 BLOCK undefined BEFORE QUERY
+
   try {
     const snap = await getDocs(
       query(
@@ -38,23 +40,32 @@ export async function getUserPlan(userId) {
    CALCULATE SHOP RANK
 ========================= */
 export async function calculateShopRank(userId) {
+  if (!userId) {
+    return {
+      userId: null,
+      plan: "free",
+      totalAds: 0,
+      rankScore: 0
+    };
+  }
+
   try {
     const plan = await getUserPlan(userId);
 
     const productsSnap = await getDocs(
-      query(collection(db, "products"),
-      where("userId", "==", userId),
-      where("status", "==", "active"))
+      query(
+        collection(db, "products"),
+        where("userId", "==", userId),
+        where("status", "==", "active")
+      )
     );
 
     const totalAds = productsSnap.size;
-
     const planScore = PLAN_SCORE[plan] || 1;
 
-    // Ranking formula (VERY IMPORTANT)
     const rankScore =
-      (planScore * 1000) +   // plan weight
-      (totalAds * 10);       // activity weight
+      (planScore * 1000) +
+      (totalAds * 10);
 
     return {
       userId,
@@ -85,32 +96,31 @@ export async function getRankedShops() {
 
     snap.forEach(doc => {
       const p = doc.data();
+
       if (!p.userId) return;
 
       if (!shopsMap[p.userId]) {
         shopsMap[p.userId] = {
           userId: p.userId,
-          totalAds: 1
+          totalAds: 0
         };
-      } else {
-        shopsMap[p.userId].totalAds++;
       }
+
+      shopsMap[p.userId].totalAds++;
     });
 
     const shops = Object.values(shopsMap);
 
-    const ranked = await Promise.all(
-      shops.map(async (shop) => {
-        const rank = await calculateShopRank(shop.userId);
-        return {
-          ...shop,
-          rankScore: rank.rankScore,
-          plan: rank.plan
-        };
-      })
-    );
+    const ranked = shops.map(shop => {
+      const planScore = PLAN_SCORE.free || 1;
 
-    // SORT: GOLD first → FREE last
+      return {
+        ...shop,
+        plan: "free",
+        rankScore: (planScore * 1000) + (shop.totalAds * 10)
+      };
+    });
+
     return ranked.sort((a, b) => b.rankScore - a.rankScore);
 
   } catch (err) {
