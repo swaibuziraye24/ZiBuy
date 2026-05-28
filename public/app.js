@@ -939,17 +939,27 @@ window.allProducts = allProducts;
 let clickCount = 0;
 let clickTimer = null;
 
-document.getElementById("logo").addEventListener("click", () => {
-  clickCount++;
+document.addEventListener("DOMContentLoaded", () => {
+  const logo = document.getElementById("logo");
 
-  if (clickTimer) clearTimeout(clickTimer);
+  if (!logo) return;
 
-  clickTimer = setTimeout(() => {
-    clickCount = 0;
-  }, 2000);
+  logo.addEventListener("click", () => {
+    clickCount++;
 
-  if (clickCount >= 5) {
-    clickCount = 0;
-    window.location.href = "admin.html";
-  }
+    clearTimeout(clickTimer);
+
+    clickTimer = setTimeout(() => {
+      clickCount = 0;
+    }, 1500); // reset if user stops clicking
+
+    if (clickCount === 5) {
+      clickCount = 0;
+      openAdminLogin();
+    }
+  });
 });
+
+function openAdminLogin() {
+  window.location.href = "admin.html";
+}
