@@ -791,79 +791,54 @@ window.closeProductModal = function() {
 // ============================================
 
 window.searchProducts = function () {
-
-  const input =
-    document.getElementById("search-input");
-
-  const suggestionsBox =
-    document.getElementById("search-suggestions");
+  const input = document.getElementById("search-input");
+  const box = document.getElementById("search-suggestions");
 
   if (!input) return;
 
-  searchQuery =
-    input.value.toLowerCase().trim();
+  searchQuery = input.value.toLowerCase().trim();
 
   renderProducts();
 
-  // CLEAR SUGGESTIONS
-  suggestionsBox.innerHTML = "";
+  // hide suggestions if empty
+  if (!box) return;
 
   if (!searchQuery) {
-    suggestionsBox.style.display = "none";
+    box.style.display = "none";
+    box.innerHTML = "";
     return;
   }
 
-  // FIND MATCHES
-  const matches = (window.allProducts || []).filter(p => {
+  const matches = (window.allProducts || [])
+    .filter(p => {
+      const text = `${p.name || ""} ${p.category || ""}`.toLowerCase();
+      return text.includes(searchQuery);
+    })
+    .slice(0, 6);
 
-    const text = `
-      ${p.name || ""}
-      ${p.category || ""}
-    `.toLowerCase();
+  box.innerHTML = "";
 
-    return text.includes(searchQuery);
-
-  }).slice(0, 6);
-
-  // SHOW SUGGESTIONS
-  if (matches.length > 0) {
-
-    suggestionsBox.style.display = "block";
-
-    matches.forEach(product => {
-
-      const div =
-        document.createElement("div");
-
-      div.className =
-        "search-suggestion-item";
-
-      div.innerHTML = `
-        🔍 ${product.name}
-      `;
-
-      div.onclick = () => {
-
-        input.value = product.name;
-
-        searchQuery =
-          product.name.toLowerCase();
-
-        suggestionsBox.style.display =
-          "none";
-
-        renderProducts();
-      };
-
-      suggestionsBox.appendChild(div);
-
-    });
-
-  } else {
-
-    suggestionsBox.style.display =
-      "none";
+  if (matches.length === 0) {
+    box.style.display = "none";
+    return;
   }
+
+  box.style.display = "block";
+
+  matches.forEach(product => {
+    const div = document.createElement("div");
+    div.className = "search-suggestion-item";
+    div.textContent = product.name;
+
+    div.onclick = () => {
+      input.value = product.name;
+      searchQuery = product.name.toLowerCase();
+      box.style.display = "none";
+      renderProducts();
+    };
+
+    box.appendChild(div);
+  });
 };
 
 // ============================================
@@ -967,4 +942,41 @@ window.allProducts = allProducts;
   }
 };
 
+window.applyFilters = function () {
+  const min = parseInt(document.getElementById("price-min")?.value || 0);
+  const max = parseInt(document.getElementById("price-max")?.value || 99999999);
+  const location = document.getElementById("location-filter")?.value || "";
 
+  filterState.priceMin = min;
+  filterState.priceMax = max;
+  filterState.location = location;
+
+  renderProducts();
+};
+
+
+window.resetFilters = function () {
+  document.getElementById("price-min").value = 0;
+  document.getElementById("price-max").value = 99999999;
+  document.getElementById("location-filter").value = "";
+  document.getElementById("sort-filter").value = "newest";
+
+  filterState = {
+    priceMin: 0,
+    priceMax: 99999999,
+    location: "",
+    dateRange: "all",
+    sortBy: "newest"
+  };
+
+  searchQuery = "";
+
+  renderProducts();
+};
+
+window.toggleFilters = function () {
+  const panel = document.getElementById("filters-panel");
+  if (!panel) return;
+
+  panel.classList.toggle("active");
+};
