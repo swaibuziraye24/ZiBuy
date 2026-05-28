@@ -196,25 +196,30 @@
 
   <!-- ── SIDEBAR ── -->
   <aside class="admin-sidebar">
-    <button class="admin-nav-item active" onclick="showSection('overview',this)">
-      <span>📊</span> Overview
-    </button>
-    <button class="admin-nav-item" onclick="showSection('users',this)">
-      <span>👥</span> Users & Plans
-    </button>
-    <button class="admin-nav-item" onclick="showSection('subscriptions',this)">
-      <span>💼</span> Subscriptions
-    </button>
-    <button class="admin-nav-item" onclick="showSection('boosts',this)">
-      <span>⭐</span> Boost Requests
-    </button>
-    <button class="admin-nav-item" onclick="showSection('ads',this)">
-      <span>📦</span> All Ads
-    </button>
-    <button class="admin-nav-item" onclick="showSection('orders',this)">
-      <span>🛍️</span> Orders
-    </button>
-  </aside>
+  <button class="admin-nav-item active" data-section="overview">
+    <span>📊</span> Overview
+  </button>
+
+  <button class="admin-nav-item" data-section="users">
+    <span>👥</span> Users & Plans
+  </button>
+
+  <button class="admin-nav-item" data-section="subscriptions">
+    <span>💼</span> Subscriptions
+  </button>
+
+  <button class="admin-nav-item" data-section="boosts">
+    <span>⭐</span> Boost Requests
+  </button>
+
+  <button class="admin-nav-item" data-section="ads">
+    <span>📦</span> All Ads
+  </button>
+
+  <button class="admin-nav-item" data-section="orders">
+    <span>🛍️</span> Orders
+  </button>
+</aside>
 
   <!-- ── MAIN ── -->
   <main class="admin-main">
