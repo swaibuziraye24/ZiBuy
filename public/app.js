@@ -1077,5 +1077,4 @@ document.addEventListener("click", (e) => {
   }
 });
 
-// if (p.hidden === true) return false;
-// if (p.status === "expired") return false;
+let allProducts = [];
