@@ -32,8 +32,10 @@ onAuthStateChanged(auth, (user) => {
 ============================== */
 export async function boostAd(productId, days, price) {
 
-  if (!currentUser) {
-    alert("Login to boost ad");
+  const user = auth.currentUser;
+
+  if (!user) {
+    alert("Please login to boost ads");
     return false;
   }
 
@@ -43,10 +45,9 @@ export async function boostAd(productId, days, price) {
     const expiresAt = new Date();
     expiresAt.setDate(now.getDate() + days);
 
-    // Save premium record
     await addDoc(collection(db, "premium_ads"), {
       productId,
-      userId: currentUser.uid,
+      userId: user.uid,
       days,
       price,
       status: "active",
@@ -55,7 +56,6 @@ export async function boostAd(productId, days, price) {
       clicks: 0
     });
 
-    // Mark product as boosted
     await updateDoc(doc(db, "products", productId), {
       "boost.active": true,
       "boost.startDate": now,
@@ -69,7 +69,6 @@ export async function boostAd(productId, days, price) {
     return false;
   }
 }
-
 /* ==============================
    GET FEATURED ADS
 ============================== */
