@@ -1,6 +1,4 @@
-<!-- =========================================
-ZI BUY - SEARCH BAR
-========================================= -->
+<!-- ================= SEARCH ================= -->
 <div class="search-wrap">
   <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
     <circle cx="11" cy="11" r="8"></circle>
@@ -17,10 +15,7 @@ ZI BUY - SEARCH BAR
   <div id="search-suggestions" class="search-suggestions"></div>
 </div>
 
-
-<!-- =========================================
-FILTER PANEL
-========================================= -->
+<!-- ================= FILTERS ================= -->
 <div id="filters-panel" class="filters-panel">
 
   <div class="filters-container">
@@ -30,17 +25,16 @@ FILTER PANEL
       <h3>💰 Price Range</h3>
 
       <div class="price-inputs">
-        <input type="number" id="price-min" value="0" placeholder="Min UGX">
+        <input type="number" id="price-min" value="0">
         <span>—</span>
-        <input type="number" id="price-max" value="100000000" placeholder="Max UGX">
+        <input type="number" id="price-max" value="100000000">
       </div>
     </div>
 
-    <!-- LOCATION -->
+    <!-- LOCATION (FIXED ID) -->
     <div class="filter-group">
       <h3>📍 Location</h3>
 
-      <!-- FIX: id must match JS -->
       <select id="filter-location">
         <option value="">All Uganda</option>
         <option value="Kampala">Kampala</option>
@@ -56,11 +50,10 @@ FILTER PANEL
       </select>
     </div>
 
-    <!-- SORT -->
+    <!-- SORT (FIXED ID) -->
     <div class="filter-group">
       <h3>🔄 Sort By</h3>
 
-      <!-- FIX: id must match JS -->
       <select id="filter-sort">
         <option value="newest">Newest First</option>
         <option value="price-low">Price: Low to High</option>
@@ -69,14 +62,14 @@ FILTER PANEL
       </select>
     </div>
 
-    <!-- BUTTONS -->
+    <!-- ACTIONS -->
     <div class="filter-actions">
 
-      <button class="btn btn-outline" onclick="resetFilters()">
+      <button onclick="resetFilters()">
         Reset Filters
       </button>
 
-      <button class="btn btn-orange" onclick="applyFilters()">
+      <button onclick="applyFilters()">
         Apply Filters
       </button>
 
@@ -85,34 +78,25 @@ FILTER PANEL
   </div>
 </div>
 
-
-<!-- =========================================
-CATEGORIES
-========================================= -->
+<!-- ================= CATEGORIES ================= -->
 <nav class="categories">
 
-  <button class="cat-btn active" onclick="filterCategory('all')">🏪 All</button>
-  <button class="cat-btn" onclick="filterCategory('phones')">📱 Phones</button>
-  <button class="cat-btn" onclick="filterCategory('electronics')">💻 Electronics</button>
-  <button class="cat-btn" onclick="filterCategory('fashion')">👗 Fashion</button>
-  <button class="cat-btn" onclick="filterCategory('shoes')">👟 Shoes</button>
-  <button class="cat-btn" onclick="filterCategory('beauty')">💄 Beauty</button>
-  <button class="cat-btn" onclick="filterCategory('bags')">👜 Bags</button>
-  <button class="cat-btn" onclick="filterCategory('groceries')">🛒 Groceries</button>
-  <button class="cat-btn" onclick="filterCategory('watches')">⌚ Watches</button>
-  <button class="cat-btn" onclick="filterCategory('computers')">🖥️ Computers</button>
-  <button class="cat-btn" onclick="filterCategory('gaming')">🎮 Gaming</button>
-  <button class="cat-btn" onclick="filterCategory('home')">🏠 Home</button>
-  <button class="cat-btn" onclick="filterCategory('accessories')">💎 Accessories</button>
+  <button onclick="filterCategory('all')">🏪 All</button>
+  <button onclick="filterCategory('phones')">📱 Phones</button>
+  <button onclick="filterCategory('electronics')">💻 Electronics</button>
+  <button onclick="filterCategory('fashion')">👗 Fashion</button>
+  <button onclick="filterCategory('shoes')">👟 Shoes</button>
+  <button onclick="filterCategory('beauty')">💄 Beauty</button>
+  <button onclick="filterCategory('bags')">👜 Bags</button>
+  <button onclick="filterCategory('groceries')">🛒 Groceries</button>
+  <button onclick="filterCategory('watches')">⌚ Watches</button>
+  <button onclick="filterCategory('computers')">🖥️ Computers</button>
 
-  <button class="cat-btn filter-toggle-btn" onclick="toggleFilters()" style="margin-left:auto">
+  <button onclick="toggleFilters()" style="margin-left:auto">
     🔽 Filters
   </button>
 
 </nav>
 
-
-<!-- =========================================
-PRODUCT LIST
-========================================= -->
+<!-- ================= PRODUCTS ================= -->
 <div id="products" class="products"></div>
