@@ -4,61 +4,52 @@ import {
   getDocs
 } from "./firebase.js";
 
+import { getRankedShops } from "./ranking-service.js";
+
 let allShops = [];
 
 loadShops();
 
 async function loadShops() {
 
-  const container =
-    document.getElementById("shops-container");
+  const container = document.getElementById("shops-container");
 
   try {
 
-    const snapshot =
-      await getDocs(
-        collection(db, "products")
-      );
+    const shops = await getRankedShops();
 
-    const uniqueShops = {};
+    if (shops.length === 0) {
+      container.innerHTML = "<p>No shops found</p>";
+      return;
+    }
 
-    snapshot.forEach((docSnap) => {
+    container.innerHTML = shops.map((shop) => `
+      <div class="shop-card"
+        onclick="window.location.href='shop.html?seller=${shop.userId}'">
 
-      const product = docSnap.data();
+        <div class="shop-name">
+          🏪 Shop ${shop.userId.slice(0,6)}
+        </div>
 
-      if (!product.userId) return;
+        <div class="shop-meta">
+          📦 ${shop.totalAds} listings
+        </div>
 
-      if (!uniqueShops[product.userId]) {
+        <div class="shop-meta">
+          ⭐ Rank Score: ${shop.rankScore}
+        </div>
 
-        uniqueShops[product.userId] = {
+        <button class="shop-btn">
+          Visit Shop
+        </button>
 
-          userId: product.userId,
-          seller: product.seller || {},
-          totalProducts: 1
-
-        };
-
-      } else {
-
-        uniqueShops[product.userId].totalProducts++;
-
-      }
-
-    });
-
-    allShops = Object.values(uniqueShops);
-
-    renderShops(allShops);
+      </div>
+    `).join("");
 
   } catch (err) {
-
     console.error(err);
-
-    container.innerHTML =
-      "<p>Failed to load shops</p>";
-
+    container.innerHTML = "<p>Failed to load shops</p>";
   }
-
 }
 
 function renderShops(shops) {
