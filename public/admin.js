@@ -542,3 +542,10 @@ function showToast(msg, type = "info") {
   c.appendChild(t);
   setTimeout(() => t.remove(), 3500);
 }
+
+document.querySelectorAll(".admin-nav-item").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const section = btn.getAttribute("data-section");
+    showSection(section, btn);
+  });
+});
