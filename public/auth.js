@@ -170,62 +170,107 @@ export async function customerLogout() {
   }
 }
 
-// ============ Admin Login ============
+
+// ============================================
+// ADMIN LOGIN MODAL
+// ============================================
+
+export function openAdminLoginModal() {
+  const modal = document.getElementById("admin-login-modal");
+
+  if (modal) {
+    modal.classList.add("open");
+  }
+}
+
+export function closeAdminLoginModal() {
+  const modal = document.getElementById("admin-login-modal");
+
+  if (modal) {
+    modal.classList.remove("open");
+  }
+}
+
+// ============================================
+// ADMIN LOGIN
+// ============================================
+
 export async function adminLogin() {
-
-  const email =
-    document.getElementById("admin-email")?.value.trim();
-
-  const password =
-    document.getElementById("admin-password")?.value.trim();
+  const email = document.getElementById("admin-email")?.value.trim();
+  const password = document.getElementById("admin-password")?.value.trim();
 
   if (!email || !password) {
-
     alert("❌ Please fill admin credentials");
-
     return;
-
   }
 
   try {
+    const result = await signInWithEmailAndPassword(auth, email, password);
 
-    const result =
-      await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-
-    // Only allow your admin email
     if (result.user.email !== ADMIN_EMAIL) {
-
       await signOut(auth);
-
       alert("❌ Not authorized as admin");
-
       return;
-
     }
 
     isAdmin = true;
 
     closeAdminLoginModal();
 
+    setTimeout(() => {
+      openAdminPanel();
+    }, 500);
+
     showToast("✅ Welcome Admin! 🔑");
 
-    // ✅ Open real admin dashboard page
-    window.location.href = "admin.html";
-
   } catch (err) {
-
     alert("❌ Admin login failed: " + err.message);
-
   }
-
 }
 
+// ============================================
+// ADMIN PANEL
+// ============================================
 
-// Expose auth functions to window for onclick handlers
+export async function openAdminPanel() {
+  try {
+    const modal = document.getElementById("admin-modal");
+    const content = document.getElementById("admin-panel-content");
+
+    if (!modal || !content) {
+      console.error("Admin modal elements not found");
+      return;
+    }
+
+    modal.classList.add("open");
+    content.style.display = "block";
+
+    try {
+      await import("./admin.js");
+    } catch (err) {
+      console.warn("admin.js optional:", err);
+    }
+
+    if (window.loadOrders) {
+      window.loadOrders();
+    }
+
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+export function closeAdminPanel() {
+  const modal = document.getElementById("admin-modal");
+
+  if (modal) {
+    modal.classList.remove("open");
+  }
+}
+
+// ============================================
+// GLOBAL FUNCTIONS
+// ============================================
 window.openAuthModal = openAuthModal;
 window.closeAuthModal = closeAuthModal;
 window.customerRegister = customerRegister;
@@ -234,3 +279,5 @@ window.customerLogout = customerLogout;
 window.openAdminLoginModal = openAdminLoginModal;
 window.closeAdminLoginModal = closeAdminLoginModal;
 window.adminLogin = adminLogin;
+window.openAdminPanel = openAdminPanel;
+window.closeAdminPanel = closeAdminPanel;
