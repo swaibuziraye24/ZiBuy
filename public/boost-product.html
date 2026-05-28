@@ -1,15 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
 <meta charset="UTF-8">
-<meta name="viewport"
-content="width=device-width, initial-scale=1.0">
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Boost Product — ZiBuy</title>
 
 <style>
-
 body{
   margin:0;
   padding:20px;
@@ -17,27 +13,10 @@ body{
   font-family:Arial,sans-serif;
 }
 
-.boost-wrap{
-  max-width:600px;
-  margin:auto;
-}
+.boost-wrap{max-width:600px;margin:auto;}
 
-.page-title{
-  font-size:32px;
-  font-weight:800;
-  margin-bottom:10px;
-  color:#111;
-}
-
-.page-sub{
-  color:#666;
-  margin-bottom:30px;
-}
-
-.boost-grid{
-  display:grid;
-  gap:16px;
-}
+.page-title{font-size:32px;font-weight:800;margin-bottom:10px;}
+.page-sub{color:#666;margin-bottom:30px;}
 
 .boost-card{
   background:white;
@@ -48,39 +27,12 @@ body{
   transition:0.2s;
 }
 
-.boost-card:hover{
-  transform:translateY(-3px);
-  border-color:#ff6600;
-}
+.boost-card:hover{transform:translateY(-3px);border-color:#ff6600;}
+.boost-card.active{border-color:#ff6600;background:#fff7f2;}
 
-.boost-card.active{
-  border-color:#ff6600;
-  background:#fff7f2;
-}
-
-.boost-top{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-
-.boost-days{
-  font-size:22px;
-  font-weight:800;
-}
-
-.boost-price{
-  font-size:24px;
-  font-weight:900;
-  color:#ff6600;
-}
-
-.boost-features{
-  margin-top:16px;
-  color:#555;
-  line-height:1.7;
-  font-size:15px;
-}
+.boost-top{display:flex;justify-content:space-between;}
+.boost-days{font-size:22px;font-weight:800;}
+.boost-price{font-size:24px;font-weight:900;color:#ff6600;}
 
 .pay-btn{
   width:100%;
@@ -95,316 +47,123 @@ body{
   cursor:pointer;
 }
 
-.pay-btn:hover{
-  background:#e65c00;
-}
+.pay-btn:disabled{opacity:0.6;cursor:not-allowed;}
 
-.selected-label{
-  margin-top:20px;
-  font-weight:700;
-  color:#ff6600;
-}
-
-.loading{
-  text-align:center;
-  padding:40px;
-}
-
+.selected-label{margin-top:20px;font-weight:700;color:#ff6600;}
+.loading{text-align:center;padding:40px;}
 </style>
-
 </head>
 
 <body>
 
 <div class="boost-wrap">
+  <div class="page-title">⭐ Boost Your Ad</div>
+  <div class="page-sub">Get more visibility, more clicks and more buyers.</div>
 
-  <div class="page-title">
-    ⭐ Boost Your Ad
-  </div>
+  <div id="product-info" class="loading">Loading product...</div>
 
-  <div class="page-sub">
-    Get more visibility, more clicks and more buyers on ZiBuy.
-  </div>
-
-  <div id="product-info"></div>
-
-  <div class="boost-grid">
-
-    <div
-      class="boost-card"
-      onclick="selectPlan(7,5000,this)"
-    >
-      <div class="boost-top">
-        <div class="boost-days">
-          7 Days
-        </div>
-
-        <div class="boost-price">
-          UGX 5,000
-        </div>
-      </div>
-
-      <div class="boost-features">
-        ✅ Featured placement<br>
-        ✅ More visibility<br>
-        ✅ Faster sales
-      </div>
+  <div class="boost-card" onclick="selectPlan(7,5000,this)">
+    <div class="boost-top">
+      <div class="boost-days">7 Days</div>
+      <div class="boost-price">UGX 5,000</div>
     </div>
-
-    <div
-      class="boost-card"
-      onclick="selectPlan(14,8000,this)"
-    >
-      <div class="boost-top">
-        <div class="boost-days">
-          14 Days
-        </div>
-
-        <div class="boost-price">
-          UGX 8,000
-        </div>
-      </div>
-
-      <div class="boost-features">
-        ✅ Better ranking<br>
-        ✅ More clicks<br>
-        ✅ Recommended ads section
-      </div>
-    </div>
-
-    <div
-      class="boost-card"
-      onclick="selectPlan(30,15000,this)"
-    >
-      <div class="boost-top">
-        <div class="boost-days">
-          30 Days
-        </div>
-
-        <div class="boost-price">
-          UGX 15,000
-        </div>
-      </div>
-
-      <div class="boost-features">
-        ✅ Maximum visibility<br>
-        ✅ Top search placement<br>
-        ✅ Highest exposure
-      </div>
-    </div>
-
   </div>
 
-  <div
-    class="selected-label"
-    id="selected-plan"
-  >
-    No plan selected
+  <div class="boost-card" onclick="selectPlan(14,8000,this)">
+    <div class="boost-top">
+      <div class="boost-days">14 Days</div>
+      <div class="boost-price">UGX 8,000</div>
+    </div>
   </div>
 
-  <button
-    class="pay-btn"
-    onclick="startBoost()"
-  >
+  <div class="boost-card" onclick="selectPlan(30,15000,this)">
+    <div class="boost-top">
+      <div class="boost-days">30 Days</div>
+      <div class="boost-price">UGX 15,000</div>
+    </div>
+  </div>
+
+  <div id="selected-plan" class="selected-label">No plan selected</div>
+
+  <button class="pay-btn" onclick="startBoost()">
     🚀 Boost Now
   </button>
-
 </div>
 
 <script type="module">
+import { db, doc, getDoc } from "./firebase.js";
+import { boostAd } from "./premium-ads.js";
 
-import {
-  db,
-  doc,
-  getDoc
-} from "./firebase.js";
-
-import {
-  boostAd
-} from "./premium-ads.js";
-
-const params =
-  new URLSearchParams(window.location.search);
-
-const productId =
-  params.get("productId");
+const productId = new URLSearchParams(window.location.search).get("productId");
 
 let selectedDays = null;
 let selectedPrice = null;
 
-/* =========================
-   LOAD PRODUCT
-========================= */
-
+/* LOAD PRODUCT */
 async function loadProduct() {
-
   if (!productId) {
-    alert("No product ID");
+    document.getElementById("product-info").innerHTML = "❌ Missing product ID";
     return;
   }
 
-  try {
+  const snap = await getDoc(doc(db, "products", productId));
 
-    const snap =
-      await getDoc(
-        doc(db, "products", productId)
-      );
-
-    if (!snap.exists()) {
-      alert("Product not found");
-      return;
-    }
-
-    const product = snap.data();
-
-    document.getElementById(
-      "product-info"
-    ).innerHTML = `
-      <div style="
-        background:white;
-        border-radius:18px;
-        padding:18px;
-        margin-bottom:22px;
-      ">
-
-        <div style="
-          display:flex;
-          gap:16px;
-          align-items:center;
-        ">
-
-          <img
-            src="${
-              product.images?.[0]
-              || ''
-            }"
-            style="
-              width:90px;
-              height:90px;
-              object-fit:cover;
-              border-radius:12px;
-            "
-          >
-
-          <div>
-
-            <div style="
-              font-size:20px;
-              font-weight:800;
-            ">
-              ${product.name}
-            </div>
-
-            <div style="
-              color:#ff6600;
-              font-size:22px;
-              font-weight:900;
-              margin-top:8px;
-            ">
-              UGX ${Number(
-                product.price || 0
-              ).toLocaleString()}
-            </div>
-
-          </div>
-
-        </div>
-
-      </div>
-    `;
-
-  } catch (err) {
-
-    console.error(err);
-
+  if (!snap.exists()) {
+    document.getElementById("product-info").innerHTML = "❌ Product not found";
+    return;
   }
 
+  const p = snap.data();
+
+  document.getElementById("product-info").innerHTML = `
+    <div style="background:white;padding:18px;border-radius:16px;margin-bottom:20px">
+      <div style="display:flex;gap:12px">
+        <img src="${p.images?.[0] || ''}" style="width:80px;height:80px;object-fit:cover;border-radius:10px">
+        <div>
+          <h3>${p.name}</h3>
+          <b style="color:#ff6600">UGX ${Number(p.price || 0).toLocaleString()}</b>
+        </div>
+      </div>
+    </div>
+  `;
 }
 
-/* =========================
-   SELECT PLAN
-========================= */
-
-window.selectPlan =
-function(days, price, el){
-
+window.selectPlan = function(days, price, el){
   selectedDays = days;
   selectedPrice = price;
 
-  document.querySelectorAll(
-    ".boost-card"
-  ).forEach(card => {
-    card.classList.remove("active");
-  });
-
+  document.querySelectorAll(".boost-card").forEach(c => c.classList.remove("active"));
   el.classList.add("active");
 
-  document.getElementById(
-    "selected-plan"
-  ).textContent =
-    `Selected: ${days} Days — UGX ${price.toLocaleString()}`;
-
+  document.getElementById("selected-plan").innerText =
+    `Selected: ${days} days — UGX ${price.toLocaleString()}`;
 };
 
-/* =========================
-   START BOOST
-========================= */
-
-window.startBoost =
-async function(){
+window.startBoost = async function(){
 
   if (!selectedDays) {
-
-    alert("Select a boost plan");
-
+    alert("Select a plan first");
     return;
   }
 
-  const btn =
-    document.querySelector(".pay-btn");
-
+  const btn = document.querySelector(".pay-btn");
   btn.disabled = true;
-  btn.textContent = "Processing...";
+  btn.innerText = "Processing...";
 
-  try {
+  const success = await boostAd(productId, selectedDays, selectedPrice);
 
-    const success =
-      await boostAd(
-        productId,
-        selectedDays,
-        selectedPrice
-      );
-
-    if (success) {
-
-      alert(
-        "✅ Product boosted successfully"
-      );
-
-      window.location.href =
-        "dashboard.html?tab=my-ads";
-
-    } else {
-
-      alert("Boost failed");
-
-    }
-
-  } catch (err) {
-
-    console.error(err);
-
-    alert("Error boosting ad");
-
+  if (success) {
+    alert("Boost successful!");
+    window.location.href = "dashboard.html?tab=my-ads";
+  } else {
+    alert("Boost failed");
   }
 
   btn.disabled = false;
-  btn.textContent = "🚀 Boost Now";
-
+  btn.innerText = "🚀 Boost Now";
 };
 
 loadProduct();
-
 </script>
 
 </body>
