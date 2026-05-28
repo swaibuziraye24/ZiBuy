@@ -389,214 +389,143 @@ function getProductRankScore(product) {
 // ============================================
 // RENDER PRODUCTS
 // ============================================
-
-function renderProducts() {
-
-  const container =
-    document.getElementById("products");
-
+window.renderProducts = function () {
+  const container = document.getElementById("products");
   if (!container) return;
 
-  let filtered = (allProducts || []).filter(p => {
+  let products = [...allProducts];
 
-    /* =========================
-       SMART SEARCH
-    ========================== */
-    if (searchQuery) {
+  // =========================
+  // 1. CATEGORY FILTER
+  // =========================
+  if (currentCategory && currentCategory !== "all") {
+    products = products.filter(p => p.category === currentCategory);
+  }
 
-      const searchableText = `
+  // =========================
+  // 2. SEARCH FILTER
+  // =========================
+  if (searchQuery && searchQuery.length > 0) {
+    products = products.filter(p => {
+      const text = `
         ${p.name || ""}
-        ${p.description || ""}
         ${p.category || ""}
-        ${p.location || ""}
-        ${p.seller?.name || ""}
+        ${p.description || ""}
       `.toLowerCase();
 
-      if (!searchableText.includes(searchQuery.toLowerCase())) {
-        return false;
-      }
-    }
+      return text.includes(searchQuery);
+    });
+  }
 
-    /* =========================
-       HIDE BLOCKED / EXPIRED
-    ========================== */
-    if (p.hidden === true) return false;
-    if (p.status === "expired") return false;
-
-    /* =========================
-       CATEGORY FILTER
-    ========================== */
-    if (
-      currentCategory !== "all" &&
-      p.category !== currentCategory
-    ) {
-      return false;
-    }
-
-    /* =========================
-       PRICE FILTER
-    ========================== */
-    if (
-      p.price < filterState.priceMin ||
-      p.price > filterState.priceMax
-    ) {
-      return false;
-    }
-
-    /* =========================
-       LOCATION FILTER
-    ========================== */
-    if (
-      filterState.location &&
-      p.location !== filterState.location
-    ) {
-      return false;
-    }
-
-    return true;
+  // =========================
+  // 3. PRICE FILTER
+  // =========================
+  products = products.filter(p => {
+    const price = Number(p.price || 0);
+    return price >= filterState.priceMin && price <= filterState.priceMax;
   });
 
-  // ============================================
-  // SMART SORTING + PREMIUM RANKING
-  // ============================================
-
-  filtered.sort((a, b) => {
-
-    // PREMIUM FIRST
-    if (a.isPremium && !b.isPremium) return -1;
-    if (!a.isPremium && b.isPremium) return 1;
-
-    const aBoost = a.rankScore || 0;
-    const bBoost = b.rankScore || 0;
-
-    if (filterState.sortBy === "price-low") {
-      return a.price - b.price;
-    }
-
-    if (filterState.sortBy === "price-high") {
-      return b.price - a.price;
-    }
-
-    if (filterState.sortBy === "views") {
-      return (b.views || 0) - (a.views || 0);
-    }
-
-    // DEFAULT: BOOST + NEWEST
-    return (
-      bBoost - aBoost ||
-      new Date(b.createdAt) - new Date(a.createdAt)
+  // =========================
+  // 4. LOCATION FILTER
+  // =========================
+  if (filterState.location) {
+    products = products.filter(p =>
+      (p.location || "").toLowerCase().includes(filterState.location.toLowerCase())
     );
+  }
 
-  });
+  // =========================
+  // 5. DATE FILTER
+  // =========================
+  if (filterState.dateRange !== "all") {
+    const now = Date.now();
 
-  // ============================================
-  // EMPTY STATE
-  // ============================================
+    products = products.filter(p => {
+      const created = p.createdAt?.toDate
+        ? p.createdAt.toDate().getTime()
+        : new Date(p.createdAt || 0).getTime();
 
-  if (filtered.length === 0) {
+      if (!created) return false;
 
+      const diff = now - created;
+
+      if (filterState.dateRange === "24h") return diff <= 86400000;
+      if (filterState.dateRange === "7d") return diff <= 7 * 86400000;
+      if (filterState.dateRange === "30d") return diff <= 30 * 86400000;
+
+      return true;
+    });
+  }
+
+  // =========================
+  // 6. SORTING
+  // =========================
+  switch (filterState.sortBy) {
+    case "price-low":
+      products.sort((a, b) => a.price - b.price);
+      break;
+
+    case "price-high":
+      products.sort((a, b) => b.price - a.price);
+      break;
+
+    case "views":
+      products.sort((a, b) => (b.views || 0) - (a.views || 0));
+      break;
+
+    case "newest":
+    default:
+      products.sort((a, b) => {
+        const aTime = a.createdAt?.toDate
+          ? a.createdAt.toDate().getTime()
+          : new Date(a.createdAt || 0).getTime();
+
+        const bTime = b.createdAt?.toDate
+          ? b.createdAt.toDate().getTime()
+          : new Date(b.createdAt || 0).getTime();
+
+        return bTime - aTime;
+      });
+  }
+
+  // =========================
+  // 7. SAVE FILTERED GLOBAL STATE
+  // =========================
+  filteredProducts = products;
+
+  // =========================
+  // 8. RENDER UI
+  // =========================
+  container.innerHTML = "";
+
+  if (products.length === 0) {
     container.innerHTML = `
-      <div class="empty-state">
-        <p style="font-size:48px;margin-bottom:12px">🔍</p>
-        <p>No products found</p>
+      <div style="padding:20px;text-align:center;color:#666;">
+        No products found 😕
       </div>
     `;
-
     return;
   }
 
-  // ============================================
-  // RENDER PRODUCTS
-  // ============================================
+  products.forEach(p => {
+    const card = document.createElement("div");
+    card.className = "product-card";
 
-  container.innerHTML = filtered.map(p => {
+    card.innerHTML = `
+      <div class="product-image">
+        <img src="${(p.images && p.images[0]) || 'placeholder.jpg'}" alt="${p.name}">
+      </div>
 
-    const images = p.images || [];
-
-    return `
-      <div class="product-card">
-
-        <div class="product-image-box" style="position:relative">
-
-          <img src="${images[0] || ''}" alt="${p.name || 'Product'}">
-
-          ${p.isPremium ? `
-            <span class="premium-badge">⭐ FEATURED</span>
-          ` : ''}
-
-        </div>
-
-        <div class="product-info">
-
-          <p class="product-cat">${p.category || "General"}</p>
-
-          <h3 class="product-title">
-            ${p.name || "Untitled Product"}
-
-            ${p.seller?.isVerified ? `
-              <span style="color:#10b981;font-size:13px;font-weight:800;margin-left:6px;">
-                ✅ Verified
-              </span>
-            ` : ''}
-          </h3>
-
-          <p class="product-price">
-            UGX ${Number(p.price || 0).toLocaleString()}
-          </p>
-
-          <div class="product-seller-loc">
-
-            <span
-              onclick="openSellerShop('${p.userId}')"
-              style="cursor:pointer;font-weight:700;color:#ff6600;"
-            >
-              🏪 ${p.seller?.name || "Seller"}
-            </span>
-
-            <br>
-
-            📍 ${p.seller?.location || "Uganda"}
-
-          </div>
-
-          <div class="card-footer">
-
-            <button class="cart-btn"
-              onclick="addToCart('${(p.name || "").replace(/'/g,"\\'")}', ${p.price || 0}, '${images[0] || ""}')">
-              🛒 Add
-            </button>
-
-            <button class="view-btn"
-              onclick="openProductModal('${p.id}')">
-              View
-            </button>
-
-          </div>
-
-          ${currentUser?.email === "swaibuziraye22@gmail.com" ? `
-            <button class="admin-delete-btn"
-              onclick="deleteProduct('${p.id}')">
-              🗑 Delete Ad
-            </button>
-          ` : ''}
-
-        </div>
+      <div class="product-info">
+        <h3>${p.name || "No name"}</h3>
+        <p class="price">UGX ${Number(p.price || 0).toLocaleString()}</p>
+        <p class="location">📍 ${p.location || "Unknown"}</p>
       </div>
     `;
 
-  }).join("");
-
-  // ============================================
-  // COUNT
-  // ============================================
-
-  const countEl =
-    document.getElementById("product-count");
-
-  if (countEl) {
-    countEl.textContent = `${filtered.length} listings`;
-  }
-}
+    container.appendChild(card);
+  });
+};
 
 // ============================================
 // CATEGORY FILTER
