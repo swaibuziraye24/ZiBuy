@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Subscriptions — ZiBuy Admin</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header class="topbar">
+  <h1 class="logo">Zi<span>Buy</span> Admin</h1>
+
+  <button onclick="window.location.href='index.html'">
+    ← Back
+  </button>
+</header>
+
+<div style="max-width:900px;margin:0 auto;padding:20px">
+
+  <h2>💳 Subscription Requests</h2>
+
+  <div id="subs-container">
+    <p>Loading...</p>
+  </div>
+
+</div>
+
+<script type="module">
+  import { loadSubscriptions } from "./admin-subscriptions.js";
+
+  loadSubscriptions();
+</script>
+
+</body>
+</html>
