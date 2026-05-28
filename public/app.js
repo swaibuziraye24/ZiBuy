@@ -587,10 +587,49 @@ products = mixedProducts;
 
   card.className = "product-card";
 
+  card.style.background = "#fff";
+card.style.borderRadius = "18px";
+card.style.overflow = "hidden";
+card.style.boxShadow = "0 4px 18px rgba(0,0,0,0.08)";
+card.style.transition = "0.2s ease";
+card.style.cursor = "pointer";
+card.style.border = "1px solid #f1f1f1";
+
+card.onmouseenter = () => {
+  card.style.transform = "translateY(-4px)";
+  card.style.boxShadow = "0 10px 25px rgba(0,0,0,0.12)";
+};
+
+card.onmouseleave = () => {
+  card.style.transform = "translateY(0)";
+  card.style.boxShadow = "0 4px 18px rgba(0,0,0,0.08)";
+};
+
   // Needed for Sponsored badge positioning
   card.style.position = "relative";
 
   card.innerHTML = `
+
+
+<div class="product-image" style="
+  position:relative;
+  overflow:hidden;
+  border-radius:14px 14px 0 0;
+  background:#f3f4f6;
+">
+
+  <img
+    src="${(p.images && p.images[0]) || 'placeholder.jpg'}"
+    alt="${p.name}"
+    style="
+      width:100%;
+      height:220px;
+      object-fit:cover;
+      display:block;
+      transition:0.3s;
+    "
+  >
+
 
     ${(p.boost?.active || p.isPremium) ? `
       <div style="
@@ -609,24 +648,41 @@ products = mixedProducts;
       </div>
     ` : ""}
 
-    <div class="product-image">
-      <img
-        src="${(p.images && p.images[0]) || 'placeholder.jpg'}"
-        alt="${p.name}"
-      >
+    <div class="product-image" style="
+  height:220px;
+  overflow:hidden;
+  background:#f3f4f6;
+">
     </div>
 
-    <div class="product-info">
+    <div class="product-info" style="
+  padding:14px;
+">
 
-      <h3>
+<h3 style="
+  font-size:16px;
+  font-weight:700;
+  margin:0 0 8px;
+  color:#111827;
+  line-height:1.4;
+">
         ${p.name || "No name"}
       </h3>
 
-      <p class="price">
+      <p class="price" style="
+  color:#ff6600;
+  font-size:20px;
+  font-weight:800;
+  margin:0 0 6px;
+">
         UGX ${Number(p.price || 0).toLocaleString()}
       </p>
 
-      <p class="location">
+      <p class="location" style="
+  color:#6b7280;
+  font-size:14px;
+  margin:0;
+">
         📍 ${p.location || "Unknown"}
       </p>
 
