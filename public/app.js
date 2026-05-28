@@ -17,11 +17,12 @@ import {
 // ============================================
 // GLOBALS
 // ============================================
-let searchQuery = "";
+let allProducts = [];
 let filteredProducts = [];
 let currentUser = null;
-let allProducts = [];
+let searchQuery = "";
 let currentCategory = "all";
+
 let filterState = {
   priceMin: 0,
   priceMax: 99999999,
@@ -30,9 +31,9 @@ let filterState = {
   sortBy: "newest"
 };
 
+// GLOBAL SYNC (IMPORTANT)
+window.allProducts = allProducts;
 
-window.allProducts = [];
-let allProducts = [];
 
 // ============================================
 // DOM READY CHECK
@@ -260,7 +261,7 @@ allProducts = products.sort(
   (a, b) => b.rankScore - a.rankScore
 );
 
-// keep global sync
+// keep global sync (CRITICAL FIX)
 window.allProducts = allProducts;
 
 filteredProducts = [...allProducts];
