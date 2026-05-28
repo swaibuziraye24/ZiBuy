@@ -514,7 +514,59 @@ window.renderProducts = function () {
   // 7. SAVE FILTERED GLOBAL STATE
   // =========================
   filteredProducts = products;
+// =========================
+// MIX BOOSTED ADS
+// Sponsored products appear
+// throughout listings
+// =========================
 
+const boostedProducts =
+  products.filter(
+    p => p.boost?.active || p.isPremium
+  );
+
+const normalProducts =
+  products.filter(
+    p => !p.boost?.active && !p.isPremium
+  );
+
+const mixedProducts = [];
+
+let boostIndex = 0;
+let normalIndex = 0;
+
+// Insert sponsored ad every 4 products
+while (
+  boostIndex < boostedProducts.length ||
+  normalIndex < normalProducts.length
+) {
+
+  // Add boosted product
+  if (boostIndex < boostedProducts.length) {
+
+    mixedProducts.push(
+      boostedProducts[boostIndex]
+    );
+
+    boostIndex++;
+  }
+
+  // Add normal products
+  for (let i = 0; i < 4; i++) {
+
+    if (normalIndex < normalProducts.length) {
+
+      mixedProducts.push(
+        normalProducts[normalIndex]
+      );
+
+      normalIndex++;
+    }
+  }
+}
+
+// Replace products list
+products = mixedProducts;
   // =========================
   // 8. RENDER UI
   // =========================
