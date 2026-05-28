@@ -1,4 +1,4 @@
-<!-- KEEP THIS SEARCH BAR ONLY -->
+<!-- ================= SEARCH BAR ================= -->
 <div class="search-wrap">
   <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
     <circle cx="11" cy="11" r="8"/>
@@ -11,11 +11,11 @@
     placeholder="Search products..."
     onkeyup="searchProducts()"
   >
+
   <div id="search-suggestions" class="search-suggestions"></div>
 </div>
 
-
-<!-- KEEP THIS FILTER PANEL ONLY -->
+<!-- ================= FILTER PANEL ================= -->
 <div id="filters-panel" class="filters-panel">
 
   <div class="filters-container">
@@ -25,9 +25,9 @@
       <h3>💰 Price Range</h3>
 
       <div class="price-inputs">
-        <input type="number" id="price-min" placeholder="Min UGX" value="0">
+        <input type="number" id="price-min" value="0" placeholder="Min UGX">
         <span>—</span>
-        <input type="number" id="price-max" placeholder="Max UGX" value="100000000">
+        <input type="number" id="price-max" value="100000000" placeholder="Max UGX">
       </div>
     </div>
 
@@ -36,7 +36,6 @@
       <h3>📍 Location</h3>
 
       <select id="location-filter">
-
         <option value="">All Uganda</option>
         <option value="Kampala">Kampala</option>
         <option value="Wakiso">Wakiso</option>
@@ -48,7 +47,6 @@
         <option value="Mbale">Mbale</option>
         <option value="Masaka">Masaka</option>
         <option value="Fort Portal">Fort Portal</option>
-
       </select>
     </div>
 
@@ -57,23 +55,10 @@
       <h3>📅 Posted</h3>
 
       <div class="date-filter-btns">
-
-        <button class="date-filter-btn active" onclick="filterByDate('all')">
-          All Time
-        </button>
-
-        <button class="date-filter-btn" onclick="filterByDate('24h')">
-          Last 24h
-        </button>
-
-        <button class="date-filter-btn" onclick="filterByDate('7d')">
-          Last 7 Days
-        </button>
-
-        <button class="date-filter-btn" onclick="filterByDate('30d')">
-          Last 30 Days
-        </button>
-
+        <button class="date-filter-btn active" onclick="filterByDate('all')">All Time</button>
+        <button class="date-filter-btn" onclick="filterByDate('24h')">Last 24h</button>
+        <button class="date-filter-btn" onclick="filterByDate('7d')">Last 7 Days</button>
+        <button class="date-filter-btn" onclick="filterByDate('30d')">Last 30 Days</button>
       </div>
     </div>
 
@@ -91,145 +76,74 @@
 
     <!-- BUTTONS -->
     <div class="filter-actions">
-
-      <button
-        class="btn btn-outline"
-        onclick="resetFilters()"
-      >
-        Reset Filters
-      </button>
-
-      <button
-        class="btn btn-orange"
-        onclick="applyFilters()"
-      >
-        Apply Filters
-      </button>
-
+      <button class="btn btn-outline" onclick="resetFilters()">Reset Filters</button>
+      <button class="btn btn-orange" onclick="applyFilters()">Apply Filters</button>
     </div>
 
   </div>
 
 </div>
 
-
-<!-- KEEP THIS CATEGORY SECTION ONLY -->
+<!-- ================= CATEGORIES ================= -->
 <nav class="categories">
 
-  <button
-    class="cat-btn active"
-    data-cat="all"
-    onclick="filterCategory('all')"
-  >
+  <button class="cat-btn active" data-cat="all" onclick="filterCategory('all')">
     🏪 All
   </button>
 
-  <button
-    class="cat-btn"
-    data-cat="phones"
-    onclick="filterCategory('phones')"
-  >
+  <button class="cat-btn" data-cat="phones" onclick="filterCategory('phones')">
     📱 Phones
   </button>
 
-  <button
-    class="cat-btn"
-    data-cat="electronics"
-    onclick="filterCategory('electronics')"
-  >
+  <button class="cat-btn" data-cat="electronics" onclick="filterCategory('electronics')">
     💻 Electronics
   </button>
 
-  <button
-    class="cat-btn"
-    data-cat="fashion"
-    onclick="filterCategory('fashion')"
-  >
+  <button class="cat-btn" data-cat="fashion" onclick="filterCategory('fashion')">
     👗 Fashion
   </button>
 
-  <button
-    class="cat-btn"
-    data-cat="shoes"
-    onclick="filterCategory('shoes')"
-  >
+  <button class="cat-btn" data-cat="shoes" onclick="filterCategory('shoes')">
     👟 Shoes
   </button>
 
-  <button
-    class="cat-btn"
-    data-cat="beauty"
-    onclick="filterCategory('beauty')"
-  >
+  <button class="cat-btn" data-cat="beauty" onclick="filterCategory('beauty')">
     💄 Beauty
   </button>
 
-  <button
-    class="cat-btn"
-    data-cat="bags"
-    onclick="filterCategory('bags')"
-  >
+  <button class="cat-btn" data-cat="bags" onclick="filterCategory('bags')">
     👜 Bags
   </button>
 
-  <button
-    class="cat-btn"
-    data-cat="groceries"
-    onclick="filterCategory('groceries')"
-  >
+  <button class="cat-btn" data-cat="groceries" onclick="filterCategory('groceries')">
     🛒 Groceries
   </button>
 
-  <button
-    class="cat-btn"
-    data-cat="watches"
-    onclick="filterCategory('watches')"
-  >
+  <button class="cat-btn" data-cat="watches" onclick="filterCategory('watches')">
     ⌚ Watches
   </button>
 
-  <button
-    class="cat-btn"
-    data-cat="computers"
-    onclick="filterCategory('computers')"
-  >
+  <button class="cat-btn" data-cat="computers" onclick="filterCategory('computers')">
     🖥️ Computers
   </button>
 
-  <button
-    class="cat-btn"
-    data-cat="gaming"
-    onclick="filterCategory('gaming')"
-  >
+  <button class="cat-btn" data-cat="gaming" onclick="filterCategory('gaming')">
     🎮 Gaming
   </button>
 
-  <button
-    class="cat-btn"
-    data-cat="home"
-    onclick="filterCategory('home')"
-  >
+  <button class="cat-btn" data-cat="home" onclick="filterCategory('home')">
     🏠 Home
   </button>
 
-  <button
-    class="cat-btn"
-    data-cat="accessories"
-    onclick="filterCategory('accessories')"
-  >
+  <button class="cat-btn" data-cat="accessories" onclick="filterCategory('accessories')">
     💎 Accessories
   </button>
 
-  <button
-    class="cat-btn filter-toggle-btn"
-    onclick="toggleFilters()"
-    style="margin-left:auto"
-  >
+  <button class="cat-btn filter-toggle-btn" onclick="toggleFilters()" style="margin-left:auto">
     🔽 Filters
   </button>
 
 </nav>
 
-
-<!-- KEEP THIS PRODUCTS CONTAINER -->
+<!-- ================= PRODUCTS ================= -->
 <div id="products" class="products"></div>
