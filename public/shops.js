@@ -72,16 +72,16 @@ function renderShops(shops) {
         onclick="window.location.href='shop.html?seller=${shop.userId}'">
 
         <div class="shop-name">
-          🏪 ${shop.seller.name || "ZiBuy Shop"}
+          🏪 ${shop.userId || "ZiBuy Shop"}
           ${shop.seller.isVerified ? "✅" : ""}
         </div>
 
         <div class="shop-meta">
-          📍 ${shop.seller.location || "Uganda"}
+          📍 ${shop.totalAds || "Uganda"}
         </div>
 
         <div class="shop-meta">
-          📦 ${shop.totalProducts} listings
+          📦 ${shop.plan || 0} listings
         </div>
 
         <button class="shop-btn">
