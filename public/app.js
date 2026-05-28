@@ -32,7 +32,7 @@ let filterState = {
 
 
 window.allProducts = [];
-let allProducts = window.allProducts;
+let allProducts = [];
 
 // ============================================
 // DOM READY CHECK
@@ -260,6 +260,9 @@ allProducts = products.sort(
   (a, b) => b.rankScore - a.rankScore
 );
 
+// keep global sync
+window.allProducts = allProducts;
+
 filteredProducts = [...allProducts];
 
 loadFeaturedProducts();
@@ -383,7 +386,7 @@ function renderProducts() {
 
   if (!container) return;
 
-  let filtered = allProducts.filter(p => {
+  let filtered = (allProducts || []).filter(p => {
 
     /* =========================
        SMART SEARCH
@@ -871,7 +874,7 @@ window.searchProducts = function () {
   }
 
   // FIND MATCHES
-  const matches = allProducts.filter(p => {
+  const matches = (window.allProducts || []).filter(p => {
 
     const text = `
       ${p.name || ""}
@@ -1010,6 +1013,7 @@ window.deleteProduct = async function(productId) {
     await deleteDoc(doc(db, "products", productId));
 
     allProducts = allProducts.filter(p => p.id !== productId);
+window.allProducts = allProducts;
 
     renderProducts();
 
@@ -1024,59 +1028,3 @@ window.deleteProduct = async function(productId) {
 };
 
 
-window.handleSearch = function(value) {
-
-  searchQuery =
-    value.toLowerCase().trim();
-
-  renderProducts();
-
-};
-
-window.filterCategory = function(category) {
-
-  currentCategory = category;
-
-  renderProducts();
-
-};
-
-// ============================================
-// SMART SEARCH SYSTEM
-// ============================================
-
-window.searchProducts = function () {
-
-  const input =
-    document.getElementById("search-input");
-
-  if (!input) return;
-
-  searchQuery =
-    input.value.toLowerCase().trim();
-
-  renderProducts();
-};
-
-// HIDE SEARCH SUGGESTIONS
-document.addEventListener("click", (e) => {
-
-  const box =
-    document.getElementById(
-      "search-suggestions"
-    );
-
-  const input =
-    document.getElementById(
-      "search-input"
-    );
-
-  if (!box || !input) return;
-
-  if (
-    !box.contains(e.target) &&
-    e.target !== input
-  ) {
-    box.style.display = "none";
-  }
-});
