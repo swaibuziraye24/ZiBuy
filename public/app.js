@@ -630,6 +630,46 @@ products = mixedProducts;
         📍 ${p.location || "Unknown"}
       </p>
 
+<div style="
+  display:flex;
+  gap:8px;
+  margin-top:12px;
+">
+
+  <button
+    onclick="window.location.href='product.html?id=${p.id}'"
+    style="
+      flex:1;
+      background:#ff6600;
+      color:white;
+      border:none;
+      padding:10px;
+      border-radius:8px;
+      font-weight:700;
+      cursor:pointer;
+    "
+  >
+    View
+  </button>
+
+  <button
+    onclick="startChat('${p.userId}')"
+    style="
+      flex:1;
+      background:#111827;
+      color:white;
+      border:none;
+      padding:10px;
+      border-radius:8px;
+      font-weight:700;
+      cursor:pointer;
+    "
+  >
+    Chat
+  </button>
+
+</div>
+
     </div>
   `;
 
