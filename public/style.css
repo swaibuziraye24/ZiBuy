@@ -5966,13 +5966,6 @@ table {
    SELLER VERIFICATION — RESPONSIVE DESIGN
 ============================================ */
 
-.admin-verification-wrap{
-  width:100%;
-  max-width:1200px;
-  margin:0 auto;
-  padding:20px 14px 100px;
-  box-sizing:border-box;
-}
 
 .admin-verification-wrap h1{
   font-size:clamp(22px, 5vw, 36px);
@@ -6365,12 +6358,6 @@ table {
 /* ============================================
    ADMIN VERIFICATION SYSTEM
 ============================================ */
-
-.admin-verification-wrap{
-  max-width:1200px;
-  margin:auto;
-  padding:20px;
-}
 
 .admin-verification-wrap h1{
   font-size:28px;
