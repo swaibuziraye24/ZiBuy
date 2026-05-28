@@ -12,21 +12,14 @@ import {
 } from "./firebase.js";
 
 import {
-  getRankedProducts
+  getRankedProducts,
+  getUserPlan,
+  PLAN_SCORE
 } from "./ranking-service.js";
 
 // =============================
 // GLOBAL STATE (ZiBuy SAFE FIX)
 // =============================
-
-// Initialize global products safely
-window.allProducts = window.allProducts || [];
-
-// Main product state (single source of truth)
-let allProducts = window.allProducts;
-
-// Filtered products (what UI renders)
-let filteredProducts = [...allProducts];
 
 // User + UI state
 let currentUser = null;
