@@ -349,8 +349,19 @@ function listenToFollowers() {
 
   onSnapshot(q, (snapshot) => {
 
-    const el = document.getElementById("followers-count");
-    if (el) el.textContent = snapshot.size;
+    const el1 =
+  document.getElementById("followers-count");
+
+const el2 =
+  document.getElementById("followers-count-2");
+
+if (el1) {
+  el1.textContent = snapshot.size;
+}
+
+if (el2) {
+  el2.textContent = snapshot.size;
+}
 
   });
 }
