@@ -18,6 +18,8 @@ import {
 
 import { onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+import { canUserPost } from "./subscription-check.js";
+
 import {
   expireOldAds
 } from "./ad-expiry.js";
@@ -374,4 +376,26 @@ if (ratingEl) {
     `⭐ ${avg.toFixed(1)} / 5`;
 
 }
+}
+
+async function checkBeforePosting() {
+
+  const user = auth.currentUser;
+
+  if (!user) {
+    alert("Login first");
+    return false;
+  }
+
+  const check =
+    await canUserPost(user.uid);
+
+  if (!check.allowed) {
+    alert(
+      `❌ Limit reached for ${check.plan} plan. Upgrade to continue.`
+    );
+    return false;
+  }
+
+  return true;
 }
