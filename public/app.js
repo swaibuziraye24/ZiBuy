@@ -20,7 +20,8 @@ import {
 // =============================
 // GLOBAL STATE (ZiBuy SAFE FIX)
 // =============================
-
+let allProducts = [];
+let filteredProducts = [];
 // User + UI state
 let currentUser = null;
 let searchQuery = "";
@@ -260,9 +261,9 @@ return product;
     );
 
  // Store all products globally for use in other functions
-allProducts = products.sort(
-  (a, b) => b.rankScore - a.rankScore
-);
+allProducts = products.sort((a, b) => b.rankScore - a.rankScore);
+
+window.allProducts = allProducts;
 
 // keep global sync (CRITICAL FIX)
 window.allProducts = allProducts;
@@ -935,41 +936,3 @@ window.allProducts = allProducts;
   }
 };
 
-window.applyFilters = function () {
-  const min = parseInt(document.getElementById("price-min")?.value || 0);
-  const max = parseInt(document.getElementById("price-max")?.value || 99999999);
-  const location = document.getElementById("location-filter")?.value || "";
-
-  filterState.priceMin = min;
-  filterState.priceMax = max;
-  filterState.location = location;
-
-  renderProducts();
-};
-
-
-window.resetFilters = function () {
-  document.getElementById("price-min").value = 0;
-  document.getElementById("price-max").value = 99999999;
-  document.getElementById("location-filter").value = "";
-  document.getElementById("sort-filter").value = "newest";
-
-  filterState = {
-    priceMin: 0,
-    priceMax: 99999999,
-    location: "",
-    dateRange: "all",
-    sortBy: "newest"
-  };
-
-  searchQuery = "";
-
-  renderProducts();
-};
-
-window.toggleFilters = function () {
-  const panel = document.getElementById("filters-panel");
-  if (!panel) return;
-
-  panel.classList.toggle("active");
-};
