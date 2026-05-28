@@ -263,6 +263,10 @@ renderProducts();
 
 } catch (err) {
   console.error(err);
+
+console.log("TOTAL PRODUCTS:", products.length);
+console.log(products);
+
 }
 }
 // ============================================
