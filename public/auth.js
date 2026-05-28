@@ -222,76 +222,56 @@ export async function customerLogout() {
 
 // ============ Admin Login ============
 export async function adminLogin() {
-  const email = document.getElementById("admin-email")?.value.trim();
-  const password = document.getElementById("admin-password")?.value.trim();
+
+  const email =
+    document.getElementById("admin-email")?.value.trim();
+
+  const password =
+    document.getElementById("admin-password")?.value.trim();
 
   if (!email || !password) {
+
     alert("❌ Please fill admin credentials");
+
     return;
+
   }
 
   try {
-    const result = await signInWithEmailAndPassword(auth, email, password);
 
+    const result =
+      await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+
+    // Only allow your admin email
     if (result.user.email !== ADMIN_EMAIL) {
+
       await signOut(auth);
+
       alert("❌ Not authorized as admin");
+
       return;
+
     }
 
     isAdmin = true;
+
     closeAdminLoginModal();
-    
-    // Wait a moment then open admin panel
-    setTimeout(() => {
-      openAdminPanel();
-    }, 500);
-    
+
     showToast("✅ Welcome Admin! 🔑");
+
+    // ✅ Open real admin dashboard page
+    window.location.href = "admin.html";
+
   } catch (err) {
+
     alert("❌ Admin login failed: " + err.message);
+
   }
-}
 
-export async function openAdminPanel() {
-  try {
-    // Get modal elements
-    const modal = document.getElementById("admin-modal");
-    const content = document.getElementById("admin-panel-content");
-
-    if (!modal || !content) {
-      console.error("Admin modal elements not found");
-      alert("Error: Admin panel not found");
-      return;
-    }
-
-    // Show modal
-    modal.classList.add("open");
-    content.style.display = "block";
-
-    // Load admin.js module
-    try {
-      await import("./admin.js");
-      console.log("Admin module loaded");
-    } catch (err) {
-      console.warn("Admin module not available (optional):", err);
-    }
-
-    // Load orders if function exists
-    if (window.loadOrders) {
-      window.loadOrders();
-    }
-
-  } catch (err) {
-    console.error("Error opening admin panel:", err);
-  }
-}
-
-export function closeAdminPanel() {
-  const modal = document.getElementById("admin-modal");
-  if (modal) {
-    modal.classList.remove("open");
-  }
 }
 
 
