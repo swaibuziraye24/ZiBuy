@@ -1,228 +1,539 @@
 // ============================================
-//   ZiBuy — Admin Module
+//   ZiBuy — Admin Panel
 // ============================================
 
 import {
-  db, storage,
-  collection, getDocs, addDoc, deleteDoc, doc
+  db, auth, collection, getDocs, doc,
+  getDoc, query, where, updateDoc, deleteDoc, addDoc
 } from "./firebase.js";
+import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { PLAN_LIMITS } from "./plan-enforcer.js";
 
-import {
-  ref,
-  uploadBytes,
-  getDownloadURL
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+const ADMIN_EMAIL = "swaibuziraye22@gmail.com"; // ← your admin email
 
-import { showToast, loadProducts } from "./app.js";
+// ── Raw data caches ───────────────────────────
+let allUsers  = [];
+let allSubs   = [];
+let allBoosts = [];
+let allAds    = [];
+let allOrders = [];
 
-import { auth } from "./firebase.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-
-const ADMIN_EMAIL = "swaibuziraye22@gmail.com";
-
-let isAdmin = false;
-
-onAuthStateChanged(auth, (user) => {
-
-  if (!user) {
-    isAdmin = false;
+// ── Auth guard ────────────────────────────────
+onAuthStateChanged(auth, async (user) => {
+  if (!user || user.email !== ADMIN_EMAIL) {
+    alert("Access denied. Admins only.");
+    window.location.href = "index.html";
     return;
   }
-
-  const currentEmail = user.email?.trim().toLowerCase();
-  const adminEmail = ADMIN_EMAIL.trim().toLowerCase();
-
-  isAdmin = currentEmail === adminEmail;
-
-  console.log("Admin:", isAdmin);
-
+  document.getElementById("admin-email-display").textContent = user.email;
+  await loadAll();
 });
 
+window.adminLogout = () => signOut(auth).then(() => window.location.href = "index.html");
 
-  // ============ Image Preview ============
+// ── Section switching ─────────────────────────
+window.showSection = function(name, btn) {
+  document.querySelectorAll(".admin-section").forEach(s => s.classList.remove("active"));
+  document.querySelectorAll(".admin-nav-item").forEach(b => b.classList.remove("active"));
+  document.getElementById(`section-${name}`)?.classList.add("active");
+  if (btn) btn.classList.add("active");
+};
 
-  function previewImages(event) {
-  if (!event?.target?.files) return;
-  const container = document.getElementById("preview-container");
-  if (!container) return;
-  container.innerHTML = "";
-
-  Array.from(event.target.files).forEach(file => {
-    if (!file.type.startsWith("image/")) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = document.createElement("img");
-      img.src = e.target.result;
-      img.className = "preview-image";
-      container.appendChild(img);
-    };
-    reader.readAsDataURL(file);
-  });
+// ── Load everything in parallel ───────────────
+async function loadAll() {
+  await Promise.all([
+    loadUsers(),
+    loadSubscriptions(),
+    loadBoosts(),
+    loadAds(),
+    loadOrders()
+  ]);
+  renderOverview();
 }
 
-window.previewImages = previewImages;
+// ══════════════════════════════════════════════
+//  OVERVIEW
+// ══════════════════════════════════════════════
+function renderOverview() {
+  const paidPlans   = allSubs.filter(s => s.status === "active").length;
+  const pendingBoosts = allBoosts.filter(b => b.status === "pending").length;
+  const activeAds   = allAds.filter(a => a.status === "active").length;
 
-// ============ Upload Product ============
+  document.getElementById("kpi-users").textContent   = allUsers.length;
+  document.getElementById("kpi-paid").textContent    = paidPlans;
+  document.getElementById("kpi-ads").textContent     = activeAds;
+  document.getElementById("kpi-boosts").textContent  = pendingBoosts;
+  document.getElementById("kpi-orders").textContent  = allOrders.length;
 
- async function addProduct() {
-  // User must be logged in
-const user = auth.currentUser;
+  const pending = document.getElementById("pending-actions");
 
-if (!user) {
-  showToast("Please login first", "error");
-  return;
-}
+  const pendingSubs   = allSubs.filter(s => s.status === "pending_payment");
+  const pendingBoostList = allBoosts.filter(b => b.status === "pending");
 
-  const name        = document.getElementById("product-name").value.trim();
-  const price       = document.getElementById("product-price").value.trim();
-  const category    = document.getElementById("product-category").value;
-  const desc        = document.getElementById("product-desc").value.trim();
-  const sellerName  = document.getElementById("seller-name").value.trim();
-  const sellerPhone = document.getElementById("seller-phone").value.trim();
-  const sellerLoc   = document.getElementById("seller-location").value.trim();
-  const files       = document.getElementById("product-image").files;
-
-  if (!name || !price || !sellerPhone || files.length === 0) {
-    showToast("Please fill all fields including seller phone", "error");
+  if (pendingSubs.length === 0 && pendingBoostList.length === 0) {
+    pending.innerHTML = `<p style="color:#16a34a;font-weight:700">✅ No pending actions</p>`;
     return;
   }
 
-  const uploadBtn = document.getElementById("upload-btn");
-  uploadBtn.textContent = "Uploading...";
-  uploadBtn.disabled = true;
+  pending.innerHTML = `
+    ${pendingSubs.length > 0 ? `
+      <div style="background:#fef3c7;border-radius:10px;padding:14px;margin-bottom:10px">
+        <p style="font-weight:800;color:#92400e;margin:0 0 4px">⏳ ${pendingSubs.length} subscription(s) awaiting payment confirmation</p>
+        <button class="action-btn btn-approve" onclick="showSection('subscriptions',null)">Review →</button>
+      </div>` : ""}
+    ${pendingBoostList.length > 0 ? `
+      <div style="background:#dbeafe;border-radius:10px;padding:14px">
+        <p style="font-weight:800;color:#1e40af;margin:0 0 4px">⭐ ${pendingBoostList.length} boost request(s) awaiting approval</p>
+        <button class="action-btn btn-approve" onclick="showSection('boosts',null)">Review →</button>
+      </div>` : ""}
+  `;
+}
+
+// ══════════════════════════════════════════════
+//  USERS & PLANS
+// ══════════════════════════════════════════════
+async function loadUsers() {
+  try {
+    const snap = await getDocs(collection(db, "users"));
+    allUsers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderUsers(allUsers);
+  } catch (e) { console.error(e); }
+}
+
+function renderUsers(users) {
+  const tbody = document.getElementById("users-table-body");
+  if (!tbody) return;
+
+  if (users.length === 0) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="7">No users found</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = users.map(u => {
+    const plan     = u.plan || "free";
+    const verified = u.isSellerVerified ? "✅ Yes" : "—";
+    const banned   = u.banned ? "banned" : "active";
+
+    return `
+      <tr>
+        <td><span style="font-weight:700">${u.email || u.id}</span></td>
+        <td><span class="plan-chip chip-${plan}">${planEmoji(plan)} ${plan}</span></td>
+        <td id="ads-count-${u.id}">—</td>
+        <td>${verified}</td>
+        <td>
+          <span class="plan-chip ${u.banned ? 'chip-expired' : 'chip-approved'}">
+            ${banned}
+          </span>
+        </td>
+        <td>
+          <select class="plan-select" onchange="changeUserPlan('${u.id}', this.value)">
+            <option value="">— Change Plan —</option>
+            <option value="free"   ${plan==="free"   ?"selected":""}>🆓 Free</option>
+            <option value="bronze" ${plan==="bronze" ?"selected":""}>🥉 Bronze</option>
+            <option value="silver" ${plan==="silver" ?"selected":""}>🥈 Silver</option>
+            <option value="gold"   ${plan==="gold"   ?"selected":""}>🥇 Gold</option>
+          </select>
+        </td>
+        <td>
+          ${u.banned
+            ? `<button class="action-btn btn-unban" onclick="toggleBan('${u.id}', false)">Unban</button>`
+            : `<button class="action-btn btn-ban"   onclick="toggleBan('${u.id}', true)">Ban</button>`}
+        </td>
+      </tr>`;
+  }).join("");
+
+  // Load ad counts async
+  users.forEach(u => loadUserAdCount(u.id));
+}
+
+async function loadUserAdCount(userId) {
+  try {
+    const snap = await getDocs(query(
+      collection(db, "products"),
+      where("userId", "==", userId),
+      where("status", "==", "active")
+    ));
+    const el = document.getElementById(`ads-count-${userId}`);
+    if (el) el.textContent = snap.size;
+  } catch (_) {}
+}
+
+window.filterUsers = function() {
+  const q = document.getElementById("user-search").value.toLowerCase();
+  const filtered = allUsers.filter(u => (u.email || "").toLowerCase().includes(q));
+  renderUsers(filtered);
+};
+
+window.changeUserPlan = async function(userId, newPlan) {
+  if (!newPlan) return;
+  if (!confirm(`Change this user's plan to ${newPlan.toUpperCase()}?`)) return;
 
   try {
-    // Upload all images to Firebase Storage
-    let imageUrls = [];
-    for (const file of files) {
-      const storageRef = ref(storage, `products/${Date.now()}_${file.name}`);
-      await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(storageRef);
-      imageUrls.push(url);
+    const limits  = PLAN_LIMITS[newPlan];
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() + 30);
+
+    // Expire old active plan
+    const oldSnap = await getDocs(query(
+      collection(db, "business_accounts"),
+      where("userId", "==", userId),
+      where("status", "==", "active")
+    ));
+    for (const d of oldSnap.docs) {
+      await updateDoc(doc(db, "business_accounts", d.id), { status: "admin_changed" });
     }
 
-    // Save product to Firestore
-    await addDoc(collection(db, "products"), {
-      name,
-      price:       Number(price),
-      category,
-      description: desc || "Quality product from ZiBuy marketplace.",
-      images:      imageUrls,
-     seller: {
-  uid: user.uid,
-  email: user.email,
-  name: sellerName || user.email.split("@")[0],
-  phone: sellerPhone,
-  location: sellerLoc || "Uganda"
-},
-
-location: sellerLoc || "Uganda",
-
-      createdAt: serverTimestamp(),
-    });
-
-    showToast("Product uploaded successfully! 🎉", "success");
-
-    // Reset form
-    document.getElementById("product-name").value         = "";
-    document.getElementById("product-price").value        = "";
-    document.getElementById("product-desc").value         = "";
-    document.getElementById("seller-name").value          = "";
-    document.getElementById("seller-phone").value         = "";
-    document.getElementById("seller-location").value      = "";
-    document.getElementById("product-image").value        = "";
-    document.getElementById("preview-container").innerHTML = "";
-
-    // Refresh homepage products if available
-if (typeof loadProducts === "function") {
-  loadProducts();
-}
-
-// Small delay then refresh page
-setTimeout(() => {
-  window.location.reload();
-}, 1000);
-
-  } catch (err) {
-    console.error(err);
-    showToast("Upload failed: " + err.message, "error");
-  } finally {
-    uploadBtn.textContent = "Upload Product";
-    uploadBtn.disabled = false;
-  }
-}
-
-window.addProduct = addProduct;
-
-// ============ Delete Product ============
-
- async function deleteProduct(productId) {
-  if (!isAdmin) return;
-  if (!confirm("Delete this product?")) return;
-  try {
-    await deleteDoc(doc(db, "products", productId));
-    showToast("Product deleted", "info");
-    loadProducts();
-  } catch (err) {
-    showToast("Could not delete product", "error");
-  }
-}
-
-window.deleteProduct = deleteProduct;
-
-// ============ Load Orders ============
-
- async function loadOrders() {
-  const container = document.getElementById("admin-orders");
-  if (!container) return;
-
-  container.innerHTML = "<p style='color:#6b7280;font-size:13px'>Loading orders...</p>";
-
-  try {
-    const snapshot = await getDocs(collection(db, "orders"));
-
-    let totalOrders  = 0;
-    let totalRevenue = 0;
-    container.innerHTML = "";
-
-    if (snapshot.empty) {
-      container.innerHTML = "<p style='color:#6b7280;font-size:13px;text-align:center;padding:20px'>No orders yet</p>";
-      document.getElementById("total-orders").textContent  = "0";
-      document.getElementById("total-revenue").textContent = "UGX 0";
-      return;
+    // Create new plan if not free
+    if (newPlan !== "free") {
+      await addDoc(collection(db, "business_accounts"), {
+        userId,
+        plan:      newPlan,
+        billing:   "monthly",
+        status:    "active",
+        price:     0,
+        startDate: new Date(),
+        endDate,
+        activatedBy: "admin",
+        createdAt:   new Date()
+      });
     }
 
-    snapshot.forEach((docSnap) => {
-      const order   = docSnap.data();
-      const orderId = order.orderId || docSnap.id;
-
-      totalOrders  += 1;
-      totalRevenue += order.total || 0;
-
-      container.innerHTML += `
-        <div class="order-card">
-          <h4>📦 ${orderId}</h4>
-          <p><strong>Customer:</strong> ${order.customerName}</p>
-          <p><strong>Phone:</strong> ${order.customerPhone}</p>
-          <p><strong>Location:</strong> ${order.customerLocation}</p>
-          <p><strong>Total:</strong> UGX ${(order.total || 0).toLocaleString()}</p>
-          <p><strong>Payment:</strong> ${order.paymentMethod || "Cash On Delivery"}</p>
-          <span class="order-status">${order.status || "Pending"}</span>
-        </div>
-      `;
+    // Update user doc
+    await updateDoc(doc(db, "users", userId), {
+      plan:             newPlan,
+      isSellerVerified: newPlan === "silver" || newPlan === "gold",
+      planUpdatedAt:    new Date()
     });
 
-    document.getElementById("total-orders").textContent  = totalOrders;
-    document.getElementById("total-revenue").textContent = "UGX " + totalRevenue.toLocaleString();
-
-  } catch (err) {
-    console.error(err);
-    container.innerHTML = "<p style='color:red;font-size:13px'>Failed to load orders</p>";
+    showToast(`Plan changed to ${newPlan} ✅`, "success");
+    loadUsers();
+  } catch (e) {
+    console.error(e);
+    showToast("Failed to change plan", "error");
   }
+};
+
+window.toggleBan = async function(userId, ban) {
+  if (!confirm(`${ban ? "Ban" : "Unban"} this user?`)) return;
+  try {
+    await updateDoc(doc(db, "users", userId), { banned: ban });
+    showToast(ban ? "User banned" : "User unbanned", ban ? "error" : "success");
+    loadUsers();
+  } catch (e) {
+    showToast("Failed", "error");
+  }
+};
+
+// ══════════════════════════════════════════════
+//  SUBSCRIPTIONS
+// ══════════════════════════════════════════════
+async function loadSubscriptions() {
+  try {
+    const snap = await getDocs(collection(db, "business_accounts"));
+    allSubs = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+                       .sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
+    renderSubs(allSubs);
+  } catch (e) { console.error(e); }
 }
 
-window.loadOrders = loadOrders;
+function renderSubs(subs) {
+  const tbody = document.getElementById("subs-table-body");
+  if (!tbody) return;
 
-export { showToast, loadProducts, loadOrders };
+  if (subs.length === 0) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="8">No subscriptions yet</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = subs.map(s => {
+    const start   = fmtDate(s.startDate);
+    const end     = fmtDate(s.endDate);
+    const statusChip = chipClass(s.status);
+
+    return `
+      <tr>
+        <td style="font-size:12px">${s.email || s.userId}</td>
+        <td><span class="plan-chip chip-${s.plan}">${planEmoji(s.plan)} ${s.plan}</span></td>
+        <td style="font-size:12px">${s.billing || "monthly"}</td>
+        <td style="font-weight:700;color:var(--orange)">UGX ${Number(s.price || 0).toLocaleString()}</td>
+        <td style="font-size:12px">${start}</td>
+        <td style="font-size:12px">${end}</td>
+        <td><span class="plan-chip ${statusChip}">${s.status}</span></td>
+        <td>
+          ${s.status === "pending_payment" ? `
+            <button class="action-btn btn-approve" onclick="activateSub('${s.id}','${s.userId}','${s.plan}')">✅ Activate</button>
+            <button class="action-btn btn-reject"  onclick="rejectSub('${s.id}')">✗ Reject</button>` : ""}
+          ${s.status === "active" ? `
+            <button class="action-btn btn-reject" onclick="expireSub('${s.id}','${s.userId}')">Expire</button>` : ""}
+        </td>
+      </tr>`;
+  }).join("");
+}
+
+window.activateSub = async function(subId, userId, plan) {
+  try {
+    const limits  = PLAN_LIMITS[plan] || PLAN_LIMITS.free;
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() + 30);
+
+    await updateDoc(doc(db, "business_accounts", subId), {
+      status:        "active",
+      activatedAt:   new Date(),
+      activatedBy:   "admin",
+      endDate
+    });
+
+    await updateDoc(doc(db, "users", userId), {
+      plan,
+      isSellerVerified: plan === "silver" || plan === "gold",
+      planUpdatedAt:    new Date()
+    }).catch(() => {});
+
+    showToast("Subscription activated ✅", "success");
+    loadSubscriptions();
+    renderOverview();
+  } catch (e) {
+    showToast("Failed to activate", "error");
+  }
+};
+
+window.rejectSub = async function(subId) {
+  if (!confirm("Reject this subscription request?")) return;
+  try {
+    await updateDoc(doc(db, "business_accounts", subId), { status: "rejected" });
+    showToast("Rejected", "info");
+    loadSubscriptions();
+  } catch (e) { showToast("Failed", "error"); }
+};
+
+window.expireSub = async function(subId, userId) {
+  if (!confirm("Expire this subscription now?")) return;
+  try {
+    await updateDoc(doc(db, "business_accounts", subId), {
+      status: "expired", expiredAt: new Date()
+    });
+    await updateDoc(doc(db, "users", userId), {
+      plan: "free", planExpiredAt: new Date(), isSellerVerified: false
+    }).catch(() => {});
+    showToast("Subscription expired", "info");
+    loadSubscriptions();
+  } catch (e) { showToast("Failed", "error"); }
+};
+
+// ══════════════════════════════════════════════
+//  BOOST REQUESTS
+// ══════════════════════════════════════════════
+async function loadBoosts() {
+  try {
+    const snap = await getDocs(collection(db, "boost_requests"));
+    allBoosts = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+                         .sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
+    renderBoosts(allBoosts);
+  } catch (e) { console.error(e); }
+}
+
+function renderBoosts(boosts) {
+  const tbody = document.getElementById("boosts-table-body");
+  if (!tbody) return;
+
+  if (boosts.length === 0) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="7">No boost requests</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = boosts.map(b => `
+    <tr>
+      <td>
+        <a href="product.html?id=${b.productId}" target="_blank"
+          style="color:var(--orange);font-weight:700;font-size:13px">
+          ${b.productName || b.productId}
+        </a>
+      </td>
+      <td style="font-size:12px">${b.userEmail}</td>
+      <td>${b.days} days</td>
+      <td style="font-weight:700;color:var(--orange)">UGX ${Number(b.price||0).toLocaleString()}</td>
+      <td style="font-size:12px">${fmtDate(b.createdAt)}</td>
+      <td><span class="plan-chip ${chipClass(b.status)}">${b.status}</span></td>
+      <td>
+        ${b.status === "pending" ? `
+          <button class="action-btn btn-approve" onclick="approveBoost('${b.id}','${b.productId}',${b.days})">✅ Approve</button>
+          <button class="action-btn btn-reject"  onclick="rejectBoost('${b.id}','${b.productId}')">✗ Reject</button>` : ""}
+      </td>
+    </tr>`).join("");
+}
+
+window.approveBoost = async function(boostId, productId, days) {
+  try {
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + days);
+
+    await updateDoc(doc(db, "boost_requests", boostId), {
+      status:      "approved",
+      approvedAt:  new Date(),
+      approvedBy:  "admin"
+    });
+
+    await updateDoc(doc(db, "products", productId), {
+      isPremium:        true,
+      premiumExpiresAt: expiresAt
+    });
+
+    showToast("Boost activated ✅", "success");
+    loadBoosts();
+    renderOverview();
+  } catch (e) {
+    showToast("Failed to approve", "error");
+    console.error(e);
+  }
+};
+
+window.rejectBoost = async function(boostId, productId) {
+  if (!confirm("Reject this boost request?")) return;
+  try {
+    await updateDoc(doc(db, "boost_requests", boostId), {
+      status:     "rejected",
+      rejectedAt: new Date()
+    });
+    await updateDoc(doc(db, "products", productId), { isPremium: false }).catch(() => {});
+    showToast("Boost rejected", "info");
+    loadBoosts();
+  } catch (e) { showToast("Failed", "error"); }
+};
+
+// ══════════════════════════════════════════════
+//  ALL ADS
+// ══════════════════════════════════════════════
+async function loadAds() {
+  try {
+    const snap = await getDocs(collection(db, "products"));
+    allAds = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+                      .sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
+    renderAdsTable(allAds);
+  } catch (e) { console.error(e); }
+}
+
+function renderAdsTable(ads) {
+  const tbody = document.getElementById("ads-table-body");
+  if (!tbody) return;
+
+  if (ads.length === 0) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="7">No ads</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = ads.map(a => `
+    <tr>
+      <td>
+        <img src="${a.images?.[0] || ''}" alt=""
+          style="width:44px;height:44px;object-fit:cover;border-radius:8px;background:#f3f4f6">
+      </td>
+      <td style="font-weight:700;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.name}</td>
+      <td style="color:var(--orange);font-weight:800">UGX ${Number(a.price||0).toLocaleString()}</td>
+      <td style="font-size:12px">${a.userEmail || "—"}</td>
+      <td><span class="plan-chip ${chipClass(a.status)}">${a.status || "active"}</span></td>
+      <td style="font-size:12px">${fmtDate(a.expiresAt)}</td>
+      <td>
+        <button class="action-btn btn-reject" onclick="adminDeleteAd('${a.id}')">🗑️ Delete</button>
+      </td>
+    </tr>`).join("");
+}
+
+window.filterAds = function() {
+  const q = document.getElementById("ads-search").value.toLowerCase();
+  const filtered = allAds.filter(a =>
+    (a.name || "").toLowerCase().includes(q) ||
+    (a.userEmail || "").toLowerCase().includes(q)
+  );
+  renderAdsTable(filtered);
+};
+
+window.adminDeleteAd = async function(adId) {
+  if (!confirm("Delete this ad permanently?")) return;
+  try {
+    await deleteDoc(doc(db, "products", adId));
+    showToast("Ad deleted", "info");
+    loadAds();
+  } catch (e) { showToast("Failed", "error"); }
+};
+
+// ══════════════════════════════════════════════
+//  ORDERS
+// ══════════════════════════════════════════════
+async function loadOrders() {
+  try {
+    const snap = await getDocs(collection(db, "orders"));
+    allOrders = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+                         .sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
+    renderOrdersTable(allOrders);
+  } catch (e) { console.error(e); }
+}
+
+function renderOrdersTable(orders) {
+  const tbody = document.getElementById("orders-table-body");
+  if (!tbody) return;
+
+  if (orders.length === 0) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="7">No orders</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = orders.map(o => `
+    <tr>
+      <td style="font-weight:700;font-size:12px;color:var(--orange)">${o.orderId}</td>
+      <td style="font-size:12px">${o.customerName || "—"}<br><span style="color:var(--gray)">${o.customerPhone || ""}</span></td>
+      <td style="font-weight:800">UGX ${Number(o.total||0).toLocaleString()}</td>
+      <td style="font-size:12px">${o.paymentMethod || "—"}</td>
+      <td><span class="plan-chip ${chipClass(o.status)}">${o.status}</span></td>
+      <td style="font-size:12px">${fmtDate(o.createdAt)}</td>
+      <td>
+        <select class="plan-select" onchange="updateOrderStatus('${o.id}', this.value)">
+          <option value="">— Update —</option>
+          <option value="Pending">Pending</option>
+          <option value="Processing">Processing</option>
+          <option value="Shipped">Shipped</option>
+          <option value="Delivered">Delivered</option>
+        </select>
+      </td>
+    </tr>`).join("");
+}
+
+window.updateOrderStatus = async function(orderId, status) {
+  if (!status) return;
+  try {
+    await updateDoc(doc(db, "orders", orderId), { status, updatedAt: new Date() });
+    showToast(`Order marked as ${status} ✅`, "success");
+    loadOrders();
+  } catch (e) { showToast("Failed", "error"); }
+};
+
+// ── Helpers ───────────────────────────────────
+function planEmoji(plan) {
+  return { free:"🆓", bronze:"🥉", silver:"🥈", gold:"🥇" }[plan] || "🆓";
+}
+
+function chipClass(status) {
+  const map = {
+    active: "chip-approved", approved: "chip-approved",
+    pending: "chip-pending", pending_payment: "chip-pending",
+    expired: "chip-expired", rejected: "chip-rejected",
+    sold: "chip-expired", free: "chip-free",
+    bronze: "chip-bronze", silver: "chip-silver", gold: "chip-gold"
+  };
+  return map[status] || "chip-free";
+}
+
+function fmtDate(ts) {
+  const d = ts?.toDate?.() || (ts ? new Date(ts) : null);
+  if (!d || isNaN(d)) return "—";
+  return d.toLocaleDateString("en-UG", { day: "numeric", month: "short", year: "numeric" });
+}
+
+function showToast(msg, type = "info") {
+  const c = document.getElementById("toast-container");
+  if (!c) return;
+  const t = document.createElement("div");
+  t.className   = `toast ${type}`;
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
