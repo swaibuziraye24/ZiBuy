@@ -30,6 +30,10 @@ let filterState = {
   sortBy: "newest"
 };
 
+
+window.allProducts = [];
+let allProducts = window.allProducts;
+
 // ============================================
 // DOM READY CHECK
 // ============================================
@@ -1077,4 +1081,3 @@ document.addEventListener("click", (e) => {
   }
 });
 
-let allProducts = [];
