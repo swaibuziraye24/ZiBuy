@@ -10,78 +10,111 @@ let allShops = [];
 
 loadShops();
 
+/* ================= LOAD SHOPS ================= */
+
 async function loadShops() {
 
-  const container = document.getElementById("shops-container");
+  const container =
+    document.getElementById("shops-container");
 
   try {
 
-    const shops = await getRankedShops();
+    const shops =
+      await getRankedShops();
+
+    allShops = shops;
 
     if (shops.length === 0) {
-      container.innerHTML = "<p>No shops found</p>";
+
+      container.innerHTML = `
+        <div class="empty-state">
+          No shops found
+        </div>
+      `;
+
       return;
     }
 
-    container.innerHTML = shops.map((shop) => `
-      <div class="shop-card"
-        onclick="window.location.href='shop.html?seller=${shop.userId}'">
-
-        <div class="shop-name">
-          🏪 Shop ${shop.userId.slice(0,6)}
-        </div>
-
-        <div class="shop-meta">
-          📦 ${shop.totalAds} listings
-        </div>
-
-        <div class="shop-meta">
-          ⭐ Rank Score: ${shop.rankScore}
-        </div>
-
-        <button class="shop-btn">
-          Visit Shop
-        </button>
-
-      </div>
-    `).join("");
+    renderShops(shops);
 
   } catch (err) {
+
     console.error(err);
-    container.innerHTML = "<p>Failed to load shops</p>";
+
+    container.innerHTML = `
+      <div class="empty-state">
+        Failed to load shops
+      </div>
+    `;
   }
 }
+
+/* ================= RENDER SHOPS ================= */
 
 function renderShops(shops) {
 
   const container =
     document.getElementById("shops-container");
 
-  const shops = await getRankedShops();
-    allShops = shops;
-
-    if (shops.length === 0) {
-
-    container.innerHTML =
-      "<p>No shops found</p>";
-
-    return;
-  }
+  if (!container) return;
 
   container.innerHTML =
     shops.map((shop) => `
 
-      <div class="shop-card"
-        onclick="window.location.href='shop.html?seller=${shop.userId}'">
+      <div
+        class="shop-card"
+        onclick="window.location.href='shop.html?seller=${shop.userId}'"
+      >
 
-        <div class="shop-name">
-          🏪 ZiBuy Shop
-          ${shop.plan === "gold" ? "🥇" : shop.plan === "silver" ? "🥈" : shop.plan === "bronze" ? "🥉" : ""}
+        <div class="shop-top">
+
+          <div class="shop-avatar">
+
+            ${
+              shop.name
+                ? shop.name.charAt(0).toUpperCase()
+                : "Z"
+            }
+
+          </div>
+
+          <div class="shop-info">
+
+            <div class="shop-name">
+
+              ${
+                shop.name || "ZiBuy Shop"
+              }
+
+              ${
+                shop.plan === "gold"
+                  ? " 🥇"
+                  : shop.plan === "silver"
+                  ? " 🥈"
+                  : shop.plan === "bronze"
+                  ? " 🥉"
+                  : ""
+              }
+
+            </div>
+
+            <div class="shop-meta">
+
+              📦 ${shop.totalAds || 0} listings
+
+            </div>
+
+            <div class="shop-meta">
+
+              ⭐ Rank Score:
+              ${shop.rankScore || 0}
+
+            </div>
+
+          </div>
+
         </div>
 
-        <div class="shop-meta">
-          📦 ${shop.totalAds || 0} listings
-        </div>
         <button class="shop-btn">
           Visit Shop
         </button>
@@ -89,8 +122,9 @@ function renderShops(shops) {
       </div>
 
     `).join("");
-
 }
+
+/* ================= SEARCH ================= */
 
 window.searchShops = function () {
 
@@ -103,12 +137,12 @@ window.searchShops = function () {
     allShops.filter((shop) => {
 
       const name =
-        (shop.seller.name || "").toLowerCase();
+        (shop.name || "")
+          .toLowerCase();
 
       return name.includes(value);
 
     });
 
   renderShops(filtered);
-
 };
