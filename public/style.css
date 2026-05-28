@@ -7342,3 +7342,74 @@ table {
   font-size: 11px;
   font-weight: 800;
 }
+
+.search-box{
+  margin:20px 0;
+}
+
+.search-box input{
+  width:100%;
+  padding:14px;
+  border-radius:12px;
+  border:1px solid #ddd;
+  font-size:15px;
+}
+
+.category-filters{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:20px;
+}
+
+.category-filters button{
+  border:none;
+  padding:10px 16px;
+  border-radius:30px;
+  background:#f3f4f6;
+  cursor:pointer;
+  font-weight:600;
+}
+
+.category-filters button:hover{
+  background:#ff6600;
+  color:white;
+}
+
+/* ============================================
+   SEARCH SUGGESTIONS
+============================================ */
+
+.search-wrap{
+  position:relative;
+}
+
+.search-suggestions{
+  position:absolute;
+  top:100%;
+  left:0;
+  right:0;
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:12px;
+  margin-top:6px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.08);
+  z-index:999;
+  overflow:hidden;
+  display:none;
+}
+
+.search-suggestion-item{
+  padding:12px 14px;
+  cursor:pointer;
+  font-size:14px;
+  border-bottom:1px solid #f3f4f6;
+}
+
+.search-suggestion-item:hover{
+  background:#fff7ed;
+}
+
+.search-suggestion-item:last-child{
+  border-bottom:none;
+}
