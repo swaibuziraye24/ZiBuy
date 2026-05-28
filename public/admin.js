@@ -20,20 +20,27 @@ let allOrders = [];
 
 // ── Auth guard ────────────────────────────────
 onAuthStateChanged(auth, async (user) => {
-  if (!user) return;
+  const emailDisplay = document.getElementById("admin-email-display");
 
-  const email = (user.email || "").toLowerCase();
-  const adminEmail = ADMIN_EMAIL.toLowerCase();
-
-  if (email !== adminEmail) {
-    alert("Access denied. Admins only.");
+  if (!user) {
     window.location.href = "index.html";
     return;
   }
 
-  document.getElementById("admin-email-display").textContent = user.email;
+  if (user.email !== ADMIN_EMAIL) {
+    alert("Access denied. Admins only.");
+    await signOut(auth);
+    window.location.href = "index.html";
+    return;
+  }
+
+  if (emailDisplay) {
+    emailDisplay.textContent = user.email;
+  }
+
   await loadAll();
 });
+
 window.adminLogout = () => signOut(auth).then(() => window.location.href = "index.html");
 
 // ── Section switching ─────────────────────────
@@ -549,3 +556,11 @@ document.querySelectorAll(".admin-nav-item").forEach(btn => {
     showSection(section, btn);
   });
 });
+
+window.showSection = function(name, btn) {
+  document.querySelectorAll(".admin-section").forEach(s => s.classList.remove("active"));
+  document.querySelectorAll(".admin-nav-item").forEach(b => b.classList.remove("active"));
+
+  document.getElementById(`section-${name}`)?.classList.add("active");
+  if (btn) btn.classList.add("active");
+};
