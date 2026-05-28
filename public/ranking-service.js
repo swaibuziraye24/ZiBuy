@@ -111,15 +111,27 @@ export async function getRankedShops() {
 
     const shops = Object.values(shopsMap);
 
-    const ranked = shops.map(shop => {
-      const planScore = PLAN_SCORE.free || 1;
+    const ranked = await Promise.all(
 
-      return {
-        ...shop,
-        plan: "free",
-        rankScore: (planScore * 1000) + (shop.totalAds * 10)
-      };
-    });
+  shops.map(async(shop) => {
+
+    const plan =
+      await getUserPlan(shop.userId);
+
+    const planScore =
+      PLAN_SCORE[plan] || 1;
+
+    return {
+      ...shop,
+      plan,
+      rankScore:
+        (planScore * 1000) +
+        (shop.totalAds * 10)
+    };
+
+  })
+
+);
 
     return ranked.sort((a, b) => b.rankScore - a.rankScore);
 
@@ -146,9 +158,9 @@ export async function getRankedProducts() {
       let boostScore = 0;
 
       // BOOST PRIORITY
-      if (p.isPremium === true) {
-        boostScore += 1000;
-      }
+      if (p.boost?.active === true) {
+  boostScore += 1000;
+}
 
       const created = p.createdAt?.toDate?.() || new Date();
       const ageHours = (new Date() - created) / 36e5;
