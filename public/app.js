@@ -14,15 +14,26 @@ import {
 import {
   getRankedProducts
 } from "./ranking-service.js";
-// ============================================
-// GLOBALS
-// ============================================
-let allProducts = [];
-let filteredProducts = [];
+
+// =============================
+// GLOBAL STATE (ZiBuy SAFE FIX)
+// =============================
+
+// Initialize global products safely
+window.allProducts = window.allProducts || [];
+
+// Main product state (single source of truth)
+let allProducts = window.allProducts;
+
+// Filtered products (what UI renders)
+let filteredProducts = [...allProducts];
+
+// User + UI state
 let currentUser = null;
 let searchQuery = "";
 let currentCategory = "all";
 
+// Filter state
 let filterState = {
   priceMin: 0,
   priceMax: 99999999,
@@ -31,9 +42,8 @@ let filterState = {
   sortBy: "newest"
 };
 
-// GLOBAL SYNC (IMPORTANT)
+// Keep global sync in real-time
 window.allProducts = allProducts;
-
 
 // ============================================
 // DOM READY CHECK
