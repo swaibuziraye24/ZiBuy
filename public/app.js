@@ -10,10 +10,15 @@ import {
   deleteDoc,
   doc
 } from "./firebase.js";
+
+import {
+  getRankedProducts
+} from "./ranking-service.js";
 // ============================================
 // GLOBALS
 // ============================================
-
+let searchQuery = "";
+let filteredProducts = [];
 let currentUser = null;
 let allProducts = [];
 let currentCategory = "all";
@@ -124,7 +129,57 @@ async function loadProducts() {
           ...docSnap.data()
         };
 
+// ── AUTO EXPIRE ADS ─────────────────
+
+if (product.expiresAt) {
+
+  const expiryDate =
+    product.expiresAt.toDate
+      ? product.expiresAt.toDate()
+      : new Date(product.expiresAt);
+
+  if (expiryDate < new Date()) {
+
+    product.status = "expired";
+
+  }
+
+}
+
         if (product.userId) {
+
+// ── SHOP SUBSCRIPTION ─────────────────
+try {
+
+  const subSnap = await getDocs(
+    query(
+      collection(db, "business_subscriptions"),
+      where("userId", "==", product.userId),
+      where("active", "==", true)
+    )
+  );
+
+  if (!subSnap.empty) {
+
+    const sub = subSnap.docs[0].data();
+
+    product.shopPlan =
+      sub.plan || "free";
+
+  } else {
+
+    product.shopPlan = "free";
+
+  }
+
+} catch (err) {
+
+  console.error("Plan check error:", err);
+
+  product.shopPlan = "free";
+
+}
+
           try {
             const verificationSnap = await getDocs(
               query(
@@ -146,20 +201,70 @@ async function loadProducts() {
           product.seller.isVerified = false;
         }
 
-        return product;
+        /* =========================
+   PRODUCT RANKING SCORE
+========================= */
+
+const plan =
+  await getUserPlan(product.userId);
+
+const planScore =
+  PLAN_SCORE[plan] || 1;
+
+/* BOOST SCORE */
+
+let boostScore = 0;
+
+if (product.isPremium === true) {
+  boostScore = 5000;
+}
+
+/* VERIFIED BONUS */
+
+let verifiedScore = 0;
+
+if (product.seller.isVerified) {
+  verifiedScore = 500;
+}
+
+/* NEWER ADS BONUS */
+
+const created =
+  product.createdAt?.toDate?.()
+  || new Date();
+
+const ageHours =
+  (new Date() - created) / 36e5;
+
+const freshnessScore =
+  Math.max(0, 100 - ageHours);
+
+/* FINAL SCORE */
+
+product.rankScore =
+  (planScore * 1000) +
+  boostScore +
+  verifiedScore +
+  freshnessScore;
+
+return product;
       })
     );
 
-    // Store all products globally for use in other functions
-    allProducts = products;
+ // Store all products globally for use in other functions
+allProducts = products.sort(
+  (a, b) => b.rankScore - a.rankScore
+);
 
-    loadFeaturedProducts();
-    renderProducts();
-  } catch (err) {
-    console.error(err);
-  }
+filteredProducts = [...allProducts];
+
+loadFeaturedProducts();
+renderProducts();
+
+} catch (err) {
+  console.error(err);
 }
-
+}
 // ============================================
 // LOAD FEATURED PRODUCTS
 // ============================================
@@ -224,108 +329,255 @@ async function loadFeaturedProducts() {
   }
 }
 
+
+function getProductRankScore(product) {
+
+  let score = 0;
+
+  // ── PREMIUM BOOST ─────────────────
+  if (product.isPremium) {
+    score += 1000;
+  }
+
+  // ── SHOP PLANS ────────────────────
+  switch ((product.shopPlan || "").toLowerCase()) {
+
+    case "gold":
+      score += 500;
+      break;
+
+    case "silver":
+      score += 300;
+      break;
+
+    case "bronze":
+      score += 150;
+      break;
+  }
+
+  // ── VERIFIED SELLER ───────────────
+  if (product.seller?.isVerified) {
+    score += 80;
+  }
+
+  // ── PRODUCT VIEWS ─────────────────
+  score += product.views || 0;
+
+  return score;
+}
+
 // ============================================
 // RENDER PRODUCTS
 // ============================================
 
 function renderProducts() {
-  const container = document.getElementById("products");
+
+  const container =
+    document.getElementById("products");
+
   if (!container) return;
 
   let filtered = allProducts.filter(p => {
 
-  // Hide blocked products
-  if (p.hidden === true) return false;
+    /* =========================
+       SMART SEARCH
+    ========================== */
+    if (searchQuery) {
 
-  if (currentCategory !== "all" && p.category !== currentCategory) return false;
-  if (p.price < filterState.priceMin || p.price > filterState.priceMax) return false;
-  if (filterState.location && p.location !== filterState.location) return false;
+      const searchableText = `
+        ${p.name || ""}
+        ${p.description || ""}
+        ${p.category || ""}
+        ${p.location || ""}
+        ${p.seller?.name || ""}
+      `.toLowerCase();
 
-  return true;
+      if (!searchableText.includes(searchQuery.toLowerCase())) {
+        return false;
+      }
+    }
 
-});
+    /* =========================
+       HIDE BLOCKED / EXPIRED
+    ========================== */
+    if (p.hidden === true) return false;
+    if (p.status === "expired") return false;
 
-  // Sort
-  if (filterState.sortBy === "price-low") {
-    filtered.sort((a, b) => a.price - b.price);
-  } else if (filterState.sortBy === "price-high") {
-    filtered.sort((a, b) => b.price - a.price);
-  } else {
-    filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-  }
+    /* =========================
+       CATEGORY FILTER
+    ========================== */
+    if (
+      currentCategory !== "all" &&
+      p.category !== currentCategory
+    ) {
+      return false;
+    }
+
+    /* =========================
+       PRICE FILTER
+    ========================== */
+    if (
+      p.price < filterState.priceMin ||
+      p.price > filterState.priceMax
+    ) {
+      return false;
+    }
+
+    /* =========================
+       LOCATION FILTER
+    ========================== */
+    if (
+      filterState.location &&
+      p.location !== filterState.location
+    ) {
+      return false;
+    }
+
+    return true;
+  });
+
+  // ============================================
+  // SMART SORTING + PREMIUM RANKING
+  // ============================================
+
+  filtered.sort((a, b) => {
+
+    // PREMIUM FIRST
+    if (a.isPremium && !b.isPremium) return -1;
+    if (!a.isPremium && b.isPremium) return 1;
+
+    const aBoost = a.rankScore || 0;
+    const bBoost = b.rankScore || 0;
+
+    if (filterState.sortBy === "price-low") {
+      return a.price - b.price;
+    }
+
+    if (filterState.sortBy === "price-high") {
+      return b.price - a.price;
+    }
+
+    if (filterState.sortBy === "views") {
+      return (b.views || 0) - (a.views || 0);
+    }
+
+    // DEFAULT: BOOST + NEWEST
+    return (
+      bBoost - aBoost ||
+      new Date(b.createdAt) - new Date(a.createdAt)
+    );
+
+  });
+
+  // ============================================
+  // EMPTY STATE
+  // ============================================
 
   if (filtered.length === 0) {
+
     container.innerHTML = `
       <div class="empty-state">
         <p style="font-size:48px;margin-bottom:12px">🔍</p>
         <p>No products found</p>
       </div>
     `;
+
     return;
   }
 
+  // ============================================
+  // RENDER PRODUCTS
+  // ============================================
+
   container.innerHTML = filtered.map(p => {
+
     const images = p.images || [];
 
     return `
-  <div class="product-card">
-    <div class="product-image-box">
-      <img src="${images[0] || ''}" alt="${p.name}">
-      ${p.isPremium ? '<span class="premium-badge">⭐ FEATURED</span>' : ''}
-    </div>
-    <div class="product-info">
-      <p class="product-cat">${p.category}</p>
-      <h3 class="product-title">${p.name}</h3>
-      <p class="product-price">UGX ${Number(p.price).toLocaleString()}</p>
-      <div class="product-seller-loc">
+      <div class="product-card">
 
-  <span
-    onclick="openSellerShop('${p.userId}')"
-    style="
-      cursor:pointer;
-      font-weight:700;
-      color:#ff6600;
-    "
-  >
-    🏪 ${p.seller?.name || "Seller"}
-  </span>
+        <div class="product-image-box" style="position:relative">
 
-  <br>
+          <img src="${images[0] || ''}" alt="${p.name || 'Product'}">
 
-  📍 ${p.seller?.location || "Uganda"}
+          ${p.isPremium ? `
+            <span class="premium-badge">⭐ FEATURED</span>
+          ` : ''}
 
-  ${
-    p.seller?.isVerified
-    ? '<span style="color:#10b981;font-weight:800;margin-left:4px">✅ Verified</span>'
-    : ''
-  }
+        </div>
 
-</div>
-      <div class="card-footer">
-  <button class="cart-btn" onclick="addToCart('${p.name.replace(/'/g,"\\'")}', ${p.price}, '${images[0] || ""}')">
-    🛒 Add
-  </button>
+        <div class="product-info">
 
-  <button class="view-btn" onclick="openProductModal('${p.id}')">
-    View
-  </button>
-</div>
+          <p class="product-cat">${p.category || "General"}</p>
 
-${currentUser?.email === "swaibuziraye22@gmail.com" ? `
-  <button 
-    class="admin-delete-btn"
-    onclick="deleteProduct('${p.id}')">
-    🗑 Delete Ad
-  </button>
-` : ""}
-    </div>
-  </div>
-`;
+          <h3 class="product-title">
+            ${p.name || "Untitled Product"}
+
+            ${p.seller?.isVerified ? `
+              <span style="color:#10b981;font-size:13px;font-weight:800;margin-left:6px;">
+                ✅ Verified
+              </span>
+            ` : ''}
+          </h3>
+
+          <p class="product-price">
+            UGX ${Number(p.price || 0).toLocaleString()}
+          </p>
+
+          <div class="product-seller-loc">
+
+            <span
+              onclick="openSellerShop('${p.userId}')"
+              style="cursor:pointer;font-weight:700;color:#ff6600;"
+            >
+              🏪 ${p.seller?.name || "Seller"}
+            </span>
+
+            <br>
+
+            📍 ${p.seller?.location || "Uganda"}
+
+          </div>
+
+          <div class="card-footer">
+
+            <button class="cart-btn"
+              onclick="addToCart('${(p.name || "").replace(/'/g,"\\'")}', ${p.price || 0}, '${images[0] || ""}')">
+              🛒 Add
+            </button>
+
+            <button class="view-btn"
+              onclick="openProductModal('${p.id}')">
+              View
+            </button>
+
+          </div>
+
+          ${currentUser?.email === "swaibuziraye22@gmail.com" ? `
+            <button class="admin-delete-btn"
+              onclick="deleteProduct('${p.id}')">
+              🗑 Delete Ad
+            </button>
+          ` : ''}
+
+        </div>
+      </div>
+    `;
+
   }).join("");
 
-  document.getElementById("product-count").textContent = `${filtered.length} listings`;
+  // ============================================
+  // COUNT
+  // ============================================
 
+  const countEl =
+    document.getElementById("product-count");
+
+  if (countEl) {
+    countEl.textContent = `${filtered.length} listings`;
+  }
 }
+
 // ============================================
 // CATEGORY FILTER
 // ============================================
@@ -588,48 +840,83 @@ window.closeProductModal = function() {
 // ============================================
 // SEARCH
 // ============================================
-window.searchProducts = function() {
-  const searchQuery = document.getElementById("search-input")?.value.toLowerCase() || "";
-  
-  const filtered = allProducts.filter(p =>
-    p.name.toLowerCase().includes(searchQuery) ||
-    p.description.toLowerCase().includes(searchQuery)
-  );
 
-  const container = document.getElementById("products");
-  if (!container) return;
+window.searchProducts = function () {
 
-  if (filtered.length === 0) {
-    container.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><p>No products match your search</p></div>`;
+  const input =
+    document.getElementById("search-input");
+
+  const suggestionsBox =
+    document.getElementById("search-suggestions");
+
+  if (!input) return;
+
+  searchQuery =
+    input.value.toLowerCase().trim();
+
+  renderProducts();
+
+  // CLEAR SUGGESTIONS
+  suggestionsBox.innerHTML = "";
+
+  if (!searchQuery) {
+    suggestionsBox.style.display = "none";
     return;
   }
 
-container.innerHTML = filtered.map(p => {
-    const images = p.images || [];
+  // FIND MATCHES
+  const matches = allProducts.filter(p => {
 
-    return `
-      <div class="product-card">
-        <div class="product-image-box">
-          <img src="${images[0] || ''}" alt="${p.name}">
-          ${p.isPremium ? '<span class="premium-badge">⭐ FEATURED</span>' : ''}
-        </div>
-        <div class="product-info">
-          <p class="product-cat">${p.category}</p>
-          <h3 class="product-title">${p.name}</h3>
-          <p class="product-price">UGX ${Number(p.price).toLocaleString()}</p>
-          <div class="product-seller-loc">
-            📍 ${p.seller?.location || "Uganda"}
-            ${p.seller?.isVerified ? '<span style="color:#10b981;font-weight:800;margin-left:4px">✅ Verified</span>' : ''}
-          </div>
-          <div class="card-footer">
-            <button class="cart-btn" onclick="addToCart('${p.name.replace(/'/g,"\\'")}', ${p.price}, '${images[0] || ''}')">🛒 Add</button>
-            <button class="view-btn" onclick="openProductModal('${p.id}')">View</button>
-          </div>
-        </div>
-      </div>
-    `;
-  }).join("");
+    const text = `
+      ${p.name || ""}
+      ${p.category || ""}
+    `.toLowerCase();
+
+    return text.includes(searchQuery);
+
+  }).slice(0, 6);
+
+  // SHOW SUGGESTIONS
+  if (matches.length > 0) {
+
+    suggestionsBox.style.display = "block";
+
+    matches.forEach(product => {
+
+      const div =
+        document.createElement("div");
+
+      div.className =
+        "search-suggestion-item";
+
+      div.innerHTML = `
+        🔍 ${product.name}
+      `;
+
+      div.onclick = () => {
+
+        input.value = product.name;
+
+        searchQuery =
+          product.name.toLowerCase();
+
+        suggestionsBox.style.display =
+          "none";
+
+        renderProducts();
+      };
+
+      suggestionsBox.appendChild(div);
+
+    });
+
+  } else {
+
+    suggestionsBox.style.display =
+      "none";
+  }
 };
+
 // ============================================
 // WHATSAPP & CALL
 // ============================================
@@ -729,3 +1016,61 @@ window.deleteProduct = async function(productId) {
 
   }
 };
+
+
+window.handleSearch = function(value) {
+
+  searchQuery =
+    value.toLowerCase().trim();
+
+  renderProducts();
+
+};
+
+window.filterCategory = function(category) {
+
+  currentCategory = category;
+
+  renderProducts();
+
+};
+
+// ============================================
+// SMART SEARCH SYSTEM
+// ============================================
+
+window.searchProducts = function () {
+
+  const input =
+    document.getElementById("search-input");
+
+  if (!input) return;
+
+  searchQuery =
+    input.value.toLowerCase().trim();
+
+  renderProducts();
+};
+
+// HIDE SEARCH SUGGESTIONS
+document.addEventListener("click", (e) => {
+
+  const box =
+    document.getElementById(
+      "search-suggestions"
+    );
+
+  const input =
+    document.getElementById(
+      "search-input"
+    );
+
+  if (!box || !input) return;
+
+  if (
+    !box.contains(e.target) &&
+    e.target !== input
+  ) {
+    box.style.display = "none";
+  }
+});
