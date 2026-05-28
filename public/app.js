@@ -653,7 +653,7 @@ products = mixedProducts;
   </button>
 
   <button
-    onclick="startChat('${p.userId}')"
+    onclick="addToCart('${p.name}', ${p.price}, '${(p.images && p.images[0]) || 'placeholder.jpg'}')"
     style="
       flex:1;
       background:#111827;
@@ -665,7 +665,7 @@ products = mixedProducts;
       cursor:pointer;
     "
   >
-    Chat
+    Cart
   </button>
 
 </div>
