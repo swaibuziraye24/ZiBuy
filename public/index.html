@@ -1,134 +1,29 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- KEEP THIS SEARCH BAR ONLY -->
+<div class="search-wrap">
+  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+    <circle cx="11" cy="11" r="8"/>
+    <path d="m21 21-4.35-4.35"/>
+  </svg>
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#ff6600">
-<meta name="apple-mobile-web-app-capable" content="yes">
-
-  <title>ZiBuy — Buy & Sell in Uganda</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-
-<!-- ============ TOP BAR ============ -->
-<header class="topbar">
-
- 
-  <!-- Logo -->
- <h1 class="logo" id="secret-admin-trigger">
-  Zi<span>Buy</span>
-</h1>
-
-<button
-onclick="window.location.href='shops.html'"
-class="btn btn-outline"
->
-🏪 Shops
-</button>
-
-  <!-- Search Bar (Hidden on Mobile) -->
-  <div class="search-wrap">
-    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-    </svg>
-    <input
-      type="text"
-      id="search-input"
-      placeholder="Search products..."
-      onkeyup="searchProducts()"
-    >
-  </div>
-
-  <!-- Right Icons (Mobile-Friendly) -->
-  <div class="topbar-icons">
-
-<button class="btn btn-orange" id="post-ad-btn" onclick="window.location.href='post-ad.html'" style="display:none">
-  + Post Ad
-</button>
-
-<button class="btn btn-outline" id="messages-btn" onclick="window.location.href='messages.html'" style="display:none">
-  💬 Messages
-</button>
-
-<button class="btn btn-outline" id="notifications-btn" onclick="window.location.href='notifications.html'" style="display:none">
-  🔔 Notifications
-</button>
-
-<button class="btn btn-outline" id="dashboard-btn" onclick="window.location.href='dashboard.html'" style="display:none">
-      📊 Dashboard
-    </button>
-
-    <button class="btn btn-outline" id="upgrade-btn" onclick="window.location.href='business-plans.html'" style="display:none;border-color:#f59e0b;color:#b45309">
-      ⭐ Upgrade
-    </button>
-
-<div class="cart-btn-wrap">
-  <button class="btn btn-orange" onclick="toggleCart()">
-    🛒 Cart
-  </button>
-  <span class="cart-badge" id="cart-count">0</span>
-</div>
-
-  
-  <button class="btn btn-outline" id="account-btn" onclick="openAuthModal()">
-  👤 Account
-</button>
+  <input
+    type="text"
+    id="search-input"
+    placeholder="Search products..."
+    onkeyup="searchProducts()"
+  >
+  <div id="search-suggestions" class="search-suggestions"></div>
 </div>
 
 
-  </div>
-
-</header>
-
-
-<!-- ============ HERO ============ -->
-<section class="hero">
-  <div class="hero-text">
-    <h2>Buy & Sell Anything<br>in Uganda 🇺🇬</h2>
-    <p>Uganda's trusted free classifieds marketplace</p>
-  </div>
-  <div class="hero-stats">
-    <div class="stat-pill">
-      <strong>851K</strong>
-      <span>Active Ads</span>
-    </div>
-    <div class="stat-pill">
-      <strong>Free</strong>
-      <span>To Post</span>
-    </div>
-    <div class="stat-pill">
-      <strong>Safe</strong>
-      <span>Payments</span>
-    </div>
-  </div>
-</section>
-
-<!-- ============ CATEGORIES ============ -->
-<nav class="categories">
-  <button class="cat-btn active" data-cat="all"         onclick="filterCategory('all')">🏪 All</button>
-  <button class="cat-btn" data-cat="phones"             onclick="filterCategory('phones')">📱 Phones</button>
-  <button class="cat-btn" data-cat="electronics"        onclick="filterCategory('electronics')">💻 Electronics</button>
-  <button class="cat-btn" data-cat="fashion"            onclick="filterCategory('fashion')">👗 Fashion</button>
-  <button class="cat-btn" data-cat="shoes"              onclick="filterCategory('shoes')">👟 Shoes</button>
-  <button class="cat-btn" data-cat="beauty"             onclick="filterCategory('beauty')">💄 Beauty</button>
-  <button class="cat-btn" data-cat="bags"               onclick="filterCategory('bags')">👜 Bags</button>
-  <button class="cat-btn" data-cat="groceries"          onclick="filterCategory('groceries')">🛒 Groceries</button>
-  <button class="cat-btn" data-cat="watches"            onclick="filterCategory('watches')">⌚ Watches</button>
-  <button class="cat-btn" data-cat="computers"          onclick="filterCategory('computers')">🖥️ Computers</button>
-  <button class="cat-btn" data-cat="gaming"             onclick="filterCategory('gaming')">🎮 Gaming</button>
-  <button class="cat-btn" data-cat="home"               onclick="filterCategory('home')">🏠 Home</button>
-  <button class="cat-btn" data-cat="accessories"        onclick="filterCategory('accessories')">💎 Accessories</button>
-  <button class="cat-btn filter-toggle-btn" onclick="toggleFilters()" style="margin-left:auto">🔽 Filters</button>
-</nav>
-
-<!-- ============ ADVANCED FILTERS ============ -->
+<!-- KEEP THIS FILTER PANEL ONLY -->
 <div id="filters-panel" class="filters-panel">
+
   <div class="filters-container">
+
+    <!-- PRICE -->
     <div class="filter-group">
       <h3>💰 Price Range</h3>
+
       <div class="price-inputs">
         <input type="number" id="price-min" placeholder="Min UGX" value="0">
         <span>—</span>
@@ -136,9 +31,12 @@ class="btn btn-outline"
       </div>
     </div>
 
+    <!-- LOCATION -->
     <div class="filter-group">
       <h3>📍 Location</h3>
+
       <select id="location-filter">
+
         <option value="">All Uganda</option>
         <option value="Kampala">Kampala</option>
         <option value="Wakiso">Wakiso</option>
@@ -150,21 +48,39 @@ class="btn btn-outline"
         <option value="Mbale">Mbale</option>
         <option value="Masaka">Masaka</option>
         <option value="Fort Portal">Fort Portal</option>
+
       </select>
     </div>
 
+    <!-- DATE -->
     <div class="filter-group">
       <h3>📅 Posted</h3>
+
       <div class="date-filter-btns">
-        <button class="date-filter-btn active" onclick="filterByDate('all')">All Time</button>
-        <button class="date-filter-btn" onclick="filterByDate('24h')">Last 24h</button>
-        <button class="date-filter-btn" onclick="filterByDate('7d')">Last 7 Days</button>
-        <button class="date-filter-btn" onclick="filterByDate('30d')">Last 30 Days</button>
+
+        <button class="date-filter-btn active" onclick="filterByDate('all')">
+          All Time
+        </button>
+
+        <button class="date-filter-btn" onclick="filterByDate('24h')">
+          Last 24h
+        </button>
+
+        <button class="date-filter-btn" onclick="filterByDate('7d')">
+          Last 7 Days
+        </button>
+
+        <button class="date-filter-btn" onclick="filterByDate('30d')">
+          Last 30 Days
+        </button>
+
       </div>
     </div>
 
+    <!-- SORT -->
     <div class="filter-group">
       <h3>🔄 Sort By</h3>
+
       <select id="sort-filter" onchange="applySortFilter()">
         <option value="newest">Newest First</option>
         <option value="price-low">Price: Low to High</option>
@@ -173,446 +89,147 @@ class="btn btn-outline"
       </select>
     </div>
 
+    <!-- BUTTONS -->
     <div class="filter-actions">
-      <button class="btn btn-outline" onclick="resetFilters()">Reset Filters</button>
-      <button class="btn btn-orange" onclick="applyFilters()">Apply Filters</button>
+
+      <button
+        class="btn btn-outline"
+        onclick="resetFilters()"
+      >
+        Reset Filters
+      </button>
+
+      <button
+        class="btn btn-orange"
+        onclick="applyFilters()"
+      >
+        Apply Filters
+      </button>
+
     </div>
+
   </div>
+
 </div>
 
-<!-- ============ FILTERS ============ -->
-<div class="filters-bar">
-  <button class="filter-toggle-btn" onclick="toggleFilters()">
-    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-      <path d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
-    </svg>
-    Filters
+
+<!-- KEEP THIS CATEGORY SECTION ONLY -->
+<nav class="categories">
+
+  <button
+    class="cat-btn active"
+    data-cat="all"
+    onclick="filterCategory('all')"
+  >
+    🏪 All
   </button>
 
-  <div class="filters-panel" id="filters-panel">
+  <button
+    class="cat-btn"
+    data-cat="phones"
+    onclick="filterCategory('phones')"
+  >
+    📱 Phones
+  </button>
 
-    <!-- Price Range -->
-    <div class="filter-group">
-      <label class="filter-label">💰 Price Range</label>
-      <div class="price-inputs">
-        <input type="number" id="price-min" placeholder="Min UGX" value="0" onchange="applyFilters()">
-        <span class="price-dash">-</span>
-        <input type="number" id="price-max" placeholder="Max UGX" value="99999999" onchange="applyFilters()">
-      </div>
-      <div class="price-slider-container">
-        <input type="range" id="price-range-min" class="price-slider" min="0" max="99999999" step="100000" value="0" oninput="updatePriceRange()">
-        <input type="range" id="price-range-max" class="price-slider" min="0" max="99999999" step="100000" value="99999999" oninput="updatePriceRange()">
-      </div>
-      <div class="price-display">
-        UGX <span id="price-display-min">0</span> - <span id="price-display-max">99999999</span>
-      </div>
-    </div>
+  <button
+    class="cat-btn"
+    data-cat="electronics"
+    onclick="filterCategory('electronics')"
+  >
+    💻 Electronics
+  </button>
 
-    <!-- Location -->
-    <div class="filter-group">
-      <label class="filter-label">📍 Location</label>
-      <select id="filter-location" onchange="applyFilters()">
-        <option value="">All Uganda</option>
-        <option value="Kampala">Kampala</option>
-        <option value="Wakiso">Wakiso</option>
-        <option value="Mukono">Mukono</option>
-        <option value="Jinja">Jinja</option>
-        <option value="Mbarara">Mbarara</option>
-        <option value="Entebbe">Entebbe</option>
-        <option value="Gulu">Gulu</option>
-        <option value="Mbale">Mbale</option>
-        <option value="Masaka">Masaka</option>
-        <option value="Fort Portal">Fort Portal</option>
-        <option value="Hoima">Hoima</option>
-        <option value="Kiboga">Kiboga</option>
-        <option value="Mubende">Mubende</option>
-        <option value="Mityana">Mityana</option>
-        <option value="Kyankwanzi">Kyankwanzi</option>
-        <option value="Kaseese">Kaseese</option>
-        <option value="Lugazi">Lugazi</option>
-        <option value="Mpigi">Mpigi</option>
-        <option value="Arua">Arua</option>
-        <option value="Masindi">Masindi</option>
-        <option value="Bushenyi">Bushenyi</option>
-        <option value="Isingiro">Isingiro</option>
-        <option value="Kamuli">Kamuli</option>
-        <option value="Others">Others</option>
-      </select>
-    </div>
+  <button
+    class="cat-btn"
+    data-cat="fashion"
+    onclick="filterCategory('fashion')"
+  >
+    👗 Fashion
+  </button>
 
-    <!-- Date Posted -->
-    <div class="filter-group">
-      <label class="filter-label">📅 Posted</label>
-      <div class="filter-radios">
-        <label><input type="radio" name="date-filter" value="all" checked onchange="applyFilters()"> All Time</label>
-        <label><input type="radio" name="date-filter" value="7" onchange="applyFilters()"> Last 7 days</label>
-        <label><input type="radio" name="date-filter" value="30" onchange="applyFilters()"> Last 30 days</label>
-      </div>
-    </div>
+  <button
+    class="cat-btn"
+    data-cat="shoes"
+    onclick="filterCategory('shoes')"
+  >
+    👟 Shoes
+  </button>
 
-    <!-- Sort -->
-    <div class="filter-group">
-      <label class="filter-label">⬆️ Sort By</label>
-      <select id="filter-sort" onchange="applyFilters()">
-        <option value="newest">Newest First</option>
-        <option value="oldest">Oldest First</option>
-        <option value="price-low">Price: Low to High</option>
-        <option value="price-high">Price: High to Low</option>
-      </select>
-    </div>
+  <button
+    class="cat-btn"
+    data-cat="beauty"
+    onclick="filterCategory('beauty')"
+  >
+    💄 Beauty
+  </button>
 
-    <button class="btn btn-orange" onclick="applyFilters()" style="width:100%;margin-top:12px">Apply Filters</button>
-    <button class="btn btn-outline" onclick="resetFilters()" style="width:100%;margin-top:8px">Reset All</button>
+  <button
+    class="cat-btn"
+    data-cat="bags"
+    onclick="filterCategory('bags')"
+  >
+    👜 Bags
+  </button>
 
-  </div>
+  <button
+    class="cat-btn"
+    data-cat="groceries"
+    onclick="filterCategory('groceries')"
+  >
+    🛒 Groceries
+  </button>
 
-  <div class="active-filters" id="active-filters"></div>
-</div>
+  <button
+    class="cat-btn"
+    data-cat="watches"
+    onclick="filterCategory('watches')"
+  >
+    ⌚ Watches
+  </button>
 
-<!-- ============ PRODUCT GRID ============ -->
-<div class="section-header">
-  <div>
-    <h2>Latest Listings</h2>
-    <p id="product-count"></p>
-  </div>
-  <select class="sort-select">
-    <option>Newest First</option>
-    <option>Price: Low to High</option>
-    <option>Price: High to Low</option>
-  </select>
-</div>
+  <button
+    class="cat-btn"
+    data-cat="computers"
+    onclick="filterCategory('computers')"
+  >
+    🖥️ Computers
+  </button>
 
+  <button
+    class="cat-btn"
+    data-cat="gaming"
+    onclick="filterCategory('gaming')"
+  >
+    🎮 Gaming
+  </button>
+
+  <button
+    class="cat-btn"
+    data-cat="home"
+    onclick="filterCategory('home')"
+  >
+    🏠 Home
+  </button>
+
+  <button
+    class="cat-btn"
+    data-cat="accessories"
+    onclick="filterCategory('accessories')"
+  >
+    💎 Accessories
+  </button>
+
+  <button
+    class="cat-btn filter-toggle-btn"
+    onclick="toggleFilters()"
+    style="margin-left:auto"
+  >
+    🔽 Filters
+  </button>
+
+</nav>
+
+
+<!-- KEEP THIS PRODUCTS CONTAINER -->
 <div id="products" class="products"></div>
-
-<!-- ============ SAFETY BANNER ============ -->
-<div class="safety-banner">
-  <span class="shield">🛡️</span>
-  <div>
-    <h4>Stay Safe When Buying on ZiBuy</h4>
-    <p>Meet sellers in public places · Don't pay in advance · Check items before paying · Report suspicious ads</p>
-  </div>
-</div>
-
-<!-- ============ FOOTER ============ -->
-<footer>
-  <div class="footer-top">
-    <div class="footer-brand">
-      <a href="index.html" style="display:flex;align-items:center">
-  <img src="my_logo.png" alt="ZiBuy" id="secret-admin-trigger" style="height:50px;width:auto;object-fit:contain;cursor:pointer">
-</a>
-      <p>Uganda's trusted free classifieds marketplace. Buy and sell safely.</p>
-    </div>
-    <div class="footer-links">
-      <h4>Company</h4>
-      <a href="about.html">About ZiBuy</a>
-      <a href="safety.html">Safety Tips</a>
-      <a href="advertise.html">Advertise</a>
-    </div>
-    <div class="footer-links">
-      <h4>Support</h4>
-     <a href="help.html">Help Center</a>
-      <a href="contact.html">Contact Us</a>
-    
-    </div>
-  </div>
-  <div class="footer-bottom">
-    © 2026 ZiBuy Uganda · All rights reserved
-  </div>
-</footer>
-
-<!-- ============ OVERLAY ============ -->
-<div id="overlay" class="overlay" onclick="closeCart()"></div>
-
-<!-- ============ TOAST CONTAINER ============ -->
-<div id="toast-container" class="toast-container"></div>
-
-<!-- ============ CART SIDEBAR ============ -->
-<div id="cart-sidebar" class="cart-sidebar">
-  <div class="cart-top">
-    <h2>🛒 Your Cart</h2>
-    <button class="close-cart" onclick="closeCart()">×</button>
-  </div>
-
-  <div id="cart-items"></div>
-
-  <div class="cart-footer">
-    <input type="text"  id="customer-name"     placeholder="Your Full Name">
-    <input type="tel"   id="customer-phone"    placeholder="Phone Number (e.g. 0701 234567)">
-    <input type="text"  id="customer-location" placeholder="Delivery Location">
-    <div class="cart-total-row">
-      Total: <span>UGX <span id="cart-total">0</span></span>
-    </div>
-    <button class="checkout-btn" onclick="checkout()">Place Order</button>
-  </div>
-</div>
-
-<!-- ============ PRODUCT QUICK-VIEW MODAL ============ -->
-<div id="product-modal" class="product-modal">
-  <div class="product-modal-content">
-    <div class="modal-img-slider">
-      <img id="modal-image" alt="Product">
-      <div class="modal-img-nav" id="modal-dots"></div>
-    </div>
-    <div class="modal-body">
-      <p class="product-cat" id="modal-cat"></p>
-      <h2 id="modal-name"></h2>
-      <p class="modal-price" id="modal-price"></p>
-      <div id="modal-seller-info" class="modal-seller"></div>
-      <div class="modal-actions">
-        <button class="cart-btn" id="modal-cart-btn">Add to Cart</button>
-        <button class="view-btn" id="modal-view-btn" onclick="closeProductModal()">Full Page</button>
-        <button class="view-btn" onclick="closeProductModal()">×</button>
-      </div>
-      <div id="modal-contact-btns" class="contact-btns"></div>
-    </div>
-  </div>
-</div>
-
-<!-- ============ AUTH MODAL ============ -->
-<div id="auth-modal" class="modal">
-  <div class="modal-box">
-    <div class="modal-header">
-      <h2>ZiBuy Account</h2>
-      <button class="modal-close" onclick="closeAuthModal()">×</button>
-    </div>
-    <input type="email"    id="auth-email"    placeholder="Email address">
-    <input type="password" id="auth-password" placeholder="Password">
-    <button class="full-btn" onclick="customerLogin()">Login</button>
-    <div class="modal-divider">— or —</div>
-    <button class="full-btn secondary" onclick="customerRegister()">Create Account</button>
-    <div class="modal-divider"></div>
-    <button class="full-btn secondary" onclick="customerLogout()">Logout</button>
-  </div>
-</div>
-
-<!-- ============ ADMIN LOGIN MODAL ============ -->
-<div id="admin-login-modal" class="modal">
-  <div class="modal-box">
-    <div class="modal-header">
-      <h2>🔑 Admin Login</h2>
-      <button class="modal-close" onclick="closeAdminLoginModal()">×</button>
-    </div>
-    <input type="email"    id="admin-email"    placeholder="Admin Email">
-    <input type="password" id="admin-password" placeholder="Password">
-    <button class="full-btn" onclick="adminLogin()">Login as Admin</button>
-  </div>
-</div>
-
-<!-- ============ ADMIN PANEL MODAL ============ -->
-<div id="admin-modal" class="modal">
-
-  <div class="modal-box admin-box" id="admin-panel-content">
-
-    <!-- HEADER -->
-    <div class="modal-header">
-      <h2>📦 Seller Dashboard</h2>
-
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-
-        <button
-          id="admin-verify-btn"
-          class="btn btn-orange"
-          onclick="window.location.href='admin.html'"
-          style="padding:8px 12px;font-size:12px;display:none"
-        >
-          🛠️ Admin Panel
-        </button>
-
-        <button
-          class="btn btn-orange"
-          onclick="window.location.href='admin-premium.html'"
-          style="padding:8px 12px;font-size:12px"
-        >
-          ⭐ Premium Ads
-        </button>
-
-        <button
-          class="btn btn-orange"
-          onclick="window.location.href='admin-verification.html'"
-          style="padding:8px 12px;font-size:12px"
-        >
-          ✅ Verifications
-        </button>
-
-<button class="btn btn-orange" onclick="window.location.href='admin-boost-requests.html'" style="padding:8px 12px;font-size:12px">⭐ Boost Requests</button>
-
-
-        <button
-          class="btn btn-orange"
-          onclick="window.location.href='admin-analytics.html'"
-          style="padding:8px 12px;font-size:12px"
-        >
-          📊 Analytics
-        </button>
-
-        <button class="modal-close" onclick="closeAdminPanel()">×</button>
-
-<button
-  class="btn btn-orange"
-  onclick="window.location.href='admin-business-requests.html'"
->
-  💼 Business Requests
-</button>
-
-<button
-  class="btn btn-orange"
-  onclick="window.location.href='admin-reports.html'"
->
-  🚨 Reports
-</button>
-
-      </div>
-    </div>
-
-    <!-- STATS -->
-    <div class="admin-stats-row">
-
-      <div class="stat-card">
-        <div class="stat-label">Total Orders</div>
-        <div class="stat-value" id="total-orders">—</div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-label">Total Revenue</div>
-        <div class="stat-value" id="total-revenue">—</div>
-      </div>
-
-    </div>
-
-    <!-- FORM HEADER -->
-    <div class="admin-header">
-      <h2>Post New Ad</h2>
-      <p>Add products professionally to the ZiBuy marketplace</p>
-    </div>
-
-    <!-- FORM -->
-    <div class="admin-form">
-
-      <div class="admin-form-group">
-        <label>Product Name</label>
-        <input
-          type="text"
-          id="product-name"
-          placeholder="Enter product name"
-        >
-      </div>
-
-      <div class="admin-form-group">
-        <label>Price (UGX)</label>
-        <input
-          type="number"
-          id="product-price"
-          placeholder="Enter price in UGX"
-        >
-      </div>
-
-      <div class="admin-form-group">
-        <label>Category</label>
-
-        <select id="product-category">
-          <option value="phones">📱 Phones</option>
-          <option value="electronics">💻 Electronics</option>
-          <option value="fashion">👗 Fashion</option>
-          <option value="shoes">👟 Shoes</option>
-          <option value="beauty">💄 Beauty</option>
-          <option value="bags">👜 Bags</option>
-          <option value="groceries">🛒 Groceries</option>
-          <option value="watches">⌚ Watches</option>
-          <option value="computers">🖥️ Computers</option>
-          <option value="gaming">🎮 Gaming</option>
-          <option value="home">🏠 Home</option>
-          <option value="accessories">💎 Accessories</option>
-        </select>
-      </div>
-
-      <div class="admin-form-group">
-        <label>Seller Name</label>
-        <input
-          type="text"
-          id="seller-name"
-          placeholder="e.g. John Kato"
-        >
-      </div>
-
-      <div class="admin-form-group">
-        <label>Seller Phone / WhatsApp</label>
-        <input
-          type="tel"
-          id="seller-phone"
-          placeholder="256701234567"
-        >
-      </div>
-
-      <div class="admin-form-group">
-        <label>Seller Location</label>
-        <input
-          type="text"
-          id="seller-location"
-          placeholder="Kampala, Ntinda"
-        >
-      </div>
-
-      <div class="admin-form-group full-width">
-        <label>Description</label>
-
-        <textarea
-          id="product-desc"
-          placeholder="Write product description"
-          rows="4"
-        ></textarea>
-      </div>
-
-      <div class="admin-form-group full-width">
-        <label>Product Images</label>
-
-        <input
-          type="file"
-          id="product-image"
-          multiple
-          accept="image/*"
-          onchange="previewImages(event)"
-        >
-      </div>
-
-      <div class="admin-form-group full-width">
-        <div id="preview-container"></div>
-      </div>
-
-      <div class="admin-form-group full-width">
-        <button
-          class="full-btn"
-          id="upload-btn"
-          onclick="addProduct()"
-        >
-          🚀 Post Ad
-        </button>
-      </div>
-
-    </div>
-
-    <!-- ORDERS -->
-    <p class="admin-section-title" style="margin-top:24px">
-      Recent Orders
-    </p>
-
-    <div id="admin-orders"></div>
-
-  </div>
-
-</div>
-
-<script type="module">
-  import { getFeaturedAds } from "./premium-ads.js";
-  window.getFeaturedAds = getFeaturedAds;
-</script>
-
-<script type="module" src="app.js"></script>
-
-<footer class="footer">
-  <a href="terms.html">Terms & Conditions</a>
-  <a href="privacy.html">Privacy Policy</a>
-  <a href="report.html">Report Abuse</a>
-</footer>
-
-</body>
-</html>
