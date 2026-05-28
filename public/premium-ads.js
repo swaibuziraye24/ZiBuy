@@ -1,85 +1,147 @@
-import { db, auth, collection, addDoc, updateDoc, doc, getDocs, query, where } from "./firebase.js";
+// ============================================
+// ZiBuy — Premium Ads / Boost System (CLEAN)
+// ============================================
+
+import {
+  db,
+  auth,
+  collection,
+  addDoc,
+  updateDoc,
+  doc,
+  getDocs,
+  query,
+  where
+} from "./firebase.js";
+
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 let currentUser = null;
+let selectedBoost = null;
 
+/* ==============================
+   AUTH STATE
+============================== */
 onAuthStateChanged(auth, (user) => {
   currentUser = user;
 });
 
+/* ==============================
+   BOOST AD (direct activation)
+   - Used after payment confirmed
+============================== */
 export async function boostAd(productId, days, price) {
+
   if (!currentUser) {
     alert("Login to boost ad");
     return false;
   }
 
   try {
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + days);
 
+    const now = new Date();
+    const expiresAt = new Date();
+    expiresAt.setDate(now.getDate() + days);
+
+    // Save premium record
     await addDoc(collection(db, "premium_ads"), {
       productId,
       userId: currentUser.uid,
       days,
       price,
       status: "active",
-      createdAt: new Date(),
+      createdAt: now,
       expiresAt,
       clicks: 0
     });
 
+    // Mark product as boosted
     await updateDoc(doc(db, "products", productId), {
-      isPremium: true,
-      premiumExpiresAt: expiresAt
+      "boost.active": true,
+      "boost.startDate": now,
+      "boost.endDate": expiresAt
     });
 
     return true;
+
   } catch (err) {
-    console.error(err);
+    console.error("boostAd error:", err);
     return false;
   }
 }
 
+/* ==============================
+   GET FEATURED ADS
+============================== */
 export async function getFeaturedAds() {
+
   try {
-    const snapshot = await getDocs(query(
-      collection(db, "premium_ads"),
-      where("status", "==", "active")
-    ));
+
+    const snapshot = await getDocs(
+      query(
+        collection(db, "premium_ads"),
+        where("status", "==", "active")
+      )
+    );
 
     const featured = [];
-    snapshot.forEach((doc) => {
-      const premium = doc.data();
-      if (new Date(premium.expiresAt.toDate()) > new Date()) {
-        featured.push(premium);
+    const now = new Date();
+
+    snapshot.forEach((docSnap) => {
+
+      const data = docSnap.data();
+
+      const end =
+        data.expiresAt?.toDate?.() || data.expiresAt;
+
+      if (end && new Date(end) > now) {
+        featured.push(data);
       }
     });
 
     return featured;
+
   } catch (err) {
-    console.error(err);
+    console.error("getFeaturedAds error:", err);
     return [];
   }
 }
 
+/* ==============================
+   TRACK CLICKS
+============================== */
 export async function trackAdClick(productId) {
+
   try {
-    const snapshot = await getDocs(query(
-      collection(db, "premium_ads"),
-      where("productId", "==", productId)
-    ));
+
+    const snapshot = await getDocs(
+      query(
+        collection(db, "premium_ads"),
+        where("productId", "==", productId),
+        where("status", "==", "active")
+      )
+    );
 
     if (!snapshot.empty) {
-      const premiumDoc = snapshot.docs[0];
-      const clicks = (premiumDoc.data().clicks || 0) + 1;
-      await updateDoc(premiumDoc.ref, { clicks });
+
+      const docSnap = snapshot.docs[0];
+      const data = docSnap.data();
+
+      await updateDoc(docSnap.ref, {
+        clicks: (data.clicks || 0) + 1
+      });
     }
+
   } catch (err) {
-    console.error(err);
+    console.error("trackAdClick error:", err);
   }
 }
 
+/* ==============================
+   SHOW BOOST MODAL
+============================== */
 window.showBoostModal = function(productId, productName) {
+
   if (!currentUser) {
     alert("Login to boost");
     return;
@@ -88,121 +150,119 @@ window.showBoostModal = function(productId, productName) {
   const modal = document.createElement("div");
   modal.className = "modal open";
   modal.id = "boost-modal-" + productId;
+
   modal.innerHTML = `
     <div class="modal-box" style="max-width:500px">
       <div class="modal-header">
         <h2>⭐ Boost Your Ad</h2>
-        <button class="modal-close" onclick="document.getElementById('boost-modal-${productId}').remove()">×</button>
+        <button class="modal-close"
+          onclick="document.getElementById('boost-modal-${productId}').remove()">
+          ×
+        </button>
       </div>
-      
-      <p style="color:#6b7280;margin-bottom:20px;font-size:15px">Make <strong>${productName}</strong> stand out! Get more visibility.</p>
+
+      <p style="color:#6b7280;margin-bottom:20px;font-size:15px">
+        Make <strong>${productName}</strong> stand out!
+      </p>
 
       <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px">
-        <div class="boost-option" onclick="selectBoost(this, '${productId}', 7, 5000)">
-          <div>
-            <p style="margin:0;font-weight:700;font-size:16px">7 Days</p>
-            <p style="margin:6px 0 0;color:#6b7280;font-size:14px">UGX 5,000</p>
-          </div>
+
+        <div class="boost-option"
+          onclick="selectBoost(this, '${productId}', 7, 5000)">
+          <p><strong>7 Days</strong> — UGX 5,000</p>
           <input type="radio" name="boost-${productId}">
         </div>
 
-        <div class="boost-option" onclick="selectBoost(this, '${productId}', 14, 8000)">
-          <div>
-            <p style="margin:0;font-weight:700;font-size:16px">14 Days</p>
-            <p style="margin:6px 0 0;color:#6b7280;font-size:14px">UGX 8,000</p>
-          </div>
+        <div class="boost-option"
+          onclick="selectBoost(this, '${productId}', 14, 8000)">
+          <p><strong>14 Days</strong> — UGX 8,000</p>
           <input type="radio" name="boost-${productId}">
         </div>
 
-        <div class="boost-option" onclick="selectBoost(this, '${productId}', 30, 15000)">
-          <div>
-            <p style="margin:0;font-weight:700;font-size:16px">30 Days</p>
-            <p style="margin:6px 0 0;color:#6b7280;font-size:14px">UGX 15,000</p>
-          </div>
+        <div class="boost-option"
+          onclick="selectBoost(this, '${productId}', 30, 15000)">
+          <p><strong>30 Days</strong> — UGX 15,000</p>
           <input type="radio" name="boost-${productId}">
         </div>
+
       </div>
 
-      <button class="btn btn-orange" onclick="processBoost('${productId}')" style="width:100%;padding:14px;font-size:15px">Boost Now 🚀</button>
+      <button class="btn btn-orange"
+        onclick="processBoost()"
+        style="width:100%;padding:14px;font-size:15px">
+        Boost Now 🚀
+      </button>
+
     </div>
   `;
 
   document.body.appendChild(modal);
 };
 
+/* ==============================
+   SELECT BOOST PLAN
+============================== */
 window.selectBoost = function(el, productId, days, price) {
-  document.querySelectorAll(`input[name="boost-${productId}"]`).forEach(r => r.checked = false);
+
+  document.querySelectorAll(`input[name="boost-${productId}"]`)
+    .forEach(r => r.checked = false);
+
   el.querySelector("input").checked = true;
-  window.selectedBoost = { productId, days, price };
+
+  selectedBoost = { productId, days, price };
 };
 
+/* ==============================
+   PROCESS BOOST (WHATSAPP FLOW)
+   - Payment confirmation flow
+============================== */
 window.processBoost = async function() {
-  if (!window.selectedBoost) {
+
+  if (!selectedBoost) {
     alert("Select a boost plan");
     return;
   }
 
-  const { productId, days, price } = window.selectedBoost;
-  const ZIBUY_WHATSAPP = "256790548910"; // ← replace with your number
+  const ZIBUY_WHATSAPP = "256790548910";
 
   try {
-    // Save pending boost record
+
+    const { productId, days, price } = selectedBoost;
+
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + days);
 
+    // Save pending boost
     await addDoc(collection(db, "premium_ads"), {
       productId,
-      userId:    currentUser.uid,
+      userId: currentUser.uid,
       days,
       price,
-      status:    "pending_payment",
+      status: "pending_payment",
       createdAt: new Date(),
       expiresAt,
-      clicks:    0
+      clicks: 0
     });
 
     const msg = encodeURIComponent(
-      `⭐ *ZiBuy Ad Boost Request*\n\n` +
-      `Product ID: ${productId}\n` +
+      `⭐ ZiBuy Boost Request\n\n` +
+      `Product: ${productId}\n` +
       `Plan: ${days} Days\n` +
-      `Amount: *UGX ${price.toLocaleString()}*\n\n` +
-      `User: ${currentUser.email}\n\n` +
-      `Please confirm payment to activate boost.`
+      `Amount: UGX ${price.toLocaleString()}\n\n` +
+      `User: ${currentUser.email}`
     );
 
-    window.open(`https://wa.me/${ZIBUY_WHATSAPP}?text=${msg}`, "_blank");
+    window.open(
+      `https://wa.me/${ZIBUY_WHATSAPP}?text=${msg}`,
+      "_blank"
+    );
 
     document.querySelectorAll(".modal").forEach(m => m.remove());
-    alert("✅ Boost request sent! We'll activate it after payment confirmation on WhatsApp.");
+
+    alert("✅ Boost request sent. Awaiting payment confirmation.");
 
   } catch (err) {
-    console.error(err);
-    alert("Boost request failed. Try again.");
-  }
-};
-
-window.selectBoost = function(el, productId, days, price) {
-  document.querySelectorAll(".boost-option input").forEach(r => r.checked = false);
-  el.querySelector("input").checked = true;
-  window.selectedBoost = { productId, days, price };
-};
-
-window.processBoost = async function() {
-  if (!window.selectedBoost) {
-    alert("Select a plan");
-    return;
-  }
-
-  const success = await boostAd(
-    window.selectedBoost.productId,
-    window.selectedBoost.days,
-    window.selectedBoost.price
-  );
-
-  if (success) {
-    alert("✅ Ad boosted! Refresh to see changes.");
-    window.location.reload();
-  } else {
-    alert("Boost failed");
+    console.error("processBoost error:", err);
+    alert("Boost request failed");
   }
 };
