@@ -469,17 +469,45 @@ window.renderProducts = function () {
 
     case "newest":
     default:
-      products.sort((a, b) => {
-        const aTime = a.createdAt?.toDate
-          ? a.createdAt.toDate().getTime()
-          : new Date(a.createdAt || 0).getTime();
+     
+    products.sort((a, b) => {
 
-        const bTime = b.createdAt?.toDate
-          ? b.createdAt.toDate().getTime()
-          : new Date(b.createdAt || 0).getTime();
+  // =========================
+  // BOOST PRIORITY
+  // =========================
 
-        return bTime - aTime;
-      });
+  const aBoost =
+    a.boost?.active || a.isPremium
+      ? 1
+      : 0;
+
+  const bBoost =
+    b.boost?.active || b.isPremium
+      ? 1
+      : 0;
+
+  // Boosted ads first
+  if (aBoost !== bBoost) {
+    return bBoost - aBoost;
+  }
+
+  // =========================
+  // NEWEST AFTER BOOST
+  // =========================
+
+  const aTime = a.createdAt?.toDate
+    ? a.createdAt.toDate().getTime()
+    : new Date(a.createdAt || 0).getTime();
+
+  const bTime = b.createdAt?.toDate
+    ? b.createdAt.toDate().getTime()
+    : new Date(b.createdAt || 0).getTime();
+
+  return bTime - aTime;
+});
+
+ break;
+      
   }
 
   // =========================
@@ -502,23 +530,61 @@ window.renderProducts = function () {
   }
 
   products.forEach(p => {
-    const card = document.createElement("div");
-    card.className = "product-card";
 
-    card.innerHTML = `
-      <div class="product-image">
-        <img src="${(p.images && p.images[0]) || 'placeholder.jpg'}" alt="${p.name}">
+  const card = document.createElement("div");
+
+  card.className = "product-card";
+
+  // Needed for Sponsored badge positioning
+  card.style.position = "relative";
+
+  card.innerHTML = `
+
+    ${(p.boost?.active || p.isPremium) ? `
+      <div style="
+        position:absolute;
+        top:8px;
+        left:8px;
+        background:#ff6600;
+        color:white;
+        padding:4px 8px;
+        font-size:12px;
+        font-weight:700;
+        border-radius:6px;
+        z-index:10;
+      ">
+        Sponsored
       </div>
+    ` : ""}
 
-      <div class="product-info">
-        <h3>${p.name || "No name"}</h3>
-        <p class="price">UGX ${Number(p.price || 0).toLocaleString()}</p>
-        <p class="location">📍 ${p.location || "Unknown"}</p>
-      </div>
-    `;
+    <div class="product-image">
+      <img
+        src="${(p.images && p.images[0]) || 'placeholder.jpg'}"
+        alt="${p.name}"
+      >
+    </div>
 
-    container.appendChild(card);
-  });
+    <div class="product-info">
+
+      <h3>
+        ${p.name || "No name"}
+      </h3>
+
+      <p class="price">
+        UGX ${Number(p.price || 0).toLocaleString()}
+      </p>
+
+      <p class="location">
+        📍 ${p.location || "Unknown"}
+      </p>
+
+    </div>
+  `;
+
+  container.appendChild(card);
+
+});
+    
 };
 
 // ============================================
