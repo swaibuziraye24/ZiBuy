@@ -208,42 +208,7 @@ window.submitAd = async function() {
     return;
   }
 
-  // ── 2. CHECK SUBSCRIPTION LIMITS (NEW SYSTEM) ─────────────────
-try {
-
-  const q = query(
-    collection(db, "business_subscriptions"),
-    where("userId", "==", currentUser.uid)
-  );
-
-  const snap = await getDocs(q);
-
-  if (snap.empty) {
-    alert("❌ No subscription found. Please activate a plan.");
-    return;
-  }
-
-  const subDoc = snap.docs[0];
-  const sub = subDoc.data();
-
-  const now = new Date();
-
-  // 1. Check active
-  if (!sub.active) {
-    alert("⚠️ Your subscription is inactive.");
-    return;
-  }
-
-  // 2. Check expiry
-  const end = sub.endDate?.toDate?.();
-
-if (!end || end < now || !sub.active) {
-  alert("⛔ Subscription expired or inactive.");
-  return;
-}
-
-  // ── 2. REAL SUBSCRIPTION CHECK ──────────────
-
+  // ── SUBSCRIPTION CHECK ─────────────────
 try {
 
   const check =
@@ -263,19 +228,8 @@ try {
 
 } catch (err) {
 
-  console.error(
-    "Subscription check failed:",
-    err
-  );
-
-}
-
-  // SAVE subscription info for later update
-  window._subscriptionDocId = subDoc.id;
-  window._subscriptionData = sub;
-
-} catch (err) {
-  console.warn("Subscription check failed:", err);
+  console.error("Subscription check failed:", err);
+  return;
 }
 
   // ── 3. Lock button ──────────────────────────
@@ -284,6 +238,25 @@ try {
     btn.textContent = "Publishing...";
     btn.disabled = true;
   }
+
+
+  const { getActiveSubscription } =
+  await import("./subscription-check.js");
+
+const sub =
+  await getActiveSubscription(currentUser.uid);
+
+const limit =
+  sub.details.imagesPerAd || 3;
+
+if (uploadedImages.length > limit) {
+
+  alert(
+    `❌ You can only upload ${limit} images on your plan`
+  );
+
+  return;
+}
 
   try {
     // ── 4. Upload images ────────────────────────
@@ -314,19 +287,15 @@ const { getActiveSubscription } =
   await import("./subscription-check.js");
 
 const subscription =
-  await getActiveSubscription(
-    currentUser.uid
-  );
+  await getActiveSubscription(currentUser.uid);
+
+const plan = subscription.details;
 
 const adDays =
-  subscription.details.adDays || 30;
+  plan.adDurationDays || 30;
 
-const expiresAt =
-  new Date();
-
-expiresAt.setDate(
-  expiresAt.getDate() + adDays
-);
+const expiresAt = new Date();
+expiresAt.setDate(expiresAt.getDate() + adDays);
 
     const productData = {
       name:        titleInput.value.trim(),
@@ -337,9 +306,15 @@ expiresAt.setDate(
       images:      imageUrls,
       userId:      currentUser.uid,
       userEmail:   currentUser.email,
-      status:      "active",
-      views:       0,
-      isPremium:   false,
+      status: "active",
+views: 0,
+
+boost: {
+  active: false,
+  startDate: null,
+  endDate: null,
+  type: null // 7d, 14d, 30d
+},
       createdAt:   new Date(),
       updatedAt:   new Date(),
       expiresAt,
@@ -358,11 +333,11 @@ expiresAt.setDate(
 try {
   if (window._subscriptionDocId) {
 
-    const subRef = doc(
-      db,
-      "business_subscriptions",
-      window._subscriptionDocId
-    );
+  const subRef = doc(
+  db,
+  "business_accounts",
+  window._subscriptionDocId
+);
 
     await updateDoc(subRef, {
       usedAds: (window._subscriptionData.usedAds || 0) + 1
