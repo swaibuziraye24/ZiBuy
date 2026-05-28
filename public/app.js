@@ -264,8 +264,6 @@ renderProducts();
 } catch (err) {
   console.error(err);
 
-console.log("TOTAL PRODUCTS:", products.length);
-console.log(products);
 
 }
 }
@@ -1078,3 +1076,6 @@ document.addEventListener("click", (e) => {
     box.style.display = "none";
   }
 });
+
+// if (p.hidden === true) return false;
+// if (p.status === "expired") return false;
