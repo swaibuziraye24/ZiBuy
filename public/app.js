@@ -936,3 +936,20 @@ window.allProducts = allProducts;
   }
 };
 
+let clickCount = 0;
+let clickTimer = null;
+
+document.getElementById("logo").addEventListener("click", () => {
+  clickCount++;
+
+  if (clickTimer) clearTimeout(clickTimer);
+
+  clickTimer = setTimeout(() => {
+    clickCount = 0;
+  }, 2000);
+
+  if (clickCount >= 5) {
+    clickCount = 0;
+    window.location.href = "admin.html";
+  }
+});
