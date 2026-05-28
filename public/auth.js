@@ -72,56 +72,6 @@ export function closeAuthModal() {
   }
 }
 
-// ============ Admin Login ============
-export async function adminLogin() {
-
-  const email =
-    document.getElementById("admin-email")?.value.trim();
-
-  const password =
-    document.getElementById("admin-password")?.value.trim();
-
-  if (!email || !password) {
-    alert("❌ Please fill admin credentials");
-    return;
-  }
-
-  try {
-
-    const result =
-      await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-
-    // Only your admin email allowed
-    if (result.user.email !== ADMIN_EMAIL) {
-
-      await signOut(auth);
-
-      alert("❌ Not authorized as admin");
-
-      return;
-    }
-
-    isAdmin = true;
-
-    closeAdminLoginModal();
-
-    showToast("✅ Welcome Admin!");
-
-    // ✅ OPEN REAL ADMIN DASHBOARD
-    window.location.href = "admin.html";
-
-  } catch (err) {
-
-    alert("❌ Admin login failed: " + err.message);
-
-  }
-
-}
-
 
 // ============ Customer Registration ============
 window.customerRegister = async function() {
