@@ -57,7 +57,10 @@ function renderShops(shops) {
   const container =
     document.getElementById("shops-container");
 
-  if (shops.length === 0) {
+  const shops = await getRankedShops();
+    allShops = shops;
+
+    if (shops.length === 0) {
 
     container.innerHTML =
       "<p>No shops found</p>";
@@ -72,18 +75,13 @@ function renderShops(shops) {
         onclick="window.location.href='shop.html?seller=${shop.userId}'">
 
         <div class="shop-name">
-          🏪 ${shop.userId || "ZiBuy Shop"}
-          ${shop.seller.isVerified ? "✅" : ""}
+          🏪 ZiBuy Shop
+          ${shop.plan === "gold" ? "🥇" : shop.plan === "silver" ? "🥈" : shop.plan === "bronze" ? "🥉" : ""}
         </div>
 
         <div class="shop-meta">
-          📍 ${shop.totalAds || "Uganda"}
+          📦 ${shop.totalAds || 0} listings
         </div>
-
-        <div class="shop-meta">
-          📦 ${shop.plan || 0} listings
-        </div>
-
         <button class="shop-btn">
           Visit Shop
         </button>
