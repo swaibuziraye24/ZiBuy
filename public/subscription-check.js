@@ -93,8 +93,6 @@ export async function canUserPost(userId) {
   const plan =
     sub.details;
 
-  /* COUNT ACTIVE ADS */
-
   const adsSnapshot =
     await getDocs(
       query(
@@ -107,8 +105,7 @@ export async function canUserPost(userId) {
   const totalAds =
     adsSnapshot.size;
 
-  /* GOLD = UNLIMITED */
-
+  // ✅ Unlimited plan (Gold)
   if (plan.maxAds === Infinity) {
 
     return {
@@ -119,8 +116,7 @@ export async function canUserPost(userId) {
 
   }
 
-  /* LIMIT REACHED */
-
+  // ❌ Limit reached
   if (totalAds >= plan.maxAds) {
 
     return {
@@ -131,10 +127,10 @@ export async function canUserPost(userId) {
 
   }
 
+  // ✅ Allowed
   return {
     allowed: true,
-    remaining:
-      plan.maxAds - totalAds,
+    remaining: plan.maxAds - totalAds,
     plan: plan.name
   };
 
