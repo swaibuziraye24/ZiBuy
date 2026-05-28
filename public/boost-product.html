@@ -1,187 +1,409 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#ff6600">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <title>Boost Your Ad — ZiBuy</title>
-  <link rel="stylesheet" href="style.css">
+
+<meta charset="UTF-8">
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<title>Boost Product — ZiBuy</title>
+
+<style>
+
+body{
+  margin:0;
+  padding:20px;
+  background:#f5f5f5;
+  font-family:Arial,sans-serif;
+}
+
+.boost-wrap{
+  max-width:600px;
+  margin:auto;
+}
+
+.page-title{
+  font-size:32px;
+  font-weight:800;
+  margin-bottom:10px;
+  color:#111;
+}
+
+.page-sub{
+  color:#666;
+  margin-bottom:30px;
+}
+
+.boost-grid{
+  display:grid;
+  gap:16px;
+}
+
+.boost-card{
+  background:white;
+  border-radius:18px;
+  padding:22px;
+  border:2px solid transparent;
+  cursor:pointer;
+  transition:0.2s;
+}
+
+.boost-card:hover{
+  transform:translateY(-3px);
+  border-color:#ff6600;
+}
+
+.boost-card.active{
+  border-color:#ff6600;
+  background:#fff7f2;
+}
+
+.boost-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.boost-days{
+  font-size:22px;
+  font-weight:800;
+}
+
+.boost-price{
+  font-size:24px;
+  font-weight:900;
+  color:#ff6600;
+}
+
+.boost-features{
+  margin-top:16px;
+  color:#555;
+  line-height:1.7;
+  font-size:15px;
+}
+
+.pay-btn{
+  width:100%;
+  margin-top:25px;
+  background:#ff6600;
+  color:white;
+  border:none;
+  padding:16px;
+  border-radius:14px;
+  font-size:16px;
+  font-weight:800;
+  cursor:pointer;
+}
+
+.pay-btn:hover{
+  background:#e65c00;
+}
+
+.selected-label{
+  margin-top:20px;
+  font-weight:700;
+  color:#ff6600;
+}
+
+.loading{
+  text-align:center;
+  padding:40px;
+}
+
+</style>
+
 </head>
+
 <body>
 
-<!-- ============ TOP BAR ============ -->
-<header class="topbar">
-  <a href="index.html"><h1 class="logo">Zi<span>Buy</span></h1></a>
-  <div class="topbar-actions" style="margin-left:auto">
-    <button class="btn btn-dark" onclick="window.location.href='dashboard.html'">← Skip</button>
-  </div>
-</header>
+<div class="boost-wrap">
 
-<!-- ============ BOOST PAGE ============ -->
-<div style="max-width:800px;margin:0 auto;padding:24px">
-
-  <!-- Header -->
-  <div style="text-align:center;margin-bottom:32px">
-    <h1 style="font-size:28px;font-weight:800;margin-bottom:8px">⭐ Boost Your Product</h1>
-    <p style="color:#6b7280;font-size:16px">Get more visibility and sell faster</p>
+  <div class="page-title">
+    ⭐ Boost Your Ad
   </div>
 
-  <!-- Product Preview -->
-  <div id="product-preview" style="background:white;border-radius:16px;padding:20px;margin-bottom:32px;box-shadow:0 4px 20px rgba(0,0,0,0.08)">
-    <h3 style="margin:0 0 16px;font-weight:800">Your Product</h3>
-    <div style="display:grid;grid-template-columns:120px 1fr;gap:16px">
-      <img id="preview-image" src="" alt="Product" style="width:120px;height:120px;object-fit:cover;border-radius:10px;background:#f3f4f6">
-      <div>
-        <h4 id="preview-name" style="margin:0 0 8px;font-weight:700">Product Name</h4>
-        <p id="preview-price" style="margin:0;color:#ff6600;font-weight:800;font-size:18px">UGX 0</p>
-        <p id="preview-location" style="margin:8px 0 0;color:#6b7280;font-size:13px">📍 Location</p>
+  <div class="page-sub">
+    Get more visibility, more clicks and more buyers on ZiBuy.
+  </div>
+
+  <div id="product-info"></div>
+
+  <div class="boost-grid">
+
+    <div
+      class="boost-card"
+      onclick="selectPlan(7,5000,this)"
+    >
+      <div class="boost-top">
+        <div class="boost-days">
+          7 Days
+        </div>
+
+        <div class="boost-price">
+          UGX 5,000
+        </div>
+      </div>
+
+      <div class="boost-features">
+        ✅ Featured placement<br>
+        ✅ More visibility<br>
+        ✅ Faster sales
       </div>
     </div>
-  </div>
 
-  <!-- Boost Plans -->
-  <div style="margin-bottom:32px">
-    <h3 style="font-size:18px;font-weight:800;margin-bottom:16px">Choose Your Plan</h3>
-    
-    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:14px">
-      
-      <!-- 7 Days Plan -->
-      <div class="boost-card" onclick="selectPlan(this, 7, 5000)" style="border:2px solid #e5e7eb;border-radius:14px;padding:20px;text-align:center;cursor:pointer;transition:all 0.2s">
-        <p style="margin:0;font-size:32px;margin-bottom:8px">⭐</p>
-        <h4 style="margin:0 0 8px;font-weight:800">7 Days</h4>
-        <p style="margin:0 0 16px;color:#6b7280;font-size:14px">1 week of visibility</p>
-        <p style="margin:0;font-size:24px;font-weight:900;color:#ff6600">UGX 5,000</p>
+    <div
+      class="boost-card"
+      onclick="selectPlan(14,8000,this)"
+    >
+      <div class="boost-top">
+        <div class="boost-days">
+          14 Days
+        </div>
+
+        <div class="boost-price">
+          UGX 8,000
+        </div>
       </div>
 
-      <!-- 14 Days Plan -->
-      <div class="boost-card" onclick="selectPlan(this, 14, 8000)" style="border:2px solid #e5e7eb;border-radius:14px;padding:20px;text-align:center;cursor:pointer;transition:all 0.2s">
-        <p style="margin:0;font-size:32px;margin-bottom:8px">⭐⭐</p>
-        <h4 style="margin:0 0 8px;font-weight:800">14 Days</h4>
-        <p style="margin:0 0 16px;color:#6b7280;font-size:14px">2 weeks of visibility</p>
-        <p style="margin:0;font-size:24px;font-weight:900;color:#ff6600">UGX 8,000</p>
-        <p style="margin:8px 0 0;background:#dcfce7;color:#16a34a;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700">SAVE 5%</p>
+      <div class="boost-features">
+        ✅ Better ranking<br>
+        ✅ More clicks<br>
+        ✅ Recommended ads section
       </div>
-
-      <!-- 30 Days Plan -->
-      <div class="boost-card" onclick="selectPlan(this, 30, 15000)" style="border:2px solid #e5e7eb;border-radius:14px;padding:20px;text-align:center;cursor:pointer;transition:all 0.2s">
-        <p style="margin:0;font-size:32px;margin-bottom:8px">⭐⭐⭐</p>
-        <h4 style="margin:0 0 8px;font-weight:800">30 Days</h4>
-        <p style="margin:0 0 16px;color:#6b7280;font-size:14px">Full month visibility</p>
-        <p style="margin:0;font-size:24px;font-weight:900;color:#ff6600">UGX 15,000</p>
-        <p style="margin:8px 0 0;background:#dcfce7;color:#16a34a;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700">SAVE 17%</p>
-      </div>
-
     </div>
+
+    <div
+      class="boost-card"
+      onclick="selectPlan(30,15000,this)"
+    >
+      <div class="boost-top">
+        <div class="boost-days">
+          30 Days
+        </div>
+
+        <div class="boost-price">
+          UGX 15,000
+        </div>
+      </div>
+
+      <div class="boost-features">
+        ✅ Maximum visibility<br>
+        ✅ Top search placement<br>
+        ✅ Highest exposure
+      </div>
+    </div>
+
   </div>
 
-  <!-- Benefits -->
-  <div style="background:#fffbeb;border:1.5px solid #fde68a;border-radius:14px;padding:20px;margin-bottom:24px">
-    <h4 style="margin:0 0 12px;color:#92400e;font-weight:800">✨ What You Get</h4>
-    <ul style="margin:0;padding-left:20px;color:#92400e;font-size:14px">
-      <li>📍 Featured position on homepage</li>
-      <li>⭐ Featured badge on your product</li>
-      <li>📈 Higher visibility to buyers</li>
-      <li>💬 More inquiries & messages</li>
-    </ul>
+  <div
+    class="selected-label"
+    id="selected-plan"
+  >
+    No plan selected
   </div>
 
-  <!-- Action Buttons -->
-  <div style="display:flex;gap:12px">
-    <button onclick="window.location.href='dashboard.html'" class="btn btn-outline" style="flex:1;padding:14px">Skip for Now</button>
-    <button id="boost-btn" onclick="processBoost()" class="btn btn-orange" style="flex:1;padding:14px;display:none">Continue to Payment</button>
-  </div>
+  <button
+    class="pay-btn"
+    onclick="startBoost()"
+  >
+    🚀 Boost Now
+  </button>
 
 </div>
 
-<div id="overlay" class="overlay"></div>
-<div id="toast-container" class="toast-container"></div>
-
 <script type="module">
-  import { db, doc, getDoc, collection, addDoc } from "./firebase.js";
-  import { auth } from "./firebase.js";
-  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-  import { boostAd } from "./premium-ads.js";
 
-  let currentUser = null;
-  let selectedPlan = null;
-  const params = new URLSearchParams(window.location.search);
-  const productId = params.get("productId");
+import {
+  db,
+  doc,
+  getDoc
+} from "./firebase.js";
 
-  onAuthStateChanged(auth, async (user) => {
-    currentUser = user;
-    if (!user) {
-      window.location.href = "index.html";
-      return;
-    }
+import {
+  boostAd
+} from "./premium-ads.js";
 
-    // Load product preview
-    if (productId) {
-      try {
-        const snap = await getDoc(doc(db, "products", productId));
-        if (snap.exists()) {
-          const p = snap.data();
-          document.getElementById("preview-image").src = p.images?.[0] || "";
-          document.getElementById("preview-name").textContent = p.name;
-          document.getElementById("preview-price").textContent = "UGX " + Number(p.price).toLocaleString();
-          document.getElementById("preview-location").textContent = "📍 " + (p.location || "Uganda");
-        }
-      } catch (err) {
-        console.error("Error loading product:", err);
-      }
-    }
-  });
+const params =
+  new URLSearchParams(window.location.search);
 
-  window.selectPlan = function(el, days, price) {
-    // Remove selection from all cards
-    document.querySelectorAll(".boost-card").forEach(card => {
-      card.style.borderColor = "#e5e7eb";
-      card.style.background = "white";
-    });
+const productId =
+  params.get("productId");
 
-    // Select this card
-    el.style.borderColor = "#ff6600";
-    el.style.background = "#fff7ed";
+let selectedDays = null;
+let selectedPrice = null;
 
-    selectedPlan = { days, price };
-    document.getElementById("boost-btn").style.display = "block";
-  };
+/* =========================
+   LOAD PRODUCT
+========================= */
 
-window.processBoost = async function() {
-  if (!selectedPlan || !productId) {
-    alert("Please select a plan");
+async function loadProduct() {
+
+  if (!productId) {
+    alert("No product ID");
     return;
   }
 
-  const btn = event.target;
-  btn.textContent = "Processing...";
-  btn.disabled = true;
-
   try {
-    // Save boost request to Firestore (pending approval)
-    await addDoc(collection(db, "boost_requests"), {
-      productId: productId,
-      userId: currentUser.uid,
-      userEmail: currentUser.email,
-      days: selectedPlan.days,
-      price: selectedPlan.price,
-      status: "pending",
-      createdAt: new Date()
-    });
 
-    // Send to WhatsApp
-    const message = `Hi! I want to boost my product for ${selectedPlan.days} days. Price: UGX ${selectedPlan.price.toLocaleString()}. Please confirm payment details.`;
-    const adminPhone = "256790548910"; // YOUR ADMIN PHONE
-    
-    window.location.href = `https://wa.me/${adminPhone}?text=${encodeURIComponent(message)}`;
+    const snap =
+      await getDoc(
+        doc(db, "products", productId)
+      );
+
+    if (!snap.exists()) {
+      alert("Product not found");
+      return;
+    }
+
+    const product = snap.data();
+
+    document.getElementById(
+      "product-info"
+    ).innerHTML = `
+      <div style="
+        background:white;
+        border-radius:18px;
+        padding:18px;
+        margin-bottom:22px;
+      ">
+
+        <div style="
+          display:flex;
+          gap:16px;
+          align-items:center;
+        ">
+
+          <img
+            src="${
+              product.images?.[0]
+              || ''
+            }"
+            style="
+              width:90px;
+              height:90px;
+              object-fit:cover;
+              border-radius:12px;
+            "
+          >
+
+          <div>
+
+            <div style="
+              font-size:20px;
+              font-weight:800;
+            ">
+              ${product.name}
+            </div>
+
+            <div style="
+              color:#ff6600;
+              font-size:22px;
+              font-weight:900;
+              margin-top:8px;
+            ">
+              UGX ${Number(
+                product.price || 0
+              ).toLocaleString()}
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    `;
 
   } catch (err) {
-    console.error("Error:", err);
-    alert("Error: " + err.message);
-    btn.textContent = "Continue to Payment";
-    btn.disabled = false;
+
+    console.error(err);
+
   }
+
+}
+
+/* =========================
+   SELECT PLAN
+========================= */
+
+window.selectPlan =
+function(days, price, el){
+
+  selectedDays = days;
+  selectedPrice = price;
+
+  document.querySelectorAll(
+    ".boost-card"
+  ).forEach(card => {
+    card.classList.remove("active");
+  });
+
+  el.classList.add("active");
+
+  document.getElementById(
+    "selected-plan"
+  ).textContent =
+    `Selected: ${days} Days — UGX ${price.toLocaleString()}`;
+
 };
+
+/* =========================
+   START BOOST
+========================= */
+
+window.startBoost =
+async function(){
+
+  if (!selectedDays) {
+
+    alert("Select a boost plan");
+
+    return;
+  }
+
+  const btn =
+    document.querySelector(".pay-btn");
+
+  btn.disabled = true;
+  btn.textContent = "Processing...";
+
+  try {
+
+    const success =
+      await boostAd(
+        productId,
+        selectedDays,
+        selectedPrice
+      );
+
+    if (success) {
+
+      alert(
+        "✅ Product boosted successfully"
+      );
+
+      window.location.href =
+        "dashboard.html?tab=my-ads";
+
+    } else {
+
+      alert("Boost failed");
+
+    }
+
+  } catch (err) {
+
+    console.error(err);
+
+    alert("Error boosting ad");
+
+  }
+
+  btn.disabled = false;
+  btn.textContent = "🚀 Boost Now";
+
+};
+
+loadProduct();
 
 </script>
 
