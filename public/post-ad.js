@@ -283,13 +283,14 @@ if (uploadedImages.length > limit) {
 
 // ── PLAN AD EXPIRY ───────────────────────
 
-const { getActiveSubscription } =
-  await import("./subscription-check.js");
+if (!getActiveSubscription) {
+  ({ getActiveSubscription } = await import("./subscription-check.js"));
+}
 
 const subscription =
   await getActiveSubscription(currentUser.uid);
 
-const plan = subscription.details;
+const plan = subscription?.details || {};
 
 const adDays =
   plan.adDurationDays || 30;
