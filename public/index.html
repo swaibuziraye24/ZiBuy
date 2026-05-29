@@ -30,18 +30,6 @@
       placeholder="Search phones, cars, shoes..."
       onkeyup="searchProducts()"
     >
-
-<button
-  class="btn btn-orange"
-  onclick="window.location.href='shops.html'"
->
-  🏪 Shops
-</button>
-
- <a href="business-plans.html" class="nav-btn">
-    💼 Plans
-  </a>
-
   </div>
 
   <div class="topbar-actions">
@@ -61,6 +49,17 @@
     <button class="btn btn-outline" id="dashboard-btn" onclick="window.location.href='dashboard.html'" style="display:none">
       📊 Dashboard
     </button>
+
+<button
+  class="btn btn-orange"
+  onclick="window.location.href='shops.html'"
+>
+  🏪 Shops
+</button>
+
+ <a href="business-plans.html" class="nav-btn">
+    💼 Plans
+  </a>
 
     <button class="btn btn-outline" id="account-btn" onclick="openAuthModal()">
       Account
@@ -343,6 +342,16 @@
  onclick="location.href='admin-boost-requests.html'" style="padding:8px 12px;font-size:12px">
   ⭐ Premium Ads Requests
 </button>
+
+
+<button class="admin-nav-item" data-section="orders">
+    🛍️ Orders
+  </button>
+
+  <button class="btn btn-orange"
+   onclick="window.location.href='admin-report.html'">
+    🚨 Report
+  </button>
 
         <button class="modal-close"
           onclick="closeAdminPanel()">
