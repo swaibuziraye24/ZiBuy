@@ -17,11 +17,14 @@ const PLAN_LIMITS = {
 const ADMIN_EMAIL = "swaibuziraye22@gmail.com"; // ← your admin email
 
 // ── Raw data caches ───────────────────────────
-let allUsers  = [];
-let allSubs   = [];
-let allBoosts = [];
-let allAds    = [];
-let allOrders = [];
+let allUsers       = [];
+let allSubs        = [];
+let allBoosts      = [];
+let allAds         = [];
+let allOrders      = [];
+let allPremiumAds  = [];
+let allVerifs      = [];
+let allReports     = [];
 
 // ── Auth guard ────────────────────────────────
 onAuthStateChanged(auth, async (user) => {
@@ -84,7 +87,10 @@ async function loadAll() {
     loadSubscriptions(),
     loadBoosts(),
     loadAds(),
-    loadOrders()
+    loadOrders(),
+    loadPremiumAds(),
+    loadVerifications(),
+    loadReports()
   ]);
   renderOverview();
 }
@@ -575,3 +581,183 @@ function showToast(msg, type = "info") {
   c.appendChild(t);
   setTimeout(() => t.remove(), 3500);
 }
+
+
+
+// ══════════════════════════════════════════════
+//  PREMIUM ADS
+// ══════════════════════════════════════════════
+async function loadPremiumAds() {
+  try {
+    const snap = await getDocs(collection(db, "premium_ads"));
+    allPremiumAds = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+                            .sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
+    renderPremiumAds(allPremiumAds);
+
+    const active  = allPremiumAds.filter(p => p.status === "active" && new Date(p.expiresAt?.toDate?.()) > new Date());
+    const revenue = allPremiumAds.reduce((s, p) => s + (p.price || 0), 0);
+    const avgClicks = active.length > 0
+      ? Math.round(active.reduce((s, p) => s + (p.clicks || 0), 0) / active.length)
+      : 0;
+
+    const ke = document.getElementById("kpi-active-boosts");
+    const kr = document.getElementById("kpi-boost-revenue");
+    const kc = document.getElementById("kpi-avg-clicks");
+    if (ke) ke.textContent = active.length;
+    if (kr) kr.textContent = "UGX " + revenue.toLocaleString();
+    if (kc) kc.textContent = avgClicks;
+  } catch (e) { console.error(e); }
+}
+
+function renderPremiumAds(ads) {
+  const tbody = document.getElementById("premium-table-body");
+  if (!tbody) return;
+  if (ads.length === 0) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="8">No premium ads</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = ads.map(a => {
+    const isActive = a.status === "active" && new Date(a.expiresAt?.toDate?.()) > new Date();
+    return `
+      <tr>
+        <td><a href="product.html?id=${a.productId}" target="_blank" style="color:var(--orange);font-weight:700">${a.productId?.slice(0,10)}…</a></td>
+        <td style="font-size:12px">${a.userEmail || a.userId?.slice(0,8)}</td>
+        <td>${a.days} days</td>
+        <td style="font-weight:800;color:var(--orange)">UGX ${Number(a.price||0).toLocaleString()}</td>
+        <td>${a.clicks || 0}</td>
+        <td style="font-size:12px">${fmtDate(a.expiresAt)}</td>
+        <td><span class="plan-chip ${isActive ? 'chip-approved' : 'chip-expired'}">${isActive ? 'active' : a.status}</span></td>
+        <td>
+          ${isActive ? `<button class="action-btn btn-reject" onclick="removePremiumAd('${a.id}','${a.productId}')">Remove</button>` : ""}
+        </td>
+      </tr>`;
+  }).join("");
+}
+
+window.removePremiumAd = async function(premiumId, productId) {
+  if (!confirm("Remove this premium boost?")) return;
+  try {
+    await updateDoc(doc(db, "premium_ads", premiumId), { status: "removed" });
+    await updateDoc(doc(db, "products", productId), { isPremium: false }).catch(() => {});
+    showToast("Boost removed", "info");
+    loadPremiumAds();
+  } catch (e) { showToast("Failed", "error"); }
+};
+
+// ══════════════════════════════════════════════
+//  VERIFICATIONS
+// ══════════════════════════════════════════════
+async function loadVerifications() {
+  try {
+    const snap = await getDocs(collection(db, "seller_verifications"));
+    allVerifs = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+                        .sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
+    renderVerifs(allVerifs);
+  } catch (e) { console.error(e); }
+}
+
+function renderVerifs(verifs) {
+  const tbody = document.getElementById("verif-table-body");
+  if (!tbody) return;
+  if (verifs.length === 0) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="7">No verification requests</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = verifs.map(v => `
+    <tr>
+      <td style="font-weight:700">${v.fullName || "—"}</td>
+      <td>${v.businessName || "—"}</td>
+      <td style="font-size:12px">${v.email || "—"}</td>
+      <td style="font-size:12px">${v.phone || "—"}</td>
+      <td style="font-size:12px">${v.location || "—"}</td>
+      <td><span class="plan-chip ${chipClass(v.status)}">${v.status}</span></td>
+      <td style="display:flex;gap:6px;flex-wrap:wrap">
+        ${v.status === "pending" ? `
+          <button class="action-btn btn-approve" onclick="approveVerif('${v.id}','${v.userId}')">✅ Approve</button>
+          <button class="action-btn btn-reject"  onclick="rejectVerif('${v.id}')">✗ Reject</button>
+          ${v.phone ? `<button class="action-btn" style="background:#dcfce7;color:#166534" onclick="window.open('https://wa.me/${v.phone}?text=${encodeURIComponent("Hi "+v.fullName+", your ZiBuy seller verification is under review.")}','_blank')">💬 WA</button>` : ""}
+        ` : ""}
+      </td>
+    </tr>`).join("");
+}
+
+window.filterVerifs = function(status) {
+  const filtered = status === "all" ? allVerifs : allVerifs.filter(v => v.status === status);
+  renderVerifs(filtered);
+};
+
+window.approveVerif = async function(verifId, userId) {
+  if (!confirm("Approve this seller?")) return;
+  try {
+    await updateDoc(doc(db, "seller_verifications", verifId), { status: "approved", approvedAt: new Date() });
+    if (userId) {
+      await updateDoc(doc(db, "users", userId), { isSellerVerified: true, sellerVerificationStatus: "approved" }).catch(() => {});
+    }
+    showToast("Seller approved ✅", "success");
+    loadVerifications();
+  } catch (e) { showToast("Failed", "error"); }
+};
+
+window.rejectVerif = async function(verifId) {
+  const reason = prompt("Rejection reason (optional):");
+  try {
+    await updateDoc(doc(db, "seller_verifications", verifId), {
+      status: "rejected",
+      rejectionReason: reason || "Not provided"
+    });
+    showToast("Rejected", "info");
+    loadVerifications();
+  } catch (e) { showToast("Failed", "error"); }
+};
+
+// ══════════════════════════════════════════════
+//  REPORTS
+// ══════════════════════════════════════════════
+async function loadReports() {
+  try {
+    const snap = await getDocs(collection(db, "reports"));
+    allReports = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+                         .sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
+    renderReports(allReports);
+  } catch (e) { console.error(e); }
+}
+
+function renderReports(reports) {
+  const tbody = document.getElementById("reports-table-body");
+  if (!tbody) return;
+  if (reports.length === 0) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="6">No reports</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = reports.map(r => `
+    <tr>
+      <td style="font-weight:700;color:#ef4444">${r.reason || "—"}</td>
+      <td><a href="product.html?id=${r.productId}" target="_blank" style="color:var(--orange);font-weight:700;font-size:12px">${r.productId?.slice(0,10) || "—"}</a></td>
+      <td style="font-size:12px">${r.reportedBy || r.reporterEmail || "—"}</td>
+      <td style="font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.description || "—"}</td>
+      <td><span class="plan-chip ${r.status === 'resolved' ? 'chip-approved' : 'chip-pending'}">${r.status || "open"}</span></td>
+      <td style="display:flex;gap:6px">
+        ${r.status !== "resolved" ? `<button class="action-btn btn-approve" onclick="resolveReport('${r.id}')">✅ Resolve</button>` : ""}
+        <button class="action-btn btn-reject" onclick="deleteReportedAd('${r.productId}','${r.id}')">🗑️ Delete Ad</button>
+      </td>
+    </tr>`).join("");
+}
+
+window.resolveReport = async function(reportId) {
+  try {
+    await updateDoc(doc(db, "reports", reportId), { status: "resolved", resolvedAt: new Date() });
+    showToast("Report resolved ✅", "success");
+    loadReports();
+  } catch (e) { showToast("Failed", "error"); }
+};
+
+window.deleteReportedAd = async function(productId, reportId) {
+  if (!confirm("Delete this product permanently?")) return;
+  try {
+    await deleteDoc(doc(db, "products", productId));
+    await updateDoc(doc(db, "reports", reportId), { status: "resolved", resolvedAt: new Date() }).catch(() => {});
+    showToast("Product deleted & report resolved", "info");
+    loadReports();
+    loadAds();
+  } catch (e) { showToast("Failed", "error"); }
+};
