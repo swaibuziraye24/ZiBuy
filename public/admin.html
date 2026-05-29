@@ -194,6 +194,11 @@
 <div class="admin-layout">
 
   <!-- ── SIDEBAR ── -->
+
+<aside class="admin-sidebar">
+
+<button class="admin-nav-item active">
+
   <button class="admin-nav-item active" data-section="overview"
   onclick="window.showSection('overview', this)">
   <span>📊</span> Overview
@@ -228,6 +233,60 @@
   <span>🚨</span> Reports
 </button>
 </aside>
+
+<!-- ============ ADMIN PANEL MODAL ============ -->
+<div id="admin-modal" class="modal">
+
+  <div
+    class="modal-box admin-box"
+    id="admin-panel-content"
+  >
+
+    <div class="modal-header">
+
+      <h2>⚙️ ZiBuy Admin</h2>
+
+      <div style="display:flex;gap:8px">
+
+        
+        <button class="btn btn-orange"
+          onclick="window.location.href='admin-premium.html'"
+          style="padding:8px 12px;font-size:12px">
+          ⭐ Premium Ads
+        </button>
+
+        <button class="btn btn-orange"
+          onclick="window.location.href='admin-verification.html'"
+          style="padding:8px 12px;font-size:12px">
+          ✅ Verifications
+        </button>
+
+        <button class="btn btn-orange"
+          onclick="window.location.href='admin-analytics.html'"
+          style="padding:8px 12px;font-size:12px">
+          📊 Analytics
+        </button>
+
+<button class="btn btn-orange"
+ onclick="location.href='admin-subscriptions.html'" style="padding:8px 12px;font-size:12px">
+  
+  Subscriptions
+</button>
+
+<button class="btn btn-orange"
+ onclick="location.href='admin-boost-requests.html'" style="padding:8px 12px;font-size:12px">
+  ⭐ Premium Ads Requests
+</button>
+
+
+        <button class="modal-close"
+          onclick="closeAdminPanel()">
+          ×
+        </button>
+
+      </div>
+
+
 
   <!-- ── MAIN ── -->
   <main class="admin-main">
