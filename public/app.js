@@ -471,6 +471,8 @@ function renderFeaturedAds() {
   });
 }
 
+renderFeaturedAds();
+
   // =========================
   // 1. CATEGORY FILTER
   // =========================
@@ -727,7 +729,6 @@ function renderFeaturedAds() {
   });
 };
  
-renderFeaturedAds();
 
 // ============================================
 // CATEGORY FILTER
