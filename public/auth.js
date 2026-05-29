@@ -218,8 +218,8 @@ export async function adminLogin() {
     closeAdminLoginModal();
 
     setTimeout(() => {
-      openAdminPanel();
-    }, 500);
+  window.location.href = "admin.html";
+}, 500);
 
     showToast("✅ Welcome Admin! 🔑");
 
@@ -232,41 +232,6 @@ export async function adminLogin() {
 // ADMIN PANEL
 // ============================================
 
-export async function openAdminPanel() {
-  try {
-    const modal = document.getElementById("admin-modal");
-    const content = document.getElementById("admin-panel-content");
-
-    if (!modal || !content) {
-      console.error("Admin modal elements not found");
-      return;
-    }
-
-    modal.classList.add("open");
-    content.style.display = "block";
-
-    try {
-  await import("/admin.js");
-} catch (err) {
-  console.warn("admin.js optional:", err);
-}
-
-    if (window.loadOrders) {
-      window.loadOrders();
-    }
-
-  } catch (err) {
-    console.error(err);
-  }
-}
-
-export function closeAdminPanel() {
-  const modal = document.getElementById("admin-modal");
-
-  if (modal) {
-    modal.classList.remove("open");
-  }
-}
 
 // ============================================
 // GLOBAL FUNCTIONS
@@ -279,5 +244,3 @@ window.customerLogout = customerLogout;
 window.openAdminLoginModal = openAdminLoginModal;
 window.closeAdminLoginModal = closeAdminLoginModal;
 window.adminLogin = adminLogin;
-window.openAdminPanel = openAdminPanel;
-window.closeAdminPanel = closeAdminPanel;
