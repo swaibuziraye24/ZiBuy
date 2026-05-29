@@ -387,18 +387,14 @@ function getProductRankScore(product) {
 // ============================================
 window.renderProducts = function () {
 
-// =========================
-// CREATE FEATURED ADS ROW
-// =========================
-let featuredRow = document.getElementById("featured-ads-row");
+let featuredContainer = document.getElementById("featured-ads");
 
-if (!featuredRow) {
-  featuredRow = document.createElement("div");
-  featuredRow.id = "featured-ads-row";
-  featuredRow.className = "product-row featured-row";
+if (!featuredContainer) {
+  featuredContainer = document.createElement("div");
+  featuredContainer.id = "featured-ads";
 
-  const container = document.getElementById("products");
-  container.parentNode.insertBefore(featuredRow, container);
+  const productsContainer = document.getElementById("products");
+  productsContainer.parentNode.insertBefore(featuredContainer, productsContainer);
 }
 
   const container = document.getElementById("products");
@@ -412,14 +408,11 @@ if (!featuredRow) {
   let products = [...allProducts];
 
 
-// =========================
-// LOAD FEATURED ADS
-// =========================
 function renderFeaturedAds() {
-  const row = document.getElementById("featured-ads-row");
-  if (!row) return;
+  const container = document.getElementById("featured-ads");
+  if (!container) return;
 
-  row.innerHTML = "";
+  container.innerHTML = "";
 
   const featured = allProducts.filter(
     p => p.boost?.active || p.isPremium
@@ -428,44 +421,53 @@ function renderFeaturedAds() {
   featured.forEach(p => {
 
     const card = document.createElement("div");
+
     card.className = "product-card";
 
+    card.style.marginBottom = "10px"; // 🔥 vertical spacing
+
     card.innerHTML = `
-      <div style="position:relative;background:#f7f7f7;">
+      <div style="display:flex; gap:10px; align-items:center; padding:8px;">
+
         <img src="${(p.images && p.images[0]) || 'placeholder.jpg'}"
-          style="width:100%; aspect-ratio:1/1; object-fit:cover;">
+          style="width:70px; height:70px; object-fit:cover; border-radius:6px;">
 
-        <div style="
-          position:absolute;
-          top:0;
-          left:0;
-          background:#ff6600;
-          color:#fff;
-          font-size:10px;
-          padding:4px 6px;
-          font-weight:800;
-        ">
-          ⭐ Featured
+        <div style="flex:1;">
+
+          <div style="
+            font-size:11px;
+            font-weight:800;
+            color:#ff6600;
+          ">
+            ⭐ FEATURED
+          </div>
+
+          <div style="font-size:13px; font-weight:600;">
+            ${p.name || "No name"}
+          </div>
+
+          <div style="color:#f68b1e; font-weight:700;">
+            UGX ${Number(p.price || 0).toLocaleString()}
+          </div>
+
         </div>
-      </div>
-
-      <div style="padding:6px;">
-        <h3 style="font-size:12px;margin:0;">
-          ${p.name || "No name"}
-        </h3>
-
-        <p style="color:#f68b1e;font-weight:700;margin:4px 0;">
-          UGX ${Number(p.price || 0).toLocaleString()}
-        </p>
 
         <button onclick="window.location.href='product.html?id=${p.id}'"
-          style="width:100%;padding:6px;font-size:11px;background:#f68b1e;color:white;border:none;">
+          style="
+            padding:6px 10px;
+            font-size:11px;
+            background:#f68b1e;
+            color:white;
+            border:none;
+            border-radius:4px;
+          ">
           View
         </button>
+
       </div>
     `;
 
-    row.appendChild(card);
+    container.appendChild(card);
   });
 }
 
