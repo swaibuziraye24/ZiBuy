@@ -42,9 +42,14 @@
         <span>🛒</span>
         <span>My Orders</span>
       </button>
-      <button class="nav-item" data-tab="profile" onclick="switchTab('profile')">
+      <button class="nav-item" onclick="switchTab('profile')">
         <span>⚙️</span>
         <span>Settings</span>
+      </button>
+
+      <button class="nav-item" onclick="switchTab('analytics')">
+        <span>📊</span>
+        <span>Analytics</span>
       </button>
     </nav>
   </aside>
@@ -62,6 +67,19 @@
         <p style="text-align:center;padding:40px">Loading your products...</p>
       </div>
     </div>
+
+
+<!-- ANALYTICS TAB -->
+<div class="dashboard-tab" id="analytics-tab" style="display:none">
+  <div class="tab-header">
+    <h2>📊 Analytics</h2>
+    <span id="analytics-plan-badge" style="padding:5px 12px;border-radius:20px;font-size:12px;font-weight:800;background:#f3f4f6;color:#6b7280"></span>
+  </div>
+  <div id="analytics-container">
+    <p style="text-align:center;padding:40px;color:#6b7280">Loading analytics...</p>
+  </div>
+</div>
+
 
     <!-- ORDERS TAB -->
 <div class="dashboard-tab" id="orders-tab">
