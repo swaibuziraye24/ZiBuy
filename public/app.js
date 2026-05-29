@@ -483,6 +483,10 @@ window.renderProducts = function () {
 
   products.forEach(p => {
 
+p.views = Number(p.views || 0);
+p.likes = Number(p.likes || 0);
+p.orders = Number(p.orders || 0);
+
     const cat = (p.category || "Others").toLowerCase();
     if (!grouped[cat]) grouped[cat] = [];
     grouped[cat].push(p);
@@ -685,6 +689,15 @@ window.addToCart = function(name, price, image) {
   showToast(`✅ Added to cart`);
 };
 
+
+window.updateCartUI = function () {
+  const cart = JSON.parse(localStorage.getItem("zibuy-cart")) || [];
+  const count = cart.reduce((sum, item) => sum + item.qty, 0);
+
+  const el = document.getElementById("cart-count");
+  if (el) el.textContent = count;
+};
+
 window.toggleCart = function() {
   const sidebar = document.getElementById("cart-sidebar");
   const overlay = document.getElementById("overlay");
@@ -769,14 +782,6 @@ function updateCartTotal() {
   }
 }
 
-function updateCartUI() {
-  const cart = JSON.parse(localStorage.getItem("zibuy-cart")) || [];
-  const badge = document.getElementById("cart-count");
-  
-  if (badge) {
-    badge.textContent = cart.length;
-  }
-}
 
 window.checkout = function() {
   const name = document.getElementById("customer-name")?.value.trim();
