@@ -5107,86 +5107,95 @@ img {
    PRODUCT GRID
 ========================================= */
 
-#products{
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:10px;
-  padding:10px;
+/* ── Grid ── */
+#products {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  padding: 8px;
+  align-items: start;
 }
 
-#products{
-  align-items:start;
-}
-
-.product-card{
-  background:#fff;
-  border-radius:10px;
-  overflow:hidden;
-  border:1px solid #eee;
-  position:relative;
-}
-
-.product-image{
-  line-height:0;
-}
-
-.product-image img{
-  width:100%;
-  height:145px;
-  object-fit:cover;
-  display:block;
-  margin:0;
-}
-
-.product-info{
-  padding:6px 7px 7px;
-}
-
-.product-info h3{
-  font-size:13px;
-  font-weight:600;
-  line-height:1.25;
-  margin:0 0 2px;
-  color:#111;
-
-  display:-webkit-box;
-  line-clamp:2;
-  -webkit-line-clamp:2;
-  -webkit-box-orient:vertical;
-  overflow:hidden;
-}
-
-.product-info .price{
-  font-size:15px;
-  font-weight:800;
-  color:#ff6600;
-  margin:0;
-}
-
-.product-info .location{
-  font-size:11px;
-  color:#777;
-  margin:1px 0 5px;
-}
-
-.product-actions{
-  display:flex;
-  gap:4px;
-  margin-top:0;
-}
-
-.product-actions button{
-  padding:6px;
-  font-size:11px;
-  border-radius:5px;
-}
-/* =========================================
-   PRODUCT CARDS
-========================================= */
-
+/* ── Card ── */
 .product-card {
   width: 100%;
   min-width: 0;
+  background: #fff;
+  border-radius: 4px;
+  overflow: hidden;
+  border: none;
+  position: relative;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.10);
+  transition: box-shadow .18s;
+}
+
+.product-card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.14);
+}
+
+/* ── Image ── */
+.product-image {
+  line-height: 0;
+  background: #f7f7f7;
+}
+
+.product-image img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  height: auto;
+  object-fit: cover;
+  display: block;
+  margin: 0;
+}
+
+/* ── Info ── */
+.product-info {
+  padding: 7px 8px 9px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.product-info h3 {
+  font-size: 12.5px;
+  font-weight: 400;
+  line-height: 1.3;
+  margin: 0 0 4px;
+  color: #333;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.product-info .price {
+  font-size: 15px;
+  font-weight: 700;
+  color: #f68b1e;
+  margin: 0 0 1px;
+  display: block;
+}
+
+.product-info .location {
+  font-size: 11px;
+  color: #999;
+  margin: 2px 0 6px;
+}
+
+/* ── Actions (hidden by default, Jumia-style) ── */
+.product-actions {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.product-actions button {
+  flex: 1;
+  padding: 7px 4px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 2px;
+  border: none;
+  cursor: pointer;
 }
 
 /* =========================================
