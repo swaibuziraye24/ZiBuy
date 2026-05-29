@@ -615,7 +615,6 @@ card.onmouseleave = () => {
   border-radius:0;
   background:#f7f7f7;
 ">
-
   <img
     src="${(p.images && p.images[0]) || 'placeholder.jpg'}"
     alt="${p.name}"
@@ -629,106 +628,101 @@ card.onmouseleave = () => {
     "
   >
 
-    ${(p.boost?.active || p.isPremium) ? `
-      <div style="
-        position:absolute;
-        top:6px;
-        left:6px;
-        background:#f68b1e;
-        color:white;
-        padding:2px 7px;
-        font-size:10px;
-        font-weight:700;
-        border-radius:2px;
-        z-index:10;
-        letter-spacing:.3px;
-        text-transform:uppercase;
-      ">
-        Sponsored
-      </div>
-    ` : ""}
-
-    <div class="product-image" style="
-  height:0;
-  overflow:hidden;
-  background:#f7f7f7;
-">
-    </div>
-
-    <div class="product-info" style="
-  padding:7px 8px 9px;
-  border-top:1px solid #f0f0f0;
-">
-
-<h3 style="
-  font-size:12.5px;
-  font-weight:400;
-  margin:0 0 4px;
-  color:#333;
-  line-height:1.3;
-">
-        ${p.name || "No name"}
-      </h3>
-
-      <p class="price" style="
-  color:#f68b1e;
-  font-size:15px;
-  font-weight:700;
-  margin:0 0 2px;
-">
-        UGX ${Number(p.price || 0).toLocaleString()}
-      </p>
-
-      <p class="location" style="
-  color:#999;
-  font-size:11px;
-  margin:0;
-">
-        📍 ${p.location || "Unknown"}
-      </p>
-
-<div style="
-  display:flex;
-  gap:6px;
-  margin-top:6px;
-">
-
-  <button
-    onclick="window.location.href='product.html?id=${p.id}'"
-    style="
-      flex:1;
+  ${(p.boost?.active || p.isPremium) ? `
+    <div style="
+      position:absolute;
+      top:0;
+      left:0;
       background:#ff6600;
       color:white;
-      border:none;
-      padding:10px;
-      border-radius:8px;
-      font-weight:700;
-      cursor:pointer;
-    "
-  >
-    View
-  </button>
-
-  <button
-    onclick="addToCart('${p.name}', ${p.price}, '${(p.images && p.images[0]) || 'placeholder.jpg'}')"
-    style="
-      flex:1;
-      background:#111827;
-      color:white;
-      border:none;
-      padding:10px;
-      border-radius:8px;
-      font-weight:700;
-      cursor:pointer;
-    "
-  >
-    Cart
-  </button>
-
+      padding:5px 10px;
+      font-size:11px;
+      font-weight:800;
+      border-radius:0 0 8px 0;
+      z-index:10;
+      letter-spacing:.5px;
+      text-transform:uppercase;
+      box-shadow:0 2px 6px rgba(255,102,0,0.4);
+    ">
+      ⭐ Sponsored
+    </div>
+  ` : ""}
 </div>
 
-    </div>
-  `;
+<div class="product-info" style="
+  padding:7px 8px 9px;
+  border-top:1px solid #f0f0f0;
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+">
+
+  <h3 style="
+    font-size:12.5px;
+    font-weight:400;
+    margin:0;
+    color:#333;
+    line-height:1.3;
+    display:-webkit-box;
+    -webkit-line-clamp:2;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
+  ">
+    ${p.name || "No name"}
+  </h3>
+
+  <p class="price" style="
+    color:#f68b1e;
+    font-size:15px;
+    font-weight:700;
+    margin:0;
+  ">
+    UGX ${Number(p.price || 0).toLocaleString()}
+  </p>
+
+  <p class="location" style="
+    color:#999;
+    font-size:11px;
+    margin:0;
+  ">
+    📍 ${p.location || "Unknown"}
+  </p>
+
+  <div style="
+    display:flex;
+    gap:6px;
+    margin-top:6px;
+  ">
+    <button onclick="event.stopPropagation();addToCart('${p.name?.replace(/'/g,"\\'")}',${p.price},'${p.images?.[0]||''}')" style="
+      flex:1;
+      padding:7px 4px;
+      font-size:11px;
+      font-weight:700;
+      border-radius:2px;
+      border:none;
+      background:#f68b1e;
+      color:white;
+      cursor:pointer;
+    ">
+      🛒 Cart
+    </button>
+    <button onclick="event.stopPropagation();window.location.href='product.html?id=${p.id}'" style="
+      flex:1;
+      padding:7px 4px;
+      font-size:11px;
+      font-weight:700;
+      border-radius:2px;
+      border:1.5px solid #f68b1e;
+      background:white;
+      color:#f68b1e;
+      cursor:pointer;
+    ">
+      👁 View
+    </button>
+  </div>
+
+</div>
+`;
 
   container.appendChild(card);
 
