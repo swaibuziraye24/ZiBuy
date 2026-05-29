@@ -31,11 +31,15 @@
       min-height: calc(100vh - 56px);
     }
 
-    /* Sidebar */
     .admin-sidebar {
-      background: #1f2937;
-      padding: 20px 0;
-    }
+  background: #1f2937;
+  padding: 14px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+
     .admin-nav-item {
       display: flex;
       align-items: center;
@@ -194,80 +198,73 @@
 <div class="admin-layout">
 
   <!-- ── SIDEBAR ── -->
-
 <aside class="admin-sidebar">
 
-<button class="admin-nav-item active">
+  <!-- OVERVIEW -->
+  <button class="admin-nav-item active"
+    data-section="overview"
+    onclick="window.showSection('overview', this)">
+    <span>📊</span> Overview
+  </button>
 
-  <button class="admin-nav-item active" data-section="overview"
-  onclick="window.showSection('overview', this)">
-  <span>📊</span> Overview
-</button>
+  <!-- USERS -->
+  <button class="admin-nav-item"
+    data-section="users"
+    onclick="window.showSection('users', this)">
+    <span>👥</span> Users & Plans
+  </button>
 
-<button class="btn btn-orange"
-          onclick="window.location.href='admin-premium.html'"
-          style="padding:8px 12px;font-size:12px">
-          ⭐ Premium Ads
-        </button>
+  <!-- SUBSCRIPTIONS -->
+  <button class="admin-nav-item"
+    data-section="subscriptions"
+    onclick="window.showSection('subscriptions', this)">
+    <span>💼</span> Subscriptions
+  </button>
 
+  <!-- BOOSTS -->
+  <button class="admin-nav-item"
+    data-section="boosts"
+    onclick="window.showSection('boosts', this)">
+    <span>⭐</span> Boost Requests
+  </button>
 
-<button class="admin-nav-item" data-section="users"
-  onclick="window.showSection('users', this)">
-  <span>👥</span> Users & Plans
-</button>
+  <!-- ADS -->
+  <button class="admin-nav-item"
+    data-section="ads"
+    onclick="window.showSection('ads', this)">
+    <span>📦</span> All Ads
+  </button>
 
- <button class="btn btn-orange"
-          onclick="window.location.href='admin-verification.html'"
-          style="padding:8px 12px;font-size:12px">
-          ✅ Verifications
-        </button>
+  <!-- ORDERS -->
+  <button class="admin-nav-item"
+    data-section="orders"
+    onclick="window.showSection('orders', this)">
+    <span>🛍️</span> Orders
+  </button>
 
-        <button class="btn btn-orange"
-          onclick="window.location.href='admin-analytics.html'"
-          style="padding:8px 12px;font-size:12px">
-          📊 Analytics
-        </button>
+  <!-- PREMIUM PAGE -->
+  <button class="admin-nav-item"
+    onclick="window.location.href='admin-premium.html'">
+    <span>⭐</span> Premium Ads
+  </button>
 
-<button class="btn btn-orange"
- onclick="location.href='admin-subscriptions.html'" style="padding:8px 12px;font-size:12px">
-  
-  Subscriptions
-</button>
+  <!-- VERIFICATIONS PAGE -->
+  <button class="admin-nav-item"
+    onclick="window.location.href='admin-verification.html'">
+    <span>✅</span> Verifications
+  </button>
 
-<button class="btn btn-orange"
- onclick="location.href='admin-boost-requests.html'" style="padding:8px 12px;font-size:12px">
-  ⭐ Premium Ads Requests
-</button>
+  <!-- ANALYTICS PAGE -->
+  <button class="admin-nav-item"
+    onclick="window.location.href='admin-analytics.html'">
+    <span>📊</span> Analytics
+  </button>
 
-<button class="admin-nav-item" data-section="subscriptions"
-  onclick="window.showSection('subscriptions', this)">
-  <span>💼</span> Subscriptions
-</button>
-
-<button class="admin-nav-item" data-section="boosts"
-  onclick="window.showSection('boosts', this)">
-  <span>⭐</span> Boost Requests
-</button>
-
-<button class="admin-nav-item" data-section="ads"
-  onclick="window.showSection('ads', this)">
-  <span>📦</span> All Ads
-</button>
-
-<button class="admin-nav-item" data-section="orders"
-  onclick="window.showSection('orders', this)">
-  <span>🛍️</span> Orders
-</button>
-
-<button class="admin-nav-item" onclick="window.location.href='admin-reports.html'">
-  <span>🚨</span> Reports
-</button>
-
- <button class="modal-close"
-          onclick="closeAdminPanel()">
-          ×
-        </button>
-
+  <!-- REPORTS PAGE -->
+  <button class="admin-nav-item"
+    onclick="window.location.href='admin-reports.html'">
+    <span>🚨</span> Reports
+  </button>
 
 </aside>
 
