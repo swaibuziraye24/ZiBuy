@@ -7490,6 +7490,12 @@ table {
   gap: 25px;
 }
 
+/* EACH SECTION MUST NOT BREAK SCROLL */
+.product-section {
+  width: 100%;
+                        /* 🔥 prevents scroll breaking */
+}
+
 /* Section wrapper (JS will create this) */
 .product-section {
   padding: 10px;
@@ -7504,9 +7510,12 @@ table {
 /* HORIZONTAL SCROLL ROW */
 .product-row {
   display: flex;
+  flex-wrap: nowrap;   /* 🔥 REQUIRED */
   overflow-x: auto;
   overflow-y: hidden;
-  gap: 12px;
+
+  gap: 10px;
+  padding: 10px;
 
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
@@ -7519,14 +7528,17 @@ table {
 
 /* PRODUCT CARD */
 .product-card {
-  min-width: 160px;
   flex: 0 0 auto;
-
-  background: #fff;
-  border-radius: 10px;
-  padding: 10px;
+  width: 160px;
+  min-width: 160px;
 
   scroll-snap-align: start;
+
+  background: #fff;
+  border-radius: 6px;
+  overflow: hidden;
+
+  box-shadow: 0 1px 4px rgba(0,0,0,0.10);
 }
 
 .hide-scrollbar::-webkit-scrollbar {
@@ -7620,9 +7632,12 @@ table {
 
 .product-row {
   display: flex;
+  flex-wrap: nowrap;   /* 🔥 CRITICAL FIX */
   overflow-x: auto;
+  overflow-y: hidden;
   gap: 10px;
   padding: 10px;
+
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
 }
@@ -7633,10 +7648,9 @@ table {
 }
 
 .product-card {
-  flex: 0 0 auto;
-  width: 160px; /* 🔥 THIS IS THE KEY FIX */
+  flex: 0 0 auto;      /* 🔥 CRITICAL */
+  width: 160px;
   min-width: 160px;
-  max-width: 160px;
 
   scroll-snap-align: start;
 
