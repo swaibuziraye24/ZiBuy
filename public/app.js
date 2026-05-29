@@ -288,6 +288,9 @@ renderProducts();
 async function loadFeaturedProducts() {
   try {
     const featured = await getFeaturedAds();
+
+    console.log("Featured Ads:", featured);
+    
     const container = document.getElementById("products");
 
     if (!container || featured.length === 0) return;
@@ -295,7 +298,7 @@ async function loadFeaturedProducts() {
     const featuredHtml = `
       <div style="grid-column:1/-1;background:linear-gradient(135deg, #fff4ee, #fffbeb);border:2px solid #ff6600;border-radius:14px;padding:20px;margin-bottom:20px">
         <h2 style="margin:0 0 16px;color:#ff6600;font-size:16px;font-weight:800">⭐ FEATURED ADS</h2>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(180px, 1fr));gap:12px">
+        <div class="product-row">
           ${featured.slice(0, 6).map(p => {
             // Get product details
             const product = allProducts.find(ap => ap.id === p.productId);
@@ -305,7 +308,12 @@ async function loadFeaturedProducts() {
             const hasPhone = phone.length > 0;
 
             return `
-              <div class="product-card" style="position:relative">
+             <div class="product-card" style="
+  position:relative;
+  flex:0 0 auto;
+  width:160px;
+  min-width:160px;
+">
                 <div class="product-image-box">
                   <img src="${product.images?.[0] || ''}" alt="${product.name}">
                   <span class="premium-badge">⭐ FEATURED</span>
