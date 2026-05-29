@@ -182,47 +182,7 @@ async function loadProducts() {
           (planScore * 1000) + boostScore + verifScore + freshnessScore;
 
         return product;
-      
-/* BOOST SCORE */
-
-let boostScore = 0;
-
-if (product.isPremium === true) {
-  boostScore = 5000;
-}
-
-/* VERIFIED BONUS */
-
-let verifiedScore = 0;
-
-if (product.seller.isVerified) {
-  verifiedScore = 500;
-}
-
-/* NEWER ADS BONUS */
-
-const created =
-  product.createdAt?.toDate?.()
-  || new Date();
-
-const ageHours =
-  (new Date() - created) / 36e5;
-
-const freshnessScore =
-  Math.max(0, 100 - ageHours);
-
-/* FINAL SCORE */
-
-product.rankScore =
-  (planScore * 1000) +
-  boostScore +
-  verifiedScore +
-  freshnessScore;
-
-return product;
-      })
-    
-
+      });
   
  // Store all products globally for use in other functions
 allProducts = products.sort((a, b) => b.rankScore - a.rankScore);
