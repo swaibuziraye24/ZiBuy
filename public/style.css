@@ -7702,14 +7702,3 @@ table {
   margin: 4px 0;
 }
 
-#featured-ads {
-  display: flex;
-  flex-direction: column !important;
-
-  width: 100%;
-
-  gap: 8px;
-
-  overflow-x: hidden !important;
-  overflow-y: visible !important;
-}
