@@ -1106,9 +1106,8 @@ if (logoBtn) {
     
     clearTimeout(adminClickTimeout);
     
-   if (adminClickCount === 5) {
+  if (adminClickCount === 5) {
       adminClickCount = 0;
-      const { auth } = await import("./firebase.js");
       const user = auth.currentUser;
       if (user && user.email === "swaibuziraye22@gmail.com") {
         window.location.href = "admin.html";
