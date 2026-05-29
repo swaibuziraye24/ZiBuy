@@ -94,6 +94,10 @@ window.switchTab = async function(tabName) {
     tabId = "profile-tab";
   }
 
+  else if (tabName === "analytics") {
+    tabId = "analytics-tab";
+  }
+
   const activeTab = document.getElementById(tabId);
 
   if (!activeTab) {
@@ -115,19 +119,16 @@ window.switchTab = async function(tabName) {
 
   // Load tab data
   try {
-
     if (tabName === "my-ads") {
       await loadMyProducts();
-    }
-
-    else if (tabName === "orders") {
+    } else if (tabName === "orders") {
       await loadMyOrders();
-    }
-
-    else if (tabName === "profile") {
+    } else if (tabName === "profile") {
       await loadProfileSettings();
+    } else if (tabName === "analytics") {
+      await loadAnalytics();
     }
-
+  
   } catch (err) {
 
     debug("❌ switchTab error:", err);
@@ -616,3 +617,266 @@ window.upgradeToBusiness = async function() {
 
 };
 
+// ============================================
+// ANALYTICS — plan-gated dashboard
+// ============================================
+
+async function loadAnalytics() {
+  const container = document.getElementById("analytics-container");
+  const badge     = document.getElementById("analytics-plan-badge");
+  if (!container) return;
+
+  container.innerHTML = `<p style="text-align:center;padding:40px;color:#6b7280">Loading...</p>`;
+
+  try {
+    // ── 1. Get user plan ──────────────────────
+    const subSnap = await getDocs(query(
+      collection(db, "business_accounts"),
+      where("userId", "==", currentUser.uid),
+      where("status", "==", "active")
+    ));
+    let plan = "free";
+    if (!subSnap.empty) {
+      const sub = subSnap.docs[0].data();
+      const end = sub.endDate?.toDate?.();
+      plan = (end && new Date() < end) ? (sub.plan || "free") : "free";
+    }
+
+    const planLabels = { free:"🆓 Free", bronze:"🥉 Bronze", silver:"🥈 Silver", gold:"🥇 Gold" };
+    const planColors = { free:"#6b7280", bronze:"#92400e", silver:"#475569", gold:"#b45309" };
+    const planBg     = { free:"#f3f4f6", bronze:"#fef3c7", silver:"#f1f5f9", gold:"#fffbeb" };
+
+    if (badge) {
+      badge.textContent   = planLabels[plan] || "🆓 Free";
+      badge.style.background = planBg[plan]  || "#f3f4f6";
+      badge.style.color      = planColors[plan] || "#6b7280";
+    }
+
+    // ── 2. Get user's ads ─────────────────────
+    const adsSnap = await getDocs(query(
+      collection(db, "products"),
+      where("userId", "==", currentUser.uid)
+    ));
+    const ads = adsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const activeAds  = ads.filter(a => a.status === "active");
+    const totalViews = ads.reduce((s, a) => s + (a.views || 0), 0);
+
+    // ── 3. Get user's orders ──────────────────
+    const ordersSnap = await getDocs(query(
+      collection(db, "orders"),
+      where("userEmail", "==", currentUser.email)
+    ));
+    const orders       = ordersSnap.docs.map(d => d.data());
+    const totalOrders  = orders.length;
+    const totalRevenue = orders.reduce((s, o) => s + (o.total || 0), 0);
+
+    // ── FREE ──────────────────────────────────
+    if (plan === "free") {
+      container.innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px">
+          ${statCard("Active Ads", activeAds.length, "#ff6600")}
+          ${statCard("Total Views", totalViews.toLocaleString(), "#6b7280")}
+        </div>
+        ${upgradePrompt("bronze", "Get views per ad, order tracking & more")}
+      `;
+      return;
+    }
+
+    // ── BRONZE ────────────────────────────────
+    if (plan === "bronze") {
+      const topAds = [...ads].sort((a, b) => (b.views||0) - (a.views||0)).slice(0, 5);
+      container.innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px">
+          ${statCard("Active Ads",   activeAds.length,          "#ff6600")}
+          ${statCard("Total Views",  totalViews.toLocaleString(),"#6b7280")}
+          ${statCard("Orders Made",  totalOrders,               "#10b981")}
+        </div>
+
+        <div style="background:white;border-radius:14px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,0.06);margin-bottom:16px">
+          <h3 style="font-size:14px;font-weight:800;margin-bottom:14px">👁️ Views per Ad</h3>
+          ${topAds.length === 0 ? "<p style='color:#6b7280;font-size:13px'>No ads yet</p>" :
+            topAds.map(a => barRow(a.name, a.views || 0, totalViews || 1, "#ff6600")).join("")}
+        </div>
+
+        ${upgradePrompt("silver", "Unlock revenue tracking, category breakdown & 7-day trends")}
+      `;
+      return;
+    }
+
+    // ── SILVER ────────────────────────────────
+    if (plan === "silver") {
+      const categories = {};
+      ads.forEach(a => {
+        categories[a.category || "Other"] = (categories[a.category || "Other"] || 0) + (a.views || 0);
+      });
+      const topCats    = Object.entries(categories).sort((a,b) => b[1]-a[1]).slice(0, 5);
+      const maxCatView = Math.max(...topCats.map(c => c[1]), 1);
+
+      const topAds = [...ads].sort((a,b) => (b.views||0)-(a.views||0)).slice(0,5);
+
+      const last7 = orders.filter(o => {
+        const d = o.createdAt?.toDate?.();
+        return d && (new Date() - d) <= 7*86400000;
+      });
+
+      container.innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px">
+          ${statCard("Active Ads",     activeAds.length,                 "#ff6600")}
+          ${statCard("Total Views",    totalViews.toLocaleString(),       "#6b7280")}
+          ${statCard("Orders Made",    totalOrders,                      "#10b981")}
+          ${statCard("Total Revenue",  "UGX "+totalRevenue.toLocaleString(), "#8b5cf6")}
+          ${statCard("Orders (7 days)",last7.length,                     "#f59e0b")}
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+          <div style="background:white;border-radius:14px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
+            <h3 style="font-size:14px;font-weight:800;margin-bottom:14px">👁️ Top Ads by Views</h3>
+            ${topAds.length === 0 ? "<p style='color:#6b7280;font-size:13px'>No ads</p>" :
+              topAds.map(a => barRow(a.name, a.views||0, totalViews||1, "#ff6600")).join("")}
+          </div>
+          <div style="background:white;border-radius:14px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
+            <h3 style="font-size:14px;font-weight:800;margin-bottom:14px">🗂️ Views by Category</h3>
+            ${topCats.length === 0 ? "<p style='color:#6b7280;font-size:13px'>No data</p>" :
+              topCats.map(([cat, v]) => barRow(cat, v, maxCatView, "#8b5cf6")).join("")}
+          </div>
+        </div>
+
+        ${upgradePrompt("gold", "Unlock export to CSV, conversion insights & full performance history")}
+      `;
+      return;
+    }
+
+    // ── GOLD ──────────────────────────────────
+    const categories = {};
+    ads.forEach(a => {
+      categories[a.category || "Other"] = (categories[a.category || "Other"] || 0) + (a.views||0);
+    });
+    const topCats    = Object.entries(categories).sort((a,b) => b[1]-a[1]).slice(0,5);
+    const maxCatView = Math.max(...topCats.map(c => c[1]), 1);
+    const topAds     = [...ads].sort((a,b) => (b.views||0)-(a.views||0)).slice(0,10);
+    const soldAds    = ads.filter(a => a.status === "sold").length;
+    const boostedAds = ads.filter(a => a.isPremium).length;
+
+    container.innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:20px">
+        ${statCard("Active Ads",     activeAds.length,                  "#ff6600")}
+        ${statCard("Total Views",    totalViews.toLocaleString(),        "#6b7280")}
+        ${statCard("Orders",         totalOrders,                       "#10b981")}
+        ${statCard("Revenue",        "UGX "+totalRevenue.toLocaleString(),"#8b5cf6")}
+        ${statCard("Sold Ads",       soldAds,                           "#f59e0b")}
+        ${statCard("Boosted Ads",    boostedAds,                        "#b45309")}
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+        <div style="background:white;border-radius:14px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
+          <h3 style="font-size:14px;font-weight:800;margin-bottom:14px">👁️ Top 10 Ads by Views</h3>
+          ${topAds.map(a => barRow(a.name, a.views||0, totalViews||1, "#ff6600")).join("") || "<p style='color:#6b7280;font-size:13px'>No ads</p>"}
+        </div>
+        <div style="background:white;border-radius:14px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
+          <h3 style="font-size:14px;font-weight:800;margin-bottom:14px">🗂️ Views by Category</h3>
+          ${topCats.map(([cat, v]) => barRow(cat, v, maxCatView, "#8b5cf6")).join("") || "<p style='color:#6b7280;font-size:13px'>No data</p>"}
+        </div>
+      </div>
+
+      <div style="background:white;border-radius:14px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,0.06);margin-bottom:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <h3 style="font-size:14px;font-weight:800;margin:0">📋 Full Ad Performance</h3>
+          <button onclick="exportAnalyticsCSV()" style="background:#ff6600;color:white;border:none;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer">⬇️ Export CSV</button>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead>
+            <tr style="background:#f9fafb">
+              <th style="padding:10px;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;border-bottom:2px solid #e5e7eb">Ad Name</th>
+              <th style="padding:10px;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;border-bottom:2px solid #e5e7eb">Category</th>
+              <th style="padding:10px;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;border-bottom:2px solid #e5e7eb">Price</th>
+              <th style="padding:10px;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;border-bottom:2px solid #e5e7eb">Views</th>
+              <th style="padding:10px;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;border-bottom:2px solid #e5e7eb">Status</th>
+              <th style="padding:10px;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;border-bottom:2px solid #e5e7eb">Boosted</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${ads.map(a => `
+              <tr style="border-bottom:1px solid #f0f0f0">
+                <td style="padding:10px;font-weight:600;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.name || "—"}</td>
+                <td style="padding:10px;color:#6b7280">${a.category || "—"}</td>
+                <td style="padding:10px;color:#ff6600;font-weight:800">UGX ${Number(a.price||0).toLocaleString()}</td>
+                <td style="padding:10px;font-weight:700">${a.views || 0}</td>
+                <td style="padding:10px"><span style="padding:3px 8px;border-radius:20px;font-size:11px;font-weight:800;background:${a.status==='active'?'#dcfce7':'#fee2e2'};color:${a.status==='active'?'#166534':'#991b1b'}">${a.status||"active"}</span></td>
+                <td style="padding:10px">${a.isPremium ? "⭐ Yes" : "—"}</td>
+              </tr>`).join("")}
+          </tbody>
+        </table>
+      </div>
+    `;
+
+    // Store for CSV export
+    window._analyticsAds    = ads;
+    window._analyticsOrders = orders;
+
+  } catch (e) {
+    console.error(e);
+    container.innerHTML = `<p style="color:red;text-align:center;padding:40px">Failed to load analytics</p>`;
+  }
+}
+
+// ── Helpers ───────────────────────────────────
+function statCard(label, value, color) {
+  return `
+    <div style="background:white;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.06);border-left:4px solid ${color};text-align:center">
+      <p style="font-size:22px;font-weight:900;color:${color};margin:0">${value}</p>
+      <p style="font-size:11px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin:4px 0 0">${label}</p>
+    </div>`;
+}
+
+function barRow(label, value, max, color) {
+  const pct = max > 0 ? Math.round((value / max) * 100) : 0;
+  return `
+    <div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+        <span style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:70%">${label}</span>
+        <span style="color:#6b7280;font-weight:700">${value}</span>
+      </div>
+      <div style="height:6px;background:#f0f0f0;border-radius:20px">
+        <div style="height:6px;width:${pct}%;background:${color};border-radius:20px;transition:width .6s"></div>
+      </div>
+    </div>`;
+}
+
+function upgradePrompt(plan, reason) {
+  const icons = { bronze:"🥉", silver:"🥈", gold:"🥇" };
+  return `
+    <div style="background:linear-gradient(135deg,#fff4ee,#fffbeb);border:2px solid #ff6600;border-radius:14px;padding:20px;text-align:center">
+      <p style="font-size:24px;margin-bottom:8px">${icons[plan]} Upgrade to ${plan.charAt(0).toUpperCase()+plan.slice(1)}</p>
+      <p style="color:#6b7280;font-size:13px;margin-bottom:14px">${reason}</p>
+      <button onclick="window.location.href='business-plans.html'" style="background:#ff6600;color:white;border:none;padding:12px 24px;border-radius:10px;font-weight:800;font-size:14px;cursor:pointer">
+        ⬆️ Upgrade Now
+      </button>
+    </div>`;
+}
+
+window.exportAnalyticsCSV = function() {
+  const ads = window._analyticsAds || [];
+  if (ads.length === 0) { alert("No data to export"); return; }
+
+  const rows = [
+    ["Ad Name","Category","Price (UGX)","Views","Status","Boosted","Posted Date"],
+    ...ads.map(a => [
+      `"${(a.name||"").replace(/"/g,'""')}"`,
+      a.category || "—",
+      a.price || 0,
+      a.views || 0,
+      a.status || "active",
+      a.isPremium ? "Yes" : "No",
+      a.createdAt?.toDate?.() ? new Date(a.createdAt.toDate()).toLocaleDateString() : "—"
+    ])
+  ];
+
+  const csv  = rows.map(r => r.join(",")).join("\n");
+  const blob = new Blob([csv], { type:"text/csv" });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  a.href     = url;
+  a.download = `zibuy-analytics-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
