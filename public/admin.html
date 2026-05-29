@@ -194,34 +194,39 @@
 <div class="admin-layout">
 
   <!-- ── SIDEBAR ── -->
-  <aside class="admin-sidebar">
-  <button class="admin-nav-item active" data-section="overview">
-    <span>📊</span> Overview
-  </button>
+  <button class="admin-nav-item active" data-section="overview"
+  onclick="window.showSection('overview', this)">
+  <span>📊</span> Overview
+</button>
 
-  <button class="admin-nav-item" data-section="users">
-    <span>👥</span> Users & Plans
-  </button>
+<button class="admin-nav-item" data-section="users"
+  onclick="window.showSection('users', this)">
+  <span>👥</span> Users & Plans
+</button>
 
-  <button class="admin-nav-item" data-section="subscriptions">
-    <span>💼</span> Subscriptions
-  </button>
+<button class="admin-nav-item" data-section="subscriptions"
+  onclick="window.showSection('subscriptions', this)">
+  <span>💼</span> Subscriptions
+</button>
 
-  <button class="admin-nav-item" data-section="boosts">
-    <span>⭐</span> Boost Requests
-  </button>
+<button class="admin-nav-item" data-section="boosts"
+  onclick="window.showSection('boosts', this)">
+  <span>⭐</span> Boost Requests
+</button>
 
-  <button class="admin-nav-item" data-section="ads">
-    <span>📦</span> All Ads
-  </button>
+<button class="admin-nav-item" data-section="ads"
+  onclick="window.showSection('ads', this)">
+  <span>📦</span> All Ads
+</button>
 
-  <button class="admin-nav-item" data-section="orders">
-    <span>🛍️</span> Orders
-  </button>
+<button class="admin-nav-item" data-section="orders"
+  onclick="window.showSection('orders', this)">
+  <span>🛍️</span> Orders
+</button>
 
-  <button class="admin-nav-item" onclick="window.location.href='admin-reports.html'">
-    <span>🚨</span> Reports
-  </button>
+<button class="admin-nav-item" onclick="window.location.href='admin-reports.html'">
+  <span>🚨</span> Reports
+</button>
 </aside>
 
   <!-- ── MAIN ── -->
