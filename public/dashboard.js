@@ -880,3 +880,59 @@ window.exportAnalyticsCSV = function() {
   a.click();
   URL.revokeObjectURL(url);
 };
+
+
+window.openMyShop =
+async function () {
+
+  if (!auth.currentUser) {
+
+    alert("Please login");
+
+    return;
+  }
+
+  try {
+
+    const uid =
+      auth.currentUser.uid;
+
+    const shopRef =
+      doc(
+        db,
+        "business_profiles",
+        uid
+      );
+
+    const snap =
+      await getDoc(shopRef);
+
+    /* SHOP EXISTS */
+    if (snap.exists()) {
+
+      window.location.href =
+        `shop.html?seller=${uid}`;
+
+    }
+
+    /* NO SHOP YET */
+    else {
+
+      window.location.href =
+        "edit-shop.html";
+
+    }
+
+  } catch (err) {
+
+    console.error(err);
+
+    alert(
+      "Failed to open shop"
+    );
+
+  }
+
+};
+
+
