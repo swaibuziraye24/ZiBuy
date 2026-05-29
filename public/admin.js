@@ -43,13 +43,6 @@ onAuthStateChanged(auth, async (user) => {
 
 window.adminLogout = () => signOut(auth).then(() => window.location.href = "index.html");
 
-// ── Section switching ─────────────────────────
-window.showSection = function(name, btn) {
-  document.querySelectorAll(".admin-section").forEach(s => s.classList.remove("active"));
-  document.querySelectorAll(".admin-nav-item").forEach(b => b.classList.remove("active"));
-  document.getElementById(`section-${name}`)?.classList.add("active");
-  if (btn) btn.classList.add("active");
-};
 
 // ── Load everything in parallel ───────────────
 async function loadAll() {
