@@ -622,9 +622,9 @@ forYou.sort((a, b) => {
     row.style.padding = "10px";
     row.style.scrollSnapType = "x mandatory";
 
-    // ============================================
-// INFINITE LOAD (BATCH SYSTEM)
-// ============================================
+// =========================
+// INFINITE SCROLL FIX (SCOPED)
+// =========================
 let index = 0;
 const batchSize = 8;
 
@@ -673,20 +673,18 @@ function loadMore() {
 
   index += batchSize;
 }
-  }
 
+// INITIAL LOAD
 loadMore();
 
-// ============================================
-// LOAD MORE WHEN SCROLL REACHES END
-// ============================================
+// SCROLL TRIGGER
 row.addEventListener("scroll", () => {
-
   if (row.scrollLeft + row.clientWidth >= row.scrollWidth - 50) {
     loadMore();
   }
-
 });
+
+  }
 
   // =========================
   // FINAL OUTPUT (JUMIA STYLE ROWS)
