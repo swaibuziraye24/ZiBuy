@@ -76,12 +76,14 @@ function setupAuthStateListener() {
     }
 
     // Safely update all DOM elements
+   const isAdmin = user?.email === "swaibuziraye22@gmail.com";
     const elements = {
-      "post-ad-btn": user ? "block" : "none",
-     "dashboard-btn": user ? "block" : "none",
-     "upgrade-btn":   user ? "block" : "none", 
-      "messages-btn": user ? "block" : "none",
-      "notifications-btn": user ? "block" : "none"
+      "post-ad-btn":       user ? "block" : "none",
+      "dashboard-btn":     user && !isAdmin ? "block" : "none",
+      "upgrade-btn":       user && !isAdmin ? "block" : "none",
+      "messages-btn":      user ? "block" : "none",
+      "notifications-btn": user ? "block" : "none",
+      "admin-panel-btn":   isAdmin ? "block" : "none"
     };
 
     Object.keys(elements).forEach(id => {
@@ -1104,8 +1106,8 @@ if (logoBtn) {
     
     clearTimeout(adminClickTimeout);
     
-    if (adminClickCount === 5) {
-      openAdminLoginModal();
+   if (adminClickCount === 5) {
+      window.location.href = "admin.html";
       adminClickCount = 0;
     }
     
