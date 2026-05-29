@@ -1107,8 +1107,14 @@ if (logoBtn) {
     clearTimeout(adminClickTimeout);
     
    if (adminClickCount === 5) {
-      window.location.href = "admin.html";
       adminClickCount = 0;
+      const { auth } = await import("./firebase.js");
+      const user = auth.currentUser;
+      if (user && user.email === "swaibuziraye22@gmail.com") {
+        window.location.href = "admin.html";
+      } else {
+        alert("Admin access denied.");
+      }
     }
     
     adminClickTimeout = setTimeout(() => {
