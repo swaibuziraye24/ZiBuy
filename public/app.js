@@ -471,106 +471,63 @@ window.renderProducts = function () {
 
     case "newest":
     default:
-     
-    products.sort((a, b) => {
+      products.sort((a, b) => {
 
-  // =========================
-  // BOOST PRIORITY
-  // =========================
+        const aBoost = (a.boost?.active || a.isPremium) ? 1 : 0;
+        const bBoost = (b.boost?.active || b.isPremium) ? 1 : 0;
 
-  const aBoost =
-    a.boost?.active || a.isPremium
-      ? 1
-      : 0;
+        if (aBoost !== bBoost) return bBoost - aBoost;
 
-  const bBoost =
-    b.boost?.active || b.isPremium
-      ? 1
-      : 0;
+        const aTime = a.createdAt?.toDate
+          ? a.createdAt.toDate().getTime()
+          : new Date(a.createdAt || 0).getTime();
 
-  // Boosted ads first
-  if (aBoost !== bBoost) {
-    return bBoost - aBoost;
-  }
+        const bTime = b.createdAt?.toDate
+          ? b.createdAt.toDate().getTime()
+          : new Date(b.createdAt || 0).getTime();
 
-  // =========================
-  // NEWEST AFTER BOOST
-  // =========================
-
-  const aTime = a.createdAt?.toDate
-    ? a.createdAt.toDate().getTime()
-    : new Date(a.createdAt || 0).getTime();
-
-  const bTime = b.createdAt?.toDate
-    ? b.createdAt.toDate().getTime()
-    : new Date(b.createdAt || 0).getTime();
-
-  return bTime - aTime;
-});
-
- break;
-      
+        return bTime - aTime;
+      });
+      break;
   }
 
   // =========================
   // 7. SAVE FILTERED GLOBAL STATE
   // =========================
   filteredProducts = products;
-// =========================
-// MIX BOOSTED ADS
-// Sponsored products appear
-// throughout listings
-// =========================
 
-const boostedProducts =
-  products.filter(
-    p => p.boost?.active || p.isPremium
-  );
+  // =========================
+  // BOOST MIX SYSTEM (UNCHANGED)
+  // =========================
+  const boostedProducts = products.filter(p => p.boost?.active || p.isPremium);
+  const normalProducts = products.filter(p => !p.boost?.active && !p.isPremium);
 
-const normalProducts =
-  products.filter(
-    p => !p.boost?.active && !p.isPremium
-  );
+  const mixedProducts = [];
 
-const mixedProducts = [];
+  let boostIndex = 0;
+  let normalIndex = 0;
 
-let boostIndex = 0;
-let normalIndex = 0;
+  while (boostIndex < boostedProducts.length || normalIndex < normalProducts.length) {
 
-// Insert sponsored ad every 4 products
-while (
-  boostIndex < boostedProducts.length ||
-  normalIndex < normalProducts.length
-) {
+    if (boostIndex < boostedProducts.length) {
+      mixedProducts.push(boostedProducts[boostIndex]);
+      boostIndex++;
+    }
 
-  // Add boosted product
-  if (boostIndex < boostedProducts.length) {
-
-    mixedProducts.push(
-      boostedProducts[boostIndex]
-    );
-
-    boostIndex++;
-  }
-
-  // Add normal products
-  for (let i = 0; i < 4; i++) {
-
-    if (normalIndex < normalProducts.length) {
-
-      mixedProducts.push(
-        normalProducts[normalIndex]
-      );
-
-      normalIndex++;
+    for (let i = 0; i < 4; i++) {
+      if (normalIndex < normalProducts.length) {
+        mixedProducts.push(normalProducts[normalIndex]);
+        normalIndex++;
+      }
     }
   }
-}
 
-// Replace products list
-products = mixedProducts;
+  products = mixedProducts;
+
+buildCategoryNav(products);
+
   // =========================
-  // 8. RENDER UI
+  // 8. RENDER UI (JUMIA STYLE FIXED)
   // =========================
   container.innerHTML = "";
 
@@ -583,153 +540,124 @@ products = mixedProducts;
     return;
   }
 
+  // =========================
+  // SMART GROUPING (FIXED - NO DUPLICATES)
+  // =========================
+  const grouped = {};
+  const trending = [];
+  const newArrivals = [];
+  const sponsored = [];
+
+  const now = Date.now();
+
   products.forEach(p => {
 
-  const card = document.createElement("div");
+    const cat = (p.category || "Others").toLowerCase();
+    if (!grouped[cat]) grouped[cat] = [];
+    grouped[cat].push(p);
 
-  card.className = "product-card";
+    if (p.boost?.active || p.isPremium) sponsored.push(p);
 
-  card.style.background = "#fff";
-card.style.borderRadius = "4px";
-card.style.overflow = "hidden";
-card.style.boxShadow = "0 1px 4px rgba(0,0,0,0.10)";
-card.style.transition = "box-shadow .18s";
-card.style.cursor = "pointer";
-card.style.border = "none";
+    if ((p.views || 0) > 5) trending.push(p);
 
-card.onmouseenter = () => {
-  card.style.transform = "translateY(0)";
-  card.style.boxShadow = "0 4px 16px rgba(0,0,0,0.14)";
-};
+    const created = p.createdAt?.toDate
+      ? p.createdAt.toDate().getTime()
+      : new Date(p.createdAt || 0).getTime();
 
-card.onmouseleave = () => {
-  card.style.transform = "translateY(0)";
-  card.style.boxShadow = "0 1px 4px rgba(0,0,0,0.10)";
-};
+    if (now - created <= 7 * 86400000) newArrivals.push(p);
+  });
 
-  card.style.position = "relative";
+  // =========================
+  // RENDER ROW FUNCTION
+  // =========================
+  function renderRow(title, list) {
 
-  card.innerHTML = `
+    if (!list || list.length === 0) return;
 
-<div class="product-image" style="
-  position:relative;
-  overflow:hidden;
-  border-radius:0;
-  background:#f7f7f7;
-">
-  <img
-    src="${(p.images && p.images[0]) || 'placeholder.jpg'}"
-    alt="${p.name}"
-    style="
-      width:100%;
-      aspect-ratio:1/1;
-      height:auto;
-      object-fit:cover;
-      display:block;
-      transition:0.3s;
-    "
-  >
+    const section = document.createElement("div");
+    section.className = "product-section";
 
-  ${(p.boost?.active || p.isPremium) ? `
-    <div style="
-      position:absolute;
-      top:0;
-      left:0;
-      background:#ff6600;
-      color:white;
-      padding:5px 10px;
-      font-size:11px;
-      font-weight:800;
-      border-radius:0 0 8px 0;
-      z-index:10;
-      letter-spacing:.5px;
-      text-transform:uppercase;
-      box-shadow:0 2px 6px rgba(255,102,0,0.4);
-    ">
-      ⭐ Sponsored
-    </div>
-  ` : ""}
-</div>
+    section.innerHTML = `
+      <h2 style="margin:10px;">${title}</h2>
+      <div class="product-row"></div>
+    `;
 
-<div class="product-info" style="
-  padding:7px 8px 9px;
-  border-top:1px solid #f0f0f0;
-  display:flex;
-  flex-direction:column;
-  gap:2px;
-">
+    const row = section.querySelector(".product-row");
 
-  <h3 style="
-    font-size:12.5px;
-    font-weight:400;
-    margin:0;
-    color:#333;
-    line-height:1.3;
-    display:-webkit-box;
-    -webkit-line-clamp:2;
-    -webkit-box-orient:vertical;
-    overflow:hidden;
-  ">
-    ${p.name || "No name"}
-  </h3>
+    row.style.display = "flex";
+    row.style.overflowX = "auto";
+    row.style.gap = "10px";
+    row.style.padding = "10px";
+    row.style.scrollSnapType = "x mandatory";
 
-  <p class="price" style="
-    color:#f68b1e;
-    font-size:15px;
-    font-weight:700;
-    margin:0;
-  ">
-    UGX ${Number(p.price || 0).toLocaleString()}
-  </p>
+    list.forEach(p => {
 
-  <p class="location" style="
-    color:#999;
-    font-size:11px;
-    margin:0;
-  ">
-    📍 ${p.location || "Unknown"}
-  </p>
+      const card = document.createElement("div");
+      card.className = "product-card";
 
-  <div style="
-    display:flex;
-    gap:6px;
-    margin-top:6px;
-  ">
-    <button onclick="event.stopPropagation();addToCart('${p.name?.replace(/'/g,"\\'")}',${p.price},'${p.images?.[0]||''}')" style="
-      flex:1;
-      padding:7px 4px;
-      font-size:11px;
-      font-weight:700;
-      border-radius:2px;
-      border:none;
-      background:#f68b1e;
-      color:white;
-      cursor:pointer;
-    ">
-      🛒 Cart
-    </button>
-    <button onclick="event.stopPropagation();window.location.href='product.html?id=${p.id}'" style="
-      flex:1;
-      padding:7px 4px;
-      font-size:11px;
-      font-weight:700;
-      border-radius:2px;
-      border:1.5px solid #f68b1e;
-      background:white;
-      color:#f68b1e;
-      cursor:pointer;
-    ">
-      👁 View
-    </button>
-  </div>
+      card.style.flex = "0 0 auto";
+      card.style.minWidth = "160px";
+      card.style.background = "#fff";
+      card.style.borderRadius = "6px";
+      card.style.overflow = "hidden";
+      card.style.boxShadow = "0 1px 4px rgba(0,0,0,0.10)";
+      card.style.scrollSnapAlign = "start";
+      card.style.cursor = "pointer";
 
-</div>
-`;
+      card.innerHTML = `
+        <div style="position:relative;background:#f7f7f7;">
+          <img src="${(p.images && p.images[0]) || 'placeholder.jpg'}"
+            style="width:100%; aspect-ratio:1/1; object-fit:cover;">
+          
+          ${(p.boost?.active || p.isPremium) ? `
+            <div style="
+              position:absolute;
+              top:0;
+              left:0;
+              background:#ff6600;
+              color:white;
+              font-size:10px;
+              padding:4px 6px;
+              font-weight:800;
+            ">
+              ⭐ Sponsored
+            </div>
+          ` : ""}
+        </div>
 
-  container.appendChild(card);
+        <div style="padding:6px;">
+          <h3 style="font-size:12px;margin:0;">
+            ${p.name || "No name"}
+          </h3>
 
-});
-    
+          <p style="color:#f68b1e;font-weight:700;margin:4px 0;">
+            UGX ${Number(p.price || 0).toLocaleString()}
+          </p>
+
+          <button onclick="event.stopPropagation();window.location.href='product.html?id=${p.id}'"
+            style="width:100%;padding:6px;font-size:11px;background:#f68b1e;color:white;border:none;">
+            View
+          </button>
+        </div>
+      `;
+
+      row.appendChild(card);
+    });
+
+    container.appendChild(section);
+  }
+
+  // =========================
+  // FINAL OUTPUT (JUMIA STYLE ROWS)
+  // =========================
+  renderRow("⭐ Sponsored", sponsored);
+  renderRow("🔥 Trending", trending);
+  renderRow("🆕 New Arrivals", newArrivals);
+
+  Object.keys(grouped).forEach(cat => {
+    const title = cat.charAt(0).toUpperCase() + cat.slice(1);
+    renderRow(title, grouped[cat]);
+  });
 };
 
 // ============================================
@@ -1152,4 +1080,34 @@ window.allProducts = allProducts;
   }
 };
 
+// ============================================
+// BUILD CATEGORY NAV BAR
+// ============================================
+function buildCategoryNav(products) {
 
+  const nav = document.getElementById("category-nav");
+  if (!nav) return;
+
+  const cats = ["all", ...new Set(products.map(p => p.category || "others"))];
+
+  nav.innerHTML = "";
+
+  cats.forEach(cat => {
+
+    const btn = document.createElement("button");
+    btn.innerText = cat.charAt(0).toUpperCase() + cat.slice(1);
+
+    if (currentCategory === cat || (!currentCategory && cat === "all")) {
+      btn.classList.add("active");
+    }
+
+    btn.onclick = () => {
+
+      currentCategory = (cat === "all") ? "all" : cat;
+
+      renderProducts();
+    };
+
+    nav.appendChild(btn);
+  });
+}
