@@ -1,136 +1,196 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
 <meta charset="UTF-8">
 
 <meta
 name="viewport"
 content="width=device-width, initial-scale=1.0">
 
-<title>Edit Shop</title>
+<title>Edit Business Profile</title>
+
+<link rel="stylesheet" href="style.css">
 
 <style>
 
 body{
-  margin:0;
+  background:#f3f4f6;
   font-family:Arial,sans-serif;
-  background:#f5f5f5;
-}
-
-.container{
-  max-width:800px;
-  margin:auto;
   padding:20px;
 }
 
-.card{
+.edit-shop-container{
+  max-width:700px;
+  margin:auto;
   background:white;
   padding:24px;
-  border-radius:14px;
+  border-radius:18px;
+  box-shadow:0 4px 20px rgba(0,0,0,.08);
+}
+
+.edit-shop-container h1{
+  margin-bottom:20px;
+  font-size:28px;
+}
+
+.form-group{
   margin-bottom:20px;
 }
 
-input,
-textarea{
+.form-group label{
+  display:block;
+  margin-bottom:8px;
+  font-weight:700;
+}
+
+.form-group input,
+.form-group textarea{
   width:100%;
   padding:14px;
-  margin-bottom:14px;
-  border-radius:10px;
-  border:1px solid #ddd;
-  box-sizing:border-box;
+  border:1.5px solid #ddd;
+  border-radius:12px;
+  font-size:15px;
 }
 
-textarea{
+.form-group textarea{
+  resize:vertical;
+  min-height:120px;
+}
+
+.preview-image{
+  width:100%;
+  margin-top:10px;
+  border-radius:14px;
+  object-fit:cover;
+  background:#eee;
+}
+
+#logo-preview{
   height:120px;
+  max-width:120px;
 }
 
-button{
+#banner-preview{
+  height:220px;
+}
+
+.save-btn{
   background:#ff6600;
   color:white;
   border:none;
-  padding:14px 18px;
-  border-radius:10px;
+  padding:16px;
+  width:100%;
+  border-radius:14px;
+  font-size:16px;
   font-weight:700;
   cursor:pointer;
 }
 
-.preview{
-  width:100%;
-  border-radius:12px;
-  margin-bottom:12px;
+.save-btn:hover{
+  opacity:.92;
 }
 
-.logo-preview{
-  width:120px;
-  height:120px;
-  border-radius:50%;
-  object-fit:cover;
-  margin-bottom:12px;
+.back-btn{
+  display:inline-block;
+  margin-bottom:20px;
+  text-decoration:none;
+  color:#ff6600;
+  font-weight:700;
 }
 
 </style>
-
 </head>
-
 <body>
 
-<div class="container">
+<div class="edit-shop-container">
 
-  <div class="card">
+<a
+href="shop.html"
+class="back-btn">
+← Back to Shop
+</a>
 
-    <h2>🏪 Customize Shop</h2>
+<h1>🏪 Edit Business Profile</h1>
 
-    <input
-      type="text"
-      id="business-name"
-      placeholder="Business Name"
-    >
+<div class="form-group">
 
-    <textarea
-      id="business-description"
-      placeholder="Describe your business"
-    ></textarea>
+<label>
+Business Name
+</label>
 
-    <label>Shop Logo</label>
+<input
+type="text"
+id="business-name"
+placeholder="Enter business name">
 
-    <img
-      id="logo-preview"
-      class="logo-preview"
-    >
+</div>
 
-    <input
-      type="file"
-      id="logo-input"
-      accept="image/*"
-    >
+<div class="form-group">
 
-    <label>Shop Banner</label>
+<label>
+Business Description
+</label>
 
-    <img
-      id="banner-preview"
-      class="preview"
-    >
+<textarea
+id="business-description"
+placeholder="Describe your business">
+</textarea>
 
-    <input
-      type="file"
-      id="banner-input"
-      accept="image/*"
-    >
+</div>
 
-    <button onclick="saveShopProfile()">
-      Save Shop
-    </button>
+<div class="form-group">
 
-  </div>
+<label>
+Business Logo
+</label>
+
+<input
+type="file"
+id="logo-input"
+accept="image/*">
+
+<img
+id="logo-preview"
+class="preview-image"
+src=""
+alt="Logo Preview">
+
+</div>
+
+<div class="form-group">
+
+<label>
+Business Banner
+</label>
+
+<input
+type="file"
+id="banner-input"
+accept="image/*">
+
+<img
+id="banner-preview"
+class="preview-image"
+src=""
+alt="Banner Preview">
+
+</div>
+
+<button
+id="save-btn"
+class="save-btn"
+onclick="saveShopProfile()">
+
+Save Business Profile
+
+</button>
 
 </div>
 
 <script
 type="module"
-src="edit-shop.js"
-></script>
+src="edit-shop.js">
+</script>
 
 </body>
 </html>
