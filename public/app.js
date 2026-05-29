@@ -387,15 +387,6 @@ function getProductRankScore(product) {
 // ============================================
 window.renderProducts = function () {
 
-let featuredContainer = document.getElementById("featured-ads");
-
-if (!featuredContainer) {
-  featuredContainer = document.createElement("div");
-  featuredContainer.id = "featured-ads";
-
-  const productsContainer = document.getElementById("products");
-  productsContainer.parentNode.insertBefore(featuredContainer, productsContainer);
-}
 
   const container = document.getElementById("products");
   if (!container) return;
@@ -407,71 +398,6 @@ if (!featuredContainer) {
 
   let products = [...allProducts];
 
-
-function renderFeaturedAds() {
-  const container = document.getElementById("featured-ads");
-  if (!container) return;
-
-  container.innerHTML = "";
-
-  const featured = allProducts.filter(
-    p => p.boost?.active || p.isPremium
-  );
-
-  featured.forEach(p => {
-
-    const card = document.createElement("div");
-
-   card.className = "";
-
-    card.style.marginBottom = "10px"; // 🔥 vertical spacing
-
-    card.innerHTML = `
-      <div style="display:flex; gap:10px; align-items:center; padding:8px;">
-
-        <img src="${(p.images && p.images[0]) || 'placeholder.jpg'}"
-          style="width:70px; height:70px; object-fit:cover; border-radius:6px;">
-
-        <div style="flex:1;">
-
-          <div style="
-            font-size:11px;
-            font-weight:800;
-            color:#ff6600;
-          ">
-            ⭐ FEATURED
-          </div>
-
-          <div style="font-size:13px; font-weight:600;">
-            ${p.name || "No name"}
-          </div>
-
-          <div style="color:#f68b1e; font-weight:700;">
-            UGX ${Number(p.price || 0).toLocaleString()}
-          </div>
-
-        </div>
-
-        <button onclick="window.location.href='product.html?id=${p.id}'"
-          style="
-            padding:6px 10px;
-            font-size:11px;
-            background:#f68b1e;
-            color:white;
-            border:none;
-            border-radius:4px;
-          ">
-          View
-        </button>
-
-      </div>
-    `;
-
-    container.appendChild(card);
-  });
-}
-
-renderFeaturedAds();
 
   // =========================
   // 1. CATEGORY FILTER
@@ -620,6 +546,7 @@ renderFeaturedAds();
   const grouped = {};
   const trending = [];
   const newArrivals = [];
+  const featured = [];
   const sponsored = [];
 
   const now = Date.now();
@@ -630,7 +557,10 @@ renderFeaturedAds();
     if (!grouped[cat]) grouped[cat] = [];
     grouped[cat].push(p);
 
-    if (p.boost?.active || p.isPremium) sponsored.push(p);
+    if (p.boost?.active || p.isPremium) {
+  sponsored.push(p);
+  featured.push(p);
+}
     if ((p.views || 0) > 5) trending.push(p);
 
     const created = p.createdAt?.toDate
@@ -723,6 +653,7 @@ renderFeaturedAds();
   renderRow("⭐ Sponsored", sponsored);
   renderRow("🔥 Trending", trending);
   renderRow("🆕 New Arrivals", newArrivals);
+  renderRow("⭐ Featured Ads", featured);
 
   Object.keys(grouped).forEach(cat => {
     renderRow(cat.charAt(0).toUpperCase() + cat.slice(1), grouped[cat]);
