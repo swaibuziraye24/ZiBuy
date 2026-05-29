@@ -7701,3 +7701,22 @@ table {
 .product-card p {
   margin: 4px 0;
 }
+
+.featured-row {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  gap: 10px;
+  padding: 10px;
+
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+
+  background: #fff7e6;
+}
+
+.featured-row::-webkit-scrollbar {
+  display: none;
+}
