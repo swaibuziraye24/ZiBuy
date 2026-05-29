@@ -7487,7 +7487,12 @@ table {
 #products {
   display: flex;
   flex-direction: column;
-  gap: 25px;
+  gap: 10px; /* 🔥 reduced spacing */
+}
+
+.product-section {
+  margin: 0;
+  padding: 0;
 }
 
 /* EACH SECTION MUST NOT BREAK SCROLL */
@@ -7503,8 +7508,8 @@ table {
 
 /* Title of each row */
 .product-section h2 {
-  font-size: 18px;
-  margin-bottom: 10px;
+  margin: 6px 10px;   /* 🔥 reduces category-to-category distance */
+  font-size: 16px;
 }
 
 /* HORIZONTAL SCROLL ROW */
@@ -7587,6 +7592,11 @@ table {
   transform: translateY(-2px);
 }
 
+
+.product-row {
+  padding-top: 5px;
+  padding-bottom: 10px;
+}
 
 /* ============================================
    STICKY CATEGORY NAV (JUMIA STYLE)
