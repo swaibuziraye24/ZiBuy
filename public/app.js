@@ -383,11 +383,17 @@ function getProductRankScore(product) {
 }
 
 // ============================================
-// RENDER PRODUCTS
+// RENDER PRODUCTS (FIXED SAFE VERSION)
 // ============================================
 window.renderProducts = function () {
+
   const container = document.getElementById("products");
   if (!container) return;
+
+  if (!Array.isArray(allProducts)) {
+    console.warn("allProducts is not ready");
+    return;
+  }
 
   let products = [...allProducts];
 
@@ -457,6 +463,7 @@ window.renderProducts = function () {
   // 6. SORTING
   // =========================
   switch (filterState.sortBy) {
+
     case "price-low":
       products.sort((a, b) => a.price - b.price);
       break;
@@ -469,7 +476,6 @@ window.renderProducts = function () {
       products.sort((a, b) => (b.views || 0) - (a.views || 0));
       break;
 
-    case "newest":
     default:
       products.sort((a, b) => {
 
@@ -488,12 +494,8 @@ window.renderProducts = function () {
 
         return bTime - aTime;
       });
-      break;
   }
 
-  // =========================
-  // 7. SAVE FILTERED GLOBAL STATE
-  // =========================
   filteredProducts = products;
 
   // =========================
@@ -503,7 +505,6 @@ window.renderProducts = function () {
   const normalProducts = products.filter(p => !p.boost?.active && !p.isPremium);
 
   const mixedProducts = [];
-
   let boostIndex = 0;
   let normalIndex = 0;
 
@@ -524,11 +525,11 @@ window.renderProducts = function () {
 
   products = mixedProducts;
 
-buildCategoryNav(products);
+  // ❌ FIX: ONLY CALL IF EXISTS
+  if (typeof buildCategoryNav === "function") {
+    buildCategoryNav(products);
+  }
 
-  // =========================
-  // 8. RENDER UI (JUMIA STYLE FIXED)
-  // =========================
   container.innerHTML = "";
 
   if (products.length === 0) {
@@ -540,47 +541,12 @@ buildCategoryNav(products);
     return;
   }
 
-  // =========================
-  // SMART GROUPING (FIXED - NO DUPLICATES)
-  // =========================
   const grouped = {};
   const trending = [];
   const newArrivals = [];
   const sponsored = [];
 
   const now = Date.now();
-
-
-  // ============================================
-// FOR YOU RECOMMENDATION ENGINE
-// ============================================
-const forYou = [...products];
-
-forYou.sort((a, b) => {
-
-  // boost priority
-  const aBoost = (a.boost?.active || a.isPremium) ? 1 : 0;
-  const bBoost = (b.boost?.active || b.isPremium) ? 1 : 0;
-
-  if (aBoost !== bBoost) return bBoost - aBoost;
-
-  // views priority
-  const aViews = a.views || 0;
-  const bViews = b.views || 0;
-
-  if (aViews !== bViews) return bViews - aViews;
-
-  // recency priority
-  const aTime = a.createdAt?.toDate
-    ? a.createdAt.toDate().getTime()
-    : new Date(a.createdAt || 0).getTime();
-
-  const bTime = b.createdAt?.toDate
-    ? b.createdAt.toDate().getTime()
-    : new Date(b.createdAt || 0).getTime();
-
-  return bTime - aTime;
-});
 
   products.forEach(p => {
 
@@ -589,7 +555,6 @@ forYou.sort((a, b) => {
     grouped[cat].push(p);
 
     if (p.boost?.active || p.isPremium) sponsored.push(p);
-
     if ((p.views || 0) > 5) trending.push(p);
 
     const created = p.createdAt?.toDate
@@ -599,12 +564,9 @@ forYou.sort((a, b) => {
     if (now - created <= 7 * 86400000) newArrivals.push(p);
   });
 
-  // =========================
-  // RENDER ROW FUNCTION
-  // =========================
   function renderRow(title, list) {
 
-    if (!list || list.length === 0) return;
+    if (!Array.isArray(list) || list.length === 0) return;
 
     const section = document.createElement("div");
     section.className = "product-section";
@@ -622,81 +584,72 @@ forYou.sort((a, b) => {
     row.style.padding = "10px";
     row.style.scrollSnapType = "x mandatory";
 
-// =========================
-// INFINITE SCROLL FIX (SCOPED)
-// =========================
-let index = 0;
-const batchSize = 8;
+    let index = 0;
+    const batchSize = 8;
 
-function loadMore() {
+    function loadMore() {
 
-  const slice = list.slice(index, index + batchSize);
+      const slice = list.slice(index, index + batchSize);
 
-  slice.forEach(p => {
+      slice.forEach(p => {
 
-    const card = document.createElement("div");
-    card.className = "product-card";
+        const card = document.createElement("div");
+        card.className = "product-card";
 
-    card.style.flex = "0 0 auto";
-    card.style.minWidth = "160px";
-    card.style.background = "#fff";
-    card.style.borderRadius = "6px";
-    card.style.overflow = "hidden";
-    card.style.boxShadow = "0 1px 4px rgba(0,0,0,0.10)";
-    card.style.scrollSnapAlign = "start";
-    card.style.cursor = "pointer";
+        card.style.flex = "0 0 auto";
+        card.style.minWidth = "160px";
+        card.style.background = "#fff";
+        card.style.borderRadius = "6px";
+        card.style.overflow = "hidden";
+        card.style.boxShadow = "0 1px 4px rgba(0,0,0,0.10)";
+        card.style.scrollSnapAlign = "start";
+        card.style.cursor = "pointer";
 
-    card.innerHTML = `
-      <div style="position:relative;background:#f7f7f7;">
-        <img src="${(p.images && p.images[0]) || 'placeholder.jpg'}"
-          style="width:100%; aspect-ratio:1/1; object-fit:cover;">
-      </div>
+        card.innerHTML = `
+          <div style="position:relative;background:#f7f7f7;">
+            <img src="${(p.images && p.images[0]) || 'placeholder.jpg'}"
+              style="width:100%; aspect-ratio:1/1; object-fit:cover;">
+          </div>
 
-      <div style="padding:6px;">
-        <h3 style="font-size:12px;margin:0;">
-          ${p.name || "No name"}
-        </h3>
+          <div style="padding:6px;">
+            <h3 style="font-size:12px;margin:0;">
+              ${p.name || "No name"}
+            </h3>
 
-        <p style="color:#f68b1e;font-weight:700;margin:4px 0;">
-          UGX ${Number(p.price || 0).toLocaleString()}
-        </p>
+            <p style="color:#f68b1e;font-weight:700;margin:4px 0;">
+              UGX ${Number(p.price || 0).toLocaleString()}
+            </p>
 
-        <button onclick="event.stopPropagation();window.location.href='product.html?id=${p.id}'"
-          style="width:100%;padding:6px;font-size:11px;background:#f68b1e;color:white;border:none;">
-          View
-        </button>
-      </div>
-    `;
+            <button onclick="event.stopPropagation();window.location.href='product.html?id=${p.id}'"
+              style="width:100%;padding:6px;font-size:11px;background:#f68b1e;color:white;border:none;">
+              View
+            </button>
+          </div>
+        `;
 
-    row.appendChild(card);
-  });
+        row.appendChild(card);
+      });
 
-  index += batchSize;
-}
+      index += batchSize;
+    }
 
-// INITIAL LOAD
-loadMore();
-
-// SCROLL TRIGGER
-row.addEventListener("scroll", () => {
-  if (row.scrollLeft + row.clientWidth >= row.scrollWidth - 50) {
     loadMore();
-  }
-});
 
+    row.addEventListener("scroll", () => {
+      if (row.scrollLeft + row.clientWidth >= row.scrollWidth - 50) {
+        loadMore();
+      }
+    });
+
+    container.appendChild(section);
   }
 
-  // =========================
-  // FINAL OUTPUT (JUMIA STYLE ROWS)
-  // =========================
   renderRow("⭐ Sponsored", sponsored);
   renderRow("🔥 Trending", trending);
   renderRow("🆕 New Arrivals", newArrivals);
-  renderRow("🎯 For You", forYou);
 
   Object.keys(grouped).forEach(cat => {
-    const title = cat.charAt(0).toUpperCase() + cat.slice(1);
-    renderRow(title, grouped[cat]);
+    renderRow(cat.charAt(0).toUpperCase() + cat.slice(1), grouped[cat]);
   });
 };
 
