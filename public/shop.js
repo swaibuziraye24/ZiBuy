@@ -163,6 +163,57 @@ async function loadShopHeader() {
     const shop =
       snapshot.docs[0].data();
 
+
+      const verifiedBadge =
+  document.getElementById("verified-badge");
+
+const planBadge =
+  document.getElementById("plan-badge");
+
+const descEl =
+  document.getElementById("shop-description");
+
+const locationEl =
+  document.getElementById("business-location");
+
+const contactEl =
+  document.getElementById("business-contact");
+
+const whatsappEl =
+  document.getElementById("business-whatsapp");
+
+const plan =
+  shop.plan || "free";
+
+if(shop.isVerified){
+  verifiedBadge.innerHTML =
+    `<span class="badge badge-verified">
+      ✅ Verified Business
+    </span>`;
+}
+
+planBadge.innerHTML =
+  `<span class="badge badge-${plan}">
+    ${plan.toUpperCase()} PLAN
+  </span>`;
+
+descEl.textContent =
+  shop.description ||
+  "Professional ZiBuy seller";
+
+locationEl.innerHTML =
+  `📍 ${shop.location || "Uganda"}`;
+
+contactEl.innerHTML =
+  `📧 ${shop.email || "No email"}`;
+
+if(plan === "gold"){
+  whatsappEl.innerHTML =
+    `📱 24/7 WhatsApp Support`;
+}else{
+  whatsappEl.style.display = "none";
+}
+
     /* LOGO + BANNER */
 
     const logo =
