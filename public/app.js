@@ -133,91 +133,56 @@ async function loadProducts() {
   try {
     const snapshot = await getDocs(collection(db, "products"));
 
-    const products = await Promise.all(
-      snapshot.docs.map(async (docSnap) => {
+    // ── Batch load plans + verifications ONCE ──
+    let planMap   = {};
+    let verifSet  = new Set();
+
+    try {
+      const [subsSnap, verifSnap] = await Promise.all([
+        getDocs(collection(db, "business_accounts")),
+        getDocs(query(collection(db, "seller_verifications"), where("status", "==", "approved")))
+      ]);
+
+      subsSnap.forEach(d => {
+        const data = d.data();
+        if (data.status === "active") planMap[data.userId] = data.plan || "free";
+      });
+
+      verifSnap.forEach(d => verifSet.add(d.data().userId));
+    } catch (e) {
+      console.warn("Batch load failed:", e);
+    }
+
+    const products = snapshot.docs.map((docSnap) => {
         const product = {
           id: docSnap.id,
           ...docSnap.data()
         };
 
-// ── AUTO EXPIRE ADS ─────────────────
-
-if (product.expiresAt) {
-
-  const expiryDate =
-    product.expiresAt.toDate
-      ? product.expiresAt.toDate()
-      : new Date(product.expiresAt);
-
-  if (expiryDate < new Date()) {
-
-    product.status = "expired";
-
-  }
-
-}
-
-        if (product.userId) {
-
-// ── SHOP SUBSCRIPTION ─────────────────
-try {
-
-  const subSnap = await getDocs(
-    query(
-      collection(db, "business_subscriptions"),
-      where("userId", "==", product.userId),
-      where("active", "==", true)
-    )
-  );
-
-  if (!subSnap.empty) {
-
-    const sub = subSnap.docs[0].data();
-
-    product.shopPlan =
-      sub.plan || "free";
-
-  } else {
-
-    product.shopPlan = "free";
-
-  }
-
-} catch (err) {
-
-  console.error("Plan check error:", err);
-
-  product.shopPlan = "free";
-
-}
-
-          try {
-            const verificationSnap = await getDocs(
-              query(
-                collection(db, "seller_verifications"),
-                where("userId", "==", product.userId),
-                where("status", "==", "approved")
-              )
-            );
-
-            product.seller = product.seller || {};
-            product.seller.isVerified = !verificationSnap.empty;
-          } catch (err) {
-            console.error("Verification check error:", err);
-            product.seller = product.seller || {};
-            product.seller.isVerified = false;
-          }
-        } else {
-          product.seller = product.seller || {};
-          product.seller.isVerified = false;
+        // expires check
+        if (product.expiresAt) {
+          const expiryDate = product.expiresAt.toDate
+            ? product.expiresAt.toDate()
+            : new Date(product.expiresAt);
+          if (expiryDate < new Date()) product.status = "expired";
         }
 
-        /* =========================
-   PRODUCT RANKING SCORE
-========================= */
+        // plan + verified from batch maps — zero extra reads
+        product.shopPlan = planMap[product.userId] || "free";
+        product.seller   = product.seller || {};
+        product.seller.isVerified = verifSet.has(product.userId);
 
-const plan =
-  await getUserPlan(product.userId);
+        const planScore   = PLAN_SCORE[product.shopPlan] || 1;
+        const boostScore  = product.isPremium ? 5000 : 0;
+        const verifScore  = product.seller.isVerified ? 500 : 0;
+        const created     = product.createdAt?.toDate?.() || new Date();
+        const freshnessScore = Math.max(0, 100 - (new Date() - created) / 3_600_000);
+
+        product.rankScore =
+          (planScore * 1000) + boostScore + verifScore + freshnessScore;
+
+        return product;
+      
 
 const planScore =
   PLAN_SCORE[plan] || 1;
@@ -260,8 +225,9 @@ product.rankScore =
 
 return product;
       })
-    );
+    
 
+  
  // Store all products globally for use in other functions
 allProducts = products.sort((a, b) => b.rankScore - a.rankScore);
 
@@ -290,7 +256,7 @@ async function loadFeaturedProducts() {
     const featured = await getFeaturedAds();
 
     console.log("Featured Ads:", featured);
-    
+
     const container = document.getElementById("products");
 
     if (!container || featured.length === 0) return;
@@ -569,7 +535,14 @@ window.renderProducts = function () {
   sponsored.push(p);
   featured.push(p);
 }
-    if ((p.views || 0) > 5) trending.push(p);
+   const score =
+  (p.views || 0) +
+  ((p.likes || 0) * 3) +
+  ((p.orders || 0) * 10);
+
+if (score > 50) {
+  trending.push(p);
+}
 
     const created = p.createdAt?.toDate
       ? p.createdAt.toDate().getTime()
@@ -657,11 +630,11 @@ window.renderProducts = function () {
 
     container.appendChild(section);
   }
-
+  renderRow("⭐ Featured Ads", featured);
   renderRow("⭐ Sponsored", sponsored);
   renderRow("🔥 Trending", trending);
   renderRow("🆕 New Arrivals", newArrivals);
-  renderRow("⭐ Featured Ads", featured);
+  
 
   Object.keys(grouped).forEach(cat => {
     renderRow(cat.charAt(0).toUpperCase() + cat.slice(1), grouped[cat]);
