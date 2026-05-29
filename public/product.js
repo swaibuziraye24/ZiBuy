@@ -10,6 +10,7 @@ import { showToast } from "./app.js";
 // Re-import app.js so cart works on this page too
 import "./app.js";
 
+
 let currentUser = null;
 
 onAuthStateChanged(auth, (user) => {
@@ -38,6 +39,12 @@ async function loadProduct() {
 
    
 const p      = snap.data();
+
+import { updateDoc, increment } from "./firebase.js";
+
+updateDoc(doc(db, "products", id), {
+  views: increment(1)
+});
     const images = Array.isArray(p.images) ? p.images : [];
     const seller = p.seller || {};
     let   active = 0;
@@ -103,12 +110,34 @@ const p      = snap.data();
         </p>
 
         <div style="display:flex;gap:12px;margin-bottom:16px">
-          <button class="cart-btn" style="flex:1;padding:16px;font-size:16px;background:#ff6600;color:white;border:none;border-radius:12px;font-weight:700;cursor:pointer" onclick="addToCart('${p.name.replace(/'/g,"\\'")}', ${p.price}, '${images[0] || ""}')">
-            🛒 Add to Cart
-          </button>
-          <button class="view-btn" style="flex:1;padding:16px;font-size:16px;border:1.5px solid #ff6600;color:#ff6600;background:white;border-radius:12px;font-weight:700;cursor:pointer" onclick="toggleCart()">
-            View Cart
-          </button>
+
+        <button onclick="likeProduct('${id}')" style="
+  flex:1;
+  padding:16px;
+  font-size:16px;
+  border:1.5px solid #ff4d6d;
+  color:#ff4d6d;
+  background:white;
+  border-radius:12px;
+  font-weight:700;
+  cursor:pointer">
+  ❤️ Like
+</button>
+          <button
+  class="cart-btn"
+  style="flex:1;padding:16px;font-size:16px;background:#ff6600;color:white;border:none;border-radius:12px;font-weight:700;cursor:pointer"
+  onclick="addToCart('${p.name.replace(/'/g,"\\'")}', ${p.price}, '${images[0] || ""}')"
+>
+  🛒 Add to Cart
+</button>
+
+<button
+  class="view-btn"
+  style="flex:1;padding:16px;font-size:16px;background:#25D366;color:white;border:none;border-radius:12px;font-weight:700;cursor:pointer"
+  onclick="buyNowWhatsApp('${p.name}', ${p.price}, '${seller.phone || ""}')"
+>
+  📲 Buy Now
+</button>
         </div>
 
         ${contactHTML}
@@ -245,3 +274,55 @@ window.submitProductReview = async function() {
 };
 
 loadProduct();
+
+
+import { updateDoc, increment } from "./firebase.js";
+
+window.likeProduct = async function(productId) {
+  try {
+    await updateDoc(doc(db, "products", productId), {
+      likes: increment(1)
+    });
+  } catch (err) {
+    console.error("Like error:", err);
+  }
+};
+
+
+window.createOrder = async function(product) {
+  const { addDoc, collection } = await import("./firebase.js");
+  const { db } = await import("./firebase.js");
+
+  try {
+    await addDoc(collection(db, "orders"), {
+      productId: product.id,
+      name: product.name,
+      price: product.price,
+      sellerId: product.userId || "",
+      createdAt: new Date(),
+      status: "pending"
+    });
+
+    // increase local orders counter (optional UI boost)
+    product.orders = (product.orders || 0) + 1;
+
+  } catch (err) {
+    console.error("Order failed:", err);
+  }
+};
+
+
+window.buyNowWhatsApp = function(name, price, phone) {
+  const cleanPhone = (phone || "").replace(/\D/g, "");
+
+  if (!cleanPhone) {
+    alert("Seller phone not available");
+    return;
+  }
+
+  const msg = encodeURIComponent(
+    `Hello, I want to buy *${name}* for UGX ${price}. Is it available?`
+  );
+
+  window.location.href = `https://wa.me/${cleanPhone}?text=${msg}`;
+};
