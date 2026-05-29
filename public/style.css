@@ -7482,3 +7482,134 @@ table {
 .search-suggestion-item:last-child{
   border-bottom:none;
 }
+
+/* MAIN container */
+#products {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+/* Section wrapper (JS will create this) */
+.product-section {
+  padding: 10px;
+}
+
+/* Title of each row */
+.product-section h2 {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+/* HORIZONTAL SCROLL ROW */
+.product-row {
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  gap: 12px;
+
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* hide scrollbar */
+.product-row::-webkit-scrollbar {
+  display: none;
+}
+
+/* PRODUCT CARD */
+.product-card {
+  min-width: 160px;
+  flex: 0 0 auto;
+
+  background: #fff;
+  border-radius: 10px;
+  padding: 10px;
+
+  scroll-snap-align: start;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+
+/* ============================================
+   ZiBuy JUMIA-LIKE HORIZONTAL SCROLL UPGRADE
+   (Smooth swipe + snap + better UX)
+============================================ */
+
+/* Smooth scrolling for all product rows */
+.product-row {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Better snap behavior */
+.product-row {
+  scroll-snap-type: x mandatory;
+}
+
+/* Each card snaps properly */
+.product-card {
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+/* Hide scrollbar (clean UI like Jumia) */
+.product-row::-webkit-scrollbar {
+  display: none;
+}
+
+/* Firefox */
+.product-row {
+  scrollbar-width: none;
+}
+
+/* Add smooth hover feel (optional UX upgrade only) */
+.product-card {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.product-card:hover {
+  transform: translateY(-2px);
+}
+
+
+/* ============================================
+   STICKY CATEGORY NAV (JUMIA STYLE)
+============================================ */
+
+.category-nav {
+  position: sticky;
+  top: 0;
+  z-index: 999;
+
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+
+  background: white;
+  padding: 10px;
+
+  border-bottom: 1px solid #eee;
+}
+
+.category-nav button {
+  flex: 0 0 auto;
+
+  padding: 6px 12px;
+  font-size: 12px;
+
+  border: 1px solid #ddd;
+  background: white;
+  border-radius: 20px;
+
+  cursor: pointer;
+}
+
+.category-nav button.active {
+  background: #f68b1e;
+  color: white;
+  border-color: #f68b1e;
+}
