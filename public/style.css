@@ -5149,9 +5149,12 @@ img {
 }
 
 /* ── Info ── */
-.product-info {
-  padding: 7px 8px 9px;
-  border-top: 1px solid #f0f0f0;
+.product-info{
+  padding:6px 7px 7px;
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  position:static;
 }
 
 .product-info h3 {
@@ -5167,18 +5170,21 @@ img {
   overflow: hidden;
 }
 
-.product-info .price {
-  font-size: 15px;
-  font-weight: 700;
-  color: #f68b1e;
-  margin: 0 0 1px;
-  display: block;
+.product-info .price{
+  font-size:15px;
+  font-weight:800;
+  color:#f68b1e;
+  margin:0;
+  display:block;
+  position:static;
 }
 
-.product-info .location {
-  font-size: 11px;
-  color: #999;
-  margin: 2px 0 6px;
+.product-info .location{
+  font-size:11px;
+  color:#999;
+  margin:0;
+  display:block;
+  position:static;
 }
 
 /* ── Actions (hidden by default, Jumia-style) ── */
