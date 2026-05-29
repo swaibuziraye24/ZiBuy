@@ -7702,28 +7702,14 @@ table {
   margin: 4px 0;
 }
 
-.featured-row {
-  display: flex;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  overflow-y: hidden;
-
-  gap: 10px;
-  padding: 10px;
-
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-
-  background: #fff7e6;
-}
-
-.featured-row::-webkit-scrollbar {
-  display: none;
-}
-
 #featured-ads {
   display: flex;
-  flex-direction: column;
-  gap: 5px;
-  margin-bottom: 10px;
+  flex-direction: column !important;
+
+  width: 100%;
+
+  gap: 8px;
+
+  overflow-x: hidden !important;
+  overflow-y: visible !important;
 }
