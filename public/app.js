@@ -588,34 +588,32 @@ products = mixedProducts;
   card.className = "product-card";
 
   card.style.background = "#fff";
-card.style.borderRadius = "18px";
+card.style.borderRadius = "4px";
 card.style.overflow = "hidden";
-card.style.boxShadow = "0 4px 18px rgba(0,0,0,0.08)";
-card.style.transition = "0.2s ease";
+card.style.boxShadow = "0 1px 4px rgba(0,0,0,0.10)";
+card.style.transition = "box-shadow .18s";
 card.style.cursor = "pointer";
-card.style.border = "1px solid #f1f1f1";
+card.style.border = "none";
 
 card.onmouseenter = () => {
-  card.style.transform = "translateY(-4px)";
-  card.style.boxShadow = "0 10px 25px rgba(0,0,0,0.12)";
+  card.style.transform = "translateY(0)";
+  card.style.boxShadow = "0 4px 16px rgba(0,0,0,0.14)";
 };
 
 card.onmouseleave = () => {
   card.style.transform = "translateY(0)";
-  card.style.boxShadow = "0 4px 18px rgba(0,0,0,0.08)";
+  card.style.boxShadow = "0 1px 4px rgba(0,0,0,0.10)";
 };
 
-  // Needed for Sponsored badge positioning
   card.style.position = "relative";
 
   card.innerHTML = `
 
-
 <div class="product-image" style="
   position:relative;
   overflow:hidden;
-  border-radius:14px 14px 0 0;
-  background:#f3f4f6;
+  border-radius:0;
+  background:#f7f7f7;
 ">
 
   <img
@@ -623,64 +621,67 @@ card.onmouseleave = () => {
     alt="${p.name}"
     style="
       width:100%;
-      height:220px;
+      aspect-ratio:1/1;
+      height:auto;
       object-fit:cover;
       display:block;
       transition:0.3s;
     "
   >
 
-
     ${(p.boost?.active || p.isPremium) ? `
       <div style="
         position:absolute;
-        top:8px;
-        left:8px;
-        background:#ff6600;
+        top:6px;
+        left:6px;
+        background:#f68b1e;
         color:white;
-        padding:4px 8px;
-        font-size:12px;
+        padding:2px 7px;
+        font-size:10px;
         font-weight:700;
-        border-radius:6px;
+        border-radius:2px;
         z-index:10;
+        letter-spacing:.3px;
+        text-transform:uppercase;
       ">
         Sponsored
       </div>
     ` : ""}
 
     <div class="product-image" style="
-  height:220px;
+  height:0;
   overflow:hidden;
-  background:#f3f4f6;
+  background:#f7f7f7;
 ">
     </div>
 
     <div class="product-info" style="
-  padding:14px;
+  padding:7px 8px 9px;
+  border-top:1px solid #f0f0f0;
 ">
 
 <h3 style="
-  font-size:16px;
-  font-weight:700;
-  margin:0 0 8px;
-  color:#111827;
-  line-height:1.4;
+  font-size:12.5px;
+  font-weight:400;
+  margin:0 0 4px;
+  color:#333;
+  line-height:1.3;
 ">
         ${p.name || "No name"}
       </h3>
 
       <p class="price" style="
-  color:#ff6600;
-  font-size:20px;
-  font-weight:800;
-  margin:0 0 6px;
+  color:#f68b1e;
+  font-size:15px;
+  font-weight:700;
+  margin:0 0 2px;
 ">
         UGX ${Number(p.price || 0).toLocaleString()}
       </p>
 
       <p class="location" style="
-  color:#6b7280;
-  font-size:14px;
+  color:#999;
+  font-size:11px;
   margin:0;
 ">
         📍 ${p.location || "Unknown"}
@@ -688,8 +689,8 @@ card.onmouseleave = () => {
 
 <div style="
   display:flex;
-  gap:8px;
-  margin-top:12px;
+  gap:6px;
+  margin-top:6px;
 ">
 
   <button
