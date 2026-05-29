@@ -571,3 +571,117 @@ function showToast(msg, type = "info") {
   setTimeout(() => t.remove(), 3500);
 }
 
+// ============================================
+// SHOW ADMIN SECTION
+// ============================================
+
+async function showSection(sectionName) {
+
+  console.log("📂 Opening section:", sectionName);
+
+  // Hide all sections
+  document.querySelectorAll(".admin-section")
+    .forEach(section => {
+
+      section.style.display = "none";
+      section.classList.remove("active");
+
+    });
+
+  // Remove active sidebar buttons
+  document.querySelectorAll(".admin-nav button")
+    .forEach(btn => {
+
+      btn.classList.remove("active");
+
+    });
+
+  // Show target section
+  const activeSection =
+    document.getElementById(sectionName + "-section");
+
+  if (activeSection) {
+
+    activeSection.style.display = "block";
+    activeSection.classList.add("active");
+
+  } else {
+
+    console.error(
+      "❌ Section not found:",
+      sectionName + "-section"
+    );
+
+    return;
+  }
+
+  // Activate matching nav button
+  const activeBtn =
+    document.querySelector(
+      `[data-section="${sectionName}"]`
+    );
+
+  if (activeBtn) {
+
+    activeBtn.classList.add("active");
+
+  }
+
+  // ============================================
+  // LOAD SECTION DATA
+  // ============================================
+
+  try {
+
+    if (sectionName === "products") {
+
+      await loadProducts();
+
+    }
+
+    else if (sectionName === "users") {
+
+      await loadUsers();
+
+    }
+
+    else if (sectionName === "orders") {
+
+      await loadOrders();
+
+    }
+
+    else if (sectionName === "boosts") {
+
+      await loadBoostRequests();
+
+    }
+
+    else if (sectionName === "business") {
+
+      await loadBusinessAccounts();
+
+    }
+
+    else if (sectionName === "analytics") {
+
+      await loadAnalytics();
+
+    }
+
+  } catch (err) {
+
+    console.error(
+      "❌ Failed loading section:",
+      err
+    );
+
+  }
+
+}
+
+// ============================================
+// EXPOSE FUNCTIONS TO HTML
+// ============================================
+
+window.showSection = showSection;
