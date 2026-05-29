@@ -396,6 +396,69 @@
   </main>
 </div>
 
+
+<!-- Stats -->
+    <div class="admin-stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Total Orders</div>
+        <div class="stat-value" id="total-orders">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Revenue</div>
+        <div class="stat-value" id="total-revenue">—</div>
+      </div>
+    </div>
+
+    <!-- Upload Product -->
+    <p class="admin-section-title">Upload New Product</p>
+
+    <input type="text"   id="product-name"     placeholder="Product Name">
+    <input type="number" id="product-price"    placeholder="Price in UGX">
+
+    <!-- SELLER INFO -->
+    <p class="admin-section-title" style="margin-top:4px">Seller Info</p>
+    <input type="text" id="seller-name"     placeholder="Seller Name (e.g. John Kato)">
+    <input type="tel"  id="seller-phone"    placeholder="Seller WhatsApp/Phone (e.g. 256701234567)">
+    <input type="text" id="seller-location" placeholder="Seller Location (e.g. Kampala, Ntinda)">
+
+    <select id="product-category">
+      <option value="phones">📱 Phones</option>
+      <option value="electronics">💻 Electronics</option>
+      <option value="fashion">👗 Fashion</option>
+      <option value="shoes">👟 Shoes</option>
+      <option value="beauty">💄 Beauty</option>
+      <option value="bags">👜 Bags</option>
+      <option value="groceries">🛒 Groceries</option>
+      <option value="watches">⌚ Watches</option>
+      <option value="computers">🖥️ Computers</option>
+      <option value="gaming">🎮 Gaming</option>
+      <option value="home">🏠 Home</option>
+      <option value="accessories">💎 Accessories</option>
+    </select>
+
+    <textarea id="product-desc" placeholder="Product description (optional)" rows="3" style="resize:none"></textarea>
+
+    <input
+      type="file"
+      id="product-image"
+      multiple
+      accept="image/*"
+      onchange="previewImages(event)"
+    >
+
+    <div id="preview-container"></div>
+
+    <button class="full-btn" id="upload-btn" onclick="addProduct()">
+      Upload Product
+    </button>
+
+    <!-- Orders -->
+    <p class="admin-section-title" style="margin-top:24px">Recent Orders</p>
+    <div id="admin-orders"></div>
+
+  </div>
+</div>
+
 <div id="toast-container" class="toast-container"></div>
 
 <script type="module" src="admin.js"></script>
