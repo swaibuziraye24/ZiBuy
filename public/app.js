@@ -387,6 +387,20 @@ function getProductRankScore(product) {
 // ============================================
 window.renderProducts = function () {
 
+// =========================
+// CREATE FEATURED ADS ROW
+// =========================
+let featuredRow = document.getElementById("featured-ads-row");
+
+if (!featuredRow) {
+  featuredRow = document.createElement("div");
+  featuredRow.id = "featured-ads-row";
+  featuredRow.className = "product-row featured-row";
+
+  const container = document.getElementById("products");
+  container.parentNode.insertBefore(featuredRow, container);
+}
+
   const container = document.getElementById("products");
   if (!container) return;
 
@@ -396,6 +410,64 @@ window.renderProducts = function () {
   }
 
   let products = [...allProducts];
+
+
+// =========================
+// LOAD FEATURED ADS
+// =========================
+function renderFeaturedAds() {
+  const row = document.getElementById("featured-ads-row");
+  if (!row) return;
+
+  row.innerHTML = "";
+
+  const featured = allProducts.filter(
+    p => p.boost?.active || p.isPremium
+  );
+
+  featured.forEach(p => {
+
+    const card = document.createElement("div");
+    card.className = "product-card";
+
+    card.innerHTML = `
+      <div style="position:relative;background:#f7f7f7;">
+        <img src="${(p.images && p.images[0]) || 'placeholder.jpg'}"
+          style="width:100%; aspect-ratio:1/1; object-fit:cover;">
+
+        <div style="
+          position:absolute;
+          top:0;
+          left:0;
+          background:#ff6600;
+          color:#fff;
+          font-size:10px;
+          padding:4px 6px;
+          font-weight:800;
+        ">
+          ⭐ Featured
+        </div>
+      </div>
+
+      <div style="padding:6px;">
+        <h3 style="font-size:12px;margin:0;">
+          ${p.name || "No name"}
+        </h3>
+
+        <p style="color:#f68b1e;font-weight:700;margin:4px 0;">
+          UGX ${Number(p.price || 0).toLocaleString()}
+        </p>
+
+        <button onclick="window.location.href='product.html?id=${p.id}'"
+          style="width:100%;padding:6px;font-size:11px;background:#f68b1e;color:white;border:none;">
+          View
+        </button>
+      </div>
+    `;
+
+    row.appendChild(card);
+  });
+}
 
   // =========================
   // 1. CATEGORY FILTER
@@ -652,6 +724,8 @@ window.renderProducts = function () {
     renderRow(cat.charAt(0).toUpperCase() + cat.slice(1), grouped[cat]);
   });
 };
+ 
+renderFeaturedAds();
 
 // ============================================
 // CATEGORY FILTER
