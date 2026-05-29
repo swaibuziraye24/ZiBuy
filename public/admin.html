@@ -242,16 +242,22 @@
     <span>🛍️</span> Orders
   </button>
 
-  <!-- PREMIUM PAGE -->
   <button class="admin-nav-item"
-    onclick="window.location.href='admin-premium.html'">
+    data-section="premium"
+    onclick="window.showSection('premium', this)">
     <span>⭐</span> Premium Ads
   </button>
 
-  <!-- VERIFICATIONS PAGE -->
   <button class="admin-nav-item"
-    onclick="window.location.href='admin-verification.html'">
+    data-section="verifications"
+    onclick="window.showSection('verifications', this)">
     <span>✅</span> Verifications
+  </button>
+
+  <button class="admin-nav-item"
+    data-section="reports"
+    onclick="window.showSection('reports', this)">
+    <span>🚨</span> Reports
   </button>
 
   <!-- ANALYTICS PAGE -->
@@ -260,11 +266,6 @@
     <span>📊</span> Analytics
   </button>
 
-  <!-- REPORTS PAGE -->
-  <button class="admin-nav-item"
-    onclick="window.location.href='admin-reports.html'">
-    <span>🚨</span> Reports
-  </button>
 
 </aside>
 
@@ -393,8 +394,65 @@
       </div>
     </div>
 
+ </div>
+
+    <!-- ══ PREMIUM ADS ════════════════════════ -->
+    <div class="admin-section" id="section-premium">
+      <h2 style="font-size:22px;font-weight:800;margin-bottom:20px">⭐ Premium Ads</h2>
+      <div class="kpi-row">
+        <div class="kpi-card"><div class="kpi-label">Active Boosts</div><div class="kpi-value" id="kpi-active-boosts">—</div></div>
+        <div class="kpi-card" style="border-color:#f59e0b"><div class="kpi-label">Total Revenue</div><div class="kpi-value" id="kpi-boost-revenue">—</div></div>
+        <div class="kpi-card" style="border-color:#8b5cf6"><div class="kpi-label">Avg Clicks</div><div class="kpi-value" id="kpi-avg-clicks">—</div></div>
+      </div>
+      <div class="admin-card">
+        <table class="data-table">
+          <thead>
+            <tr><th>Product</th><th>Seller</th><th>Days</th><th>Price</th><th>Clicks</th><th>Expires</th><th>Status</th><th>Action</th></tr>
+          </thead>
+          <tbody id="premium-table-body">
+            <tr class="empty-row"><td colspan="8">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══ VERIFICATIONS ══════════════════════ -->
+    <div class="admin-section" id="section-verifications">
+      <h2 style="font-size:22px;font-weight:800;margin-bottom:20px">✅ Seller Verifications</h2>
+      <div class="filter-tabs" style="display:flex;gap:8px;margin-bottom:16px">
+        <button class="action-btn btn-approve" onclick="filterVerifs('pending')">⏳ Pending</button>
+        <button class="action-btn" style="background:#dcfce7;color:#166534" onclick="filterVerifs('approved')">✅ Approved</button>
+        <button class="action-btn btn-reject" onclick="filterVerifs('rejected')">❌ Rejected</button>
+        <button class="action-btn" style="background:#f3f4f6;color:#6b7280" onclick="filterVerifs('all')">All</button>
+      </div>
+      <div class="admin-card">
+        <table class="data-table">
+          <thead>
+            <tr><th>Name</th><th>Business</th><th>Email</th><th>Phone</th><th>Location</th><th>Status</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="verif-table-body">
+            <tr class="empty-row"><td colspan="7">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══ REPORTS ═════════════════════════════ -->
+    <div class="admin-section" id="section-reports">
+      <h2 style="font-size:22px;font-weight:800;margin-bottom:20px">🚨 Reports</h2>
+      <div class="admin-card">
+        <table class="data-table">
+          <thead>
+            <tr><th>Reason</th><th>Product ID</th><th>Reported By</th><th>Description</th><th>Status</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="reports-table-body">
+            <tr class="empty-row"><td colspan="6">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
   </main>
-</div>
 
 
 <!-- Stats -->
