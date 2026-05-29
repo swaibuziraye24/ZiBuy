@@ -422,7 +422,7 @@ function renderFeaturedAds() {
 
     const card = document.createElement("div");
 
-    card.className = "product-card";
+   card.className = "";
 
     card.style.marginBottom = "10px"; // 🔥 vertical spacing
 
