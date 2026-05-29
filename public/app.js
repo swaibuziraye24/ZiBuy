@@ -183,10 +183,6 @@ async function loadProducts() {
 
         return product;
       
-
-const planScore =
-  PLAN_SCORE[plan] || 1;
-
 /* BOOST SCORE */
 
 let boostScore = 0;
