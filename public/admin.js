@@ -44,6 +44,34 @@ onAuthStateChanged(auth, async (user) => {
 window.adminLogout = () => signOut(auth).then(() => window.location.href = "index.html");
 
 
+window.showSection = function(name, btn) {
+
+  // hide all sections
+  document.querySelectorAll(".admin-section")
+    .forEach(section => {
+      section.classList.remove("active");
+    });
+
+  // remove active class from sidebar buttons
+  document.querySelectorAll(".admin-nav-item")
+    .forEach(button => {
+      button.classList.remove("active");
+    });
+
+  // show selected section
+  const activeSection =
+    document.getElementById(`section-${name}`);
+
+  if (activeSection) {
+    activeSection.classList.add("active");
+  }
+
+  // activate clicked button
+  if (btn) {
+    btn.classList.add("active");
+  }
+};
+
 // ── Load everything in parallel ───────────────
 async function loadAll() {
   await Promise.all([
@@ -543,17 +571,3 @@ function showToast(msg, type = "info") {
   setTimeout(() => t.remove(), 3500);
 }
 
-document.querySelectorAll(".admin-nav-item").forEach(btn => {
-  btn.addEventListener("click", () => {
-    const section = btn.getAttribute("data-section");
-    showSection(section, btn);
-  });
-});
-
-window.showSection = function(name, btn) {
-  document.querySelectorAll(".admin-section").forEach(s => s.classList.remove("active"));
-  document.querySelectorAll(".admin-nav-item").forEach(b => b.classList.remove("active"));
-
-  document.getElementById(`section-${name}`)?.classList.add("active");
-  if (btn) btn.classList.add("active");
-};
