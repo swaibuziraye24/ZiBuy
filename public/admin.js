@@ -8,10 +8,48 @@ import {
 } from "./firebase.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 const PLAN_LIMITS = {
-  free:   { maxAds: 3,      boosts: 0,  adDays: 30,  images: 3  },
-  bronze: { maxAds: 15,     boosts: 2,  adDays: 60,  images: 5  },
-  silver: { maxAds: 50,     boosts: 8,  adDays: 90,  images: 8  },
-  gold:   { maxAds: 999999, boosts: 25, adDays: 180, images: 15 }
+  free: {
+    maxAds: 3,
+    boosts: 0,
+    adDays: 30,
+    images: 3,
+
+    businessProfile: false,
+    support: "Community"
+  },
+
+  bronze: {
+    maxAds: 15,
+    boosts: 2,
+    adDays: 60,
+    images: 5,
+
+    businessProfile: true,
+    support: "Email"
+  },
+
+  silver: {
+    maxAds: 50,
+    boosts: 8,
+    adDays: 90,
+    images: 8,
+
+    businessProfile: true,
+    support: "Priority Email"
+  },
+
+  gold: {
+    maxAds: 999999,
+    boosts: 25,
+    adDays: 180,
+    images: 15,
+
+    businessProfile: true,
+    support: "24/7 WhatsApp",
+
+    customBadge: true,
+    priorityPlacement: true
+  }
 };
 
 const ADMIN_EMAIL = "swaibuziraye22@gmail.com"; // ← your admin email
