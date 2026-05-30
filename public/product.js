@@ -309,18 +309,3 @@ window.createOrder = async function(product) {
   }
 };
 
-
-window.buyNowWhatsApp = function(name, price, phone) {
-  const cleanPhone = (phone || "").replace(/\D/g, "");
-
-  if (!cleanPhone) {
-    alert("Seller phone not available");
-    return;
-  }
-
-  const msg = encodeURIComponent(
-    `Hello, I want to buy *${name}* for UGX ${price}. Is it available?`
-  );
-
-  window.location.href = `https://wa.me/${cleanPhone}?text=${msg}`;
-};
