@@ -488,44 +488,85 @@ window.renderProducts = function () {
     return;
   }
 
-  const grouped = {};
-  const trending = [];
-  const newArrivals = [];
-  const featured = [];
-  const sponsored = [];
+const grouped = {};
+const trending = [];
+const newArrivals = [];
+const featured = [];
+const sponsored = [];
 
-  const now = Date.now();
+const now = Date.now();
 
-  products.forEach(p => {
-
-p.views = Number(p.views || 0);
-p.likes = Number(p.likes || 0);
-p.orders = Number(p.orders || 0);
-
-    const cat = (p.category || "Others").toLowerCase();
-    if (!grouped[cat]) grouped[cat] = [];
-    grouped[cat].push(p);
-
-    if (p.boost?.active || p.isPremium) {
-  sponsored.push(p);
-  featured.push(p);
+function getPlanScore(plan) {
+  return PLAN_SCORE[plan || "free"] || 1;
 }
 
-const score =
-  (p.views || 0) +
-  ((p.likes || 0) * 5) +
-  ((p.orders || 0) * 15);
+function getTrendingScore(p, plan) {
 
-if (score > 30) {
-  trending.push(p);
+  const views = Number(p.views || 0);
+  const likes = Number(p.likes || 0);
+  const orders = Number(p.orders || 0);
+
+  const created = p.createdAt?.toDate
+    ? p.createdAt.toDate().getTime()
+    : new Date(p.createdAt || 0).getTime();
+
+  const hoursOld = Math.max(1, (Date.now() - created) / 36e5);
+
+  // BUSINESS PLAN BOOST (MAIN FACTOR)
+  const planBoost = getPlanScore(plan) * 1000;
+
+  // engagement (reduced importance now)
+  const engagement =
+    (likes * 3) +
+    (orders * 10) +
+    (views * 1);
+
+  // time decay (still important)
+  const decay = Math.max(0.3, 1 - (hoursOld / 72));
+
+  // velocity
+  const velocity = (likes + orders) / hoursOld;
+
+  return (planBoost + engagement) * decay + (velocity * 5);
 }
 
-    const created = p.createdAt?.toDate
-      ? p.createdAt.toDate().getTime()
-      : new Date(p.createdAt || 0).getTime();
+products.forEach(p => {
 
-    if (now - created <= 7 * 86400000) newArrivals.push(p);
-  });
+  p.views = Number(p.views || 0);
+  p.likes = Number(p.likes || 0);
+  p.orders = Number(p.orders || 0);
+
+  const cat = (p.category || "Others").toLowerCase();
+  if (!grouped[cat]) grouped[cat] = [];
+  grouped[cat].push(p);
+
+  if (p.boost?.active || p.isPremium) {
+    sponsored.push(p);
+    featured.push(p);
+  }
+
+  const created = p.createdAt?.toDate
+    ? p.createdAt.toDate().getTime()
+    : new Date(p.createdAt || 0).getTime();
+
+  if (now - created <= 7 * 86400000) {
+    newArrivals.push(p);
+  }
+
+  // =========================
+  // PLAN-BASED TRENDING
+  // =========================
+
+  const plan = p.plan || "free";
+  const score = getTrendingScore(p, plan);
+
+  p.score = score;
+
+  // threshold can be tuned
+  if (score > 1200) {
+    trending.push(p);
+  }
+});
 
   function renderRow(title, list) {
 
