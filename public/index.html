@@ -334,13 +334,95 @@
       <h2>ZiBuy Account</h2>
       <button class="modal-close" onclick="closeAuthModal()">×</button>
     </div>
-    <input type="email"    id="auth-email"    placeholder="Email address">
-    <input type="password" id="auth-password" placeholder="Password">
+    <input type="email" id="auth-email" placeholder="Email address">
+
+    <!-- Password with toggle -->
+    <div style="position:relative;margin-bottom:14px">
+      <input type="password" id="auth-password" placeholder="Password"
+        style="width:100%;padding:13px 44px 13px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box">
+      <button type="button" id="toggle-password"
+        onclick="togglePasswordView('auth-password','toggle-password')"
+        style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;padding:0;color:#6b7280">
+        👁️
+      </button>
+    </div>
+
     <button class="full-btn" onclick="customerLogin()">Login</button>
+
+    <div style="text-align:center;margin:-4px 0 10px">
+      <button type="button" onclick="openChangePassword()"
+        style="background:none;border:none;color:#ff6600;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">
+        Forgot / Change Password?
+      </button>
+    </div>
+
     <div class="modal-divider">— or —</div>
-    <button class="full-btn secondary" onclick="customerRegister()">Create Account</button>
-    <div class="modal-divider"></div>
-    <button class="full-btn secondary" onclick="customerLogout()">Logout</button>
+
+    <!-- Register with password toggle -->
+    <div id="register-section" style="display:none">
+      <input type="email" id="reg-email" placeholder="Email address"
+        style="width:100%;padding:13px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:14px">
+      <div style="position:relative;margin-bottom:14px">
+        <input type="password" id="reg-password" placeholder="Password (min 6 chars)"
+          style="width:100%;padding:13px 44px 13px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box">
+        <button type="button"
+          onclick="togglePasswordView('reg-password','toggle-reg-password')"
+          id="toggle-reg-password"
+          style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;padding:0;color:#6b7280">
+          👁️
+        </button>
+      </div>
+      <div style="position:relative;margin-bottom:14px">
+        <input type="password" id="reg-confirm" placeholder="Confirm password"
+          style="width:100%;padding:13px 44px 13px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box">
+        <button type="button"
+          onclick="togglePasswordView('reg-confirm','toggle-reg-confirm')"
+          id="toggle-reg-confirm"
+          style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;padding:0;color:#6b7280">
+          👁️
+        </button>
+      </div>
+      <button class="full-btn" onclick="customerRegister()">Create Account</button>
+      <p style="text-align:center;margin-top:10px;font-size:13px">
+        <button type="button" onclick="toggleRegister(false)"
+          style="background:none;border:none;color:#ff6600;font-weight:700;cursor:pointer;font-family:inherit">
+          ← Back to Login
+        </button>
+      </p>
+    </div>
+
+    <div id="login-actions">
+      <button class="full-btn secondary" onclick="toggleRegister(true)">Create Account</button>
+      <div class="modal-divider"></div>
+      <button class="full-btn secondary" onclick="customerLogout()">Logout</button>
+    </div>
+
+    <!-- Change Password section -->
+    <div id="change-password-section" style="display:none">
+      <div class="modal-divider" style="margin-top:10px">— Change Password —</div>
+      <div style="position:relative;margin-bottom:12px;margin-top:12px">
+        <input type="password" id="new-password" placeholder="New password (min 6 chars)"
+          style="width:100%;padding:13px 44px 13px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box">
+        <button type="button"
+          onclick="togglePasswordView('new-password','toggle-new-pass')"
+          id="toggle-new-pass"
+          style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;padding:0;color:#6b7280">
+          👁️
+        </button>
+      </div>
+      <button class="full-btn" onclick="changeUserPassword()">Update Password</button>
+      <p style="text-align:center;margin-top:8px;font-size:13px;color:#6b7280">
+        Or
+        <button type="button" onclick="sendPasswordReset()"
+          style="background:none;border:none;color:#ff6600;font-weight:700;cursor:pointer;font-family:inherit;font-size:13px">
+          send reset link to email
+        </button>
+      </p>
+      <button type="button" onclick="closeChangePassword()"
+        style="width:100%;background:none;border:none;color:#6b7280;font-size:13px;cursor:pointer;padding:8px;font-family:inherit">
+        Cancel
+      </button>
+    </div>
   </div>
 </div>
 
