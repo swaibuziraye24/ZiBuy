@@ -7,10 +7,11 @@ import {
   doc,
   getDoc,
   collection,
-  increment,
   updateDoc,
   addDoc
 } from "./firebase.js";
+
+import { increment } from "firebase/firestore";
 
 import { auth } from "./firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
@@ -106,8 +107,19 @@ async function loadProduct() {
         <h1>${p.name}</h1>
         <p>UGX ${Number(p.price).toLocaleString()}</p>
 
-        <div style="display:flex;gap:10px">
-          <button onclick="likeProduct('${id}')">❤️ Like</button>
+        <button onclick="likeProduct('${id}')" style="
+  flex:1;
+  padding:16px;
+  font-size:16px;
+  border:1.5px solid #ff4d6d;
+  color:#ff4d6d;
+  background:white;
+  border-radius:12px;
+  font-weight:700;
+  cursor:pointer;
+">
+  ❤️ <span id="like-count-${id}">${p.likes || 0}</span>
+</button>
 
           <button onclick="addToCart('${p.name.replace(/'/g, "\\'")}', ${p.price}, '${images[0] || ""}')">
             🛒 Add to Cart
@@ -166,9 +178,20 @@ async function loadProductReviews(productId) {
 ============================================ */
 window.likeProduct = async function (productId) {
   try {
-    await updateDoc(doc(db, "products", productId), {
+    const productRef = doc(db, "products", productId);
+
+    await updateDoc(productRef, {
       likes: increment(1)
     });
+
+    // 🔥 LIVE UI UPDATE (no refresh needed)
+    const likeBtn = document.getElementById("like-count-" + productId);
+
+    if (likeBtn) {
+      let current = Number(likeBtn.textContent || 0);
+      likeBtn.textContent = current + 1;
+    }
+
   } catch (err) {
     console.error("Like error:", err);
   }
