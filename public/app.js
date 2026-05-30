@@ -1205,3 +1205,113 @@ if ("serviceWorker" in navigator) {
     }
   });
 }
+
+
+// ============================================
+// PASSWORD TOGGLE
+// ============================================
+window.togglePasswordView = function(inputId, btnId) {
+  const input = document.getElementById(inputId);
+  const btn   = document.getElementById(btnId);
+  if (!input) return;
+  if (input.type === "password") {
+    input.type  = "text";
+    if (btn) btn.textContent = "🙈";
+  } else {
+    input.type  = "password";
+    if (btn) btn.textContent = "👁️";
+  }
+};
+
+// ============================================
+// TOGGLE REGISTER VIEW
+// ============================================
+window.toggleRegister = function(showRegister) {
+  document.getElementById("register-section").style.display  = showRegister ? "block" : "none";
+  document.getElementById("login-actions").style.display     = showRegister ? "none"  : "block";
+};
+
+// ============================================
+// CHANGE PASSWORD SECTION
+// ============================================
+window.openChangePassword = function() {
+  document.getElementById("change-password-section").style.display = "block";
+};
+
+window.closeChangePassword = function() {
+  document.getElementById("change-password-section").style.display = "none";
+  const f = document.getElementById("new-password");
+  if (f) f.value = "";
+};
+
+window.changeUserPassword = async function() {
+  const { updatePassword } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js");
+
+  const newPass = document.getElementById("new-password")?.value.trim();
+  if (!newPass || newPass.length < 6) {
+    alert("Password must be at least 6 characters");
+    return;
+  }
+
+  const user = auth.currentUser;
+  if (!user) { alert("You must be logged in"); return; }
+
+  try {
+    await updatePassword(user, newPass);
+    alert("✅ Password updated successfully!");
+    closeChangePassword();
+  } catch (err) {
+    if (err.code === "auth/requires-recent-login") {
+      alert("⚠️ Please log out and log in again before changing your password.");
+    } else {
+      alert("❌ " + err.message);
+    }
+  }
+};
+
+window.sendPasswordReset = async function() {
+  const { sendPasswordResetEmail } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js");
+
+  const email = document.getElementById("auth-email")?.value.trim()
+    || auth.currentUser?.email;
+
+  if (!email) {
+    alert("Enter your email address in the Email field first");
+    return;
+  }
+
+  try {
+    await sendPasswordResetEmail(auth, email);
+    alert(`✅ Password reset link sent to ${email}. Check your inbox.`);
+    closeAuthModal();
+  } catch (err) {
+    alert("❌ " + err.message);
+  }
+};
+
+// ============================================
+// UPDATE customerRegister to use new fields
+// ============================================
+window.customerRegister = async function() {
+  const { createUserWithEmailAndPassword } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js");
+
+  const emailEl   = document.getElementById("reg-email")   || document.getElementById("auth-email");
+  const passEl    = document.getElementById("reg-password") || document.getElementById("auth-password");
+  const confirmEl = document.getElementById("reg-confirm");
+
+  const email    = emailEl?.value.trim();
+  const password = passEl?.value.trim();
+  const confirm  = confirmEl?.value.trim();
+
+  if (!email || !password) { alert("Enter email and password"); return; }
+  if (confirm && password !== confirm) { alert("Passwords do not match"); return; }
+  if (password.length < 6) { alert("Password must be at least 6 characters"); return; }
+
+  try {
+    await createUserWithEmailAndPassword(auth, email, password);
+    alert("✅ Account created! You're now logged in.");
+    closeAuthModal();
+  } catch (err) {
+    alert("❌ " + err.message);
+  }
+};
