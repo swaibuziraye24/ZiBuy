@@ -107,6 +107,31 @@
       <strong>Safe</strong>
       <span>Payments</span>
     </div>
+
+<div id="installBanner" style="
+  display: none;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: #fff3e6;
+  border: 1px solid #ff6600;
+  margin: 10px;
+  border-radius: 8px;
+">
+  <span>Install ZiBuy for faster shopping & offline access</span>
+
+  <button onclick="installZiBuy()" style="
+    background: #ff6600;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+  ">
+    Install
+  </button>
+</div>
+
   </div>
 </section>
 
@@ -331,6 +356,23 @@
     <button class="full-btn" onclick="adminLogin()">Login as Admin</button>
   </div>
 </div>
+
+<button id="installBtn" onclick="installZiBuy()" style="
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #ff6600;
+  color: white;
+  border: none;
+  padding: 12px 16px;
+  border-radius: 50px;
+  font-size: 14px;
+  display: none;
+  z-index: 9999;
+  cursor: pointer;
+">
+  Install ZiBuy
+</button>
 
 
 <script type="module" src="app.js"></script>
