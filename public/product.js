@@ -242,8 +242,17 @@ loadProduct();
 ============================================ */
 window.submitProductReview = async function () {
   try {
-    const reviewText = document.getElementById("reviewText").value;
-    const rating = document.getElementById("rating").value;
+    const reviewTextEl = document.getElementById("reviewText");
+    const ratingEl = document.getElementById("rating");
+
+    if (!reviewTextEl || !ratingEl) {
+      alert("Review form not found on this page");
+      return;
+    }
+
+    const reviewText = reviewTextEl.value;
+    const rating = ratingEl.value;
+
     const productId = new URLSearchParams(window.location.search).get("id");
 
     if (!reviewText || !rating) {
