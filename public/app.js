@@ -513,10 +513,12 @@ p.orders = Number(p.orders || 0);
 
 const score =
   (p.views || 0) +
-  ((p.likes || 0) * 3) +
-  ((p.orders || 0) * 10);
+  ((p.likes || 0) * 5) +
+  ((p.orders || 0) * 15);
 
-const isTrending = score > 50;
+if (score > 30) {
+  trending.push(p);
+}
 
     const created = p.createdAt?.toDate
       ? p.createdAt.toDate().getTime()
@@ -579,7 +581,21 @@ const isTrending = score > 50;
 
             <p style="color:#f68b1e;font-weight:700;margin:4px 0;">
               UGX ${Number(p.price || 0).toLocaleString()}
+
             </p>
+
+
+            ${score > 50 ? `<span style="
+  position:absolute;
+  top:6px;
+  left:6px;
+  background:#ff3b30;
+  color:white;
+  font-size:10px;
+  padding:3px 6px;
+  border-radius:6px;
+  font-weight:800;
+">🔥 TRENDING</span>` : ""}
 
 ${isTrending ? `
   <div style="
