@@ -302,10 +302,30 @@ window.createOrder = async function(product) {
     });
 
     // increase local orders counter (optional UI boost)
-    product.orders = (product.orders || 0) + 1;
+   const { updateDoc, increment } = await import("./firebase.js");
+const { db, doc } = await import("./firebase.js");
+
+await updateDoc(doc(db, "products", product.id), {
+  orders: increment(1)
+});
 
   } catch (err) {
     console.error("Order failed:", err);
   }
 };
 
+
+window.buyNowWhatsApp = function(name, price, phone) {
+  const cleanPhone = (phone || "").replace(/\D/g, "");
+
+  if (!cleanPhone) {
+    alert("Seller phone not available");
+    return;
+  }
+
+  const msg = encodeURIComponent(
+    `Hello, I want to buy *${name}* for UGX ${price}. Is it available?`
+  );
+
+  window.location.href = `https://wa.me/${cleanPhone}?text=${msg}`;
+};
