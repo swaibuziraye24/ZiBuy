@@ -2,7 +2,7 @@
 //   ZiBuy — Product Detail Page
 // ============================================
 
-import { db, doc, getDoc, collection, addDoc } from "./firebase.js";
+import { db, doc, getDoc, collection, increment, updateDoc, addDoc } from "./firebase.js";
 import { auth } from "./firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { showToast } from "./app.js";
@@ -275,8 +275,6 @@ window.submitProductReview = async function() {
 
 loadProduct();
 
-
-import { updateDoc, increment } from "./firebase.js";
 
 window.likeProduct = async function(productId) {
   try {
