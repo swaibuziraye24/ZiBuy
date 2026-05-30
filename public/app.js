@@ -1129,3 +1129,37 @@ function buildCategoryNav(products) {
     nav.appendChild(btn);
   });
 }
+
+
+let deferredPrompt;
+
+// Capture install prompt
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+
+  // show install UI
+  document.getElementById("installBtn").style.display = "block";
+  document.getElementById("installBanner").style.display = "flex";
+});
+
+// Install button click
+function installZiBuy() {
+  if (!deferredPrompt) return;
+
+  deferredPrompt.prompt();
+
+  deferredPrompt.userChoice.then((choice) => {
+    if (choice.outcome === "accepted") {
+      console.log("User installed ZiBuy");
+    }
+    deferredPrompt = null;
+  });
+}
+
+
+window.addEventListener("appinstalled", () => {
+  console.log("ZiBuy installed successfully");
+  document.getElementById("installBtn").style.display = "none";
+  document.getElementById("installBanner").style.display = "none";
+});
