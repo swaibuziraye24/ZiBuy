@@ -610,13 +610,6 @@ if (userDoc.exists()) {
   }
 }
 
-// ============================================
-// CHANGE PASSWORD
-// ============================================
-
-window.changePassword = function() {
-  alert("Password change feature coming soon");
-};
 
 // ============================================
 // LOGOUT
@@ -633,14 +626,72 @@ window.logout = function() {
 // DELETE ACCOUNT
 // ============================================
 
-window.deleteAccount = function() {
-  const confirm1 = confirm("This will permanently delete your account. Are you sure?");
+window.deleteAccount = async function() {
+  const confirm1 = confirm("Delete your ZiBuy account permanently?");
   if (!confirm1) return;
-  
-  const confirm2 = confirm("This action CANNOT be undone. All your data will be lost. Continue?");
+
+  const confirm2 = confirm("⚠️ ALL your ads, orders and data will be deleted. This CANNOT be undone. Continue?");
   if (!confirm2) return;
 
-  alert("Account deletion coming soon - Contact support");
+  try {
+    const { deleteUser, reauthenticateWithCredential, EmailAuthProvider }
+      = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js");
+
+    // Re-authenticate first (Firebase requires this for deletion)
+    const password = prompt("Enter your password to confirm deletion:");
+    if (!password) return;
+
+    const credential = EmailAuthProvider.credential(currentUser.email, password);
+    await reauthenticateWithCredential(currentUser, credential);
+
+    const uid   = currentUser.uid;
+    const email = currentUser.email;
+
+    // Delete user's ads
+    const adsSnap = await getDocs(query(
+      collection(db, "products"),
+      where("userId", "==", uid)
+    ));
+    for (const d of adsSnap.docs) {
+      await deleteDoc(doc(db, "products", d.id));
+    }
+
+    // Delete user's boost requests
+    const boostSnap = await getDocs(query(
+      collection(db, "boost_requests"),
+      where("userId", "==", uid)
+    ));
+    for (const d of boostSnap.docs) {
+      await deleteDoc(doc(db, "boost_requests", d.id));
+    }
+
+    // Delete user's business account
+    const subSnap = await getDocs(query(
+      collection(db, "business_accounts"),
+      where("userId", "==", uid)
+    ));
+    for (const d of subSnap.docs) {
+      await deleteDoc(doc(db, "business_accounts", d.id));
+    }
+
+    // Delete user doc
+    await deleteDoc(doc(db, "users", uid)).catch(() => {});
+
+    // Delete Firebase Auth account
+    await deleteUser(currentUser);
+
+    alert("✅ Your account has been deleted.");
+    window.location.href = "index.html";
+
+  } catch (err) {
+    if (err.code === "auth/wrong-password" || err.code === "auth/invalid-credential") {
+      alert("❌ Wrong password. Account not deleted.");
+    } else if (err.code === "auth/requires-recent-login") {
+      alert("⚠️ Please log out and log back in, then try again.");
+    } else {
+      alert("❌ Failed: " + err.message);
+    }
+  }
 };
 
 window.upgradeToBusiness = async function() {
