@@ -145,35 +145,30 @@ async function loadProduct() {
 /* ============================================
    REVIEWS (UNCHANGED LOGIC)
 ============================================ */
+window.loadProductReviews = async function(productId) {
 
-window.submitProductReview = async function () {
-  const { auth } = await import("./firebase.js");
-  const { addDoc, collection } = await import("./firebase.js");
-  const { db } = await import("./firebase.js");
+  const { getDocs, query, where } = await import("./firebase.js");
 
-  if (!auth.currentUser) {
-    alert("Login to review");
+  const snap = await getDocs(
+    query(collection(db, "reviews"), where("productId", "==", productId))
+  );
+
+  const container = document.getElementById("product-reviews");
+  if (!container) return;
+
+  if (snap.empty) {
+    container.innerHTML = "No reviews yet";
     return;
   }
 
-  const rating = document.getElementById("review-rating").value;
-  const text = document.getElementById("review-text").value.trim();
-
-  if (!text) {
-    alert("Write a review");
-    return;
-  }
-
-  await addDoc(collection(db, "reviews"), {
-    productId: id,
-    rating: Number(rating),
-    text,
-    reviewerEmail: auth.currentUser.email,
-    createdAt: new Date()
+  let html = "";
+  snap.forEach((doc) => {
+    const r = doc.data();
+    html += `<div>${r.text}</div>`;
   });
 
-  loadProductReviews(id);
-};
+  container.innerHTML = html;
+}
 
 /* ============================================
    LIKE PRODUCT (FIXED)
