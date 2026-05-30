@@ -49,7 +49,6 @@ async function loadProduct() {
 
     const p = snap.data();
 
-    // ✅ increase views (FIXED — no inline import)
     await updateDoc(doc(db, "products", id), {
       views: increment(1)
     });
@@ -87,8 +86,9 @@ async function loadProduct() {
       <div>
         <img id="main-img" src="${images[0] || ""}" style="width:100%;border-radius:10px">
 
-        ${images.length > 1
-          ? `<div id="thumbs">
+        ${
+          images.length > 1
+            ? `<div id="thumbs">
               ${images
                 .map(
                   (img, i) =>
@@ -99,7 +99,8 @@ async function loadProduct() {
                 )
                 .join("")}
             </div>`
-          : ""}
+            : ""
+        }
       </div>
 
       <div>
@@ -115,7 +116,7 @@ async function loadProduct() {
 
           <button class="cart-btn"
             style="flex:1;padding:16px;font-size:16px;background:#ff6600;color:white;border:none;border-radius:12px;font-weight:700"
-            onclick="addToCart('${p.name.replace(/'/g,"\\'")}', ${p.price}, '${images[0] || ""}')">
+            onclick="addToCart('${p.name.replace(/'/g, "\\'")}', ${p.price}, '${images[0] || ""}')">
             🛒 Add to Cart
           </button>
 
@@ -137,17 +138,24 @@ async function loadProduct() {
     };
 
     loadProductReviews(id);
-
   } catch (err) {
     console.error(err);
   }
 }
 
 /* ============================================
-   REVIEWS (FIXED IMPORT ONLY)
+   RANKING ALGORITHM
 ============================================ */
-window.loadProductReviews = async function(productId) {
+const PLAN_SCORE = {
+  free: 1,
+  basic: 1.5,
+  premium: 2
+};
 
+/* ============================================
+   REVIEWS
+============================================ */
+window.loadProductReviews = async function (productId) {
   const { getDocs, query, where } = await import("./firebase.js");
 
   const snap = await getDocs(
@@ -163,71 +171,36 @@ window.loadProductReviews = async function(productId) {
   }
 
   let html = "";
-  snap.forEach((doc) => {
-    const r = doc.data();
-    html += `<div>${r.text}</div>`;
+  snap.forEach((d) => {
+    const r = d.data();
+    html += `<div>${r.reviewText || r.text || ""}</div>`;
   });
 
   container.innerHTML = html;
 };
 
 /* ============================================
-   LIKE PRODUCT (FIXED)
+   LIKE PRODUCT
 ============================================ */
-window.likeProduct = async function(productId) {
+window.likeProduct = async function (productId) {
   try {
-    const user = auth.currentUser;
-    if (!user) {
-      alert("Login to like products");
-      return;
+    const { doc, updateDoc, increment } = await import("./firebase.js");
+
+    await updateDoc(doc(db, "products", productId), {
+      likes: increment(1)
+    });
+
+    const el = document.getElementById(`like-count-${productId}`);
+    if (el) {
+      el.textContent = Number(el.textContent || 0) + 1;
     }
-
-    const likeId = `${productId}_${user.uid}`;
-
-    const likeRef = doc(db, "product_likes", likeId);
-    const productRef = doc(db, "products", productId);
-
-    const snap = await getDoc(likeRef);
-
-    if (snap.exists()) {
-      // ❌ unlike
-      await deleteDoc(likeRef);
-      await updateDoc(productRef, {
-        likes: increment(-1)
-      });
-
-      updateLikeUI(productId, -1);
-    } else {
-      // ❤️ like
-      await setDoc(likeRef, {
-        productId,
-        userId: user.uid,
-        createdAt: serverTimestamp()
-      });
-
-      await updateDoc(productRef, {
-        likes: increment(1)
-      });
-
-      updateLikeUI(productId, +1);
-    }
-
   } catch (err) {
     console.error("Like error:", err);
   }
 };
 
-
-function updateLikeUI(productId, change) {
-  const el = document.getElementById(`like-count-${productId}`);
-  if (!el) return;
-
-  const current = parseInt(el.textContent || "0");
-  el.textContent = current + change;
-}
-
 /* ============================================
-   ORDER (FIXED)
+   ORDER
 ============================================ */
 window.createOrder = async function (product) {
   try {
@@ -263,3 +236,30 @@ window.buyNowWhatsApp = function (name, price, phone) {
 };
 
 loadProduct();
+
+/* ============================================
+   SUBMIT REVIEW
+============================================ */
+window.submitProductReview = async function () {
+  try {
+    const reviewText = document.getElementById("reviewText").value;
+    const rating = document.getElementById("rating").value;
+    const productId = new URLSearchParams(window.location.search).get("id");
+
+    if (!reviewText || !rating) {
+      alert("Please fill in all fields");
+      return;
+    }
+
+    await addDoc(collection(db, "reviews"), {
+      productId,
+      reviewText,
+      rating: Number(rating),
+      createdAt: new Date()
+    });
+
+    alert("Review submitted successfully!");
+  } catch (error) {
+    console.error("Error submitting review:", error);
+  }
+};
