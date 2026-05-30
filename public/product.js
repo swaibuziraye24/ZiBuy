@@ -108,24 +108,24 @@ async function loadProduct() {
 
         <div style="display:flex;gap:12px;margin-bottom:16px">
 
-  <button onclick="likeProduct('${id}')" 
-    style="flex:1;padding:16px;font-size:16px;border:1.5px solid #ff4d6d;color:#ff4d6d;background:white;border-radius:12px;font-weight:700">
-    ❤️ <span id="like-count-${id}">${p.likes || 0}</span>
-  </button>
+          <button onclick="likeProduct('${id}')" 
+            style="flex:1;padding:16px;font-size:16px;border:1.5px solid #ff4d6d;color:#ff4d6d;background:white;border-radius:12px;font-weight:700">
+            ❤️ <span id="like-count-${id}">${p.likes || 0}</span>
+          </button>
 
-  <button class="cart-btn"
-    style="flex:1;padding:16px;font-size:16px;background:#ff6600;color:white;border:none;border-radius:12px;font-weight:700"
-    onclick="addToCart('${p.name.replace(/'/g,"\\'")}', ${p.price}, '${images[0] || ""}')">
-    🛒 Add to Cart
-  </button>
+          <button class="cart-btn"
+            style="flex:1;padding:16px;font-size:16px;background:#ff6600;color:white;border:none;border-radius:12px;font-weight:700"
+            onclick="addToCart('${p.name.replace(/'/g,"\\'")}', ${p.price}, '${images[0] || ""}')">
+            🛒 Add to Cart
+          </button>
 
-  <button class="view-btn"
-    style="flex:1;padding:16px;font-size:16px;background:#25D366;color:white;border:none;border-radius:12px;font-weight:700"
-    onclick="buyNowWhatsApp('${p.name}', ${p.price}, '${seller.phone || ""}')">
-    📲 Buy Now
-  </button>
+          <button class="view-btn"
+            style="flex:1;padding:16px;font-size:16px;background:#25D366;color:white;border:none;border-radius:12px;font-weight:700"
+            onclick="buyNowWhatsApp('${p.name}', ${p.price}, '${seller.phone || ""}')">
+            📲 Buy Now
+          </button>
 
-</div>
+        </div>
 
         ${contactHTML}
       </div>
@@ -137,13 +137,14 @@ async function loadProduct() {
     };
 
     loadProductReviews(id);
+
   } catch (err) {
     console.error(err);
   }
 }
 
 /* ============================================
-   REVIEWS (UNCHANGED LOGIC)
+   REVIEWS (FIXED IMPORT ONLY)
 ============================================ */
 window.loadProductReviews = async function(productId) {
 
@@ -168,7 +169,7 @@ window.loadProductReviews = async function(productId) {
   });
 
   container.innerHTML = html;
-}
+};
 
 /* ============================================
    LIKE PRODUCT (FIXED)
