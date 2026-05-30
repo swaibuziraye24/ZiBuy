@@ -7702,3 +7702,10 @@ table {
   margin: 4px 0;
 }
 
+.page {
+  display: none;
+}
+
+.page.active {
+  display: block;
+}
