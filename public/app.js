@@ -1174,20 +1174,6 @@ function showSection(sectionId) {
 
   document.getElementById(sectionId).classList.add("active");
 
-  // optional: scroll to top like mobile apps
-  window.scrollTo(0, 0);
-}
-
-
-function showSection(sectionId) {
-  const sections = document.querySelectorAll(".page");
-
-  sections.forEach(sec => {
-    sec.classList.remove("active");
-  });
-
-  document.getElementById(sectionId).classList.add("active");
-
   window.scrollTo(0, 0);
 }
 
