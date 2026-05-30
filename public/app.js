@@ -1163,3 +1163,17 @@ window.addEventListener("appinstalled", () => {
   document.getElementById("installBtn").style.display = "none";
   document.getElementById("installBanner").style.display = "none";
 });
+
+
+function showSection(sectionId) {
+  const sections = document.querySelectorAll(".page");
+
+  sections.forEach((sec) => {
+    sec.classList.remove("active");
+  });
+
+  document.getElementById(sectionId).classList.add("active");
+
+  // optional: scroll to top like mobile apps
+  window.scrollTo(0, 0);
+}
