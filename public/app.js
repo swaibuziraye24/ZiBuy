@@ -646,6 +646,12 @@ window.renderProducts = function () {
               style="width:100%;padding:6px;font-size:11px;background:#f68b1e;color:white;border:none;">
               View
             </button>
+
+            <p class="location" style="color:#999;font-size:11px;margin:0;cursor:pointer"
+    onclick="event.stopPropagation();window.location.href='user-profile.html?id=${p.userId}'">
+    📍 ${p.location || "Unknown"}
+  </p>
+
           </div>
         `;
 
