@@ -11,8 +11,6 @@ import {
   addDoc
 } from "./firebase.js";
 
-import { increment } from "firebase/firestore";
-
 import { auth } from "./firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { showToast } from "./app.js";
