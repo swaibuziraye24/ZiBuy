@@ -8,6 +8,7 @@ import {
   getDoc,
   collection,
   updateDoc,
+  increment,
   addDoc
 } from "./firebase.js";
 
