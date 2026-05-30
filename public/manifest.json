@@ -1,4 +1,5 @@
 {
+  "id": "/",
   "name": "ZiBuy",
   "short_name": "ZiBuy",
   "description": "Buy and sell products across Uganda",
@@ -8,6 +9,7 @@
   "background_color": "#ffffff",
   "theme_color": "#ff6600",
   "orientation": "portrait",
+
   "icons": [
     {
       "src": "/icons/icon-192.png",
@@ -20,6 +22,7 @@
       "type": "image/png"
     }
   ],
+
   "screenshots": [
     {
       "src": "/screenshots/home-mobile.png",
