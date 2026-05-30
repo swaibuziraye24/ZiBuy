@@ -7709,3 +7709,80 @@ table {
 .page.active {
   display: block;
 }
+
+
+/* ============================================
+   BOTTOM NAVIGATION (PWA / Mobile)
+   ============================================ */
+.zibuy-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+  border-top: 1px solid #e5e7eb;
+  z-index: 9500;
+  box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
+}
+
+.zbn-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 4px 0;
+  position: relative;
+  transition: .15s;
+  font-family: var(--font, Arial);
+}
+
+.zbn-icon  { font-size: 20px; line-height: 1; }
+.zbn-label { font-size: 10px; font-weight: 700; color: #9ca3af; }
+
+.zbn-item.active .zbn-label { color: #ff6600; }
+.zbn-item.active .zbn-icon  { filter: drop-shadow(0 0 4px rgba(255,102,0,.4)); }
+
+.zbn-item:active { transform: scale(.92); }
+
+.zbn-cart-dot {
+  position: absolute;
+  top: 0;
+  right: calc(50% - 18px);
+  background: #ff6600;
+  color: white;
+  font-size: 9px;
+  font-weight: 800;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 20px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
+
+/* Back button */
+.zbn-back-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px 8px 6px 0;
+  color: var(--dark, #111827);
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  transition: .15s;
+}
+.zbn-back-btn:active { transform: scale(.9); }
+
+/* Push page content above nav */
+body {
+  padding-bottom: calc(70px + env(safe-area-inset-bottom));
+}
