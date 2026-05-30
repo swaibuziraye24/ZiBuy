@@ -106,28 +106,26 @@ async function loadProduct() {
         <h1>${p.name}</h1>
         <p>UGX ${Number(p.price).toLocaleString()}</p>
 
-        <button onclick="likeProduct('${id}')" style="
-  flex:1;
-  padding:16px;
-  font-size:16px;
-  border:1.5px solid #ff4d6d;
-  color:#ff4d6d;
-  background:white;
-  border-radius:12px;
-  font-weight:700;
-  cursor:pointer;
-">
-  ❤️ <span id="like-count-${id}">${p.likes || 0}</span>
-</button>
+        <div style="display:flex;gap:12px;margin-bottom:16px">
 
-          <button onclick="addToCart('${p.name.replace(/'/g, "\\'")}', ${p.price}, '${images[0] || ""}')">
-            🛒 Add to Cart
-          </button>
+  <button onclick="likeProduct('${id}')" 
+    style="flex:1;padding:16px;font-size:16px;border:1.5px solid #ff4d6d;color:#ff4d6d;background:white;border-radius:12px;font-weight:700">
+    ❤️ <span id="like-count-${id}">${p.likes || 0}</span>
+  </button>
 
-          <button onclick="buyNowWhatsApp('${p.name}', ${p.price}, '${seller.phone || ""}')">
-            📲 Buy Now
-          </button>
-        </div>
+  <button class="cart-btn"
+    style="flex:1;padding:16px;font-size:16px;background:#ff6600;color:white;border:none;border-radius:12px;font-weight:700"
+    onclick="addToCart('${p.name.replace(/'/g,"\\'")}', ${p.price}, '${images[0] || ""}')">
+    🛒 Add to Cart
+  </button>
+
+  <button class="view-btn"
+    style="flex:1;padding:16px;font-size:16px;background:#25D366;color:white;border:none;border-radius:12px;font-weight:700"
+    onclick="buyNowWhatsApp('${p.name}', ${p.price}, '${seller.phone || ""}')">
+    📲 Buy Now
+  </button>
+
+</div>
 
         ${contactHTML}
       </div>
@@ -175,20 +173,19 @@ async function loadProductReviews(productId) {
 /* ============================================
    LIKE PRODUCT (FIXED)
 ============================================ */
-window.likeProduct = async function (productId) {
+window.likeProduct = async function(productId) {
   try {
-    const productRef = doc(db, "products", productId);
+    const ref = doc(db, "products", productId);
 
-    await updateDoc(productRef, {
+    await updateDoc(ref, {
       likes: increment(1)
     });
 
-    // 🔥 LIVE UI UPDATE (no refresh needed)
-    const likeBtn = document.getElementById("like-count-" + productId);
-
-    if (likeBtn) {
-      let current = Number(likeBtn.textContent || 0);
-      likeBtn.textContent = current + 1;
+    // 🔥 instant UI update
+    const el = document.getElementById(`like-count-${productId}`);
+    if (el) {
+      const current = parseInt(el.textContent || "0");
+      el.textContent = current + 1;
     }
 
   } catch (err) {
