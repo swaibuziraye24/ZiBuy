@@ -175,23 +175,55 @@ async function loadProductReviews(productId) {
 ============================================ */
 window.likeProduct = async function(productId) {
   try {
-    const ref = doc(db, "products", productId);
+    const user = auth.currentUser;
+    if (!user) {
+      alert("Login to like products");
+      return;
+    }
 
-    await updateDoc(ref, {
-      likes: increment(1)
-    });
+    const likeId = `${productId}_${user.uid}`;
 
-    // 🔥 instant UI update
-    const el = document.getElementById(`like-count-${productId}`);
-    if (el) {
-      const current = parseInt(el.textContent || "0");
-      el.textContent = current + 1;
+    const likeRef = doc(db, "product_likes", likeId);
+    const productRef = doc(db, "products", productId);
+
+    const snap = await getDoc(likeRef);
+
+    if (snap.exists()) {
+      // ❌ unlike
+      await deleteDoc(likeRef);
+      await updateDoc(productRef, {
+        likes: increment(-1)
+      });
+
+      updateLikeUI(productId, -1);
+    } else {
+      // ❤️ like
+      await setDoc(likeRef, {
+        productId,
+        userId: user.uid,
+        createdAt: serverTimestamp()
+      });
+
+      await updateDoc(productRef, {
+        likes: increment(1)
+      });
+
+      updateLikeUI(productId, +1);
     }
 
   } catch (err) {
     console.error("Like error:", err);
   }
 };
+
+
+function updateLikeUI(productId, change) {
+  const el = document.getElementById(`like-count-${productId}`);
+  if (!el) return;
+
+  const current = parseInt(el.textContent || "0");
+  el.textContent = current + change;
+}
 
 /* ============================================
    ORDER (FIXED)
