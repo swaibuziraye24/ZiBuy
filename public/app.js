@@ -1187,13 +1187,21 @@ window.showSection = showSection;
 
 
 if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/service-worker.js")
-      .then((reg) => {
-        console.log("Service Worker registered:", reg.scope);
-      })
-      .catch((err) => {
-        console.log("Service Worker failed:", err);
-      });
+  window.addEventListener("load", async () => {
+    try {
+      const reg =
+        await navigator.serviceWorker.register("/service-worker.js");
+
+      console.log("SW registered:", reg.scope);
+
+      if (reg.waiting) {
+        reg.waiting.postMessage({
+          type: "SKIP_WAITING"
+        });
+      }
+
+    } catch (err) {
+      console.error(err);
+    }
   });
 }
