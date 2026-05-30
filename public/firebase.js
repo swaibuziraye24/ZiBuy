@@ -18,7 +18,8 @@ import {
 serverTimestamp,
   orderBy,
   deleteDoc,
-  updateDoc
+  updateDoc,
+  increment
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -46,12 +47,11 @@ export {
   doc, getDoc, query, where,
   orderBy, deleteDoc, updateDoc,
 setDoc,
-serverTimestamp
+serverTimestamp,
+ increment
 };
 
 
-import { increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-export { increment };
 
 
