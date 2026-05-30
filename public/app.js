@@ -293,37 +293,49 @@ async function loadFeaturedProducts() {
 
 function getProductRankScore(product) {
 
+  const views = Number(product.views || 0);
+  const likes = Number(product.likes || 0);
+  const orders = Number(product.orders || 0);
+
+  // ── BASE SCORE ─────────────────
   let score = 0;
 
-  // ── PREMIUM BOOST ─────────────────
+  // ── PREMIUM BOOST ─────────────
   if (product.isPremium) {
     score += 1000;
   }
 
-  // ── SHOP PLANS ────────────────────
-  switch ((product.shopPlan || "").toLowerCase()) {
+  // ── SHOP PLAN BOOST (VERY IMPORTANT) ─────────────
+  const plan = (product.shopPlan || "free").toLowerCase();
 
+  switch (plan) {
     case "gold":
-      score += 500;
+      score += 800;
       break;
 
     case "silver":
-      score += 300;
+      score += 500;
       break;
 
     case "bronze":
-      score += 150;
+      score += 250;
       break;
+
+    default:
+      score += 50;
   }
 
-  // ── VERIFIED SELLER ───────────────
+  // ── VERIFIED SELLER ─────────────
   if (product.seller?.isVerified) {
-    score += 80;
+    score += 120;
   }
 
-  // ── PRODUCT VIEWS ─────────────────
-  score += product.views || 0;
+  // ── ENGAGEMENT (TIKTOK STYLE) ───
+  score += (views * 1);
+  score += (likes * 4);
+  score += (orders * 12);
 
+  // ── FINAL RETURN ───────────────
   return score;
 }
 
@@ -331,7 +343,6 @@ function getProductRankScore(product) {
 // RENDER PRODUCTS (FIXED SAFE VERSION)
 // ============================================
 window.renderProducts = function () {
-
 
   const container = document.getElementById("products");
   if (!container) return;
@@ -342,7 +353,6 @@ window.renderProducts = function () {
   }
 
   let products = [...allProducts];
-
 
   // =========================
   // 1. CATEGORY FILTER
@@ -446,7 +456,7 @@ window.renderProducts = function () {
   filteredProducts = products;
 
   // =========================
-  // BOOST MIX SYSTEM (UNCHANGED)
+  // BOOST MIX SYSTEM
   // =========================
   const boostedProducts = products.filter(p => p.boost?.active || p.isPremium);
   const normalProducts = products.filter(p => !p.boost?.active && !p.isPremium);
@@ -472,7 +482,6 @@ window.renderProducts = function () {
 
   products = mixedProducts;
 
-  // ❌ FIX: ONLY CALL IF EXISTS
   if (typeof buildCategoryNav === "function") {
     buildCategoryNav(products);
   }
@@ -488,85 +497,76 @@ window.renderProducts = function () {
     return;
   }
 
-const grouped = {};
-const trending = [];
-const newArrivals = [];
-const featured = [];
-const sponsored = [];
+  const grouped = {};
+  const trending = [];
+  const newArrivals = [];
+  const featured = [];
+  const sponsored = [];
 
-const now = Date.now();
+  const now = Date.now();
 
-function getPlanScore(plan) {
-  return PLAN_SCORE[plan || "free"] || 1;
-}
-
-function getTrendingScore(p, plan) {
-
-  const views = Number(p.views || 0);
-  const likes = Number(p.likes || 0);
-  const orders = Number(p.orders || 0);
-
-  const created = p.createdAt?.toDate
-    ? p.createdAt.toDate().getTime()
-    : new Date(p.createdAt || 0).getTime();
-
-  const hoursOld = Math.max(1, (Date.now() - created) / 36e5);
-
-  // BUSINESS PLAN BOOST (MAIN FACTOR)
-  const planBoost = getPlanScore(plan) * 1000;
-
-  // engagement (reduced importance now)
-  const engagement =
-    (likes * 3) +
-    (orders * 10) +
-    (views * 1);
-
-  // time decay (still important)
-  const decay = Math.max(0.3, 1 - (hoursOld / 72));
-
-  // velocity
-  const velocity = (likes + orders) / hoursOld;
-
-  return (planBoost + engagement) * decay + (velocity * 5);
-}
-
-products.forEach(p => {
-
-  p.views = Number(p.views || 0);
-  p.likes = Number(p.likes || 0);
-  p.orders = Number(p.orders || 0);
-
-  const cat = (p.category || "Others").toLowerCase();
-  if (!grouped[cat]) grouped[cat] = [];
-  grouped[cat].push(p);
-
-  if (p.boost?.active || p.isPremium) {
-    sponsored.push(p);
-    featured.push(p);
+  function getPlanScore(plan) {
+    return PLAN_SCORE[plan || "free"] || 1;
   }
 
-  const created = p.createdAt?.toDate
-    ? p.createdAt.toDate().getTime()
-    : new Date(p.createdAt || 0).getTime();
+  function getTrendingScore(p, plan) {
 
-  if (now - created <= 7 * 86400000) {
-    newArrivals.push(p);
+    const views = Number(p.views || 0);
+    const likes = Number(p.likes || 0);
+    const orders = Number(p.orders || 0);
+
+    const created = p.createdAt?.toDate
+      ? p.createdAt.toDate().getTime()
+      : new Date(p.createdAt || 0).getTime();
+
+    const hoursOld = Math.max(1, (Date.now() - created) / 36e5);
+
+    const planBoost = getPlanScore(plan) * 1000;
+
+    const engagement =
+      (likes * 3) +
+      (orders * 10) +
+      (views * 1);
+
+    const decay = Math.max(0.3, 1 - (hoursOld / 72));
+
+    const velocity = (likes + orders) / hoursOld;
+
+    return (planBoost + engagement) * decay + (velocity * 5);
   }
 
-  // =========================
-  // PLAN-BASED TRENDING
-  // =========================
+  products.forEach(p => {
 
-  const plan = p.plan || "free";
-  const score = getTrendingScore(p, plan);
+    p.views = Number(p.views || 0);
+    p.likes = Number(p.likes || 0);
+    p.orders = Number(p.orders || 0);
 
-  p.score = score;
+    const cat = (p.category || "Others").toLowerCase();
+    if (!grouped[cat]) grouped[cat] = [];
+    grouped[cat].push(p);
 
-  // threshold can be tuned
-  if (score > 1200) {
-    trending.push(p);
-  }
-});
+    if (p.boost?.active || p.isPremium) {
+      sponsored.push(p);
+      featured.push(p);
+    }
+
+    const created = p.createdAt?.toDate
+      ? p.createdAt.toDate().getTime()
+      : new Date(p.createdAt || 0).getTime();
+
+    if (now - created <= 7 * 86400000) {
+      newArrivals.push(p);
+    }
+
+    const plan = p.plan || "free";
+    const score = getTrendingScore(p, plan);
+
+    p.score = score;
+
+    if (score > 1200) {
+      trending.push(p);
+    }
+  });
 
   function renderRow(title, list) {
 
@@ -609,10 +609,28 @@ products.forEach(p => {
         card.style.scrollSnapAlign = "start";
         card.style.cursor = "pointer";
 
+        const isTrending = (p.score || 0) > 1200;
+
         card.innerHTML = `
           <div style="position:relative;background:#f7f7f7;">
             <img src="${(p.images && p.images[0]) || 'placeholder.jpg'}"
               style="width:100%; aspect-ratio:1/1; object-fit:cover;">
+
+            ${isTrending ? `
+              <div style="
+                position:absolute;
+                top:5px;
+                left:5px;
+                background:#ff6600;
+                color:white;
+                font-size:10px;
+                padding:3px 6px;
+                border-radius:5px;
+                font-weight:800;
+              ">
+                🔥 TRENDING
+              </div>
+            ` : ""}
           </div>
 
           <div style="padding:6px;">
@@ -622,37 +640,7 @@ products.forEach(p => {
 
             <p style="color:#f68b1e;font-weight:700;margin:4px 0;">
               UGX ${Number(p.price || 0).toLocaleString()}
-
             </p>
-
-
-            ${score > 50 ? `<span style="
-  position:absolute;
-  top:6px;
-  left:6px;
-  background:#ff3b30;
-  color:white;
-  font-size:10px;
-  padding:3px 6px;
-  border-radius:6px;
-  font-weight:800;
-">🔥 TRENDING</span>` : ""}
-
-${isTrending ? `
-  <div style="
-    position:absolute;
-    top:5px;
-    left:5px;
-    background:#ff6600;
-    color:white;
-    font-size:10px;
-    padding:3px 6px;
-    border-radius:5px;
-    font-weight:800;
-  ">
-    🔥 TRENDING
-  </div>
-` : ""}
 
             <button onclick="event.stopPropagation();window.location.href='product.html?id=${p.id}'"
               style="width:100%;padding:6px;font-size:11px;background:#f68b1e;color:white;border:none;">
@@ -677,11 +665,11 @@ ${isTrending ? `
 
     container.appendChild(section);
   }
+
   renderRow("⭐ Featured Ads", featured);
   renderRow("⭐ Sponsored", sponsored);
   renderRow("🔥 Trending", trending);
   renderRow("🆕 New Arrivals", newArrivals);
-  
 
   Object.keys(grouped).forEach(cat => {
     renderRow(cat.charAt(0).toUpperCase() + cat.slice(1), grouped[cat]);
