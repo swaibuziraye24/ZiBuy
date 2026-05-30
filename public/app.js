@@ -126,6 +126,21 @@ window.logoutCustomer = async function() {
     console.error("Logout error:", err);
   }
 };
+
+
+function getTrendScore(p) {
+  return (
+    (p.views || 0) +
+    ((p.likes || 0) * 3) +
+    ((p.orders || 0) * 10)
+  );
+}
+
+function isTrending(p) {
+  return getTrendScore(p) > 50;
+}
+
+
 // ============================================
 // LOAD PRODUCTS FROM FIRESTORE
 // ============================================
