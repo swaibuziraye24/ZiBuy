@@ -187,6 +187,8 @@ async function loadMyProducts() {
       };
     });
 
+    window._userAds = products;
+
     debug("Total products to display:", products.length);
 
     if (products.length === 0) {
@@ -383,8 +385,67 @@ window.proceedToPayment = async function() {
 // EDIT PRODUCT (SINGLE DEFINITION)
 // ============================================
 
+let editingProductId = null;
+
 window.editProduct = function(productId) {
-  window.location.href = `product.html?id=${productId}&edit=true`;
+  const product = (window._userAds || []).find(p => p.id === productId);
+  if (!product) return;
+
+  editingProductId = productId;
+
+  document.getElementById("edit-name").value      = product.name        || "";
+  document.getElementById("edit-price").value     = product.price       || "";
+  document.getElementById("edit-desc").value      = product.description || "";
+  document.getElementById("edit-location").value  = product.location    || "";
+  document.getElementById("edit-phone").value     = product.seller?.phone || "";
+
+  const modal = document.getElementById("edit-modal");
+  modal.style.display = "flex";
+};
+
+window.closeEditModal = function() {
+  document.getElementById("edit-modal").style.display = "none";
+  editingProductId = null;
+};
+
+window.saveEdit = async function() {
+  if (!editingProductId) return;
+
+  const name     = document.getElementById("edit-name").value.trim();
+  const price    = Number(document.getElementById("edit-price").value);
+  const desc     = document.getElementById("edit-desc").value.trim();
+  const location = document.getElementById("edit-location").value;
+  const phone    = document.getElementById("edit-phone").value.trim();
+
+  if (!name || !price) {
+    alert("Name and price are required");
+    return;
+  }
+
+  const btn = document.getElementById("edit-save-btn");
+  btn.textContent = "Saving...";
+  btn.disabled    = true;
+
+  try {
+    await updateDoc(doc(db, "products", editingProductId), {
+      name,
+      price,
+      description: desc,
+      location,
+      "seller.phone": phone,
+      updatedAt: new Date()
+    });
+
+    closeEditModal();
+    alert("✅ Ad updated!");
+    loadMyProducts(); // refresh the list
+  } catch (err) {
+    console.error(err);
+    alert("❌ Failed to update: " + err.message);
+  } finally {
+    btn.textContent = "Save Changes";
+    btn.disabled    = false;
+  }
 };
 
 // ============================================
