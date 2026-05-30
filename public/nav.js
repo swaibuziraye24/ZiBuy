@@ -96,52 +96,7 @@
   window.addEventListener("storage", syncCartBadge);
 
 
-  // ── Unread messages badge ───────────────────
-  import("./firebase.js").then(({ db, auth, collection, query, where }) => {
-    import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js").then(({ onAuthStateChanged }) => {
-      import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js").then(({ onSnapshot }) => {
-
-        onAuthStateChanged(auth, (user) => {
-          if (!user) return;
-
-          // Messages unread dot
-          const msgBtn = document.querySelector(".zbn-item:nth-child(4)");
-          onSnapshot(query(
-            collection(db, "messages"),
-            where("participants", "array-contains", user.email),
-            where("read", "==", false)
-          ), (snap) => {
-            const unread = snap.docs.filter(d => d.data().senderEmail !== user.email).length;
-            if (msgBtn) {
-              const dot = msgBtn.querySelector(".zbn-unread") || (() => {
-                const d = document.createElement("span");
-                d.className = "zbn-cart-dot zbn-unread";
-                msgBtn.appendChild(d);
-                return d;
-              })();
-              dot.textContent    = unread;
-              dot.style.display  = unread > 0 ? "flex" : "none";
-            }
-          });
-
-          // Notifications unread dot
-          const notifBtn = document.querySelector(".zbn-item:nth-child(4)");
-          onSnapshot(query(
-            collection(db, "notifications"),
-            where("userId", "==", user.uid),
-            where("read", "==", false)
-          ), (snap) => {
-            const bell = document.getElementById("notifications-btn");
-            if (bell) {
-              bell.textContent = snap.size > 0
-                ? `🔔 (${snap.size})`
-                : "🔔 Notifications";
-            }
-          });
-        });
-      });
-    });
-  });
+  
 
   // Sync after addToCart
   const _orig = window.addToCart;
