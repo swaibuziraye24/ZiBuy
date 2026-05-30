@@ -500,7 +500,7 @@ p.orders = Number(p.orders || 0);
   ((p.likes || 0) * 3) +
   ((p.orders || 0) * 10);
 
-if (score > 50) {
+if (score > 20) {
   trending.push(p);
 }
 
