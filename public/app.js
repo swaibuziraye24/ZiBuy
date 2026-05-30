@@ -495,14 +495,13 @@ p.orders = Number(p.orders || 0);
   sponsored.push(p);
   featured.push(p);
 }
-   const score =
+
+const score =
   (p.views || 0) +
   ((p.likes || 0) * 3) +
   ((p.orders || 0) * 10);
 
-if (score > 20) {
-  trending.push(p);
-}
+const isTrending = score > 50;
 
     const created = p.createdAt?.toDate
       ? p.createdAt.toDate().getTime()
@@ -566,6 +565,22 @@ if (score > 20) {
             <p style="color:#f68b1e;font-weight:700;margin:4px 0;">
               UGX ${Number(p.price || 0).toLocaleString()}
             </p>
+
+${isTrending ? `
+  <div style="
+    position:absolute;
+    top:5px;
+    left:5px;
+    background:#ff6600;
+    color:white;
+    font-size:10px;
+    padding:3px 6px;
+    border-radius:5px;
+    font-weight:800;
+  ">
+    🔥 TRENDING
+  </div>
+` : ""}
 
             <button onclick="event.stopPropagation();window.location.href='product.html?id=${p.id}'"
               style="width:100%;padding:6px;font-size:11px;background:#f68b1e;color:white;border:none;">
