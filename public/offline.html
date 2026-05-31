@@ -6,195 +6,32 @@
   <meta name="theme-color" content="#ff6600">
   <title>Offline — ZiBuy</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-      font-family: 'Segoe UI', Arial, sans-serif;
-      background: #f7f8fa;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-      text-align: center;
-    }
-
-    .logo {
-      font-size: 32px;
-      font-weight: 900;
-      color: #ff6600;
-      margin-bottom: 32px;
-      letter-spacing: -1px;
-    }
-
-    .logo span { color: #111827; }
-
-    .icon {
-      font-size: 72px;
-      margin-bottom: 20px;
-      animation: pulse 2s ease-in-out infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); }
-      50%       { transform: scale(1.08); }
-    }
-
-    h1 {
-      font-size: 24px;
-      font-weight: 800;
-      color: #111827;
-      margin-bottom: 10px;
-    }
-
-    p {
-      font-size: 15px;
-      color: #6b7280;
-      max-width: 320px;
-      line-height: 1.6;
-      margin-bottom: 32px;
-    }
-
-    .retry-btn {
-      background: #ff6600;
-      color: white;
-      border: none;
-      padding: 16px 36px;
-      border-radius: 12px;
-      font-size: 15px;
-      font-weight: 800;
-      cursor: pointer;
-      transition: .2s;
-      margin-bottom: 16px;
-      width: 100%;
-      max-width: 280px;
-    }
-
-    .retry-btn:active { background: #e05500; transform: scale(.97); }
-
-    .home-btn {
-      background: transparent;
-      color: #ff6600;
-      border: 2px solid #ff6600;
-      padding: 14px 36px;
-      border-radius: 12px;
-      font-size: 15px;
-      font-weight: 800;
-      cursor: pointer;
-      transition: .2s;
-      width: 100%;
-      max-width: 280px;
-    }
-
-    .home-btn:active { background: #fff4ee; }
-
-    .tips {
-      margin-top: 40px;
-      background: white;
-      border-radius: 14px;
-      padding: 20px;
-      max-width: 340px;
-      width: 100%;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-    }
-
-    .tips h3 {
-      font-size: 13px;
-      font-weight: 800;
-      color: #6b7280;
-      text-transform: uppercase;
-      letter-spacing: .5px;
-      margin-bottom: 12px;
-    }
-
-    .tip {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 13px;
-      color: #374151;
-      padding: 8px 0;
-      border-bottom: 1px solid #f0f0f0;
-      text-align: left;
-    }
-
-    .tip:last-child { border-bottom: none; }
-    .tip-icon { font-size: 18px; flex-shrink: 0; }
-
-    .status-dot {
-      display: inline-block;
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: #ef4444;
-      margin-right: 6px;
-      animation: blink 1.5s ease-in-out infinite;
-    }
-
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50%       { opacity: .3; }
-    }
+    * { margin:0;padding:0;box-sizing:border-box; }
+    body { font-family:'Segoe UI',Arial,sans-serif;background:#f7f8fa;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center; }
+    .logo { font-size:32px;font-weight:900;color:#ff6600;margin-bottom:32px;letter-spacing:-1px; }
+    .logo span { color:#111827; }
+    h1 { font-size:22px;font-weight:800;color:#111827;margin-bottom:10px; }
+    p  { font-size:14px;color:#6b7280;line-height:1.6;max-width:300px;margin-bottom:8px; }
+    .retry-btn { margin-top:28px;background:#ff6600;color:white;border:none;padding:14px 32px;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer; }
+    .links { margin-top:32px;background:white;border-radius:14px;padding:16px 20px;box-shadow:0 2px 12px rgba(0,0,0,0.07);max-width:340px;width:100%; }
+    .links h3 { font-size:14px;font-weight:800;color:#111827;margin-bottom:10px; }
+    .links a { display:block;padding:10px 0;color:#ff6600;font-weight:700;font-size:14px;text-decoration:none;border-bottom:1px solid #f0f0f0; }
+    .links a:last-child { border-bottom:none; }
   </style>
 </head>
 <body>
-
   <div class="logo">Zi<span>Buy</span></div>
-
-  <div class="icon">📡</div>
-
+  <div style="font-size:72px;margin-bottom:20px">📡</div>
   <h1>You're Offline</h1>
-
-  <p>
-    <span class="status-dot"></span>No internet connection detected.<br>
-    Check your connection and try again.
-  </p>
-
-  <button class="retry-btn" onclick="retryConnection()">
-    🔄 Try Again
-  </button>
-
-  <button class="home-btn" onclick="window.location.href='/'">
-    🏠 Go to Home
-  </button>
-
-  <div class="tips">
-    <h3>While you wait</h3>
-    <div class="tip">
-      <span class="tip-icon">📶</span>
-      Check your WiFi or mobile data
-    </div>
-    <div class="tip">
-      <span class="tip-icon">✈️</span>
-      Turn off airplane mode if on
-    </div>
-    <div class="tip">
-      <span class="tip-icon">🔁</span>
-      Previously visited pages may still work
-    </div>
-    <div class="tip">
-      <span class="tip-icon">💾</span>
-      Your cart is saved locally
-    </div>
+  <p>No internet connection right now.</p>
+  <p>Check your Wi-Fi or mobile data and try again.</p>
+  <button class="retry-btn" onclick="window.location.reload()">🔄 Try Again</button>
+  <div class="links">
+    <h3>📱 Cached Pages</h3>
+    <a href="/index.html">🏠 Homepage</a>
+    <a href="/dashboard.html">📊 Dashboard</a>
+    <a href="/messages.html">💬 Messages</a>
+    <a href="/shops.html">🏪 Shops</a>
   </div>
-
-  <script>
-    function retryConnection() {
-      if (navigator.onLine) {
-        window.location.href = "/";
-      } else {
-        const btn = document.querySelector(".retry-btn");
-        btn.textContent = "Still offline...";
-        setTimeout(() => btn.textContent = "🔄 Try Again", 2000);
-      }
-    }
-
-    // Auto-redirect when back online
-    window.addEventListener("online", () => {
-      window.location.href = "/";
-    });
-  </script>
-
 </body>
 </html>
