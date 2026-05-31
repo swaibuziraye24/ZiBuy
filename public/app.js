@@ -63,6 +63,28 @@ function initApp() {
 function setupAuthStateListener() {
   onAuthStateChanged(auth, (user) => {
     currentUser = user;
+
+// Auto-create user doc if missing (fixes old accounts)
+    if (user) {
+      import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js")
+        .then(({ setDoc, doc, getDoc }) => {
+          const ref = doc(db, "users", user.uid);
+          getDoc(ref).then(snap => {
+            if (!snap.exists()) {
+              setDoc(ref, {
+                email:            user.email,
+                uid:              user.uid,
+                plan:             "free",
+                accountType:      "normal",
+                isSellerVerified: false,
+                banned:           false,
+                createdAt:        new Date()
+              });
+            }
+          });
+        });
+    }
+
     const ADMIN_EMAIL = "swaibuziraye22@gmail.com";
 
     // Show boost requests button only for admin
@@ -1293,7 +1315,10 @@ window.sendPasswordReset = async function() {
 // UPDATE customerRegister to use new fields
 // ============================================
 window.customerRegister = async function() {
-  const { createUserWithEmailAndPassword } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js");
+  const { createUserWithEmailAndPassword } =
+    await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js");
+  const { setDoc, doc } =
+    await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
 
   const emailEl   = document.getElementById("reg-email")   || document.getElementById("auth-email");
   const passEl    = document.getElementById("reg-password") || document.getElementById("auth-password");
@@ -1308,7 +1333,20 @@ window.customerRegister = async function() {
   if (password.length < 6) { alert("Password must be at least 6 characters"); return; }
 
   try {
-    await createUserWithEmailAndPassword(auth, email, password);
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    const user = cred.user;
+
+    // ✅ Save to Firestore users collection
+    await setDoc(doc(db, "users", user.uid), {
+      email:          user.email,
+      uid:            user.uid,
+      plan:           "free",
+      accountType:    "normal",
+      isSellerVerified: false,
+      banned:         false,
+      createdAt:      new Date()
+    });
+
     alert("✅ Account created! You're now logged in.");
     closeAuthModal();
   } catch (err) {
