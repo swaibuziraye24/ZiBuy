@@ -1,114 +1,123 @@
 // ============================================
 //   ZiBuy — Service Worker
-//   Offline-first caching strategy
+//   Offline-first PWA strategy
 // ============================================
 
-const CACHE_NAME    = "zibuy-v1";
-const OFFLINE_URL   = "/offline.html";
+const CACHE_NAME   = "zibuy-v1";
+const OFFLINE_PAGE = "/offline.html";
 
-// Static assets to cache immediately on install
 const PRECACHE = [
   "/",
   "/index.html",
   "/style.css",
   "/offline.html",
+  "/my_logo.png",
   "/manifest.json",
-  "/my_logo.png"
+  "/app.js",
+  "/firebase.js",
+  "/nav.js",
+  "/product.html",
+  "/post-ad.html",
+  "/dashboard.html",
+  "/messages.html",
+  "/notifications.html",
+  "/payment.html",
+  "/shops.html",
+  "/shop.html",
+  "/business-plans.html",
+  "/boost-product.html",
 ];
 
-// ── Install: cache core assets ────────────────
+// ── Install ───────────────────────────────────
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(PRECACHE);
-    }).then(() => self.skipWaiting())
+    caches.open(CACHE_NAME)
+      .then((cache) => cache.addAll(PRECACHE))
+      .catch((err) => console.warn("[SW] Pre-cache partial failure:", err))
   );
+  self.skipWaiting();
 });
 
-// ── Activate: clean old caches ────────────────
+// ── Activate ──────────────────────────────────
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(
-        keys
-          .filter((key) => key !== CACHE_NAME)
-          .map((key) => caches.delete(key))
-      )
-    ).then(() => self.clients.claim())
+      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+    )
   );
+  self.clients.claim();
 });
 
-// ── Fetch: smart caching strategy ────────────
+// ── Fetch ─────────────────────────────────────
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Skip non-GET, chrome-extension, Firebase API requests
-  if (
-    request.method !== "GET" ||
-    url.protocol === "chrome-extension:" ||
-    url.hostname.includes("firestore.googleapis.com") ||
-    url.hostname.includes("firebase") ||
-    url.hostname.includes("gstatic.com") ||
-    url.hostname.includes("googleapis.com")
-  ) {
-    return;
-  }
+  // Skip non-GET and Firebase/Google API calls
+  if (request.method !== "GET") return;
+  if (url.hostname.includes("googleapis.com")) return;
+  if (url.hostname.includes("gstatic.com")) return;
+  if (url.hostname.includes("firestore")) return;
+  if (url.hostname.includes("firebase")) return;
+  if (url.pathname.startsWith("/__")) return;
 
-  // ── HTML pages: Network first, fallback to cache ──
+  // HTML: network first → cache → offline page
   if (request.headers.get("accept")?.includes("text/html")) {
     event.respondWith(
       fetch(request)
-        .then((response) => {
-          // Cache a fresh copy
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-          return response;
+        .then((res) => {
+          caches.open(CACHE_NAME).then((c) => c.put(request, res.clone()));
+          return res;
         })
         .catch(() =>
-          caches.match(request).then((cached) => cached || caches.match(OFFLINE_URL))
+          caches.match(request).then((cached) => cached || caches.match(OFFLINE_PAGE))
         )
     );
     return;
   }
 
-  // ── CSS / JS / fonts: Cache first, update in background ──
-  if (
-    url.pathname.endsWith(".css") ||
-    url.pathname.endsWith(".js")  ||
-    url.hostname.includes("fonts.googleapis.com") ||
-    url.hostname.includes("fonts.gstatic.com")
-  ) {
+  // CSS / JS / Images: cache first, update in background
+  if (/\.(css|js|png|jpg|jpeg|svg|ico|webp|woff2?)$/.test(url.pathname)) {
     event.respondWith(
-      caches.match(request).then((cached) => {
-        const network = fetch(request).then((response) => {
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, response.clone()));
-          return response;
-        });
-        return cached || network;
-      })
+      caches.open(CACHE_NAME).then((cache) =>
+        cache.match(request).then((cached) => {
+          const network = fetch(request).then((res) => {
+            cache.put(request, res.clone());
+            return res;
+          }).catch(() => null);
+          return cached || network;
+        })
+      )
     );
     return;
   }
 
-  // ── Images: Cache first ───────────────────────
-  if (
-    url.pathname.match(/\.(png|jpg|jpeg|gif|webp|svg|ico)$/)
-  ) {
-    event.respondWith(
-      caches.match(request).then((cached) => {
-        if (cached) return cached;
-        return fetch(request).then((response) => {
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, response.clone()));
-          return response;
-        }).catch(() => cached);
-      })
-    );
-    return;
-  }
-
-  // ── Everything else: Network first ───────────
+  // Everything else: network first, cache fallback
   event.respondWith(
-    fetch(request).catch(() => caches.match(request))
+    fetch(request)
+      .then((res) => {
+        caches.open(CACHE_NAME).then((c) => c.put(request, res.clone()));
+        return res;
+      })
+      .catch(() => caches.match(request))
   );
+});
+
+// ── Push Notifications ────────────────────────
+self.addEventListener("push", (event) => {
+  if (!event.data) return;
+  const data = event.data.json();
+  event.waitUntil(
+    self.registration.showNotification(data.title || "ZiBuy", {
+      body:  data.body  || "You have a new notification",
+      icon:  data.icon  || "/my_logo.png",
+      badge: "/my_logo.png",
+      data:  data.url   || "/"
+    })
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  event.waitUntil(clients.openWindow(event.notification.data || "/"));
 });
