@@ -9,6 +9,28 @@
   "background_color": "#ffffff",
   "theme_color": "#ff6600",
   "orientation": "portrait",
+  "lang": "en",
+  "categories": ["shopping", "business"],
+  "shortcuts": [
+    {
+      "name": "Post an Ad",
+      "short_name": "Post Ad",
+      "url": "/post-ad.html",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "My Dashboard",
+      "short_name": "Dashboard",
+      "url": "/dashboard.html",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Messages",
+      "short_name": "Messages",
+      "url": "/messages.html",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ],
 
   "icons": [
     {
