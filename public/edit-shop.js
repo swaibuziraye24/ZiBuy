@@ -207,29 +207,26 @@ async function () {
       ).value.trim();
 
     await setDoc(
-      doc(
-        db,
-        "business_profiles",
-        auth.currentUser.uid
-      ),
-      {
+  doc(
+    db,
+    "shops",
+    auth.currentUser.uid
+  ),
+  {
+    ownerId: auth.currentUser.uid,
 
-        userId:
-          auth.currentUser.uid,
+    name: businessName,
 
-        businessName,
+    description: businessDescription,
 
-        businessDescription,
+    logoUrl: logoUrl,
 
-        logo: logoUrl,
+    bannerUrl: bannerUrl,
 
-        banner: bannerUrl,
-
-        updatedAt: new Date()
-
-      },
-      { merge: true }
-    );
+    updatedAt: new Date()
+  },
+  { merge: true }
+);
 
     alert(
       "✅ Business profile updated"
