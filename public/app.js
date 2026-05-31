@@ -175,19 +175,24 @@ async function loadProducts() {
     let verifSet  = new Set();
 
     try {
-      const [subsSnap, verifSnap] = await Promise.all([
-        getDocs(collection(db, "business_accounts")),
-        getDocs(query(collection(db, "seller_verifications"), where("status", "==", "approved")))
+      const [usersSnap, verifSnap] = await Promise.all([
+        getDocs(collection(db, "users")),
+        getDocs(query(
+          collection(db, "seller_verifications"),
+          where("status", "==", "approved")
+        ))
       ]);
 
-      subsSnap.forEach(d => {
+      usersSnap.forEach(d => {
         const data = d.data();
-        if (data.status === "active") planMap[data.userId] = data.plan || "free";
+        if (data.plan && data.plan !== "free") {
+          planMap[d.id] = data.plan;
+        }
       });
 
       verifSnap.forEach(d => verifSet.add(d.data().userId));
     } catch (e) {
-      console.warn("Batch load failed:", e);
+      console.warn("Batch load skipped (guest mode):", e.code);
     }
 
     const products = snapshot.docs.map((docSnap) => {
