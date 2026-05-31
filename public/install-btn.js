@@ -229,4 +229,7 @@
     fab.addEventListener("click", showManualInstructions, { once: false });
   }
 
+// Expose for any existing onclick="installZiBuy()" buttons
+  window.installZiBuy = () => fab?.click();
+
 })();
