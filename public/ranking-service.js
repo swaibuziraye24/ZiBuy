@@ -1,4 +1,4 @@
-import { db, collection, getDocs, query, where } from "./firebase.js";
+import { db, collection, getDocs, doc, getDoc, query, where } from "./firebase.js";
 
 /* =========================
    GET USER PLAN SCORE
@@ -14,24 +14,12 @@ export const PLAN_SCORE = {
    GET USER SUBSCRIPTION
 ========================= */
 export async function getUserPlan(userId) {
-  if (!userId) return "free"; // 🔥 BLOCK undefined BEFORE QUERY
-
+  if (!userId) return "free";
   try {
-    const snap = await getDocs(
-      query(
-        collection(db, "business_accounts"),
-        where("userId", "==", userId),
-        where("status", "==", "active")
-      )
-    );
-
-    if (snap.empty) return "free";
-
-    const data = snap.docs[0].data();
-    return data.plan || "free";
-
+    const snap = await getDoc(doc(db, "users", userId));
+    if (!snap.exists()) return "free";
+    return snap.data().plan || "free";
   } catch (err) {
-    console.error("getUserPlan error:", err);
     return "free";
   }
 }
