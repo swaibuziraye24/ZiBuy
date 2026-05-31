@@ -585,21 +585,36 @@ async function loadProfileSettings() {
     `;
 
 
-    // Show account type and upgrade button
 const userDoc = await getDoc(doc(db, "users", currentUser.uid));
-if (userDoc.exists()) {
-  const userData = userDoc.data();
-  const accountType = userData.accountType || "normal";
-  
-  document.getElementById("account-type-display").textContent = 
-    accountType === "business" ? "💼 Business Account" : "👤 Regular Account";
-  
-  if (accountType === "normal") {
-    document.getElementById("upgrade-btn").style.display = "block";
-  } else {
-    document.getElementById("business-status").style.display = "block";
-  }
-}
+    const userData = userDoc.exists() ? userDoc.data() : {};
+
+    const plan        = userData.plan        || "free";
+    const accountType = userData.accountType || "normal";
+
+    const planLabels = {
+      free:   "🆓 Free Plan",
+      bronze: "🥉 Bronze Plan",
+      silver: "🥈 Silver Plan",
+      gold:   "🥇 Gold Plan"
+    };
+
+    const typeEl    = document.getElementById("account-type-display");
+    const upgradeBtn = document.getElementById("upgrade-btn");
+    const bizStatus  = document.getElementById("business-status");
+
+    if (typeEl) typeEl.textContent = planLabels[plan] || "🆓 Free Plan";
+
+    if (plan === "free") {
+      if (upgradeBtn)  upgradeBtn.style.display = "inline-block";
+      if (bizStatus)   bizStatus.style.display  = "none";
+    } else {
+      if (upgradeBtn)  upgradeBtn.style.display  = "none";
+      if (bizStatus) {
+        bizStatus.style.display  = "block";
+        bizStatus.textContent    = planLabels[plan] + " Active";
+        bizStatus.style.color    = "#16a34a";
+      }
+    }
     
     container.innerHTML = settingsHTML;
     debug("✅ Settings rendered successfully!");
