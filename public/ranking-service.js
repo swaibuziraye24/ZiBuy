@@ -25,14 +25,6 @@ export async function getUserPlan(userId) {
       )
     );
 
-
-    try {
-  const plan = await getUserPlan();
-} catch (e) {
-  console.log("Plan fetch failed:", e);
-  return null; // STOP infinite loop
-}
-
     if (snap.empty) return "free";
 
     const data = snap.docs[0].data();
