@@ -258,9 +258,14 @@
   </button>
 
   <button class="admin-nav-item"
-    data-section="reports"
-    onclick="window.showSection('reports', this)">
+    onclick="window.location.href='admin-reports.html'">
     <span>🚨</span> Reports
+  </button>
+
+  <button class="admin-nav-item"
+    data-section="broadcast"
+    onclick="window.showSection('broadcast', this)">
+    <span>📣</span> Send Notification
   </button>
 
   <!-- ANALYTICS PAGE -->
@@ -455,6 +460,54 @@
       </div>
     </div>
 
+<!-- ══ BROADCAST NOTIFICATIONS ════════════ -->
+    <div class="admin-section" id="section-broadcast">
+      <h2 style="font-size:22px;font-weight:800;margin-bottom:20px">📣 Send Notifications</h2>
+
+      <!-- Send to ALL users -->
+      <div class="admin-card" style="margin-bottom:20px">
+        <h2>🔥 Broadcast to All Users</h2>
+        <p style="font-size:13px;color:var(--gray);margin-bottom:16px">This appears as a banner on everyone's screen and saves to their notifications.</p>
+
+        <input id="bc-title" type="text" placeholder="Title e.g. Flash Sale Today! 🔥"
+          class="search-input" style="max-width:100%;margin-bottom:10px">
+
+        <textarea id="bc-message" rows="3" placeholder="Message e.g. Up to 50% off on phones today only. Shop now!"
+          style="width:100%;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-family:var(--font);font-size:13px;outline:none;resize:none;margin-bottom:10px"></textarea>
+
+        <input id="bc-url" type="text" placeholder="Link URL (optional) e.g. /index.html?cat=phones"
+          class="search-input" style="max-width:100%;margin-bottom:16px">
+
+        <button class="action-btn btn-approve" style="padding:12px 24px;font-size:14px"
+          onclick="sendBroadcast()">
+          📣 Send to All Users
+        </button>
+      </div>
+
+      <!-- Send to specific user -->
+      <div class="admin-card">
+        <h2>👤 Send to Specific User</h2>
+        <input id="notif-userid" type="text" placeholder="User ID (from Users table)"
+          class="search-input" style="max-width:100%;margin-bottom:10px">
+        <input id="notif-title" type="text" placeholder="Title"
+          class="search-input" style="max-width:100%;margin-bottom:10px">
+        <textarea id="notif-message" rows="3" placeholder="Message"
+          style="width:100%;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-family:var(--font);font-size:13px;outline:none;resize:none;margin-bottom:16px"></textarea>
+        <button class="action-btn btn-approve" style="padding:12px 24px;font-size:14px"
+          onclick="sendToUser()">
+          📨 Send Notification
+        </button>
+      </div>
+
+      <!-- Past broadcasts -->
+      <div class="admin-card">
+        <h2>📋 Past Broadcasts</h2>
+        <div id="broadcasts-list">
+          <p style="color:var(--gray);font-size:13px">Loading...</p>
+        </div>
+      </div>
+    </div>
+
   </main>
 
 
@@ -531,6 +584,8 @@
 </div>
 
 <div id="toast-container" class="toast-container"></div>
+
+<script type="module" src="notifications-setup.js"></script>
 
 <script src="nav.js"></script>
 
