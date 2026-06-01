@@ -449,6 +449,13 @@ window.approveBoost = async function(boostId, productId, days) {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + days);
 
+    // Get boost request to find userId
+    const boostSnap = await getDocs(query(
+      collection(db, "boost_requests"),
+      where("productId", "==", productId)
+    ));
+    const boostData = boostSnap.empty ? null : boostSnap.docs[0].data();
+
     await updateDoc(doc(db, "boost_requests", boostId), {
       status:      "approved",
       approvedAt:  new Date(),
@@ -460,12 +467,36 @@ window.approveBoost = async function(boostId, productId, days) {
       premiumExpiresAt: expiresAt
     });
 
-    showToast("Boost activated ✅", "success");
-    loadBoosts();
+    // ── Notify the seller ─────────────────────
+    if (boostData?.userId) {
+      await addDoc(collection(db, "notifications"), {
+        userId:    boostData.userId,
+        type:      "boost",
+        title:     "⭐ Your Ad is Now Boosted!",
+        message:   `Your ad "${boostData.productName || "Ad"}" is now featured for ${days} days. More buyers will see it!`,
+        relatedId: productId,
+        read:      false,
+        createdAt: new Date()
+      });
+    }
+
+ // ── Notify the user ───────────────────────
+    const planLabels = { bronze:"🥉 Bronze", silver:"🥈 Silver", gold:"🥇 Gold" };
+    await addDoc(collection(db, "notifications"), {
+      userId,
+      type:      "plan",
+      title:     `${planLabels[plan] || plan} Plan Activated!`,
+      message:   `Your ${plan} business plan is now active. Enjoy your new features!`,
+      relatedId: subId,
+      read:      false,
+      createdAt: new Date()
+    });
+
+    showToast("Subscription activated ✅", "success");
+    loadSubscriptions();
     renderOverview();
   } catch (e) {
-    showToast("Failed to approve", "error");
-    console.error(e);
+    showToast("Failed to activate", "error");
   }
 };
 
@@ -799,3 +830,108 @@ window.deleteReportedAd = async function(productId, reportId) {
     loadAds();
   } catch (e) { showToast("Failed", "error"); }
 };
+
+
+// ══════════════════════════════════════════════
+//  BROADCAST NOTIFICATIONS
+// ══════════════════════════════════════════════
+window.sendBroadcast = async function() {
+  const title   = document.getElementById("bc-title").value.trim();
+  const message = document.getElementById("bc-message").value.trim();
+  const url     = document.getElementById("bc-url").value.trim() || "/";
+
+  if (!title || !message) { showToast("Fill title and message", "error"); return; }
+  if (!confirm(`Send "${title}" to ALL users?`)) return;
+
+  try {
+    // Save to broadcasts — all users' pages listen to this
+    await addDoc(collection(db, "broadcasts"), {
+      title,
+      message,
+      url,
+      active:    true,
+      sentBy:    ADMIN_EMAIL,
+      createdAt: new Date()
+    });
+
+    // Also save to all users' notifications
+    const usersSnap = await getDocs(collection(db, "users"));
+    const batch = [];
+    usersSnap.forEach(d => {
+      batch.push(addDoc(collection(db, "notifications"), {
+        userId:    d.id,
+        type:      "offer",
+        title,
+        message,
+        relatedId: url,
+        read:      false,
+        createdAt: new Date()
+      }));
+    });
+    await Promise.all(batch);
+
+    document.getElementById("bc-title").value   = "";
+    document.getElementById("bc-message").value = "";
+    document.getElementById("bc-url").value     = "";
+
+    showToast(`✅ Sent to ${usersSnap.size} users!`, "success");
+    loadBroadcasts();
+  } catch (e) {
+    console.error(e);
+    showToast("Failed to send", "error");
+  }
+};
+
+window.sendToUser = async function() {
+  const userId  = document.getElementById("notif-userid").value.trim();
+  const title   = document.getElementById("notif-title").value.trim();
+  const message = document.getElementById("notif-message").value.trim();
+
+  if (!userId || !title || !message) { showToast("Fill all fields", "error"); return; }
+
+  try {
+    await addDoc(collection(db, "notifications"), {
+      userId,
+      type:      "admin",
+      title,
+      message,
+      relatedId: null,
+      read:      false,
+      createdAt: new Date()
+    });
+
+    document.getElementById("notif-userid").value  = "";
+    document.getElementById("notif-title").value   = "";
+    document.getElementById("notif-message").value = "";
+
+    showToast("✅ Notification sent!", "success");
+  } catch (e) {
+    showToast("Failed", "error");
+  }
+};
+
+async function loadBroadcasts() {
+  try {
+    const snap = await getDocs(collection(db, "broadcasts"));
+    const list = document.getElementById("broadcasts-list");
+    if (!list) return;
+
+    const items = snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0))
+      .slice(0, 10);
+
+    if (items.length === 0) {
+      list.innerHTML = "<p style='color:var(--gray);font-size:13px'>No broadcasts yet</p>";
+      return;
+    }
+
+    list.innerHTML = items.map(b => `
+      <div style="padding:12px;border-bottom:1px solid #f0f0f0">
+        <p style="font-weight:800;font-size:14px;margin:0 0 4px">🔥 ${b.title}</p>
+        <p style="font-size:13px;color:var(--gray);margin:0 0 4px">${b.message}</p>
+        <p style="font-size:11px;color:#adb5bd;margin:0">${fmtDate(b.createdAt)}</p>
+      </div>
+    `).join("");
+  } catch (e) { console.warn(e); }
+}
