@@ -449,54 +449,42 @@ window.approveBoost = async function(boostId, productId, days) {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + days);
 
-    // Get boost request to find userId
-    const boostSnap = await getDocs(query(
-      collection(db, "boost_requests"),
-      where("productId", "==", productId)
-    ));
-    const boostData = boostSnap.empty ? null : boostSnap.docs[0].data();
+    // ── Step 1: read boost doc using its ID (no query needed) ──
+    const boostDoc  = await getDoc(doc(db, "boost_requests", boostId));
+    const boostData = boostDoc.exists() ? boostDoc.data() : {};
 
+    // ── Step 2: approve the boost request ─────
     await updateDoc(doc(db, "boost_requests", boostId), {
       status:      "approved",
       approvedAt:  new Date(),
       approvedBy:  "admin"
     });
 
+    // ── Step 3: mark product as premium ───────
     await updateDoc(doc(db, "products", productId), {
       isPremium:        true,
       premiumExpiresAt: expiresAt
     });
 
-    // ── Notify the seller ─────────────────────
-    if (boostData?.userId) {
+    // ── Step 4: notify the seller ─────────────
+    if (boostData.userId) {
       await addDoc(collection(db, "notifications"), {
         userId:    boostData.userId,
         type:      "boost",
         title:     "⭐ Your Ad is Now Boosted!",
-        message:   `Your ad "${boostData.productName || "Ad"}" is now featured for ${days} days. More buyers will see it!`,
+        message:   `Your ad "${boostData.productName || "Ad"}" is now featured for ${days} days!`,
         relatedId: productId,
         read:      false,
         createdAt: new Date()
       });
     }
 
- // ── Notify the user ───────────────────────
-    const planLabels = { bronze:"🥉 Bronze", silver:"🥈 Silver", gold:"🥇 Gold" };
-    await addDoc(collection(db, "notifications"), {
-      userId,
-      type:      "plan",
-      title:     `${planLabels[plan] || plan} Plan Activated!`,
-      message:   `Your ${plan} business plan is now active. Enjoy your new features!`,
-      relatedId: subId,
-      read:      false,
-      createdAt: new Date()
-    });
-
-    showToast("Subscription activated ✅", "success");
-    loadSubscriptions();
+    showToast("Boost activated ✅", "success");
+    loadBoosts();
     renderOverview();
   } catch (e) {
-    showToast("Failed to activate", "error");
+    console.error("approveBoost error:", e.code, e.message);
+    showToast("Failed: " + (e.code || e.message), "error");
   }
 };
 
