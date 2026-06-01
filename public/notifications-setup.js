@@ -37,6 +37,11 @@ export async function setupPushNotifications(userId) {
     const { app } = await import("./firebase.js");
 
     const messaging = getMessaging(app);
+
+await navigator.serviceWorker.register(
+  "/firebase-messaging-sw.js"
+);
+
     const swReg     = await navigator.serviceWorker.ready;
 
     const token = await getToken(messaging, {
