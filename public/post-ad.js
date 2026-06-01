@@ -28,6 +28,26 @@ let currentUser = null;
 onAuthStateChanged(auth, (user) => {
   currentUser = user;
   
+
+onAuthStateChanged(auth, (user) => {
+  if (!user) { window.location.href = "index.html"; return; }
+  currentUser = user;
+  if (productId) loadProductPreview();
+
+  // Enable plan selection only after auth confirmed
+  document.querySelectorAll(".boost-plan-card").forEach(card => {
+    card.style.opacity  = "1";
+    card.style.pointerEvents = "auto";
+  });
+});
+
+// Disable cards until auth confirmed
+document.querySelectorAll(".boost-plan-card").forEach(card => {
+  card.style.opacity  = "0.5";
+  card.style.pointerEvents = "none";
+});
+
+
   // Hide loading indicator
   const authCheck = document.getElementById("auth-check");
   if (authCheck) authCheck.style.display = "none";
