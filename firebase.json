@@ -1,20 +1,24 @@
 {
   "hosting": {
-    "public": "public",
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**",
+      "DEPLOY_NOW.txt",
+      "DEPLOYMENT.md",
+      "README.md",
+      "PREMIUM_ADS_SETUP.txt",
+      "functions/**"
+    ],
     "rewrites": [
       {
         "source": "**",
         "destination": "/index.html"
       }
-    ],
-   "ignore": [
-  "firebase.json",
-  "**/.*",
-  "**/node_modules/**",
-  "DEPLOY_NOW.txt",
-  "DEPLOYMENT.md",
-  "README.md",
-  "PREMIUM_ADS_SETUP.txt"
-]
+    ]
+  },
+  "functions": {
+    "source": "functions"
   }
 }
