@@ -38,11 +38,16 @@ export async function setupPushNotifications(userId) {
 
     const messaging = getMessaging(app);
 
-await navigator.serviceWorker.register(
-  "/firebase-messaging-sw.js"
-);
+     const swReg = await navigator.serviceWorker.register(
+      "/firebase-messaging-sw.js"
+    ).catch((err) => {
+      console.warn("[FCM] SW registration failed:", err.message);
+      return null;
+    });
 
-    const swReg     = await navigator.serviceWorker.ready;
+    if (!swReg) return;
+
+    await navigator.serviceWorker.ready;
 
     const token = await getToken(messaging, {
       vapidKey:              VAPID_KEY,
