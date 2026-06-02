@@ -145,6 +145,78 @@ const SUBCATEGORIES = {
     "Electronic Accessories"
   ],
 
+  fashion: [
+    "Men's Clothing",
+    "Women's Clothing",
+    "Children's Clothing",
+    "Traditional Wear",
+    "Sportswear",
+    "Underwear",
+    "Fashion Accessories"
+  ],
+
+  shoes: [
+    "Men's Shoes",
+    "Women's Shoes",
+    "Children's Shoes",
+    "Sports Shoes",
+    "Boots",
+    "Sandals",
+    "Slippers"
+  ],
+
+  beauty: [
+    "Makeup",
+    "Skincare",
+    "Hair Care",
+    "Perfumes",
+    "Beauty Tools",
+    "Personal Care"
+  ],
+
+  bags: [
+    "Handbags",
+    "Backpacks",
+    "Travel Bags",
+    "School Bags",
+    "Laptop Bags",
+    "Wallets"
+  ],
+
+  groceries: [
+    "Food",
+    "Drinks",
+    "Snacks",
+    "Cooking Ingredients",
+    "Fresh Produce",
+    "Household Supplies"
+  ],
+
+  watches: [
+    "Men's Watches",
+    "Women's Watches",
+    "Smart Watches",
+    "Luxury Watches",
+    "Watch Accessories"
+  ],
+
+  computers: [
+    "Laptops",
+    "Desktop Computers",
+    "Monitors",
+    "Printers",
+    "Computer Accessories",
+    "Networking Equipment"
+  ],
+
+  gaming: [
+    "Gaming Consoles",
+    "Video Games",
+    "Gaming Accessories",
+    "Gaming PCs",
+    "Gaming Chairs"
+  ],
+
   home: [
     "Furniture",
     "Home Appliances",
@@ -154,6 +226,94 @@ const SUBCATEGORIES = {
     "Garden Supplies",
     "Household Chemicals",
     "Home Accessories"
+  ],
+
+  accessories: [
+    "Jewelry",
+    "Sunglasses",
+    "Belts",
+    "Hats",
+    "Scarves",
+    "Fashion Accessories"
+  ],
+
+  vehicles: [
+    "Cars",
+    "Motorcycles",
+    "Trucks",
+    "Buses",
+    "SUVs",
+    "Vehicle Accessories"
+  ],
+
+  "motor-equipment": [
+    "Engine Parts",
+    "Tyres",
+    "Batteries",
+    "Lubricants",
+    "Motor Accessories",
+    "Spare Parts"
+  ],
+
+  services: [
+    "Cleaning",
+    "Repairs",
+    "Transport",
+    "Photography",
+    "Graphic Design",
+    "Programming",
+    "Construction",
+    "Other Services"
+  ],
+
+  "babies-kids": [
+    "Baby Clothing",
+    "Toys",
+    "Baby Gear",
+    "School Supplies",
+    "Children's Furniture"
+  ],
+
+  "animals-pets": [
+    "Dogs",
+    "Cats",
+    "Birds",
+    "Fish",
+    "Pet Food",
+    "Pet Accessories"
+  ],
+
+  agriculture: [
+    "Seeds",
+    "Fertilizers",
+    "Farm Machinery",
+    "Livestock",
+    "Animal Feed",
+    "Agricultural Tools"
+  ],
+
+  "commercial-equipment": [
+    "Industrial Machines",
+    "Restaurant Equipment",
+    "Shop Equipment",
+    "Office Equipment",
+    "Manufacturing Equipment"
+  ],
+
+  "tours-leisure": [
+    "Travel Packages",
+    "Hotels",
+    "Tour Services",
+    "Camping Equipment",
+    "Sports Equipment"
+  ],
+
+  "seeking-work": [
+    "Full-Time Jobs",
+    "Part-Time Jobs",
+    "Remote Jobs",
+    "Internships",
+    "Freelance Opportunities"
   ]
 
 };
