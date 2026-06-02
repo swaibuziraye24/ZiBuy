@@ -71,29 +71,37 @@
 <div id="toast-container" class="toast-container"></div>
 
 <!-- ============ REVIEWS SECTION ============ -->
-<!-- REVIEW SECTION -->
-<div id="product-reviews"></div>
+<div class="product-page-wrap" style="margin-top:0">
+  <div style="background:white;border-radius:20px;padding:28px;box-shadow:0 4px 20px rgba(0,0,0,0.08)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <h2 style="font-size:20px;font-weight:800;margin:0">⭐ Customer Reviews</h2>
+      <span id="avg-rating-badge" style="background:#fff4ee;color:#ff6600;font-weight:800;font-size:14px;padding:6px 14px;border-radius:20px"></span>
+    </div>
 
-<div style="margin-top:20px">
-  <h3>Write a review</h3>
+    <div id="product-reviews" style="margin-bottom:24px"></div>
 
-  <textarea id="reviewText" placeholder="Write your review..." 
-    style="width:100%;padding:10px;margin-top:10px"></textarea>
-
-  <select id="rating" style="width:100%;padding:10px;margin-top:10px">
-    <option value="">Select rating</option>
-    <option value="5">⭐⭐⭐⭐⭐</option>
-    <option value="4">⭐⭐⭐⭐</option>
-    <option value="3">⭐⭐⭐</option>
-    <option value="2">⭐⭐</option>
-    <option value="1">⭐</option>
-  </select>
-
-  <button onclick="submitProductReview()"
-    style="margin-top:10px;padding:12px 20px;background:#ff6600;color:white;border:none;border-radius:8px">
-    Submit Review
-  </button>
-</div>
+    <div style="background:#f9fafb;border-radius:14px;padding:20px">
+      <h3 style="font-size:15px;font-weight:800;margin-bottom:14px">✍️ Write a Review</h3>
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+        <label style="flex:1;min-width:120px;display:flex;align-items:center;gap:8px;background:white;border:1.5px solid #e5e7eb;border-radius:10px;padding:10px 14px;cursor:pointer;font-size:14px;font-weight:700">
+          <input type="radio" name="star" value="5" checked style="accent-color:#ff6600"> ⭐⭐⭐⭐⭐
+        </label>
+        <label style="flex:1;min-width:120px;display:flex;align-items:center;gap:8px;background:white;border:1.5px solid #e5e7eb;border-radius:10px;padding:10px 14px;cursor:pointer;font-size:14px;font-weight:700">
+          <input type="radio" name="star" value="4" style="accent-color:#ff6600"> ⭐⭐⭐⭐
+        </label>
+        <label style="flex:1;min-width:120px;display:flex;align-items:center;gap:8px;background:white;border:1.5px solid #e5e7eb;border-radius:10px;padding:10px 14px;cursor:pointer;font-size:14px;font-weight:700">
+          <input type="radio" name="star" value="3" style="accent-color:#ff6600"> ⭐⭐⭐
+        </label>
+        <label style="flex:1;min-width:120px;display:flex;align-items:center;gap:8px;background:white;border:1.5px solid #e5e7eb;border-radius:10px;padding:10px 14px;cursor:pointer;font-size:14px;font-weight:700">
+          <input type="radio" name="star" value="2" style="accent-color:#ff6600"> ⭐⭐
+        </label>
+        <label style="flex:1;min-width:120px;display:flex;align-items:center;gap:8px;background:white;border:1.5px solid #e5e7eb;border-radius:10px;padding:10px 14px;cursor:pointer;font-size:14px;font-weight:700">
+          <input type="radio" name="star" value="1" style="accent-color:#ff6600"> ⭐
+        </label>
+      </div>
+      <textarea id="review-text" placeholder="Share your experience with this product..." rows="3" style="width:100%;padding:12px;border:1.5px solid #e5e7eb;border-radius:10px;font-family:inherit;margin-bottom:10px;resize:none;box-sizing:border-box;font-size:14px"></textarea>
+      <button onclick="submitProductReview()" style="background:#ff6600;color:white;border:none;padding:13px;border-radius:10px;font-weight:800;cursor:pointer;width:100%;font-size:15px;font-family:inherit">Post Review</button>
+    </div>
   </div>
 </div>
 
