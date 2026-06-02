@@ -67,19 +67,104 @@ document.querySelectorAll(".boost-plan-card").forEach(card => {
 // ============================================
 
 window.selectCategory = function(category) {
+
   selectedCategory = category;
 
   document.querySelectorAll(".cat-card").forEach(card => {
     card.classList.remove("selected");
   });
 
-  event.currentTarget.classList.add("selected");
+  if (event && event.currentTarget) {
+    event.currentTarget.classList.add("selected");
+  }
+
   document.getElementById("step1-next").disabled = false;
+
+  const container =
+    document.getElementById("subcategory-container");
+
+  const select =
+    document.getElementById("subcategory-select");
+
+  select.innerHTML =
+    '<option value="">Select Subcategory</option>';
+
+  const list =
+    SUBCATEGORIES[category] || [];
+
+  if (list.length) {
+
+    container.style.display = "block";
+
+    list.forEach(item => {
+
+      const option =
+        document.createElement("option");
+
+      option.value = item;
+      option.textContent = item;
+
+      select.appendChild(option);
+
+    });
+
+  } else {
+
+    container.style.display = "none";
+
+  }
+
 };
 
 // ============================================
 // NEXT STEP
 // ============================================
+
+let selectedSubcategory = "";
+
+const SUBCATEGORIES = {
+
+  phones: [
+    "Smartphones",
+    "Feature Phones",
+    "Tablets",
+    "Chargers",
+    "Power Banks",
+    "Phone Cases",
+    "Screen Protectors",
+    "Phone Accessories"
+  ],
+
+  electronics: [
+    "Televisions",
+    "Speakers",
+    "Headphones",
+    "Cameras",
+    "Projectors",
+    "Audio Systems",
+    "Electronic Accessories"
+  ],
+
+  home: [
+    "Furniture",
+    "Home Appliances",
+    "Kitchen Appliances",
+    "Kitchenware & Cookware",
+    "Lighting",
+    "Garden Supplies",
+    "Household Chemicals",
+    "Home Accessories"
+  ]
+
+};
+
+document
+  .getElementById("subcategory-select")
+  .addEventListener("change", (e) => {
+
+    selectedSubcategory = e.target.value;
+
+  });
 
 window.nextStep = function() {
   if (currentStep >= 4) return;
@@ -195,7 +280,7 @@ function updateReview() {
   document.getElementById("review-price").textContent = "UGX " + Number(priceInput.value).toLocaleString();
   document.getElementById("review-location").textContent = locationInput.value;
   document.getElementById("review-desc").textContent = descInput.value;
-
+  document.getElementById("review-subcat").textContent = selectedSubcategory;
   if (uploadedImages.length > 0) {
     const reader = new FileReader();
     reader.onload = function(e) {
