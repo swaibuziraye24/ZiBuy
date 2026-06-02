@@ -222,3 +222,34 @@ export async function startConversation(recipientEmail, productId, productName) 
     window.location.href = `messages.html?to=${recipientEmail}`;
   } catch (err) { console.error(err); }
 }
+
+// ──────────────────────────────────────────────
+//   MOBILE: Toggle conversations & back button
+// ──────────────────────────────────────────────
+
+window.closeChatMobile = function() {
+  const sidebar = document.querySelector(".messages-sidebar");
+  if (sidebar) sidebar.classList.remove("active");
+};
+
+// Wrap openConversation to show sidebar toggle on mobile
+const originalOpenConversation = window.openConversation;
+window.openConversation = function(email) {
+  originalOpenConversation.call(this, email);
+  
+  // On mobile, hide conversations list when opening chat
+  if (window.innerWidth <= 768) {
+    document.querySelector(".messages-sidebar").classList.add("active");
+  }
+};
+
+// Wrap closeChat to hide chat on mobile
+const originalCloseChat = window.closeChat;
+window.closeChat = function() {
+  originalCloseChat.call(this);
+  
+  // On mobile, show conversations list again
+  if (window.innerWidth <= 768) {
+    document.querySelector(".messages-sidebar").classList.remove("active");
+  }
+};
