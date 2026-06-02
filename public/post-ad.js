@@ -692,7 +692,7 @@ function showBoostPrompt(productId, productName) {
         <p style="font-weight:800;margin-bottom:10px;color:#111827">📱 How to pay:</p>
         <ol style="padding-left:18px;color:#374151;line-height:2.2">
           <li>Send <strong id="boost-amount-text" style="color:#ff6600"></strong> via MTN or Airtel Money</li>
-          <li>Send to: <strong style="color:#ff6600">+256 700 000000</strong> <span style="color:#6b7280">(ZiBuy Admin)</span></li>
+          <li>Send to: <strong style="color:#ff6600">+256 776735131</strong> <span style="color:#6b7280">(ZiBuy Admin)</span></li>
           <li>Use reference: <strong id="boost-ref-text" style="color:#ff6600;letter-spacing:.5px"></strong></li>
           <li>Then click <strong>"I've Paid — Request Boost"</strong> below</li>
         </ol>
