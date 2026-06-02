@@ -137,34 +137,81 @@
 
 <!-- ============ CATEGORIES ============ -->
 <nav class="categories">
-  <button class="cat-btn active" data-cat="all"         onclick="filterCategory('all')">🏪 All</button>
-  <button class="cat-btn" data-cat="phones"             onclick="filterCategory('phones')">📱 Phones</button>
-  <button class="cat-btn" data-cat="electronics"        onclick="filterCategory('electronics')">💻 Electronics</button>
-  <button class="cat-btn" data-cat="fashion"            onclick="filterCategory('fashion')">👗 Fashion</button>
-  <button class="cat-btn" data-cat="shoes"              onclick="filterCategory('shoes')">👟 Shoes</button>
-  <button class="cat-btn" data-cat="beauty"             onclick="filterCategory('beauty')">💄 Beauty</button>
-  <button class="cat-btn" data-cat="bags"               onclick="filterCategory('bags')">👜 Bags</button>
-  <button class="cat-btn" data-cat="groceries"          onclick="filterCategory('groceries')">🛒 Groceries</button>
-  <button class="cat-btn" data-cat="watches"            onclick="filterCategory('watches')">⌚ Watches</button>
-  <button class="cat-btn" data-cat="computers"          onclick="filterCategory('computers')">🖥️ Computers</button>
-  <button class="cat-btn" data-cat="gaming"             onclick="filterCategory('gaming')">🎮 Gaming</button>
-  <button class="cat-btn" data-cat="home"               onclick="filterCategory('home')">🏠 Home</button>
-  <button class="cat-btn" data-cat="accessories" onclick="filterCategory('accessories')">💎 Accessories</button>
-  <button class="cat-btn" data-cat="vehicles" onclick="filterCategory('vehicles')">🚗 Vehicles</button>
-  <button class="cat-btn" data-cat="motor-equipment" onclick="filterCategory('motor-equipment')">⚙️ Motor Parts</button>
-  <button class="cat-btn" data-cat="services" onclick="filterCategory('services')">🔧 Services</button>
-  <button class="cat-btn" data-cat="babies-kids" onclick="filterCategory('babies-kids')">👶 Babies & Kids</button>
-  <button class="cat-btn" data-cat="animals-pets" onclick="filterCategory('animals-pets')">🐾 Animals & Pets</button>
-  <button class="cat-btn" data-cat="agriculture" onclick="filterCategory('agriculture')">🌾 Agriculture</button>
-  <button class="cat-btn" data-cat="commercial-equipment" onclick="filterCategory('commercial-equipment')">🏭 Commercial Equip</button>
-  <button class="cat-btn" data-cat="tours-leisure" onclick="filterCategory('tours-leisure')">🏖️ Tours & Leisure</button>
-  <button class="cat-btn" data-cat="seeking-work" onclick="filterCategory('seeking-work')">📋 Seeking Work</button>
 
+  <button class="cat-btn active" data-cat="all"
+    onclick="filterCategory('all', this)">🏪 All</button>
+
+  <button class="cat-btn" data-cat="phones"
+    onclick="filterCategory('phones', this)">📱 Phones</button>
+
+  <button class="cat-btn" data-cat="electronics"
+    onclick="filterCategory('electronics', this)">💻 Electronics</button>
+
+  <button class="cat-btn" data-cat="fashion"
+    onclick="filterCategory('fashion', this)">👗 Fashion</button>
+
+  <button class="cat-btn" data-cat="shoes"
+    onclick="filterCategory('shoes', this)">👟 Shoes</button>
+
+  <button class="cat-btn" data-cat="beauty"
+    onclick="filterCategory('beauty', this)">💄 Beauty</button>
+
+  <button class="cat-btn" data-cat="bags"
+    onclick="filterCategory('bags', this)">👜 Bags</button>
+
+  <button class="cat-btn" data-cat="groceries"
+    onclick="filterCategory('groceries', this)">🛒 Groceries</button>
+
+  <button class="cat-btn" data-cat="watches"
+    onclick="filterCategory('watches', this)">⌚ Watches</button>
+
+  <button class="cat-btn" data-cat="computers"
+    onclick="filterCategory('computers', this)">🖥️ Computers</button>
+
+  <button class="cat-btn" data-cat="gaming"
+    onclick="filterCategory('gaming', this)">🎮 Gaming</button>
+
+  <button class="cat-btn" data-cat="home"
+    onclick="filterCategory('home', this)">🏠 Home</button>
+
+  <button class="cat-btn" data-cat="accessories"
+    onclick="filterCategory('accessories', this)">💎 Accessories</button>
+
+  <button class="cat-btn" data-cat="vehicles"
+    onclick="filterCategory('vehicles', this)">🚗 Vehicles</button>
+
+  <button class="cat-btn" data-cat="motor-equipment"
+    onclick="filterCategory('motor-equipment', this)">⚙️ Motor Parts</button>
+
+  <button class="cat-btn" data-cat="services"
+    onclick="filterCategory('services', this)">🔧 Services</button>
+
+  <button class="cat-btn" data-cat="babies-kids"
+    onclick="filterCategory('babies-kids', this)">👶 Babies & Kids</button>
+
+  <button class="cat-btn" data-cat="animals-pets"
+    onclick="filterCategory('animals-pets', this)">🐾 Animals & Pets</button>
+
+  <button class="cat-btn" data-cat="agriculture"
+    onclick="filterCategory('agriculture', this)">🌾 Agriculture</button>
+
+  <button class="cat-btn" data-cat="commercial-equipment"
+    onclick="filterCategory('commercial-equipment', this)">🏭 Commercial Equip</button>
+
+  <button class="cat-btn" data-cat="tours-leisure"
+    onclick="filterCategory('tours-leisure', this)">🏖️ Tours & Leisure</button>
+
+  <button class="cat-btn" data-cat="seeking-work"
+    onclick="filterCategory('seeking-work', this)">📋 Seeking Work</button>
+
+  <!-- FILTER BUTTON (FIXED) -->
   <button
     class="cat-btn filter-toggle-btn"
     onclick="toggleFilters()"
-    style="margin-left:auto"
-  >
+    style="margin-left:auto">
+    ⚙️ Filters
+  </button>
+
 </nav>
 
 <!-- ============ ADVANCED FILTERS ============ -->
@@ -181,7 +228,7 @@
 
     <div class="filter-group">
       <h3>📍 Location</h3>
-      <select id="location-filter">
+      <select id="filter-location"></select>
         <option value="">All Uganda</option>
         <option value="Kampala">Kampala</option>
         <option value="Wakiso">Wakiso</option>
@@ -242,6 +289,9 @@
 
 <!-- ============ CATEGORY NAV BAR ============ -->
 <div id="category-nav" class="category-nav"></div>
+<!-- ============ SUBCATEGORY NAV ============ -->
+<div id="subcategory-nav" class="subcategory-nav"></div>
+
 
 <!-- ============ PRODUCT GRID ============ -->
 <div class="section-header">
