@@ -7,10 +7,14 @@
         "destination": "/index.html"
       }
     ],
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
-    ]
+   "ignore": [
+  "firebase.json",
+  "**/.*",
+  "**/node_modules/**",
+  "DEPLOY_NOW.txt",
+  "DEPLOYMENT.md",
+  "README.md",
+  "PREMIUM_ADS_SETUP.txt"
+]
   }
 }
