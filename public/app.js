@@ -26,6 +26,8 @@ let filteredProducts = [];
 let currentUser = null;
 let searchQuery = "";
 let currentCategory = "all";
+let currentSubcategory = "all";
+
 
 // Filter state
 let filterState = {
@@ -391,17 +393,20 @@ window.renderProducts = function () {
   // =========================
   // 2. SEARCH FILTER
   // =========================
-  if (searchQuery && searchQuery.length > 0) {
-    products = products.filter(p => {
-      const text = `
-        ${p.name || ""}
-        ${p.category || ""}
-        ${p.description || ""}
-      `.toLowerCase();
+ if (searchQuery && searchQuery.length > 0) {
+  products = products.filter(p => {
+    const text = `
+      ${p.name || ""}
+      ${p.category || ""}
+      ${p.subcategory || ""}
+      ${p.description || ""}
+    `.toLowerCase();
 
-      return text.includes(searchQuery);
-    });
-  }
+    return text.includes(searchQuery);
+  });
+}
+
+
 
   // =========================
   // 3. PRICE FILTER
@@ -714,15 +719,27 @@ window.renderProducts = function () {
 // CATEGORY FILTER
 // ============================================
 
-window.filterCategory = function(category) {
+window.filterCategory = function(category, el) {
   currentCategory = category;
+  currentSubcategory = "all";
 
   document.querySelectorAll(".cat-btn").forEach(btn => {
     btn.classList.remove("active");
   });
-  event?.target?.classList.add("active");
+
+  if (el) el.classList.add("active");
 
   renderProducts();
+
+
+  // =========================
+// 1.5 SUBCATEGORY FILTER
+// =========================
+if (currentSubcategory && currentSubcategory !== "all") {
+  products = products.filter(p =>
+    (p.subcategory || "").toLowerCase() === currentSubcategory.toLowerCase()
+  );
+}
 
 window.openSellerShop = function(userId) {
 
@@ -732,6 +749,12 @@ window.openSellerShop = function(userId) {
 };
 
 };
+
+window.filterSubcategory = function(subcat) {
+  currentSubcategory = subcat;
+  renderProducts();
+};
+
 
 // ============================================
 // APPLY FILTERS
@@ -1135,7 +1158,6 @@ window.allProducts = allProducts;
 // BUILD CATEGORY NAV BAR
 // ============================================
 function buildCategoryNav(products) {
-
   const nav = document.getElementById("category-nav");
   if (!nav) return;
 
@@ -1144,22 +1166,47 @@ function buildCategoryNav(products) {
   nav.innerHTML = "";
 
   cats.forEach(cat => {
-
     const btn = document.createElement("button");
     btn.innerText = cat.charAt(0).toUpperCase() + cat.slice(1);
 
-    if (currentCategory === cat || (!currentCategory && cat === "all")) {
-      btn.classList.add("active");
-    }
+    btn.classList.toggle("active", currentCategory === cat);
 
     btn.onclick = () => {
-
-      currentCategory = (cat === "all") ? "all" : cat;
-
+      currentCategory = cat;
+      currentSubcategory = "all"; // RESET subcategory when category changes
       renderProducts();
     };
 
     nav.appendChild(btn);
+  });
+
+  // OPTIONAL: show subcategories for selected category
+  const subcats = [
+    "all",
+    ...new Set(
+      products
+        .filter(p => currentCategory === "all" || p.category === currentCategory)
+        .map(p => p.subcategory || "others")
+    )
+  ];
+
+  const subNav = document.getElementById("subcategory-nav");
+  if (!subNav) return;
+
+  subNav.innerHTML = "";
+
+  subcats.forEach(sc => {
+    const btn = document.createElement("button");
+    btn.innerText = sc;
+
+    btn.classList.toggle("active", currentSubcategory === sc);
+
+    btn.onclick = () => {
+      currentSubcategory = sc;
+      renderProducts();
+    };
+
+    subNav.appendChild(btn);
   });
 }
 
