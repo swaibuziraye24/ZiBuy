@@ -1,6 +1,12 @@
 {
   "hosting": {
-    "public": ".",
+    "public": "public",
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ],
     "ignore": [
       "firebase.json",
       "**/.*",
@@ -8,17 +14,20 @@
       "DEPLOY_NOW.txt",
       "DEPLOYMENT.md",
       "README.md",
-      "PREMIUM_ADS_SETUP.txt",
-      "functions/**"
-    ],
-    "rewrites": [
-      {
-        "source": "**",
-        "destination": "/index.html"
-      }
+      "PREMIUM_ADS_SETUP.txt"
     ]
   },
-  "functions": {
-    "source": "functions"
-  }
+  "functions": [
+    {
+      "codebase": "default",
+      "source": "functions",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ]
+    }
+  ]
 }
