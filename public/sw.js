@@ -3,7 +3,7 @@
 //   Offline-first PWA strategy
 // ============================================
 
-const CACHE_NAME   = "zibuy-v1";
+const CACHE_NAME   = "zibuy-v2";
 const OFFLINE_PAGE = "/offline.html";
 
 const PRECACHE = [
@@ -106,18 +106,46 @@ self.addEventListener("fetch", (event) => {
 // ── Push Notifications ────────────────────────
 self.addEventListener("push", (event) => {
   if (!event.data) return;
-  const data = event.data.json();
+
+  let data = {};
+  try {
+    data = event.data.json();
+  } catch {
+    data = { title: "ZiBuy", body: event.data.text() };
+  }
+
+  // Support both flat {title,body} and nested {notification:{title,body}}
+  const title = data.title || data.notification?.title || "ZiBuy";
+  const body   = data.body  || data.notification?.body  || "You have a new notification";
+  const icon   = data.icon  || data.notification?.icon  || "/my_logo.png";
+  const url    = data.url   || data.data?.url            || "/";
+
   event.waitUntil(
-    self.registration.showNotification(data.title || "ZiBuy", {
-      body:  data.body  || "You have a new notification",
-      icon:  data.icon  || "/my_logo.png",
-      badge: "/my_logo.png",
-      data:  data.url   || "/"
+    self.registration.showNotification(title, {
+      body,
+      icon,
+      badge:   "/my_logo.png",
+      vibrate: [200, 100, 200],
+      data:    { url }
     })
   );
 });
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  event.waitUntil(clients.openWindow(event.notification.data || "/"));
+
+  const url = event.notification.data?.url || "/";
+
+  event.waitUntil(
+    clients.matchAll({ type: "window", includeUncontrolled: true })
+      .then((clientList) => {
+        // Focus existing tab if app is already open
+        for (const client of clientList) {
+          if (client.url.includes(self.location.origin) && "focus" in client) {
+            return client.focus();
+          }
+        }
+        return clients.openWindow(url);
+      })
+  );
 });
