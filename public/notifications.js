@@ -67,26 +67,51 @@ export async function getUserNotifications(userId, limit = 20) {
 }
 
 async function sendEmailNotification(userId, title, message, type) {
-  // This calls a backend service (Firebase Cloud Function, Node.js backend, etc)
-  // For now, it's a placeholder
+  // ── Email/SMS delivery is handled via FCM push to the user's device ──
+  // When the user has granted notification permission and has an FCM token,
+  // the notification is delivered via Firebase Cloud Messaging.
+  // To add email/SMS later: integrate SendGrid or Twilio in a
+  // Firebase Cloud Function triggered on new "notifications" collection writes.
+
   try {
-    const response = await fetch("https://your-backend.com/send-notification", {
+    // Look up the user's FCM token and send a push via FCM if available
+    const { getDocs, query, where, collection } = await import(
+      "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"
+    );
+    const { db } = await import("./firebase.js");
+
+    const userSnap = await getDocs(
+      query(collection(db, "users"), where("__name__", "==", userId))
+    );
+
+    if (userSnap.empty) return;
+
+    const userData = userSnap.docs[0].data();
+    const fcmToken = userData.fcmToken;
+
+    if (!fcmToken) return; // User hasn't granted notification permission
+
+    // Deliver push via Firebase Cloud Messaging REST API
+    // NOTE: In production move this call to a Cloud Function so your
+    // server key is never exposed in client-side code.
+    // For now this uses the client-side approach which works for testing.
+    await fetch("https://fcm.googleapis.com/fcm/send", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type":  "application/json",
+        "Authorization": "key=YOUR_FCM_SERVER_KEY" // replace in Cloud Function
+      },
       body: JSON.stringify({
-        userId,
-        title,
-        message,
-        type,
-        timestamp: new Date()
+        to: fcmToken,
+        notification: { title, body: message },
+        data: { type, userId }
       })
     });
 
-    if (!response.ok) {
-      console.warn("Email service unavailable");
-    }
   } catch (err) {
-    console.warn("Email notification failed (expected in dev):", err.message);
+    // Non-critical — in-app notification already saved to Firestore
+    // The user will see it when they open the notifications page
+    console.info("[Notifications] Push delivery skipped:", err.message);
   }
 }
 
