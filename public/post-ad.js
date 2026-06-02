@@ -617,21 +617,10 @@ try {
     selectedCategory    = "";
     currentStep         = 1;
 
-    // ── 8. Offer boost ──────────────────────────
-    const boostConfirm = confirm(
-      "✅ Ad posted successfully!\n\n" +
-      "Want to boost it to the featured section?\n\n" +
-      "⭐ 7 Days  — UGX 5,000\n" +
-      "⭐ 14 Days — UGX 8,000\n" +
-      "⭐ 30 Days — UGX 15,000\n\n" +
-      "Click OK to boost, Cancel to skip"
-    );
-
-    setTimeout(() => {
-      window.location.href = boostConfirm
-        ? `boost-product.html?productId=${docRef.id}`
-        : `dashboard.html?tab=my-ads`;
-    }, 500);
+   // ── 8. Offer boost ──────────────────────────
+    window._newProductId   = docRef.id;
+    window._newProductName = titleInput.value.trim() || productData.name;
+    showBoostPrompt(docRef.id, productData.name);
 
   } catch (err) {
     console.error("Upload error:", err);
@@ -641,4 +630,197 @@ try {
       btn.disabled    = false;
     }
   }
+};
+
+/* ============================================
+   BOOST PROMPT MODAL — after ad is posted
+============================================ */
+function showBoostPrompt(productId, productName) {
+  const existing = document.getElementById("boost-prompt-modal");
+  if (existing) existing.remove();
+
+  const modal = document.createElement("div");
+  modal.id = "boost-prompt-modal";
+  modal.style.cssText = `
+    position:fixed;inset:0;background:rgba(0,0,0,0.65);
+    z-index:99999;display:flex;align-items:center;
+    justify-content:center;padding:16px
+  `;
+
+  modal.innerHTML = `
+    <div style="background:white;border-radius:20px;padding:28px;max-width:460px;width:100%;animation:slideUp .3s ease;max-height:90vh;overflow-y:auto">
+
+      <div style="text-align:center;margin-bottom:20px">
+        <p style="font-size:48px;margin-bottom:8px">🎉</p>
+        <h2 style="font-size:20px;font-weight:800;color:#111827;margin-bottom:6px">Ad Posted Successfully!</h2>
+        <p style="font-size:14px;color:#6b7280">Your ad <strong>"${productName}"</strong> is now live on ZiBuy.</p>
+      </div>
+
+      <div style="background:linear-gradient(135deg,#fff4ee,#fffbeb);border:2px solid #ff6600;border-radius:16px;padding:20px;margin-bottom:16px">
+        <h3 style="font-size:16px;font-weight:800;color:#ff6600;margin-bottom:6px">⭐ Want more buyers to see it?</h3>
+        <p style="font-size:13px;color:#374151;margin-bottom:14px;line-height:1.6">
+          Boost your ad to the <strong>Featured</strong> section and get <strong>3× more views</strong>. Boosted ads sell faster!
+        </p>
+
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div onclick="selectBoostPlan(this,'7',5000)"
+            data-days="7" data-price="5000"
+            style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border:2px solid #e5e7eb;border-radius:10px;cursor:pointer;transition:.2s;background:white">
+            <span style="font-weight:700;font-size:14px">🔥 7 Days</span>
+            <span style="font-weight:800;color:#ff6600">UGX 5,000</span>
+          </div>
+          <div onclick="selectBoostPlan(this,'14',8000)"
+            data-days="14" data-price="8000"
+            style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border:2px solid #e5e7eb;border-radius:10px;cursor:pointer;transition:.2s;background:white">
+            <span style="font-weight:700;font-size:14px">
+              ⭐ 14 Days
+              <span style="font-size:11px;background:#dcfce7;color:#16a34a;padding:2px 7px;border-radius:20px;margin-left:6px">Popular</span>
+            </span>
+            <span style="font-weight:800;color:#ff6600">UGX 8,000</span>
+          </div>
+          <div onclick="selectBoostPlan(this,'30',15000)"
+            data-days="30" data-price="15000"
+            style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border:2px solid #e5e7eb;border-radius:10px;cursor:pointer;transition:.2s;background:white">
+            <span style="font-weight:700;font-size:14px">💎 30 Days</span>
+            <span style="font-weight:800;color:#ff6600">UGX 15,000</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment instructions — revealed after plan selected -->
+      <div id="boost-payment-instructions" style="display:none;background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin-bottom:16px;font-size:13px">
+        <p style="font-weight:800;margin-bottom:10px;color:#111827">📱 How to pay:</p>
+        <ol style="padding-left:18px;color:#374151;line-height:2.2">
+          <li>Send <strong id="boost-amount-text" style="color:#ff6600"></strong> via MTN or Airtel Money</li>
+          <li>Send to: <strong style="color:#ff6600">+256 700 000000</strong> <span style="color:#6b7280">(ZiBuy Admin)</span></li>
+          <li>Use reference: <strong id="boost-ref-text" style="color:#ff6600;letter-spacing:.5px"></strong></li>
+          <li>Then click <strong>"I've Paid — Request Boost"</strong> below</li>
+        </ol>
+        <p style="margin-top:10px;padding:10px;background:#fffbeb;border-radius:8px;font-size:12px;color:#92400e">
+          ⏱️ Admin will verify your payment and activate your boost within <strong>1 hour</strong>.
+          You'll see a ⭐ badge on your ad once active.
+        </p>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button id="request-boost-btn" onclick="requestBoost('${productId}')"
+          style="display:none;background:#ff6600;color:white;border:none;padding:14px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;width:100%;transition:.2s">
+          📩 I've Paid — Request Boost
+        </button>
+        <button onclick="skipBoost()"
+          style="background:#f3f4f6;color:#6b7280;border:none;padding:12px;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;width:100%">
+          Skip for now — Go to Dashboard
+        </button>
+      </div>
+
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+}
+
+/* ---- Plan selection ---- */
+window.selectedBoostPlan = null;
+
+window.selectBoostPlan = function (el, days, price) {
+  // Reset all options
+  document.querySelectorAll("[data-days]").forEach(opt => {
+    opt.style.border     = "2px solid #e5e7eb";
+    opt.style.background = "white";
+  });
+
+  // Highlight chosen
+  el.style.border     = "2px solid #ff6600";
+  el.style.background = "#fff4ee";
+
+  window.selectedBoostPlan = { days: Number(days), price: Number(price) };
+
+  // Build payment reference from product ID
+  const ref = `BOOST-${window._newProductId.slice(0, 8).toUpperCase()}`;
+
+  // Reveal payment instructions
+  const instructions = document.getElementById("boost-payment-instructions");
+  const amountText   = document.getElementById("boost-amount-text");
+  const refText      = document.getElementById("boost-ref-text");
+  const requestBtn   = document.getElementById("request-boost-btn");
+
+  if (instructions) instructions.style.display = "block";
+  if (amountText)   amountText.textContent      = `UGX ${Number(price).toLocaleString()}`;
+  if (refText)      refText.textContent         = ref;
+  if (requestBtn)   requestBtn.style.display    = "block";
+};
+
+/* ---- Seller submits boost request after paying ---- */
+window.requestBoost = async function (productId) {
+  if (!window.selectedBoostPlan) {
+    alert("Please select a boost plan first");
+    return;
+  }
+
+  const btn = document.getElementById("request-boost-btn");
+  if (btn) { btn.textContent = "Sending..."; btn.disabled = true; }
+
+  try {
+    const { db, auth, collection, addDoc } = await import("./firebase.js");
+
+    const paymentRef = `BOOST-${productId.slice(0, 8).toUpperCase()}`;
+
+    // Save to boost_requests — admin reviews and approves
+    await addDoc(collection(db, "boost_requests"), {
+      productId,
+      productName:  window._newProductName || "",
+      userId:       auth.currentUser?.uid   || "",
+      userEmail:    auth.currentUser?.email || "",
+      days:         window.selectedBoostPlan.days,
+      price:        window.selectedBoostPlan.price,
+      paymentRef,
+      status:       "pending_verification",  // admin sets to "approved"
+      requestedAt:  new Date()
+    });
+
+    document.getElementById("boost-prompt-modal")?.remove();
+    showBoostConfirmation(paymentRef);
+
+  } catch (err) {
+    console.error("Boost request error:", err);
+    alert("Failed to send request. Please try again.");
+    if (btn) { btn.textContent = "📩 I've Paid — Request Boost"; btn.disabled = false; }
+  }
+};
+
+/* ---- Success screen ---- */
+function showBoostConfirmation(paymentRef) {
+  const modal = document.createElement("div");
+  modal.style.cssText = `
+    position:fixed;inset:0;background:rgba(0,0,0,0.65);
+    z-index:99999;display:flex;align-items:center;
+    justify-content:center;padding:16px
+  `;
+  modal.innerHTML = `
+    <div style="background:white;border-radius:20px;padding:32px;max-width:400px;width:100%;text-align:center">
+      <p style="font-size:52px;margin-bottom:12px">✅</p>
+      <h2 style="font-size:20px;font-weight:800;color:#111827;margin-bottom:8px">Boost Request Sent!</h2>
+      <p style="color:#6b7280;font-size:14px;line-height:1.7;margin-bottom:8px">
+        Your payment reference is:
+      </p>
+      <p style="font-size:18px;font-weight:800;color:#ff6600;background:#fff4ee;padding:10px 20px;border-radius:10px;display:inline-block;margin-bottom:12px;letter-spacing:1px">
+        ${paymentRef}
+      </p>
+      <p style="color:#6b7280;font-size:13px;margin-bottom:24px;line-height:1.6">
+        The admin will verify your Mobile Money payment and activate your boost within <strong>1 hour</strong>.
+        Your ad will show a <strong>⭐ Featured</strong> badge once active.
+      </p>
+      <button onclick="this.closest('div').parentElement.remove();window.location.href='dashboard.html?tab=my-ads'"
+        style="background:#ff6600;color:white;border:none;padding:14px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;width:100%">
+        Go to My Ads →
+      </button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+/* ---- Skip boost ---- */
+window.skipBoost = function () {
+  document.getElementById("boost-prompt-modal")?.remove();
+  window.location.href = `dashboard.html?tab=my-ads`;
 };
