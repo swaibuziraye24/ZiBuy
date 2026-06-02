@@ -70,6 +70,30 @@
         <button class="cat-card" onclick="selectCategory('tours-leisure')">🏖️<span>Tours & Leisure</span></button>
         <button class="cat-card" onclick="selectCategory('seeking-work')">📋<span>Seeking Work</span></button>
       </div>
+
+         <div id="subcategory-container"
+     style="display:none;margin-top:20px;">
+
+  <label style="
+    display:block;
+    margin-bottom:8px;
+    font-weight:700;">
+    Subcategory
+  </label>
+
+  <select id="subcategory-select"
+          style="
+            width:100%;
+            padding:12px;
+            border:1px solid #ddd;
+            border-radius:12px;">
+    <option value="">
+      Select Subcategory
+    </option>
+  </select>
+
+</div>
+
       <button class="full-btn" id="step1-next" onclick="nextStep()" disabled>Continue →</button>
     </div>
 
