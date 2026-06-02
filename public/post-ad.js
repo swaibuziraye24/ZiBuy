@@ -399,6 +399,7 @@ expiresAt.setDate(expiresAt.getDate() + adDays);
       name:        titleInput.value.trim(),
       price:       Number(priceInput.value),
       category:    selectedCategory,
+      subcategory: selectedSubcategory || "",
       description: descInput.value.trim(),
       location:    locationInput.value,
       images:      imageUrls,
