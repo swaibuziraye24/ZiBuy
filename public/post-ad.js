@@ -689,16 +689,43 @@ function showBoostPrompt(productId, productName) {
 
       <!-- Payment instructions — revealed after plan selected -->
       <div id="boost-payment-instructions" style="display:none;background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin-bottom:16px;font-size:13px">
-        <p style="font-weight:800;margin-bottom:10px;color:#111827">📱 How to pay:</p>
-        <ol style="padding-left:18px;color:#374151;line-height:2.2">
-          <li>Send <strong id="boost-amount-text" style="color:#ff6600"></strong> via MTN or Airtel Money</li>
-          <li>Send to: <strong style="color:#ff6600">+256 776735131</strong> <span style="color:#6b7280">(ZiBuy Admin)</span></li>
-          <li>Use reference: <strong id="boost-ref-text" style="color:#ff6600;letter-spacing:.5px"></strong></li>
-          <li>Then click <strong>"I've Paid — Request Boost"</strong> below</li>
-        </ol>
+       <p style="font-weight:800;margin-bottom:12px;color:#111827">📱 Choose how to pay:</p>
+
+        <!-- MTN Mobile Money -->
+        <div style="background:white;border:2px solid #ffcc00;border-radius:12px;padding:14px;margin-bottom:10px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+            <div style="background:#ffcc00;border-radius:8px;padding:6px 10px;font-weight:900;font-size:13px;color:#111">MTN</div>
+            <span style="font-weight:800;font-size:14px">MTN Mobile Money</span>
+          </div>
+          <ol style="padding-left:18px;color:#374151;line-height:2.2;font-size:13px;margin:0">
+            <li>Dial <strong style="color:#ff6600">*165#</strong> on your MTN line</li>
+            <li>Select <strong>Pay via Merchant</strong></li>
+            <li>Enter Merchant Code: <strong style="color:#ff6600;font-size:15px">27868095</strong></li>
+            <li>Enter amount: <strong id="boost-amount-mtn" style="color:#ff6600"></strong></li>
+            <li>Use reference: <strong id="boost-ref-mtn" style="color:#ff6600;letter-spacing:.5px"></strong></li>
+            <li>Enter your PIN to confirm</li>
+          </ol>
+        </div>
+
+        <!-- Airtel Money -->
+        <div style="background:white;border:2px solid #ef4444;border-radius:12px;padding:14px;margin-bottom:10px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+            <div style="background:#ef4444;border-radius:8px;padding:6px 10px;font-weight:900;font-size:13px;color:white">AIRTEL</div>
+            <span style="font-weight:800;font-size:14px">Airtel Money</span>
+          </div>
+          <ol style="padding-left:18px;color:#374151;line-height:2.2;font-size:13px;margin:0">
+            <li>Dial <strong style="color:#ef4444">*185#</strong> on your Airtel line</li>
+            <li>Select <strong>Make Payments</strong></li>
+            <li>Send to number: <strong style="color:#ef4444;font-size:15px">+256575996624</strong></li>
+            <li>Enter amount: <strong id="boost-amount-airtel" style="color:#ef4444"></strong></li>
+            <li>Use reference: <strong id="boost-ref-airtel" style="color:#ef4444;letter-spacing:.5px"></strong></li>
+            <li>Enter your PIN to confirm</li>
+          </ol>
+        </div>
+
         <p style="margin-top:10px;padding:10px;background:#fffbeb;border-radius:8px;font-size:12px;color:#92400e">
-          ⏱️ Admin will verify your payment and activate your boost within <strong>1 hour</strong>.
-          You'll see a ⭐ badge on your ad once active.
+          ⏱️ After paying, click <strong>"I've Paid — Request Boost"</strong> below.
+          Admin will verify and activate your boost within <strong>1 hour</strong>.
         </p>
       </div>
 
@@ -740,14 +767,23 @@ window.selectBoostPlan = function (el, days, price) {
 
   // Reveal payment instructions
   const instructions = document.getElementById("boost-payment-instructions");
-  const amountText   = document.getElementById("boost-amount-text");
-  const refText      = document.getElementById("boost-ref-text");
   const requestBtn   = document.getElementById("request-boost-btn");
 
+  // Fill MTN fields
+  const mtnAmount = document.getElementById("boost-amount-mtn");
+  const mtnRef    = document.getElementById("boost-ref-mtn");
+  if (mtnAmount) mtnAmount.textContent = `UGX ${Number(price).toLocaleString()}`;
+  if (mtnRef)    mtnRef.textContent    = ref;
+
+  // Fill Airtel fields
+  const airtelAmount = document.getElementById("boost-amount-airtel");
+  const airtelRef    = document.getElementById("boost-ref-airtel");
+  if (airtelAmount) airtelAmount.textContent = `UGX ${Number(price).toLocaleString()}`;
+  if (airtelRef)    airtelRef.textContent    = ref;
+
   if (instructions) instructions.style.display = "block";
-  if (amountText)   amountText.textContent      = `UGX ${Number(price).toLocaleString()}`;
-  if (refText)      refText.textContent         = ref;
   if (requestBtn)   requestBtn.style.display    = "block";
+  
 };
 
 /* ---- Seller submits boost request after paying ---- */
@@ -766,15 +802,17 @@ window.requestBoost = async function (productId) {
     const paymentRef = `BOOST-${productId.slice(0, 8).toUpperCase()}`;
 
     // Save to boost_requests — admin reviews and approves
-    await addDoc(collection(db, "boost_requests"), {
+   await addDoc(collection(db, "boost_requests"), {
       productId,
       productName:  window._newProductName || "",
       userId:       auth.currentUser?.uid   || "",
       userEmail:    auth.currentUser?.email || "",
+      userPhone:    auth.currentUser?.phoneNumber || "",
       days:         window.selectedBoostPlan.days,
       price:        window.selectedBoostPlan.price,
       paymentRef,
-      status:       "pending_verification",  // admin sets to "approved"
+      paymentMethod: window.selectedPaymentMethod || "MTN/Airtel",
+      status:       "pending",
       requestedAt:  new Date()
     });
 
