@@ -699,7 +699,7 @@ function showBoostPrompt(productId, productName) {
           </div>
           <ol style="padding-left:18px;color:#374151;line-height:2.2;font-size:13px;margin:0">
             <li>Dial <strong style="color:#ff6600">*165#</strong> on your MTN line</li>
-            <li>Select <strong>Pay via Merchant</strong></li>
+            <li>Select <strong>Pay With Momo</strong></li>
             <li>Enter Merchant Code: <strong style="color:#ff6600;font-size:15px">27868095</strong></li>
             <li>Enter amount: <strong id="boost-amount-mtn" style="color:#ff6600"></strong></li>
             <li>Use reference: <strong id="boost-ref-mtn" style="color:#ff6600;letter-spacing:.5px"></strong></li>
@@ -715,7 +715,7 @@ function showBoostPrompt(productId, productName) {
           </div>
           <ol style="padding-left:18px;color:#374151;line-height:2.2;font-size:13px;margin:0">
             <li>Dial <strong style="color:#ef4444">*185#</strong> on your Airtel line</li>
-            <li>Select <strong>Make Payments</strong></li>
+            <li>Select <strong>Send Money</strong></li>
             <li>Send to number: <strong style="color:#ef4444;font-size:15px">+256575996624</strong></li>
             <li>Enter amount: <strong id="boost-amount-airtel" style="color:#ef4444"></strong></li>
             <li>Use reference: <strong id="boost-ref-airtel" style="color:#ef4444;letter-spacing:.5px"></strong></li>
@@ -729,10 +729,26 @@ function showBoostPrompt(productId, productName) {
         </p>
       </div>
 
+<!-- Transaction reference input -->
+      <div id="boost-txn-wrap" style="display:none;margin-bottom:14px">
+        <label style="font-size:13px;font-weight:800;color:#111827;display:block;margin-bottom:8px">
+          📋 Enter your transaction reference / ID
+        </label>
+        <input type="text" id="boost-txn-ref"
+          placeholder="e.g. 1234567890 or REF123456"
+          style="width:100%;padding:12px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box"
+          onfocus="this.style.borderColor='#ff6600'"
+          onblur="this.style.borderColor='#e5e7eb'"
+        >
+        <p style="font-size:12px;color:#6b7280;margin-top:6px">
+          The confirmation ID you received on your phone after paying
+        </p>
+      </div>
+
       <div style="display:flex;flex-direction:column;gap:10px">
         <button id="request-boost-btn" onclick="requestBoost('${productId}')"
           style="display:none;background:#ff6600;color:white;border:none;padding:14px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;width:100%;transition:.2s">
-          📩 I've Paid — Request Boost
+          📲 Send Reference to Admin WhatsApp
         </button>
         <button onclick="skipBoost()"
           style="background:#f3f4f6;color:#6b7280;border:none;padding:12px;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;width:100%">
@@ -781,8 +797,11 @@ window.selectBoostPlan = function (el, days, price) {
   if (airtelAmount) airtelAmount.textContent = `UGX ${Number(price).toLocaleString()}`;
   if (airtelRef)    airtelRef.textContent    = ref;
 
-  if (instructions) instructions.style.display = "block";
+   if (instructions) instructions.style.display = "block";
   if (requestBtn)   requestBtn.style.display    = "block";
+
+  const txnWrap = document.getElementById("boost-txn-wrap");
+  if (txnWrap) txnWrap.style.display = "block";
   
 };
 
@@ -793,41 +812,72 @@ window.requestBoost = async function (productId) {
     return;
   }
 
+  // Validate transaction reference
+  const txnInput = document.getElementById("boost-txn-ref");
+  const txnRef   = txnInput ? txnInput.value.trim() : "";
+
+  if (!txnRef) {
+    if (txnInput) {
+      txnInput.style.borderColor = "#ef4444";
+      txnInput.placeholder = "⚠️ Please enter your transaction reference";
+      txnInput.focus();
+    }
+    return;
+  }
+
   const btn = document.getElementById("request-boost-btn");
-  if (btn) { btn.textContent = "Sending..."; btn.disabled = true; }
+  if (btn) { btn.textContent = "Opening WhatsApp..."; btn.disabled = true; }
 
   try {
     const { db, auth, collection, addDoc } = await import("./firebase.js");
 
     const paymentRef = `BOOST-${productId.slice(0, 8).toUpperCase()}`;
 
-    // Save to boost_requests — admin reviews and approves
-   await addDoc(collection(db, "boost_requests"), {
+    // Save boost request to Firestore
+    await addDoc(collection(db, "boost_requests"), {
       productId,
-      productName:  window._newProductName || "",
-      userId:       auth.currentUser?.uid   || "",
-      userEmail:    auth.currentUser?.email || "",
-      userPhone:    auth.currentUser?.phoneNumber || "",
-      days:         window.selectedBoostPlan.days,
-      price:        window.selectedBoostPlan.price,
+      productName:    window._newProductName || "",
+      userId:         auth.currentUser?.uid   || "",
+      userEmail:      auth.currentUser?.email || "",
+      userPhone:      auth.currentUser?.phoneNumber || "",
+      days:           window.selectedBoostPlan.days,
+      price:          window.selectedBoostPlan.price,
       paymentRef,
-      paymentMethod: window.selectedPaymentMethod || "MTN/Airtel",
-      status:       "pending",
-      requestedAt:  new Date()
+      transactionRef: txnRef,
+      paymentMethod:  window.selectedPaymentMethod || "MTN/Airtel",
+      status:         "pending",
+      requestedAt:    new Date()
     });
 
     document.getElementById("boost-prompt-modal")?.remove();
-    showBoostConfirmation(paymentRef);
+
+    // Send to admin WhatsApp with all details
+    const waMsg = encodeURIComponent(
+      `Hello ZiBuy Admin 👋\n\n` +
+      `I have paid for an *Ad Boost*.\n\n` +
+      `📋 *Boost Details:*\n` +
+      `• Ad: *${window._newProductName || productId}*\n` +
+      `• Duration: *${window.selectedBoostPlan.days} Days*\n` +
+      `• Amount: *UGX ${Number(window.selectedBoostPlan.price).toLocaleString()}*\n` +
+      `• My Reference Code: *${paymentRef}*\n` +
+      `• Transaction ID: *${txnRef}*\n` +
+      `• Email: *${auth.currentUser?.email || ""}*\n\n` +
+      `Please verify and activate my boost. Thank you! 🙏`
+    );
+
+    window.open(`https://wa.me/256790548910?text=${waMsg}`, "_blank");
+
+    // Show confirmation screen
+    showBoostConfirmation(paymentRef, txnRef);
 
   } catch (err) {
     console.error("Boost request error:", err);
     alert("Failed to send request. Please try again.");
-    if (btn) { btn.textContent = "📩 I've Paid — Request Boost"; btn.disabled = false; }
+    if (btn) { btn.textContent = "📲 Send Reference to Admin WhatsApp"; btn.disabled = false; }
   }
 };
-
 /* ---- Success screen ---- */
-function showBoostConfirmation(paymentRef) {
+function showBoostConfirmation(paymentRef, txnRef) {
   const modal = document.createElement("div");
   modal.style.cssText = `
     position:fixed;inset:0;background:rgba(0,0,0,0.65);
@@ -837,16 +887,28 @@ function showBoostConfirmation(paymentRef) {
   modal.innerHTML = `
     <div style="background:white;border-radius:20px;padding:32px;max-width:400px;width:100%;text-align:center">
       <p style="font-size:52px;margin-bottom:12px">✅</p>
-      <h2 style="font-size:20px;font-weight:800;color:#111827;margin-bottom:8px">Boost Request Sent!</h2>
-      <p style="color:#6b7280;font-size:14px;line-height:1.7;margin-bottom:8px">
-        Your payment reference is:
+      <h2 style="font-size:20px;font-weight:800;color:#111827;margin-bottom:8px">Reference Sent!</h2>
+      <p style="color:#6b7280;font-size:14px;margin-bottom:12px">
+        Your transaction reference has been sent to admin via WhatsApp.
       </p>
-      <p style="font-size:18px;font-weight:800;color:#ff6600;background:#fff4ee;padding:10px 20px;border-radius:10px;display:inline-block;margin-bottom:12px;letter-spacing:1px">
-        ${paymentRef}
-      </p>
-      <p style="color:#6b7280;font-size:13px;margin-bottom:24px;line-height:1.6">
-        The admin will verify your Mobile Money payment and activate your boost within <strong>1 hour</strong>.
-        Your ad will show a <strong>⭐ Featured</strong> badge once active.
+      <div style="background:#f9fafb;border-radius:10px;padding:14px;margin-bottom:16px;text-align:left">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px">
+          <span style="color:#6b7280">Reference Code</span>
+          <strong style="color:#ff6600">${paymentRef}</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:13px">
+          <span style="color:#6b7280">Transaction ID</span>
+          <strong style="color:#ff6600">${txnRef}</strong>
+        </div>
+      </div>
+      <div style="background:#f9fafb;border-radius:10px;padding:12px;margin-bottom:16px;font-size:13px;text-align:left">
+        <p style="margin:0 0 6px;font-weight:800;color:#111827">What happens next:</p>
+        <p style="margin:0 0 4px;color:#374151">1. Admin verifies your Mobile Money payment</p>
+        <p style="margin:0 0 4px;color:#374151">2. Your ad gets the ⭐ Featured badge</p>
+        <p style="margin:0;color:#374151">3. You get a notification when active ✅</p>
+      </div>
+      <p style="font-size:12px;color:#6b7280;margin-bottom:20px">
+        ⏱️ Usually activated within <strong>1 hour</strong>
       </p>
       <button onclick="this.closest('div').parentElement.remove();window.location.href='dashboard.html?tab=my-ads'"
         style="background:#ff6600;color:white;border:none;padding:14px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;width:100%">
