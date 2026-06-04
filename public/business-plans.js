@@ -516,7 +516,7 @@ function showPlanPaymentInstructions(plan, price, subDocId) {
         </div>
         <ol style="padding-left:18px;color:#374151;line-height:2.3;font-size:13px;margin:0">
           <li>Dial <strong style="color:#ff6600">*165#</strong> on your MTN line</li>
-          <li>Select <strong>Pay via Merchant</strong></li>
+          <li>Select <strong>Pay With Momo</strong></li>
           <li>Enter Merchant Code: <strong style="color:#ff6600;font-size:16px;letter-spacing:1px">27868095</strong></li>
           <li>Enter amount: <strong style="color:#ff6600">UGX ${Number(price).toLocaleString()}</strong></li>
           <li>Use reference: <strong style="color:#ff6600;letter-spacing:.5px">${ref}</strong></li>
@@ -532,7 +532,7 @@ function showPlanPaymentInstructions(plan, price, subDocId) {
         </div>
         <ol style="padding-left:18px;color:#374151;line-height:2.3;font-size:13px;margin:0">
           <li>Dial <strong style="color:#ef4444">*185#</strong> on your Airtel line</li>
-          <li>Select <strong>Make Payments</strong></li>
+          <li>Select <strong>Send Money</strong></li>
           <li>Send to number: <strong style="color:#ef4444;font-size:16px">+256575996624</strong></li>
           <li>Enter amount: <strong style="color:#ef4444">UGX ${Number(price).toLocaleString()}</strong></li>
           <li>Use reference: <strong style="color:#ef4444;letter-spacing:.5px">${ref}</strong></li>
@@ -553,11 +553,27 @@ function showPlanPaymentInstructions(plan, price, subDocId) {
         <p style="font-size:11px;color:#6b7280;margin:4px 0 0">Screenshot this for your records</p>
       </div>
 
+      <!-- Reference input -->
+      <div style="margin-bottom:14px">
+        <label style="font-size:13px;font-weight:800;color:#111827;display:block;margin-bottom:8px">
+          📋 Enter your transaction reference / ID
+        </label>
+        <input type="text" id="plan-txn-ref"
+          placeholder="e.g. 1234567890 or REF123456"
+          style="width:100%;padding:12px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box"
+          onfocus="this.style.borderColor='#ff6600'"
+          onblur="this.style.borderColor='#e5e7eb'"
+        >
+        <p style="font-size:12px;color:#6b7280;margin-top:6px">
+          This is the confirmation ID you received on your phone after paying
+        </p>
+      </div>
+
       <!-- Buttons -->
       <div style="display:flex;flex-direction:column;gap:10px">
-        <button onclick="confirmPlanPayment('${subDocId}', '${ref}', '${plan.id}')"
+        <button onclick="confirmPlanPayment('${subDocId}', '${ref}', '${plan.id}', '${plan.name}', ${price})"
           style="background:#ff6600;color:white;border:none;padding:14px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;width:100%">
-          ✅ I've Paid — Notify Admin
+          📲 Send Reference to Admin WhatsApp
         </button>
         <button onclick="document.getElementById('plan-payment-modal').remove()"
           style="background:#f3f4f6;color:#6b7280;border:none;padding:12px;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;width:100%">
@@ -572,52 +588,89 @@ function showPlanPaymentInstructions(plan, price, subDocId) {
 }
 
 // ── Seller confirms they have paid ──────────────
-window.confirmPlanPayment = async function(subDocId, paymentRef, planId) {
+window.confirmPlanPayment = async function(subDocId, paymentRef, planId, planName, price) {
   const btn = event.target;
-  btn.textContent = "Sending...";
-  btn.disabled = true;
+
+  // Get transaction reference from input
+  const txnInput = document.getElementById("plan-txn-ref");
+  const txnRef   = txnInput ? txnInput.value.trim() : "";
+
+  if (!txnRef) {
+    txnInput.style.borderColor = "#ef4444";
+    txnInput.placeholder = "⚠️ Please enter your transaction reference first";
+    txnInput.focus();
+    return;
+  }
+
+  btn.textContent = "Opening WhatsApp...";
+  btn.disabled    = true;
 
   try {
-    // Update the subscription doc with payment reference
+    // Save to Firestore with transaction reference
     await updateDoc(doc(db, "business_accounts", subDocId), {
       paymentRef,
+      transactionRef:     txnRef,
       paymentConfirmedAt: new Date(),
-      status: "pending_payment"   // admin activates → sets to "active"
+      status:             "pending_payment"
     });
 
     document.getElementById("plan-payment-modal")?.remove();
 
-    // Show confirmation
-    const confirm = document.createElement("div");
-    confirm.style.cssText = `
+    // Build WhatsApp message with all details
+    const waMsg = encodeURIComponent(
+      `Hello ZiBuy Admin 👋\n\n` +
+      `I have paid for a *${planName} Plan* upgrade.\n\n` +
+      `📋 *Payment Details:*\n` +
+      `• Plan: *${planName}*\n` +
+      `• Amount: *UGX ${Number(price).toLocaleString()}*\n` +
+      `• My Reference Code: *${paymentRef}*\n` +
+      `• Transaction ID: *${txnRef}*\n` +
+      `• Email: *${currentUser.email}*\n\n` +
+      `Please verify and activate my plan. Thank you! 🙏`
+    );
+
+    // Open admin WhatsApp
+    window.open(`https://wa.me/256790548910?text=${waMsg}`, "_blank");
+
+    // Show success screen
+    const successModal = document.createElement("div");
+    successModal.style.cssText = `
       position:fixed;inset:0;background:rgba(0,0,0,0.65);
       z-index:99999;display:flex;align-items:center;
       justify-content:center;padding:16px
     `;
-    confirm.innerHTML = `
+    successModal.innerHTML = `
       <div style="background:white;border-radius:20px;padding:32px;max-width:400px;width:100%;text-align:center">
         <p style="font-size:52px;margin-bottom:12px">✅</p>
-        <h2 style="font-size:20px;font-weight:800;margin-bottom:8px">Payment Notified!</h2>
-        <p style="color:#6b7280;font-size:14px;line-height:1.7;margin-bottom:8px">
-          Your reference is:<br>
-          <strong style="color:#ff6600;font-size:18px;letter-spacing:1px">${paymentRef}</strong>
+        <h2 style="font-size:20px;font-weight:800;color:#111827;margin-bottom:8px">
+          Reference Sent!
+        </h2>
+        <p style="color:#6b7280;font-size:14px;line-height:1.7;margin-bottom:12px">
+          Your transaction reference<br>
+          <strong style="color:#ff6600;font-size:18px;letter-spacing:1px">${txnRef}</strong><br>
+          has been sent to admin via WhatsApp.
         </p>
-        <p style="color:#6b7280;font-size:13px;margin-bottom:24px;line-height:1.6">
-          Admin will verify your MTN/Airtel payment and activate your 
-          <strong>${planId}</strong> plan within <strong>1 hour</strong>.
+        <div style="background:#f9fafb;border-radius:10px;padding:12px;margin-bottom:16px;font-size:13px;text-align:left">
+          <p style="margin:0 0 6px;font-weight:800;color:#111827">What happens next:</p>
+          <p style="margin:0 0 4px;color:#374151">1. Admin verifies your Mobile Money payment</p>
+          <p style="margin:0 0 4px;color:#374151">2. Your <strong>${planName}</strong> plan is activated</p>
+          <p style="margin:0;color:#374151">3. You get a notification when it's live ✅</p>
+        </div>
+        <p style="font-size:12px;color:#6b7280;margin-bottom:20px">
+          ⏱️ Usually activated within <strong>1 hour</strong>
         </p>
         <button onclick="this.closest('div').parentElement.remove();window.location.reload()"
           style="background:#ff6600;color:white;border:none;padding:14px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;width:100%">
-          OK, Got it →
+          Done →
         </button>
       </div>
     `;
-    document.body.appendChild(confirm);
+    document.body.appendChild(successModal);
 
   } catch (err) {
     console.error(err);
-    alert("Failed to confirm. Please try again.");
-    btn.textContent = "✅ I've Paid — Notify Admin";
-    btn.disabled = false;
+    alert("Failed. Please try again.");
+    btn.textContent = "📲 Send Reference to Admin WhatsApp";
+    btn.disabled    = false;
   }
 };
