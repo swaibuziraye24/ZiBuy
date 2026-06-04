@@ -73,6 +73,8 @@ window.switchTab = async function(tabName) {
   document.querySelectorAll(".dashboard-tab").forEach(tabEl => {
     tabEl.style.display = "none";
     tabEl.classList.remove("active");
+    tabEl.style.visibility = "visible";
+    tabEl.style.opacity = "1";
   });
 
   // Remove active nav buttons
@@ -326,58 +328,183 @@ window.proceedToPayment = async function() {
   }
 
   const { productId, productName, days, price } = window.selectedBoostPlan;
+  const paymentRef = `BOOST-${productId.slice(0, 8).toUpperCase()}`;
+
+  // Close plan selection modal
+  const modal = document.getElementById("boost-modal-" + productId);
+  if (modal) modal.remove();
+
+  // Show payment instructions modal
+  const existing = document.getElementById("dash-boost-payment-modal");
+  if (existing) existing.remove();
+
+  const payModal = document.createElement("div");
+  payModal.id = "dash-boost-payment-modal";
+  payModal.className = "modal open";
+  payModal.innerHTML = `
+    <div class="modal-box" style="max-width:480px;max-height:90vh;overflow-y:auto">
+      <div class="modal-header">
+        <h2>📱 Pay to Boost Ad</h2>
+        <button class="modal-close" onclick="document.getElementById('dash-boost-payment-modal').remove()">×</button>
+      </div>
+
+      <div style="text-align:center;background:#fff4ee;border-radius:12px;padding:14px;margin-bottom:16px">
+        <p style="font-size:13px;color:#6b7280;margin:0 0 4px">Boosting: <strong>${productName}</strong></p>
+        <p style="font-size:24px;font-weight:900;color:#ff6600;margin:0">${days} Days — UGX ${Number(price).toLocaleString()}</p>
+        <p style="font-size:12px;color:#6b7280;margin:4px 0 0">Reference: <strong style="color:#ff6600">${paymentRef}</strong></p>
+      </div>
+
+      <!-- MTN -->
+      <div style="border:2px solid #ffcc00;border-radius:12px;padding:14px;margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <div style="background:#ffcc00;border-radius:6px;padding:4px 8px;font-weight:900;font-size:12px;color:#111">MTN</div>
+          <span style="font-weight:800;font-size:14px">MTN Mobile Money</span>
+        </div>
+        <ol style="padding-left:18px;color:#374151;line-height:2.2;font-size:13px;margin:0">
+          <li>Dial <strong style="color:#ff6600">*165#</strong> on your MTN line</li>
+          <li>Select <strong>Pay With Momo</strong></li>
+          <li>Enter Merchant Code: <strong style="color:#ff6600;font-size:15px">27868095</strong></li>
+          <li>Amount: <strong style="color:#ff6600">UGX ${Number(price).toLocaleString()}</strong></li>
+          
+          <li>Enter PIN to confirm</li>
+        </ol>
+      </div>
+
+      <!-- Airtel -->
+      <div style="border:2px solid #ef4444;border-radius:12px;padding:14px;margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <div style="background:#ef4444;border-radius:6px;padding:4px 8px;font-weight:900;font-size:12px;color:white">AIRTEL</div>
+          <span style="font-weight:800;font-size:14px">Airtel Money</span>
+        </div>
+        <ol style="padding-left:18px;color:#374151;line-height:2.2;font-size:13px;margin:0">
+          <li>Dial <strong style="color:#ef4444">*185#</strong> on your Airtel line</li>
+          <li>Select <strong>Send Money</strong></li>
+          <li>Send to: <strong style="color:#ef4444;font-size:15px">+256575996624</strong></li>
+          <li>Amount: <strong style="color:#ef4444">UGX ${Number(price).toLocaleString()}</strong></li>
+          
+          <li>Enter PIN to confirm</li>
+        </ol>
+      </div>
+
+      <!-- Transaction reference input -->
+      <div style="margin-bottom:14px">
+        <label style="font-size:13px;font-weight:800;color:#111827;display:block;margin-bottom:8px">
+          📋 Enter your transaction ID after paying
+        </label>
+        <input type="text" id="dash-boost-txn-ref"
+          placeholder="e.g. 1234567890 or REF123456"
+          style="width:100%;padding:12px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box"
+          onfocus="this.style.borderColor='#ff6600'"
+          onblur="this.style.borderColor='#e5e7eb'"
+        >
+        <p style="font-size:12px;color:#6b7280;margin-top:6px">
+          The confirmation ID you received on your phone after paying
+        </p>
+      </div>
+
+      <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:12px;margin-bottom:14px;font-size:12px;color:#92400e">
+        ⏱️ After entering your transaction ID, click below to notify admin. Boost activated within <strong>1 hour</strong>.
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button onclick="submitDashboardBoost('${productId}', '${productName}', ${days}, ${price}, '${paymentRef}')"
+          style="background:#ff6600;color:white;border:none;padding:14px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;width:100%">
+          📲 Send Reference to Admin WhatsApp
+        </button>
+        <button onclick="document.getElementById('dash-boost-payment-modal').remove()"
+          style="background:#f3f4f6;color:#6b7280;border:none;padding:12px;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;width:100%">
+          I'll pay later
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(payModal);
+};
+
+window.submitDashboardBoost = async function(productId, productName, days, price, paymentRef) {
+  const txnInput = document.getElementById("dash-boost-txn-ref");
+  const txnRef   = txnInput ? txnInput.value.trim() : "";
+
+  if (!txnRef) {
+    if (txnInput) {
+      txnInput.style.borderColor = "#ef4444";
+      txnInput.placeholder = "⚠️ Please enter your transaction ID first";
+      txnInput.focus();
+    }
+    return;
+  }
+
+  const btn = event.target;
+  btn.textContent = "Saving...";
+  btn.disabled    = true;
 
   try {
-    // Save boost request to Firestore
-    const boostRequest = {
+    const docRef = await addDoc(collection(db, "boost_requests"), {
       productId,
       productName,
-      userId: currentUser.uid,
-      userEmail: currentUser.email,
+      userId:         currentUser.uid,
+      userEmail:      currentUser.email,
       days,
       price,
-      status: "pending",  // Admin will change to "approved" or "rejected"
-      createdAt: new Date(),
-      approvedAt: null
-    };
+      paymentRef,
+      transactionRef: txnRef,
+      status:         "pending",
+      requestedAt:    new Date()
+    });
 
-    const docRef = await addDoc(collection(db, "boost_requests"), boostRequest);
-    debug("Boost request saved with ID:", docRef.id);
+    document.getElementById("dash-boost-payment-modal")?.remove();
 
-    // Close modal
-    const modal = document.getElementById("boost-modal-" + productId);
-    if (modal) modal.remove();
-
-    // WhatsApp message
-    const whatsappNumber = "256790548910"; // ⚠️ CHANGE THIS TO YOUR NUMBER!
-    const whatsappMessage = encodeURIComponent(
-      `Hi 👋\n\n` +
-      `I want to boost my product:\n\n` +
-      `📦 ${productName}\n` +
-      `⏱️ ${days} Days\n` +
-      `💰 UGX ${price.toLocaleString()}\n\n` +
-      `Please confirm payment & boost my ad!\n\n` +
-      `Boost Request ID: ${docRef.id}`
+    // Open admin WhatsApp with full details
+    const waMsg = encodeURIComponent(
+      `Hello ZiBuy Admin 👋\n\n` +
+      `I have paid to boost my ad.\n\n` +
+      `📋 *Boost Details:*\n` +
+      `• Ad: *${productName}*\n` +
+      `• Duration: *${days} Days*\n` +
+      `• Amount: *UGX ${Number(price).toLocaleString()}*\n` +
+      `• Reference Code: *${paymentRef}*\n` +
+      `• Transaction ID: *${txnRef}*\n` +
+      `• Email: *${currentUser.email}*\n\n` +
+      `Please verify and activate my boost. Thank you! 🙏`
     );
 
-    // Open WhatsApp
-    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${whatsappMessage}`;
-    window.open(whatsappUrl, "_blank");
+    window.open(`https://wa.me/256790548910?text=${waMsg}`, "_blank");
 
-    // Show confirmation message
-    alert(
-      `✅ Boost request created!\n\n` +
-      `📱 WhatsApp will open for payment\n` +
-      `💬 Send the message to confirm\n` +
-      `⏳ We'll boost your ad within 24 hours after payment\n\n` +
-      `Request ID: ${docRef.id}`
-    );
-
-    loadMyProducts();
+    // Success screen
+    const successModal = document.createElement("div");
+    successModal.className = "modal open";
+    successModal.innerHTML = `
+      <div class="modal-box" style="max-width:400px;text-align:center">
+        <p style="font-size:52px;margin-bottom:12px">✅</p>
+        <h2 style="font-size:20px;font-weight:800;margin-bottom:8px">Reference Sent!</h2>
+        <div style="background:#f9fafb;border-radius:10px;padding:14px;margin-bottom:16px;text-align:left">
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px">
+            <span style="color:#6b7280">Reference Code</span>
+            <strong style="color:#ff6600">${paymentRef}</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:13px">
+            <span style="color:#6b7280">Transaction ID</span>
+            <strong style="color:#ff6600">${txnRef}</strong>
+          </div>
+        </div>
+        <p style="color:#6b7280;font-size:13px;margin-bottom:20px;line-height:1.6">
+          Admin will verify and activate your boost within <strong>1 hour</strong>. 
+          Your ad will show a ⭐ badge once active.
+        </p>
+        <button onclick="this.closest('.modal').remove();loadMyProducts()"
+          style="background:#ff6600;color:white;border:none;padding:14px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;width:100%">
+          Done →
+        </button>
+      </div>
+    `;
+    document.body.appendChild(successModal);
 
   } catch (err) {
-    console.error("Boost request error:", err);
+    console.error("Boost submit error:", err);
     alert("❌ Error: " + err.message);
+    btn.textContent = "📲 Send Reference to Admin WhatsApp";
+    btn.disabled    = false;
   }
 };
 
@@ -562,34 +689,10 @@ async function loadProfileSettings() {
   try {
     debug("Rendering settings for user:", currentUser.email);
     
-    const settingsHTML = `
-      <div class="settings-section">
-        <h3>👤 Account Information</h3>
-        <div style="padding:12px;background:#f3f4f6;border-radius:10px;margin-bottom:12px">
-          <p style="margin:6px 0"><strong>Email:</strong> ${currentUser.email}</p>
-          <p style="margin:6px 0"><strong>User ID:</strong> ${currentUser.uid}</p>
-          <p style="margin:6px 0"><strong>Member Since:</strong> ${new Date(currentUser.metadata?.creationTime).toLocaleDateString()}</p>
-        </div>
-      </div>
-
-      <div class="settings-section">
-        <h3>🔐 Security</h3>
-        <button class="btn btn-outline" onclick="changePassword()" style="width:100%;margin-bottom:8px">Change Password</button>
-        <button class="btn btn-outline" style="width:100%" onclick="logout()">Logout</button>
-      </div>
-
-      <div class="settings-section" style="border:1px solid #fee2e2;background:#fee2e2">
-        <h3 style="color:#991b1b">⚠️ Danger Zone</h3>
-        <button class="btn" style="background:#ef4444;color:white;width:100%" onclick="deleteAccount()">Delete My Account</button>
-      </div>
-    `;
-
-
-const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+    // Fetch user plan first
+    const userDoc  = await getDoc(doc(db, "users", currentUser.uid));
     const userData = userDoc.exists() ? userDoc.data() : {};
-
-    const plan        = userData.plan        || "free";
-    const accountType = userData.accountType || "normal";
+    const plan     = userData.plan || "free";
 
     const planLabels = {
       free:   "🆓 Free Plan",
@@ -598,25 +701,64 @@ const userDoc = await getDoc(doc(db, "users", currentUser.uid));
       gold:   "🥇 Gold Plan"
     };
 
-    const typeEl    = document.getElementById("account-type-display");
-    const upgradeBtn = document.getElementById("upgrade-btn");
-    const bizStatus  = document.getElementById("business-status");
+    const planColors = {
+      free:   "#6b7280",
+      bronze: "#92400e",
+      silver: "#475569",
+      gold:   "#b45309"
+    };
 
-    if (typeEl) typeEl.textContent = planLabels[plan] || "🆓 Free Plan";
+    const planBgs = {
+      free:   "#f3f4f6",
+      bronze: "#fef3c7",
+      silver: "#f1f5f9",
+      gold:   "#fffbeb"
+    };
 
-    if (plan === "free") {
-      if (upgradeBtn)  upgradeBtn.style.display = "inline-block";
-      if (bizStatus)   bizStatus.style.display  = "none";
-    } else {
-      if (upgradeBtn)  upgradeBtn.style.display  = "none";
-      if (bizStatus) {
-        bizStatus.style.display  = "block";
-        bizStatus.textContent    = planLabels[plan] + " Active";
-        bizStatus.style.color    = "#16a34a";
-      }
-    }
-    
-    container.innerHTML = settingsHTML;
+    // Build and set HTML all at once — plan info included inline
+    container.innerHTML = `
+      <div class="settings-section">
+        <h3>👤 Account Information</h3>
+        <div style="padding:14px;background:#f3f4f6;border-radius:10px;margin-bottom:12px">
+          <p style="margin:6px 0"><strong>Email:</strong> ${currentUser.email}</p>
+          <p style="margin:6px 0"><strong>User ID:</strong> <span style="font-size:12px;color:#6b7280">${currentUser.uid}</span></p>
+          <p style="margin:6px 0"><strong>Member Since:</strong> ${new Date(currentUser.metadata?.creationTime).toLocaleDateString()}</p>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>💼 Current Plan</h3>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:${planBgs[plan]};border-radius:10px;margin-bottom:12px">
+          <span style="font-weight:800;font-size:15px;color:${planColors[plan]}">${planLabels[plan]}</span>
+          ${plan === "free"
+            ? `<button onclick="window.location.href='business-plans.html'"
+                style="background:#ff6600;color:white;border:none;padding:8px 16px;border-radius:8px;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit">
+                ⬆️ Upgrade
+               </button>`
+            : `<span style="background:#dcfce7;color:#16a34a;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:800">✅ Active</span>`
+          }
+        </div>
+        ${plan !== "free"
+          ? `<button onclick="window.location.href='business-plans.html'"
+              style="background:#f3f4f6;color:#374151;border:none;padding:10px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;width:100%">
+              🔄 Change Plan
+             </button>`
+          : ""
+        }
+      </div>
+
+      <div class="settings-section">
+        <h3>🔐 Security</h3>
+        <button class="btn btn-outline" onclick="changePassword()" style="width:100%;margin-bottom:8px">Change Password</button>
+        <button class="btn btn-outline" style="width:100%" onclick="logout()">Logout</button>
+      </div>
+
+      <div class="settings-section" style="border:1px solid #fee2e2">
+        <h3 style="color:#991b1b">⚠️ Danger Zone</h3>
+        <button class="btn" style="background:#ef4444;color:white;width:100%" onclick="deleteAccount()">Delete My Account</button>
+      </div>
+    `;
+
     debug("✅ Settings rendered successfully!");
     
   } catch (err) {
