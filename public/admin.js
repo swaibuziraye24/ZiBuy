@@ -423,25 +423,59 @@ function renderBoosts(boosts) {
     return;
   }
 
-  tbody.innerHTML = boosts.map(b => `
-    <tr>
+  tbody.innerHTML = boosts.map(b => {
+    const isPending = b.status === "pending" || b.status === "pending_verification";
+    const rowBg     = isPending ? "background:#fffbeb;border-left:4px solid #ff6600" : "";
+
+    return `
+    <tr style="${rowBg}">
       <td>
         <a href="product.html?id=${b.productId}" target="_blank"
-          style="color:var(--orange);font-weight:700;font-size:13px">
+          style="color:var(--orange);font-weight:800;font-size:13px">
           ${b.productName || b.productId}
         </a>
+        <br>
+        <span style="font-size:11px;color:#6b7280">ID: ${b.productId?.slice(0,10)}</span>
       </td>
-      <td style="font-size:12px">${b.userEmail}</td>
-      <td>${b.days} days</td>
-      <td style="font-weight:700;color:var(--orange)">UGX ${Number(b.price||0).toLocaleString()}</td>
-      <td style="font-size:12px">${fmtDate(b.createdAt)}</td>
-      <td><span class="plan-chip ${chipClass(b.status)}">${b.status}</span></td>
       <td>
-        ${b.status === "pending" ? `
-          <button class="action-btn btn-approve" onclick="approveBoost('${b.id}','${b.productId}',${b.days})">✅ Approve</button>
-          <button class="action-btn btn-reject"  onclick="rejectBoost('${b.id}','${b.productId}')">✗ Reject</button>` : ""}
+        <span style="font-weight:700;font-size:13px">${b.userEmail}</span>
+        <br>
+        <span style="font-size:11px;color:#6b7280">UID: ${b.userId?.slice(0,10) || "—"}</span>
       </td>
-    </tr>`).join("");
+      <td style="font-weight:700">${b.days} days</td>
+      <td style="font-weight:800;color:var(--orange)">UGX ${Number(b.price||0).toLocaleString()}</td>
+      <td>
+        <span style="font-size:12px;font-weight:700;color:#ff6600;background:#fff4ee;padding:4px 8px;border-radius:6px;letter-spacing:.5px">
+          ${b.paymentRef || "—"}
+        </span>
+      </td>
+      <td style="font-size:12px">${fmtDate(b.requestedAt || b.createdAt)}</td>
+      <td>
+        <span class="plan-chip ${isPending ? 'chip-pending' : chipClass(b.status)}">
+          ${isPending ? "⏳ PENDING" : b.status}
+        </span>
+      </td>
+      <td>
+        ${isPending ? `
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <button class="action-btn btn-approve"
+              onclick="approveBoost('${b.id}','${b.productId}',${b.days})"
+              style="font-size:13px;padding:8px 14px">
+              ✅ Approve
+            </button>
+            <button class="action-btn btn-reject"
+              onclick="rejectBoost('${b.id}','${b.productId}')"
+              style="font-size:13px;padding:8px 14px">
+              ✗ Reject
+            </button>
+            <a href="https://wa.me/${b.userPhone || ''}"
+              style="background:#25d366;color:white;border:none;padding:7px 10px;border-radius:8px;font-size:12px;font-weight:700;text-align:center;text-decoration:none;display:block">
+              💬 WhatsApp
+            </a>
+          </div>` : "—"}
+      </td>
+    </tr>`;
+  }).join("");
 }
 
 window.approveBoost = async function(boostId, productId, days) {
