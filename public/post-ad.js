@@ -702,7 +702,6 @@ function showBoostPrompt(productId, productName) {
             <li>Select <strong>Pay With Momo</strong></li>
             <li>Enter Merchant Code: <strong style="color:#ff6600;font-size:15px">27868095</strong></li>
             <li>Enter amount: <strong id="boost-amount-mtn" style="color:#ff6600"></strong></li>
-            <li>Use reference: <strong id="boost-ref-mtn" style="color:#ff6600;letter-spacing:.5px"></strong></li>
             <li>Enter your PIN to confirm</li>
           </ol>
         </div>
@@ -718,7 +717,6 @@ function showBoostPrompt(productId, productName) {
             <li>Select <strong>Send Money</strong></li>
             <li>Send to number: <strong style="color:#ef4444;font-size:15px">+256575996624</strong></li>
             <li>Enter amount: <strong id="boost-amount-airtel" style="color:#ef4444"></strong></li>
-            <li>Use reference: <strong id="boost-ref-airtel" style="color:#ef4444;letter-spacing:.5px"></strong></li>
             <li>Enter your PIN to confirm</li>
           </ol>
         </div>
