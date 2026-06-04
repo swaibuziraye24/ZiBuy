@@ -371,7 +371,7 @@ async function processUpgrade() {
       endDate.getDate() + duration
     );
 
-    await addDoc(
+    const docRef = await addDoc(
       collection(db, "business_accounts"),
       {
         userId: currentUser.uid,
@@ -386,30 +386,8 @@ async function processUpgrade() {
       }
     );
 
-    const whatsapp =
-      "256790548910";
-
-    const msg =
-      encodeURIComponent(
-        `Hello ZiBuy Admin.%0A%0A` +
-        `I want to upgrade my business plan.%0A%0A` +
-        `Plan: ${p.name}%0A` +
-        `Billing: ${billingCycle}%0A` +
-        `Amount: UGX ${price.toLocaleString()}%0A%0A` +
-        `Email: ${currentUser.email}`
-      );
-
-    window.open(
-      `https://wa.me/${whatsapp}?text=${msg}`,
-      "_blank"
-    );
-
-    alert(
-      "✅ Upgrade request submitted"
-    );
-
-    closeUpgradeModal();
-
+   closeUpgradeModal();
+    showPlanPaymentInstructions(p, price, docRef.id);
   }
 
   catch (err) {
@@ -494,3 +472,152 @@ window.openUpgrade = openUpgrade;
 window.closeUpgradeModal = closeUpgradeModal;
 window.processUpgrade = processUpgrade;
 window.downgradeFree = downgradeFree;
+
+
+// ============================================
+// PLAN PAYMENT INSTRUCTIONS MODAL
+// ============================================
+function showPlanPaymentInstructions(plan, price, subDocId) {
+  const existing = document.getElementById("plan-payment-modal");
+  if (existing) existing.remove();
+
+  const ref = `PLAN-${subDocId.slice(0, 8).toUpperCase()}`;
+
+  const modal = document.createElement("div");
+  modal.id = "plan-payment-modal";
+  modal.style.cssText = `
+    position:fixed;inset:0;background:rgba(0,0,0,0.65);
+    z-index:99999;display:flex;align-items:center;
+    justify-content:center;padding:16px;overflow-y:auto
+  `;
+
+  modal.innerHTML = `
+    <div style="background:white;border-radius:20px;padding:28px;max-width:480px;width:100%;animation:slideUp .3s ease;max-height:90vh;overflow-y:auto">
+
+      <!-- Header -->
+      <div style="text-align:center;margin-bottom:20px">
+        <p style="font-size:40px;margin-bottom:8px">${plan.icon}</p>
+        <h2 style="font-size:20px;font-weight:800;color:#111827;margin-bottom:4px">
+          Activate ${plan.name} Plan
+        </h2>
+        <p style="font-size:28px;font-weight:900;color:#ff6600;margin:0">
+          UGX ${Number(price).toLocaleString()}
+        </p>
+        <p style="font-size:13px;color:#6b7280;margin-top:4px">
+          Pay using MTN or Airtel Money below
+        </p>
+      </div>
+
+      <!-- MTN -->
+      <div style="background:white;border:2px solid #ffcc00;border-radius:12px;padding:16px;margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+          <div style="background:#ffcc00;border-radius:8px;padding:5px 10px;font-weight:900;font-size:13px;color:#111">MTN</div>
+          <span style="font-weight:800;font-size:15px">MTN Mobile Money</span>
+        </div>
+        <ol style="padding-left:18px;color:#374151;line-height:2.3;font-size:13px;margin:0">
+          <li>Dial <strong style="color:#ff6600">*165#</strong> on your MTN line</li>
+          <li>Select <strong>Pay via Merchant</strong></li>
+          <li>Enter Merchant Code: <strong style="color:#ff6600;font-size:16px;letter-spacing:1px">27868095</strong></li>
+          <li>Enter amount: <strong style="color:#ff6600">UGX ${Number(price).toLocaleString()}</strong></li>
+          <li>Use reference: <strong style="color:#ff6600;letter-spacing:.5px">${ref}</strong></li>
+          <li>Enter your PIN to confirm</li>
+        </ol>
+      </div>
+
+      <!-- Airtel -->
+      <div style="background:white;border:2px solid #ef4444;border-radius:12px;padding:16px;margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+          <div style="background:#ef4444;border-radius:8px;padding:5px 10px;font-weight:900;font-size:13px;color:white">AIRTEL</div>
+          <span style="font-weight:800;font-size:15px">Airtel Money</span>
+        </div>
+        <ol style="padding-left:18px;color:#374151;line-height:2.3;font-size:13px;margin:0">
+          <li>Dial <strong style="color:#ef4444">*185#</strong> on your Airtel line</li>
+          <li>Select <strong>Make Payments</strong></li>
+          <li>Send to number: <strong style="color:#ef4444;font-size:16px">+256575996624</strong></li>
+          <li>Enter amount: <strong style="color:#ef4444">UGX ${Number(price).toLocaleString()}</strong></li>
+          <li>Use reference: <strong style="color:#ef4444;letter-spacing:.5px">${ref}</strong></li>
+          <li>Enter your PIN to confirm</li>
+        </ol>
+      </div>
+
+      <!-- Notice -->
+      <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:12px;margin-bottom:16px;font-size:13px;color:#92400e">
+        ⏱️ After paying, click <strong>"I've Paid"</strong> below. 
+        Admin will verify your payment and activate your plan within <strong>1 hour</strong>.
+      </div>
+
+      <!-- Reference display -->
+      <div style="background:#f9fafb;border-radius:10px;padding:12px;margin-bottom:16px;text-align:center">
+        <p style="font-size:12px;color:#6b7280;margin:0 0 4px">Your payment reference</p>
+        <p style="font-size:18px;font-weight:800;color:#ff6600;letter-spacing:1px;margin:0">${ref}</p>
+        <p style="font-size:11px;color:#6b7280;margin:4px 0 0">Screenshot this for your records</p>
+      </div>
+
+      <!-- Buttons -->
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button onclick="confirmPlanPayment('${subDocId}', '${ref}', '${plan.id}')"
+          style="background:#ff6600;color:white;border:none;padding:14px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;width:100%">
+          ✅ I've Paid — Notify Admin
+        </button>
+        <button onclick="document.getElementById('plan-payment-modal').remove()"
+          style="background:#f3f4f6;color:#6b7280;border:none;padding:12px;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;width:100%">
+          I'll pay later
+        </button>
+      </div>
+
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+}
+
+// ── Seller confirms they have paid ──────────────
+window.confirmPlanPayment = async function(subDocId, paymentRef, planId) {
+  const btn = event.target;
+  btn.textContent = "Sending...";
+  btn.disabled = true;
+
+  try {
+    // Update the subscription doc with payment reference
+    await updateDoc(doc(db, "business_accounts", subDocId), {
+      paymentRef,
+      paymentConfirmedAt: new Date(),
+      status: "pending_payment"   // admin activates → sets to "active"
+    });
+
+    document.getElementById("plan-payment-modal")?.remove();
+
+    // Show confirmation
+    const confirm = document.createElement("div");
+    confirm.style.cssText = `
+      position:fixed;inset:0;background:rgba(0,0,0,0.65);
+      z-index:99999;display:flex;align-items:center;
+      justify-content:center;padding:16px
+    `;
+    confirm.innerHTML = `
+      <div style="background:white;border-radius:20px;padding:32px;max-width:400px;width:100%;text-align:center">
+        <p style="font-size:52px;margin-bottom:12px">✅</p>
+        <h2 style="font-size:20px;font-weight:800;margin-bottom:8px">Payment Notified!</h2>
+        <p style="color:#6b7280;font-size:14px;line-height:1.7;margin-bottom:8px">
+          Your reference is:<br>
+          <strong style="color:#ff6600;font-size:18px;letter-spacing:1px">${paymentRef}</strong>
+        </p>
+        <p style="color:#6b7280;font-size:13px;margin-bottom:24px;line-height:1.6">
+          Admin will verify your MTN/Airtel payment and activate your 
+          <strong>${planId}</strong> plan within <strong>1 hour</strong>.
+        </p>
+        <button onclick="this.closest('div').parentElement.remove();window.location.reload()"
+          style="background:#ff6600;color:white;border:none;padding:14px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;width:100%">
+          OK, Got it →
+        </button>
+      </div>
+    `;
+    document.body.appendChild(confirm);
+
+  } catch (err) {
+    console.error(err);
+    alert("Failed to confirm. Please try again.");
+    btn.textContent = "✅ I've Paid — Notify Admin";
+    btn.disabled = false;
+  }
+};
