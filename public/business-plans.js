@@ -519,7 +519,6 @@ function showPlanPaymentInstructions(plan, price, subDocId) {
           <li>Select <strong>Pay With Momo</strong></li>
           <li>Enter Merchant Code: <strong style="color:#ff6600;font-size:16px;letter-spacing:1px">27868095</strong></li>
           <li>Enter amount: <strong style="color:#ff6600">UGX ${Number(price).toLocaleString()}</strong></li>
-          <li>Use reference: <strong style="color:#ff6600;letter-spacing:.5px">${ref}</strong></li>
           <li>Enter your PIN to confirm</li>
         </ol>
       </div>
@@ -535,7 +534,6 @@ function showPlanPaymentInstructions(plan, price, subDocId) {
           <li>Select <strong>Send Money</strong></li>
           <li>Send to number: <strong style="color:#ef4444;font-size:16px">+256575996624</strong></li>
           <li>Enter amount: <strong style="color:#ef4444">UGX ${Number(price).toLocaleString()}</strong></li>
-          <li>Use reference: <strong style="color:#ef4444;letter-spacing:.5px">${ref}</strong></li>
           <li>Enter your PIN to confirm</li>
         </ol>
       </div>
