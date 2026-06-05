@@ -35,7 +35,13 @@
         <span id="profile-plan-badge" style="display:none;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:800"></span>
       </div>
     </div>
-    <button onclick="messageProfile()" class="btn btn-orange" style="padding:12px 24px;white-space:nowrap">💬 Send Message</button>
+    
+  <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button onclick="messageProfile()" class="btn btn-orange" style="padding:12px 24px;white-space:nowrap">💬 Send Message</button>
+      <button id="edit-profile-btn" onclick="openEditProfile()" style="display:none;background:#f3f4f6;color:#111827;border:none;padding:12px 24px;border-radius:10px;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit;white-space:nowrap">
+        ✏️ Edit Profile
+      </button>
+    </div>
   </div>
 
   <!-- Profile Stats -->
@@ -90,8 +96,68 @@
   </div>
 </div>
 
-<div id="overlay" class="overlay"></div>
+<div id="overlay" class="overlay" onclick="closeEditProfile()"></div>
 <div id="toast-container" class="toast-container"></div>
+
+<!-- ============ EDIT PROFILE MODAL ============ -->
+<div id="edit-profile-modal"
+  style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;justify-content:center;align-items:center;padding:16px;overflow-y:auto">
+  <div style="background:white;border-radius:20px;padding:28px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;animation:slideUp .3s ease">
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <h2 style="margin:0;font-size:20px;font-weight:800">✏️ Edit My Profile</h2>
+      <button onclick="closeEditProfile()"
+        style="background:#f3f4f6;border:none;width:36px;height:36px;border-radius:50%;font-size:20px;cursor:pointer">×</button>
+    </div>
+
+    <!-- Display Name -->
+    <label style="font-size:12px;font-weight:800;text-transform:uppercase;color:#6b7280;letter-spacing:.5px;display:block;margin-bottom:6px">
+      Display Name
+    </label>
+    <input type="text" id="ep-name" placeholder="Your name or business name"
+      style="width:100%;padding:12px;border:1.5px solid #e5e7eb;border-radius:10px;font-family:inherit;font-size:14px;margin-bottom:14px;box-sizing:border-box;outline:none">
+
+    <!-- Phone -->
+    <label style="font-size:12px;font-weight:800;text-transform:uppercase;color:#6b7280;letter-spacing:.5px;display:block;margin-bottom:6px">
+      Phone / WhatsApp Number
+    </label>
+    <input type="tel" id="ep-phone" placeholder="256701234567"
+      style="width:100%;padding:12px;border:1.5px solid #e5e7eb;border-radius:10px;font-family:inherit;font-size:14px;margin-bottom:14px;box-sizing:border-box;outline:none">
+
+    <!-- Location -->
+    <label style="font-size:12px;font-weight:800;text-transform:uppercase;color:#6b7280;letter-spacing:.5px;display:block;margin-bottom:6px">
+      Location
+    </label>
+    <select id="ep-location"
+      style="width:100%;padding:12px;border:1.5px solid #e5e7eb;border-radius:10px;font-family:inherit;font-size:14px;margin-bottom:14px;box-sizing:border-box;outline:none;background:white">
+      <option value="">Select location</option>
+      <option>Kampala</option><option>Wakiso</option><option>Mukono</option>
+      <option>Jinja</option><option>Mbarara</option><option>Entebbe</option>
+      <option>Gulu</option><option>Mbale</option><option>Masaka</option>
+      <option>Fort Portal</option><option>Hoima</option><option>Arua</option>
+      <option>Masindi</option><option>Bushenyi</option><option>Other</option>
+    </select>
+
+    <!-- Bio -->
+    <label style="font-size:12px;font-weight:800;text-transform:uppercase;color:#6b7280;letter-spacing:.5px;display:block;margin-bottom:6px">
+      Bio / About
+    </label>
+    <textarea id="ep-bio" rows="4" placeholder="Tell buyers about yourself or your business..."
+      style="width:100%;padding:12px;border:1.5px solid #e5e7eb;border-radius:10px;font-family:inherit;font-size:14px;margin-bottom:20px;box-sizing:border-box;outline:none;resize:none"></textarea>
+
+    <div style="display:flex;gap:10px">
+      <button onclick="closeEditProfile()"
+        style="flex:1;padding:14px;border:1.5px solid #e5e7eb;border-radius:10px;background:white;font-family:inherit;font-weight:700;cursor:pointer">
+        Cancel
+      </button>
+      <button id="ep-save-btn" onclick="saveProfile()"
+        style="flex:2;padding:14px;border:none;border-radius:10px;background:#ff6600;color:white;font-family:inherit;font-size:15px;font-weight:800;cursor:pointer">
+        💾 Save Changes
+      </button>
+    </div>
+
+  </div>
+</div>
 
 <script type="module" src="notifications-setup.js"></script>
 
