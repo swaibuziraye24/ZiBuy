@@ -5,6 +5,8 @@ import {
   addDoc,
   getDocs,
   query,
+  doc, 
+  updateDoc,
   where
 } from "./firebase.js";
 
@@ -81,6 +83,26 @@ async function checkExistingVerification() {
 
 window.submitVerification = async function() {
   const fullName = document.getElementById("full-name").value.trim();
+
+  // Show payment requirement first
+  const existingFeeNotice = document.getElementById("verif-fee-notice");
+  if (!existingFeeNotice) {
+    const notice = document.createElement("div");
+    notice.id = "verif-fee-notice";
+    notice.style.cssText = "background:#fff4ee;border:2px solid #ff6600;border-radius:12px;padding:16px;margin-bottom:16px";
+    notice.innerHTML = `
+      <h3 style="margin:0 0 8px;font-size:15px;font-weight:800;color:#ff6600">💳 Verification Fee: UGX 10,000</h3>
+      <p style="font-size:13px;color:#374151;margin-bottom:10px">Pay once to get your ✅ Verified badge permanently.</p>
+      <div style="background:white;border:1.5px solid #ffcc00;border-radius:8px;padding:10px;margin-bottom:8px;font-size:13px">
+        <strong>MTN:</strong> Dial *165# → Pay With Momo → Code <strong style="color:#ff6600">27868095</strong> → UGX 10,000 → Ref: <strong style="color:#ff6600">VERIFY-${auth.currentUser?.uid?.slice(0,6).toUpperCase()}</strong>
+      </div>
+      <div style="background:white;border:1.5px solid #ef4444;border-radius:8px;padding:10px;font-size:13px">
+        <strong>Airtel:</strong> Dial *185# → Send Money → <strong style="color:#ef4444">+256575996624</strong> → UGX 10,000 → Ref: <strong style="color:#ef4444">VERIFY-${auth.currentUser?.uid?.slice(0,6).toUpperCase()}</strong>
+      </div>
+    `;
+    document.querySelector(".verification-form").prepend(notice);
+    return; // Stop here first time — user reads payment instructions
+  }
   const businessName = document.getElementById("business-name").value.trim();
   const phone = document.getElementById("phone-number").value.trim();
   const location = document.getElementById("location").value;
@@ -138,7 +160,7 @@ window.submitVerification = async function() {
       bio,
       idDocument: idDocURL,
       businessLicense: licenseURL,
-      paymentAmount: 50000,
+      paymentAmount: 100000,
       paymentStatus: "pending",
       status: "pending",
       createdAt: new Date()
@@ -146,37 +168,50 @@ window.submitVerification = async function() {
 
     // ========== WHATSAPP MESSAGE TO ADMIN ==========
     const adminWhatsApp = "256790548910"; // ⭐ REPLACE WITH YOUR NUMBER
-    const verificationDetails = `
-🎉 *New Seller Verification Received!*
+   // Ask for transaction reference before sending to WhatsApp
+    const txnRef = prompt(
+      "✅ Documents uploaded!\n\n" +
+      "Enter your MTN/Airtel transaction ID after paying UGX 10,000:\n" +
+      "(Check your phone for the confirmation SMS)"
+    );
 
-📝 *Seller Information:*
-- Name: ${fullName}
-- Business: ${businessName}
-- Email: ${currentUser.email}
-- Phone: ${phone}
-- Location: ${location}
+    if (!txnRef || !txnRef.trim()) {
+      alert("⚠️ Please enter your transaction ID to complete verification.");
+      btn.textContent = "Submit for Verification";
+      btn.disabled = false;
+      return;
+    }
 
-💰 *Payment:*
-- Amount: UGX 50,000
-- Status: Pending Confirmation
+    // Save transaction ref to Firestore
+    await updateDoc(doc(db, "seller_verifications", docRef.id), {
+      transactionRef:  txnRef.trim(),
+      paymentAmount:   100000,
+      paymentStatus:   "pending_verification"
+    });
 
-📄 *Documents:*
-- ID Document: ${idDocURL ? "✅ Uploaded" : "❌ Missing"}
-- Business License: ${licenseURL ? "✅ Uploaded" : "⚠️ Optional"}
+    const verifRef = `VERIFY-${currentUser.uid.slice(0,6).toUpperCase()}`;
 
-🔗 *Admin Action Required:*
-Approve or Reject in Admin Panel:
-https://zibuy-5deae.web.app/admin-verification.html
-
-⏳ *Verification ID:* ${docRef.id}
-    `;
+    const verificationDetails =
+      `🎉 *New Seller Verification Request*\n\n` +
+      `👤 *Seller Details:*\n` +
+      `• Name: ${fullName}\n` +
+      `• Business: ${businessName}\n` +
+      `• Email: ${currentUser.email}\n` +
+      `• Phone: ${phone}\n` +
+      `• Location: ${location}\n\n` +
+      `💰 *Payment:*\n` +
+      `• Amount: UGX 100,000\n` +
+      `• Reference Code: ${verifRef}\n` +
+      `• Transaction ID: ${txnRef.trim()}\n\n` +
+      `📄 *Documents:*\n` +
+      `• ID: ${idDocURL ? "✅ Uploaded" : "❌ Missing"}\n` +
+      `• License: ${licenseURL ? "✅ Uploaded" : "⚠️ Not provided"}\n\n` +
+      `🔗 Approve/Reject: https://zibuy-5deae.web.app/admin.html\n` +
+      `🆔 Verification ID: ${docRef.id}`;
 
     const whatsappURL = `https://wa.me/${adminWhatsApp}?text=${encodeURIComponent(verificationDetails)}`;
 
-    // Show success message
-    alert("✅ Verification submitted! Opening WhatsApp to confirm payment...");
-
-    // Open WhatsApp
+    alert("✅ Verification submitted! Opening WhatsApp to notify admin...");
     window.open(whatsappURL, "_blank");
 
     // Redirect to dashboard
