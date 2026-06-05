@@ -2,6 +2,9 @@ const functions = require("firebase-functions");
 const admin     = require("firebase-admin");
 admin.initializeApp();
 
+// ============================================
+// 1. PUSH NOTIFICATIONS (paid plans only)
+// ============================================
 exports.sendPushOnNotification = functions.firestore
   .document("notifications/{notifId}")
   .onCreate(async (snap) => {
@@ -16,7 +19,12 @@ exports.sendPushOnNotification = functions.firestore
 
       if (!userDoc.exists) return null;
 
-      const token = userDoc.data()?.fcmToken;
+      const userData = userDoc.data();
+      const token    = userData?.fcmToken;
+      const plan     = userData?.plan || "free";
+
+      // Free users get in-app notifications only — no push
+      if (plan === "free") return null;
       if (!token) return null;
 
       await admin.messaging().send({
@@ -36,12 +44,12 @@ exports.sendPushOnNotification = functions.firestore
             badge: "https://zibuy-5deae.web.app/my_logo.png"
           },
           fcmOptions: {
-            link: "https://zibuy-5deae.web.app"
+            link: data.url || "https://zibuy-5deae.web.app"
           }
         }
       });
 
-      console.log(`[FCM] Push sent to user ${data.userId}`);
+      console.log(`[FCM] Push sent to user ${data.userId} (plan: ${plan})`);
       return null;
 
     } catch (err) {
@@ -50,59 +58,109 @@ exports.sendPushOnNotification = functions.firestore
     }
   });
 
-
-  // functions/index.js — add this export
+// ============================================
+// 2. AUTO-EXPIRE BOOSTS (runs every 24 hours)
+// ============================================
 exports.expireBoosts = functions.pubsub
   .schedule("every 24 hours")
   .onRun(async () => {
-    const now = admin.firestore.Timestamp.now();
-    const snap = await admin.firestore()
-      .collection("products")
-      .where("isPremium", "==", true)
-      .where("premiumExpiresAt", "<=", now)
-      .get();
+    try {
+      const now  = admin.firestore.Timestamp.now();
+      const snap = await admin.firestore()
+        .collection("products")
+        .where("isPremium", "==", true)
+        .where("premiumExpiresAt", "<=", now)
+        .get();
 
-    const batch = admin.firestore().batch();
-    snap.docs.forEach(d => {
-      batch.update(d.ref, { isPremium: false });
-    });
-    await batch.commit();
-    console.log(`Expired ${snap.size} boosts`);
+      if (snap.empty) {
+        console.log("[Boosts] Nothing to expire");
+        return null;
+      }
+
+      const batch = admin.firestore().batch();
+      snap.docs.forEach(d => {
+        batch.update(d.ref, { isPremium: false });
+      });
+      await batch.commit();
+
+      // Also update boost_requests to expired
+      const boostSnap = await admin.firestore()
+        .collection("boost_requests")
+        .where("status", "==", "approved")
+        .get();
+
+      const boostBatch = admin.firestore().batch();
+      boostSnap.docs.forEach(d => {
+        const expiresAt = d.data().expiresAt?.toDate?.();
+        if (expiresAt && new Date() > expiresAt) {
+          boostBatch.update(d.ref, { status: "expired" });
+        }
+      });
+      await boostBatch.commit();
+
+      console.log(`[Boosts] Expired ${snap.size} boosted ads`);
+      return null;
+
+    } catch (err) {
+      console.error("[Boosts] Expiry failed:", err.message);
+      return null;
+    }
   });
 
-
-  // functions/index.js — add this export
+// ============================================
+// 3. AUTO-EXPIRE SUBSCRIPTIONS (every 24 hours)
+// ============================================
 exports.expireSubscriptions = functions.pubsub
   .schedule("every 24 hours")
   .onRun(async () => {
-    const now = new Date();
-    const snap = await admin.firestore()
-      .collection("business_accounts")
-      .where("status", "==", "active")
-      .get();
+    try {
+      const now  = new Date();
+      const snap = await admin.firestore()
+        .collection("business_accounts")
+        .where("status", "==", "active")
+        .get();
 
-    const batch = admin.firestore().batch();
-    snap.docs.forEach(d => {
-      const end = d.data().endDate?.toDate?.();
-      if (end && now > end) {
-        batch.update(d.ref, { status: "expired" });
+      if (snap.empty) {
+        console.log("[Subs] Nothing to expire");
+        return null;
       }
-    });
-    await batch.commit();
-  });
 
+      const batch     = admin.firestore().batch();
+      const userBatch = admin.firestore().batch();
+      let   count     = 0;
 
-  exports.sendPushOnNotification = functions.firestore
-  .document("notifications/{notifId}")
-  .onCreate(async (snap) => {
-    const data = snap.data();
+      snap.docs.forEach(d => {
+        const end = d.data().endDate?.toDate?.();
+        if (end && now > end) {
+          // Expire subscription
+          batch.update(d.ref, {
+            status:    "expired",
+            expiredAt: admin.firestore.FieldValue.serverTimestamp()
+          });
 
-    // Only send push to paid plan users
-    const userDoc = await admin.firestore()
-      .collection("users").doc(data.userId).get();
-    const plan = userDoc.data()?.plan || "free";
+          // Downgrade user to free
+          const userId = d.data().userId;
+          if (userId) {
+            const userRef = admin.firestore().collection("users").doc(userId);
+            userBatch.update(userRef, {
+              plan:             "free",
+              isSellerVerified: false,
+              planExpiredAt:    admin.firestore.FieldValue.serverTimestamp()
+            });
+          }
 
-    if (plan === "free") return null; // Free users get in-app only
+          count++;
+        }
+      });
 
-    // ... rest of push logic
+      await batch.commit();
+      await userBatch.commit();
+
+      console.log(`[Subs] Expired ${count} subscriptions`);
+      return null;
+
+    } catch (err) {
+      console.error("[Subs] Expiry failed:", err.message);
+      return null;
+    }
   });
