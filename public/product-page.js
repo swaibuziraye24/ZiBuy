@@ -125,6 +125,7 @@ async function loadProduct() {
 
     loadProductReviews(id);
     loadSellerRating(p.userId);
+    loadSellerBadges(p.userId);
 
   } catch (err) {
     console.error(err);
@@ -159,6 +160,67 @@ async function loadSellerRating(userId) {
     console.error(err);
   }
 }
+
+
+async function loadSellerBadges(userId) {
+  if (!userId) return;
+
+  try {
+    const { getDocs, query, where, collection, doc, getDoc } = await import("./firebase.js");
+    const { db } = await import("./firebase.js");
+
+    // ── Verified badge ────────────────────────
+    const verifSnap = await getDocs(query(
+      collection(db, "seller_verifications"),
+      where("userId", "==", userId),
+      where("status", "==", "approved")
+    ));
+
+    if (!verifSnap.empty) {
+      const badge = document.getElementById("seller-verified-badge");
+      if (badge) badge.style.display = "inline-block";
+    }
+
+    // ── Member since ──────────────────────────
+    const userSnap = await getDoc(doc(db, "users", userId));
+    const memberSinceEl = document.getElementById("seller-member-since");
+
+    if (memberSinceEl) {
+      let joinDate = null;
+
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+        // Try createdAt field first
+        joinDate = userData.createdAt?.toDate?.() || null;
+      }
+
+      // Fallback: get date from their earliest product
+      if (!joinDate) {
+        const productsSnap = await getDocs(query(
+          collection(db, "products"),
+          where("userId", "==", userId)
+        ));
+        const dates = productsSnap.docs
+          .map(d => d.data().createdAt?.toDate?.())
+          .filter(Boolean)
+          .sort((a, b) => a - b);
+        if (dates.length > 0) joinDate = dates[0];
+      }
+
+      if (joinDate) {
+        const formatted = joinDate.toLocaleDateString("en-UG", {
+          month: "long",
+          year:  "numeric"
+        });
+        memberSinceEl.textContent = `🗓️ Member since ${formatted}`;
+      }
+    }
+
+  } catch (err) {
+    console.error("loadSellerBadges error:", err);
+  }
+}
+
 
 async function loadProductReviews(productId) {
   try {
