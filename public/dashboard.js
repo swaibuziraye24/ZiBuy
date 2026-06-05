@@ -87,23 +87,15 @@ window.switchTab = async function(tabName) {
     btn.classList.remove("active");
   });
 
-  let tabId = "";
+  const tabMap = {
+    "my-ads":    "my-ads-tab",
+    "orders":    "orders-tab",
+    "profile":   "profile-tab",
+    "analytics": "analytics-tab",
+    "myprofile": "myprofile-tab"
+  };
 
-  if (tabName === "my-ads") {
-    tabId = "my-ads-tab";
-  }
-
-  else if (tabName === "orders") {
-    tabId = "orders-tab";
-  }
-
-  else if (tabName === "profile") {
-    tabId = "profile-tab";
-  }
-
-  else if (tabName === "analytics") {
-    tabId = "analytics-tab";
-  }
+  const tabId = tabMap[tabName] || "";
 
   const activeTab = document.getElementById(tabId);
 
