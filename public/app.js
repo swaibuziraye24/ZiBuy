@@ -55,6 +55,44 @@ function initApp() {
   console.log("App initialized");
   setupAuthStateListener();
   loadProducts();
+
+
+// Load banner ads from Firestore
+async function loadBannerAd() {
+  try {
+    const snap = await getDocs(query(
+      collection(db, "banner_ads"),
+      where("active", "==", true)
+    ));
+    if (snap.empty) return;
+
+    const banner = snap.docs[0].data();
+    const slot = document.getElementById("top-banner-slot");
+    if (!slot) return;
+
+    slot.style.display = "block";
+    slot.innerHTML = `
+      <a href="${banner.url || '#'}" target="_blank"
+        style="display:block;border-radius:12px;overflow:hidden;cursor:pointer">
+        <img src="${banner.imageUrl}" alt="${banner.title || 'Ad'}"
+          style="width:100%;height:auto;max-height:100px;object-fit:cover;border-radius:12px">
+      </a>
+    `;
+
+    // Track impression
+    if (banner.id) {
+      import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js")
+        .then(({ increment, updateDoc, doc }) => {
+          updateDoc(doc(db, "banner_ads", snap.docs[0].id), {
+            impressions: increment(1)
+          });
+        });
+    }
+  } catch (e) {}
+}
+
+loadBannerAd();
+
 }
 
 // ============================================
@@ -195,15 +233,17 @@ async function loadProducts() {
         if (data.plan && data.plan !== "free") {
           planMap[d.id] = data.plan;
         }
-        // Store member since date
-        if (data.createdAt) {
-          const joinDate = data.createdAt?.toDate?.();
+       // Store member since — try createdAt, fall back to planUpdatedAt
+        const rawDate = data.createdAt || data.planUpdatedAt || data.lastVerificationSubmit || null;
+        if (rawDate) {
+          const joinDate = rawDate?.toDate?.() || (rawDate instanceof Date ? rawDate : null);
           if (joinDate) {
             memberSinceMap[d.id] = joinDate.toLocaleDateString("en-UG", {
-              month: "short", year: "numeric"
+              month: "long", year: "numeric"
             });
           }
         }
+       
       });
 
       verifSnap.forEach(d => verifSet.add(d.data().userId));
@@ -307,9 +347,9 @@ async function loadFeaturedProducts() {
                     ${product.sellerIsVerified
                       ? `<span style="display:inline-block;background:#10b981;color:white;padding:1px 7px;border-radius:20px;font-size:10px;font-weight:800">✅ Verified</span>`
                       : ""}
-                    ${product.sellerMemberSince
-                      ? `<p style="color:#adb5bd;font-size:10px;margin:2px 0 0">🗓️ Since ${product.sellerMemberSince}</p>`
-                      : ""}
+                    ${p.sellerMemberSince
+              ? `<p style="color:#6b7280;font-size:10px;margin:0;font-weight:600">🗓️ ${p.sellerMemberSince}</p>`
+              : ""}
                   </div>
                   <div class="card-footer">
                     ${hasPhone ? `
