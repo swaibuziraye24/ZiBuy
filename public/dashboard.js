@@ -28,7 +28,12 @@ onAuthStateChanged(auth, (user) => {
   currentUser = user;
   debug("Auth state changed. User:", user?.email);
   if (!user) {
-    window.location.href = "index.html";
+    // Give it 3 seconds before redirecting — secure browsers are slow to resolve auth
+    setTimeout(() => {
+      if (!currentUser) {
+        window.location.href = "index.html";
+      }
+    }, 3000);
     return;
   }
   loadDashboard();
