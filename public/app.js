@@ -175,6 +175,8 @@ async function loadProducts() {
     // ── Batch load plans + verifications ONCE ──
     let planMap   = {};
     let verifSet  = new Set();
+    let memberSinceMap = {};
+
 
     try {
       const [usersSnap, verifSnap] = await Promise.all([
@@ -186,7 +188,7 @@ async function loadProducts() {
       ]);
 
       // memberSinceMap stores join date per userId
-      let memberSinceMap = {};
+      memberSinceMap = {};
 
       usersSnap.forEach(d => {
         const data = d.data();
