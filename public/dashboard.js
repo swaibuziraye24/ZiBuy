@@ -134,6 +134,8 @@ window.switchTab = async function(tabName) {
       await loadProfileSettings();
     } else if (tabName === "analytics") {
       await loadAnalytics();
+    } else if (tabName === "myprofile") {
+      await loadMyProfile();
     }
   
   } catch (err) {
@@ -1215,4 +1217,282 @@ async function () {
 
 };
 
+
+// ============================================
+// MY PROFILE TAB
+// ============================================
+
+async function loadMyProfile() {
+  const container = document.getElementById("myprofile-container");
+  if (!container || !currentUser) return;
+
+  container.innerHTML = `
+    <div style="text-align:center;padding:40px;color:#6b7280">
+      <div style="width:40px;height:40px;border:3px solid #ff6600;border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 16px"></div>
+      <p>Loading your profile...</p>
+    </div>
+  `;
+
+  try {
+    // ── 1. Get user doc ──────────────────────
+    const userSnap = await getDoc(doc(db, "users", currentUser.uid));
+    const userData = userSnap.exists() ? userSnap.data() : {};
+
+    // ── 2. Get user's products ───────────────
+    const productsSnap = await getDocs(query(
+      collection(db, "products"),
+      where("userId", "==", currentUser.uid)
+    ));
+    const products   = productsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const activeAds  = products.filter(p => p.status === "active").length;
+    const totalViews = products.reduce((s, p) => s + (p.views || 0), 0);
+    const totalLikes = products.reduce((s, p) => s + (p.likes || 0), 0);
+
+    // ── 3. Get user's reviews ────────────────
+    const reviewsSnap = await getDocs(query(
+      collection(db, "reviews"),
+      where("sellerId", "==", currentUser.uid)
+    ));
+    const reviews   = reviewsSnap.docs.map(d => d.data());
+    const avgRating = reviews.length > 0
+      ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
+      : "0.0";
+
+    // ── 4. Get plan ──────────────────────────
+    const subSnap = await getDocs(query(
+      collection(db, "business_accounts"),
+      where("userId", "==", currentUser.uid),
+      where("status", "==", "active")
+    ));
+    let planName = "🆓 Free Plan";
+    let planExpiry = null;
+    if (!subSnap.empty) {
+      const sub = subSnap.docs[0].data();
+      const end = sub.endDate?.toDate?.();
+      if (end && new Date() < end) {
+        const labels = { bronze:"🥉 Bronze", silver:"🥈 Silver", gold:"🥇 Gold" };
+        planName   = labels[sub.plan] || "🆓 Free";
+        planExpiry = end;
+      }
+    }
+
+    // ── 5. Get verification status ───────────
+    const verifSnap = await getDocs(query(
+      collection(db, "seller_verifications"),
+      where("userId", "==", currentUser.uid)
+    ));
+    const isVerified = !verifSnap.empty &&
+      verifSnap.docs[0].data().status === "approved";
+
+    // ── 6. Profile data ──────────────────────
+    const displayName = userData.displayName ||
+      currentUser.email.split("@")[0];
+    const phone       = userData.phone    || "—";
+    const location    = userData.location || "Uganda";
+    const bio         = userData.bio      || "No bio yet.";
+    const joinedDate  = currentUser.metadata?.creationTime
+      ? new Date(currentUser.metadata.creationTime).toLocaleDateString("en-UG", { day:"numeric", month:"long", year:"numeric" })
+      : "—";
+    const initial     = displayName[0].toUpperCase();
+
+    // ── 7. Store for edit form ───────────────
+    window._myProfileData = { displayName, phone, location, bio };
+
+    // ── 8. Render ────────────────────────────
+    container.innerHTML = `
+
+      <!-- Avatar + Name -->
+      <div style="background:white;border-radius:20px;padding:28px;box-shadow:0 2px 12px rgba(0,0,0,0.07);margin-bottom:16px;display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+        <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#ff6600,#ff9900);color:white;font-size:32px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          ${initial}
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px">
+            <h2 style="margin:0;font-size:22px;font-weight:800;color:#111827">${displayName}</h2>
+            ${isVerified ? `<span style="background:#10b981;color:white;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:800">✅ Verified</span>` : ""}
+            <span style="background:#fff4ee;color:#ff6600;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:800">${planName}</span>
+          </div>
+          <p style="margin:0 0 4px;color:#6b7280;font-size:14px">📍 ${location}</p>
+          <p style="margin:0 0 4px;color:#6b7280;font-size:14px">📱 ${phone}</p>
+          <p style="margin:0;color:#6b7280;font-size:13px">🗓️ Member since ${joinedDate}</p>
+        </div>
+        <a href="user-profile.html?id=${currentUser.uid}"
+          style="background:#f3f4f6;color:#374151;border:none;padding:10px 18px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;text-decoration:none;white-space:nowrap">
+          👁️ Public View
+        </a>
+      </div>
+
+      <!-- Stats Row -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:16px">
+        ${profileStat("📦", "Total Ads", products.length, "#ff6600")}
+        ${profileStat("✅", "Active Ads", activeAds, "#10b981")}
+        ${profileStat("👁️", "Total Views", totalViews.toLocaleString(), "#6b7280")}
+        ${profileStat("❤️", "Total Likes", totalLikes.toLocaleString(), "#ef4444")}
+        ${profileStat("⭐", "Avg Rating", avgRating, "#f59e0b")}
+        ${profileStat("💬", "Reviews", reviews.length, "#8b5cf6")}
+      </div>
+
+      <!-- Plan & Expiry -->
+      <div style="background:white;border-radius:16px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,0.07);margin-bottom:16px">
+        <h3 style="font-size:15px;font-weight:800;margin:0 0 14px;color:#111827">💼 Plan Details</h3>
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+          <div>
+            <p style="margin:0;font-size:16px;font-weight:800;color:#ff6600">${planName}</p>
+            ${planExpiry
+              ? `<p style="margin:4px 0 0;font-size:13px;color:#6b7280">Expires: ${planExpiry.toLocaleDateString("en-UG",{day:"numeric",month:"long",year:"numeric"})}</p>`
+              : `<p style="margin:4px 0 0;font-size:13px;color:#6b7280">No expiry — free forever</p>`
+            }
+          </div>
+          <button onclick="window.location.href='business-plans.html'"
+            style="background:#ff6600;color:white;border:none;padding:10px 18px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit">
+            ⬆️ Upgrade
+          </button>
+        </div>
+      </div>
+
+      <!-- Bio -->
+      <div style="background:white;border-radius:16px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,0.07);margin-bottom:16px">
+        <h3 style="font-size:15px;font-weight:800;margin:0 0 10px;color:#111827">📝 About Me</h3>
+        <p id="mp-bio-display" style="color:#374151;font-size:14px;line-height:1.7;margin:0">${bio}</p>
+      </div>
+
+      <!-- My Ads preview -->
+      <div style="background:white;border-radius:16px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,0.07);margin-bottom:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <h3 style="font-size:15px;font-weight:800;margin:0;color:#111827">📦 My Ads</h3>
+          <button onclick="switchTab('my-ads',null)"
+            style="background:#f3f4f6;color:#374151;border:none;padding:8px 14px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit">
+            View All →
+          </button>
+        </div>
+        ${products.length === 0
+          ? `<p style="color:#6b7280;font-size:14px">No ads posted yet. <a href="post-ad.html" style="color:#ff6600;font-weight:700">Post your first ad →</a></p>`
+          : `<div style="display:flex;flex-direction:column;gap:10px">
+              ${products.slice(0, 3).map(p => `
+                <div onclick="window.location.href='product.html?id=${p.id}'"
+                  style="display:flex;gap:12px;align-items:center;padding:10px;background:#f9fafb;border-radius:10px;cursor:pointer;transition:.2s"
+                  onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='#f9fafb'">
+                  <img src="${p.images?.[0] || ''}"
+                    onerror="this.style.display='none'"
+                    style="width:52px;height:52px;object-fit:cover;border-radius:8px;background:#e5e7eb;flex-shrink:0">
+                  <div style="flex:1;min-width:0">
+                    <p style="margin:0;font-weight:700;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</p>
+                    <p style="margin:3px 0 0;color:#ff6600;font-weight:800;font-size:13px">UGX ${Number(p.price).toLocaleString()}</p>
+                  </div>
+                  <div style="text-align:right;flex-shrink:0">
+                    <p style="margin:0;font-size:12px;color:#6b7280">👁️ ${p.views || 0} views</p>
+                    <p style="margin:3px 0 0;font-size:12px;color:#ef4444">❤️ ${p.likes || 0} likes</p>
+                  </div>
+                </div>
+              `).join("")}
+            </div>`
+        }
+      </div>
+
+      <!-- Recent Reviews -->
+      <div style="background:white;border-radius:16px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,0.07)">
+        <h3 style="font-size:15px;font-weight:800;margin:0 0 14px;color:#111827">⭐ Reviews I've Received</h3>
+        ${reviews.length === 0
+          ? `<p style="color:#6b7280;font-size:14px">No reviews yet.</p>`
+          : reviews.slice(0, 3).map(r => `
+              <div style="padding:12px;background:#f9fafb;border-radius:10px;border-left:4px solid #ff6600;margin-bottom:10px">
+                <p style="margin:0;font-size:14px">${"⭐".repeat(r.rating)} <strong>${r.rating}/5</strong></p>
+                <p style="margin:6px 0;font-size:13px;color:#374151">${r.text || r.reviewText || ""}</p>
+                <p style="margin:0;font-size:11px;color:#adb5bd">${r.reviewerEmail} · ${r.createdAt ? new Date(r.createdAt.toDate()).toLocaleDateString() : ""}</p>
+              </div>
+            `).join("")
+        }
+      </div>
+    `;
+
+  } catch (err) {
+    console.error("loadMyProfile error:", err);
+    container.innerHTML = `<p style="color:red;padding:20px">Failed to load profile: ${err.message}</p>`;
+  }
+}
+
+function profileStat(icon, label, value, color) {
+  return `
+    <div style="background:white;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.06);text-align:center;border-top:3px solid ${color}">
+      <p style="font-size:22px;margin:0 0 4px">${icon}</p>
+      <p style="font-size:20px;font-weight:900;color:${color};margin:0">${value}</p>
+      <p style="font-size:11px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin:4px 0 0">${label}</p>
+    </div>`;
+}
+
+// ── Edit My Profile ───────────────────────────
+
+window.openEditMyProfile = function() {
+  const d = window._myProfileData || {};
+  document.getElementById("mp-name").value     = d.displayName || "";
+  document.getElementById("mp-phone").value    = d.phone       || "";
+  document.getElementById("mp-location").value = d.location    || "";
+  document.getElementById("mp-bio").value      = d.bio         || "";
+  document.getElementById("edit-myprofile-modal").style.display = "flex";
+};
+
+window.closeEditMyProfile = function() {
+  document.getElementById("edit-myprofile-modal").style.display = "none";
+};
+
+window.saveMyProfile = async function() {
+  const name     = document.getElementById("mp-name").value.trim();
+  const phone    = document.getElementById("mp-phone").value.trim();
+  const location = document.getElementById("mp-location").value;
+  const bio      = document.getElementById("mp-bio").value.trim();
+
+  if (!name) {
+    document.getElementById("mp-name").style.borderColor = "#ef4444";
+    document.getElementById("mp-name").focus();
+    return;
+  }
+
+  const btn = document.getElementById("mp-save-btn");
+  btn.textContent = "Saving...";
+  btn.disabled    = true;
+
+  try {
+    // Update user doc
+    await updateDoc(doc(db, "users", currentUser.uid), {
+      displayName: name,
+      phone,
+      location,
+      bio,
+      updatedAt: new Date()
+    });
+
+    // Update seller info on all products
+    const productsSnap = await getDocs(query(
+      collection(db, "products"),
+      where("userId", "==", currentUser.uid)
+    ));
+    await Promise.all(productsSnap.docs.map(d =>
+      updateDoc(doc(db, "products", d.id), {
+        "seller.name":     name,
+        "seller.phone":    phone,
+        "seller.location": location,
+        updatedAt: new Date()
+      })
+    ));
+
+    closeEditMyProfile();
+
+    // Refresh the profile tab
+    await loadMyProfile();
+
+    // Toast
+    const toast = document.createElement("div");
+    toast.className   = "toast success";
+    toast.textContent = "✅ Profile updated!";
+    document.getElementById("toast-container")?.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+
+  } catch (err) {
+    console.error("saveMyProfile error:", err);
+    alert("❌ Failed: " + err.message);
+  } finally {
+    btn.textContent = "💾 Save Changes";
+    btn.disabled    = false;
+  }
+};
 
