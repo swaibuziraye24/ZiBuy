@@ -241,6 +241,12 @@ async function loadMyProducts() {
       </div>
     `).join("");
 
+
+    container.style.display = "flex";
+    container.style.flexDirection = "column";
+    container.style.gap = "14px";
+    debug("✅ Products rendered successfully!");
+
     debug("✅ Products rendered successfully!");
 
   } catch (err) {
