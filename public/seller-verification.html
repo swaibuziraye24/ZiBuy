@@ -21,7 +21,7 @@
 
 <div style="max-width:600px;margin:0 auto;padding:24px">
   <h1 style="font-size:28px;font-weight:800;margin-bottom:8px">✅ Get Verified Seller Badge</h1>
-  <p style="color:#6b7280;margin-bottom:24px">Verification fee: <strong>UGX 50,000</strong></p>
+  <p style="color:#6b7280;margin-bottom:24px">Verification fee: <strong>UGX 100,000</strong></p>
 
   <form id="verify-form">
     <!-- Personal Info -->
@@ -96,7 +96,7 @@
     <div style="background:#fffbeb;border:1.5px solid #fde68a;border-radius:12px;padding:16px;margin-bottom:20px">
       <h3 style="font-weight:800;margin:0 0 12px;color:#92400e">💳 Payment Details</h3>
       <p style="margin:0 0 8px;color:#92400e;font-size:14px">
-        <strong>Amount:</strong> UGX 50,000
+        <strong>Amount:</strong> UGX 100,000
       </p>
       <p style="margin:0;color:#92400e;font-size:13px">
         After submitting, you'll get WhatsApp with payment instructions from our admin.
@@ -193,7 +193,7 @@
         phone,
         location,
         bio,
-        paymentAmount: 50000,
+        paymentAmount: 100000,
         paymentStatus: "pending",
         status: "pending",
         createdAt: new Date()
@@ -201,7 +201,7 @@
 
       // Send WhatsApp message
       const adminPhone = "256701234567"; // YOUR ADMIN PHONE
-      const message = `🆕 NEW VERIFICATION REQUEST\n\n👤 Name: ${fullName}\n🏢 Business: ${businessName}\n📞 Phone: ${phone}\n📍 Location: ${location}\n\n💳 Payment: UGX 50,000\n📧 Email: ${currentUser.email}\n\nPlease review at: admin-verification.html`;
+      const message = `🆕 NEW VERIFICATION REQUEST\n\n👤 Name: ${fullName}\n🏢 Business: ${businessName}\n📞 Phone: ${phone}\n📍 Location: ${location}\n\n💳 Payment: UGX 100,000\n📧 Email: ${currentUser.email}\n\nPlease review at: admin-verification.html`;
       
       window.location.href = `https://wa.me/${adminPhone}?text=${encodeURIComponent(message)}`;
 
