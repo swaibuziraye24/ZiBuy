@@ -8,26 +8,41 @@
   <meta name="mobile-web-app-capable" content="yes">
   <title>My Dashboard — ZiBuy</title>
   <link rel="stylesheet" href="style.css">
-
-<link rel="manifest" href="/manifest.json">
-
+  <link rel="manifest" href="/manifest.json">
+  <style>
+    /* ── Force ads list visible ── */
+    #my-ads-list {
+      display: flex !important;
+      flex-direction: column;
+      gap: 14px;
+      min-height: 40px;
+    }
+    /* ── Only show active tab ── */
+    .dashboard-tab {
+      display: none !important;
+    }
+    .dashboard-tab.active {
+      display: block !important;
+    }
+  </style>
 </head>
 <body>
 
 <!-- ============ TOP BAR ============ -->
 <header class="topbar">
-  <a href="index.html"><img src="my_logo.png" alt="ZiBuy" id="secret-admin-trigger" style="height:45px;width:auto;cursor:pointer"></a>
+  <a href="index.html">
+    <img src="my_logo.png" alt="ZiBuy" id="secret-admin-trigger"
+      style="height:45px;width:auto;cursor:pointer">
+  </a>
   <div class="topbar-actions" style="margin-left:auto">
     <button class="btn btn-dark" onclick="window.location.href='index.html'">← Home</button>
   </div>
 </header>
 
-
-
 <!-- ============ DASHBOARD ============ -->
 <div class="dashboard-wrap">
 
-  <!-- Sidebar -->
+  <!-- ── Sidebar ── -->
   <aside class="dashboard-sidebar">
     <div class="user-profile-card">
       <div class="user-avatar">👤</div>
@@ -35,43 +50,36 @@
       <p class="user-email" id="user-email-display">Loading...</p>
     </div>
 
+    <button class="btn btn-orange" onclick="openMyShop()">
+      🏪 My Shop
+    </button>
 
-<button
-class="btn btn-orange"
-onclick="openMyShop()">
-🏪 My Shop
-</button>
-
-
-
-<button class="btn btn-orange"
-  onclick="window.location.href='seller-verification.html'">
-  ✅ Get Verified
-</button>
-
+    <button class="btn btn-orange"
+      onclick="window.location.href='seller-verification.html'">
+      ✅ Get Verified
+    </button>
 
     <nav class="dashboard-nav">
-      <button class="nav-item active" data-tab="my-ads" onclick="switchTab('my-ads')">
+      <button class="nav-item active" data-tab="my-ads" onclick="switchTab('my-ads', this)">
         <span>📦</span>
         <span>My Ads</span>
       </button>
-      <button class="nav-item" data-tab="orders" onclick="switchTab('orders')">
+      <button class="nav-item" data-tab="orders" onclick="switchTab('orders', this)">
         <span>🛒</span>
         <span>My Orders</span>
       </button>
-     <button class="nav-item" data-tab="profile" onclick="switchTab('profile')">
+      <button class="nav-item" data-tab="profile" onclick="switchTab('profile', this)">
         <span>⚙️</span>
         <span>Settings</span>
       </button>
-
-      <button class="nav-item" data-tab="analytics" onclick="switchTab('analytics')">
+      <button class="nav-item" data-tab="analytics" onclick="switchTab('analytics', this)">
         <span>📊</span>
         <span>Analytics</span>
       </button>
     </nav>
   </aside>
 
-  <!-- Main Content -->
+  <!-- ── Main Content ── -->
   <main class="dashboard-content">
 
     <!-- MY ADS TAB -->
@@ -80,89 +88,65 @@ onclick="openMyShop()">
         <h2>📦 My Products</h2>
         <a href="post-ad.html" class="btn btn-orange">+ Post New Ad</a>
       </div>
-      <div id="my-ads-list" class="ads-list">
-        <p style="text-align:center;padding:40px">Loading your products...</p>
+      <div id="my-ads-list">
+        <!-- Spinner shown until JS renders -->
+        <div style="text-align:center;padding:40px;color:#6b7280">
+          <div style="width:40px;height:40px;border:3px solid #ff6600;border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 16px"></div>
+          <p style="font-size:14px;font-weight:700">Loading your ads...</p>
+        </div>
+        <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
       </div>
     </div>
 
+    <!-- ANALYTICS TAB -->
+    <div class="dashboard-tab" id="analytics-tab">
+      <div class="tab-header">
+        <h2>📊 Analytics</h2>
+        <span id="analytics-plan-badge"
+          style="padding:5px 12px;border-radius:20px;font-size:12px;font-weight:800;background:#f3f4f6;color:#6b7280">
+        </span>
+      </div>
+      <div id="analytics-container">
+        <p style="text-align:center;padding:40px;color:#6b7280">Loading analytics...</p>
+      </div>
+    </div>
 
-<!-- ANALYTICS TAB -->
-<div class="dashboard-tab" id="analytics-tab" style="display:none">
-  <div class="tab-header">
-    <h2>📊 Analytics</h2>
-    <span id="analytics-plan-badge" style="padding:5px 12px;border-radius:20px;font-size:12px;font-weight:800;background:#f3f4f6;color:#6b7280"></span>
-  </div>
-  <div id="analytics-container">
-    <p style="text-align:center;padding:40px;color:#6b7280">Loading analytics...</p>
-  </div>
-</div>
+    <!-- ORDERS TAB -->
+    <div class="dashboard-tab" id="orders-tab">
+      <div class="tab-header">
+        <h2>🛒 My Orders</h2>
+      </div>
+      <div id="orders-list" class="orders-list">
+        <p style="text-align:center;padding:40px">Loading your orders...</p>
+      </div>
+    </div>
 
+    <!-- SETTINGS TAB -->
+    <div class="dashboard-tab" id="profile-tab">
+      <div class="tab-header">
+        <h2>⚙️ Account Settings</h2>
+      </div>
+      <!-- JS writes everything here — no child elements needed -->
+      <div id="profile-settings">
+        <p style="text-align:center;padding:40px;color:#6b7280">Loading settings...</p>
+      </div>
+    </div>
 
- 
-<!-- ORDERS TAB -->
-<div class="dashboard-tab" id="orders-tab" style="display:none">
-  <div class="tab-header">
-    <h2>🛒 My Orders</h2>
-  </div>
-  <div id="orders-list" class="orders-list">
-    <p style="text-align:center;padding:40px">Loading your orders...</p>
-  </div>
-</div>
-
-
-<!-- SETTINGS TAB -->
-<div class="dashboard-tab" id="profile-tab" style="display:none">
-  <div class="tab-header">
-    <h2>⚙️ Account Settings</h2>
-  </div>
-  <div id="profile-settings">
-    <p style="text-align:center;padding:40px;color:#6b7280">Loading settings...</p>
-  </div>
-
-<div class="settings-section">
-  <h3>📦 Account Type</h3>
-  <p id="account-type-display" style="font-size:14px;color:#6b7280;margin-bottom:16px">Loading...</p>
-  <button id="upgrade-btn" class="btn btn-orange" onclick="window.location.href='business-plans.html'" style="display:none">
-    ⬆️ Upgrade Plan
-  </button>
-  <p id="business-status" style="font-size:13px;color:#10b981;display:none">✅ Business Account Active</p>
-</div>
-
-</div>
   </main>
-
 </div>
 
-<!-- ============ MODALS ============ -->
+<!-- ============ OVERLAY & TOAST ============ -->
 <div id="overlay" class="overlay" onclick="closeModal()"></div>
 <div id="toast-container" class="toast-container"></div>
 
-
-
-<script type="module" src="dashboard.js"></script>
-
-<script>
-  // Quick test to verify containers exist
-  window.testDashboard = function() {
-    console.log("✅ my-ads-list exists:", !!document.getElementById("my-ads-list"));
-    console.log("✅ orders-list exists:", !!document.getElementById("orders-list"));
-    console.log("✅ profile-settings exists:", !!document.getElementById("profile-settings"));
-    console.log("✅ my-ads-tab exists:", !!document.getElementById("my-ads-tab"));
-    console.log("✅ orders-tab exists:", !!document.getElementById("orders-tab"));
-    console.log("✅ profile-tab exists:", !!document.getElementById("profile-tab"));
-  };
-  
-  // Run test after page loads
-  window.addEventListener('load', testDashboard);
-</script>
-
-
-<!-- Edit Product Modal -->
-<div id="edit-modal" class="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;justify-content:center;align-items:center;padding:16px">
+<!-- ============ EDIT PRODUCT MODAL ============ -->
+<div id="edit-modal" class="modal"
+  style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;justify-content:center;align-items:center;padding:16px">
   <div style="background:white;border-radius:16px;padding:24px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
       <h2 style="margin:0;font-size:18px;font-weight:800">✏️ Edit Ad</h2>
-      <button onclick="closeEditModal()" style="background:none;border:none;font-size:24px;cursor:pointer;color:#6b7280">×</button>
+      <button onclick="closeEditModal()"
+        style="background:none;border:none;font-size:24px;cursor:pointer;color:#6b7280">×</button>
     </div>
 
     <label style="font-size:12px;font-weight:800;text-transform:uppercase;color:#6b7280;letter-spacing:.5px">Product Name</label>
@@ -177,25 +161,30 @@ onclick="openMyShop()">
     <select id="edit-location"
       style="width:100%;padding:12px;border:1.5px solid #e5e7eb;border-radius:10px;font-family:inherit;font-size:14px;margin:6px 0 14px;box-sizing:border-box;outline:none;background:white">
       <option value="">Select location</option>
-      <option>Kampala</option><option>Wakiso</option><option>Mukono</option>
-      <option>Jinja</option><option>Mbarara</option><option>Entebbe</option>
-      <option>Gulu</option><option>Mbale</option><option>Masaka</option>
-      <option>Fort Portal</option><option>Hoima</option><option>Arua</option><option>Other</option>
-       <option value="Fort Portal">📍 Fort Portal</option>
-        <option value="Hoima">📍 Hoima</option>
-        <option value="Kiboga">📍 Kiboga</option>
-        <option value="Mubende">📍 Mubende</option>
-        <option value="Mityana">📍 Mityana</option>
-        <option value="Kyankwanzi">📍 Kyankwanzi</option>
-        <option value="Kaseese">📍 Kaseese</option>
-        <option value="Lugazi">📍 Lugazi</option>
-        <option value="Mpigi">📍 Mpigi</option>
-        <option value="Arua">📍 Arua</option>
-        <option value="Masindi">📍 Masindi</option>
-        <option value="Bushenyi">📍 Bushenyi</option>
-        <option value="Isingiro">📍 Isingiro</option>
-        <option value="Kamuli">📍 Kamuli</option>
-       
+      <option value="Kampala">Kampala</option>
+      <option value="Wakiso">Wakiso</option>
+      <option value="Mukono">Mukono</option>
+      <option value="Jinja">Jinja</option>
+      <option value="Mbarara">Mbarara</option>
+      <option value="Entebbe">Entebbe</option>
+      <option value="Gulu">Gulu</option>
+      <option value="Mbale">Mbale</option>
+      <option value="Masaka">Masaka</option>
+      <option value="Fort Portal">Fort Portal</option>
+      <option value="Hoima">Hoima</option>
+      <option value="Arua">Arua</option>
+      <option value="Kiboga">Kiboga</option>
+      <option value="Mubende">Mubende</option>
+      <option value="Mityana">Mityana</option>
+      <option value="Kyankwanzi">Kyankwanzi</option>
+      <option value="Kasese">Kasese</option>
+      <option value="Lugazi">Lugazi</option>
+      <option value="Mpigi">Mpigi</option>
+      <option value="Masindi">Masindi</option>
+      <option value="Bushenyi">Bushenyi</option>
+      <option value="Isingiro">Isingiro</option>
+      <option value="Kamuli">Kamuli</option>
+      <option value="Other">Other</option>
     </select>
 
     <label style="font-size:12px;font-weight:800;text-transform:uppercase;color:#6b7280;letter-spacing:.5px">Description</label>
@@ -219,8 +208,9 @@ onclick="openMyShop()">
   </div>
 </div>
 
+<!-- ============ SCRIPTS ============ -->
+<script type="module" src="dashboard.js"></script>
 <script type="module" src="notifications-setup.js"></script>
-
 <script src="nav.js"></script>
 
 </body>
