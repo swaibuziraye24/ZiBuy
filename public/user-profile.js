@@ -1,4 +1,5 @@
-import { db, auth, collection, getDocs, query, where, doc, getDoc } from "./firebase.js";
+import { db, auth, collection, getDocs, query, where, doc, getDoc, updateDoc, addDoc } from "./firebase.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const params = new URLSearchParams(window.location.search);
 const userId = params.get("id");
@@ -153,3 +154,120 @@ window.messageProfile = function() {
 };
 
 loadProfile();
+
+// ── Check if viewer is the owner — show Edit button ──
+onAuthStateChanged(auth, (user) => {
+  if (user && user.uid === userId) {
+    const editBtn = document.getElementById("edit-profile-btn");
+    if (editBtn) editBtn.style.display = "block";
+
+    // Hide "Send Message" — no point messaging yourself
+    const msgBtn = document.querySelector("button[onclick='messageProfile()']");
+    if (msgBtn) msgBtn.style.display = "none";
+  }
+});
+
+
+// ============================================
+// EDIT PROFILE
+// ============================================
+
+window.openEditProfile = async function() {
+  try {
+    // Pre-fill from Firestore user doc
+    const userSnap = await getDoc(doc(db, "users", userId));
+    const userData = userSnap.exists() ? userSnap.data() : {};
+
+    // Also get latest seller info from their products
+    const productsSnap = await getDocs(query(
+      collection(db, "products"),
+      where("userId", "==", userId)
+    ));
+    const firstProduct = productsSnap.docs[0]?.data();
+
+    // Fill fields — prefer user doc, fallback to product seller data
+    document.getElementById("ep-name").value     = userData.displayName     || firstProduct?.seller?.name     || "";
+    document.getElementById("ep-phone").value    = userData.phone           || firstProduct?.seller?.phone    || "";
+    document.getElementById("ep-location").value = userData.location        || firstProduct?.seller?.location || "";
+    document.getElementById("ep-bio").value      = userData.bio             || "";
+
+    // Show modal
+    document.getElementById("edit-profile-modal").style.display = "flex";
+
+  } catch (err) {
+    console.error("openEditProfile error:", err);
+    alert("Failed to load profile data");
+  }
+};
+
+window.closeEditProfile = function() {
+  document.getElementById("edit-profile-modal").style.display = "none";
+};
+
+window.saveProfile = async function() {
+  const name     = document.getElementById("ep-name").value.trim();
+  const phone    = document.getElementById("ep-phone").value.trim();
+  const location = document.getElementById("ep-location").value;
+  const bio      = document.getElementById("ep-bio").value.trim();
+
+  if (!name) {
+    document.getElementById("ep-name").style.borderColor = "#ef4444";
+    document.getElementById("ep-name").focus();
+    return;
+  }
+
+  const btn = document.getElementById("ep-save-btn");
+  btn.textContent = "Saving...";
+  btn.disabled    = true;
+
+  try {
+    // 1. Update user doc
+    await updateDoc(doc(db, "users", userId), {
+      displayName: name,
+      phone,
+      location,
+      bio,
+      updatedAt: new Date()
+    });
+
+    // 2. Update seller info on all their products
+    const productsSnap = await getDocs(query(
+      collection(db, "products"),
+      where("userId", "==", userId)
+    ));
+
+    const updates = productsSnap.docs.map(d =>
+      updateDoc(doc(db, "products", d.id), {
+        "seller.name":     name,
+        "seller.phone":    phone,
+        "seller.location": location,
+        updatedAt: new Date()
+      })
+    );
+    await Promise.all(updates);
+
+    // 3. Update page display immediately
+    document.getElementById("profile-name").textContent     = name + (document.getElementById("profile-verified").style.display !== "none" ? " ✅" : "");
+    document.getElementById("profile-location").textContent = "📍 " + (location || "Uganda");
+    document.getElementById("profile-bio").textContent      = bio || "No bio yet";
+
+    window.sellerPhone = phone;
+    window.sellerName  = name;
+
+    closeEditProfile();
+
+    // Show success toast
+    const toast = document.createElement("div");
+    toast.className   = "toast success";
+    toast.textContent = "✅ Profile updated!";
+    document.getElementById("toast-container").appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+
+  } catch (err) {
+    console.error("saveProfile error:", err);
+    alert("❌ Failed to save: " + err.message);
+  } finally {
+    btn.textContent = "💾 Save Changes";
+    btn.disabled    = false;
+  }
+};
