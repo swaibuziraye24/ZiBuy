@@ -114,10 +114,14 @@ async function loadProduct() {
         <div class="seller-box" style="cursor:pointer" onclick="window.location.href='user-profile.html?id=${p.userId || ''}'">
           <div class="seller-avatar">${(seller.name || "Z")[0].toUpperCase()}</div>
           <div class="seller-info">
-            <h4>${seller.name || "ZiBuy Seller"}</h4>
-            <p>📍 ${seller.location || "Uganda"} · <span id="seller-rating-text">Loading rating...</span></p>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">
+              <h4 style="margin:0;font-size:15px;font-weight:800">${seller.name || "ZiBuy Seller"}</h4>
+              <span id="seller-verified-badge" style="display:none;background:#10b981;color:white;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:800">✅ Verified</span>
+            </div>
+            <p style="margin:0;font-size:12px;color:#6b7280">📍 ${seller.location || "Uganda"} · <span id="seller-rating-text">Loading...</span></p>
+            <p style="margin:3px 0 0;font-size:12px;color:#6b7280" id="seller-member-since"></p>
           </div>
-          <span style="margin-left:auto;font-size:12px;color:#ff6600;font-weight:700">View Profile →</span>
+          <span style="margin-left:auto;font-size:12px;color:#ff6600;font-weight:700;flex-shrink:0">View Profile →</span>
         </div>
 
         <!-- Category + Title + Price -->
