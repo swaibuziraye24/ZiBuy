@@ -185,10 +185,22 @@ async function loadProducts() {
         ))
       ]);
 
+      // memberSinceMap stores join date per userId
+      let memberSinceMap = {};
+
       usersSnap.forEach(d => {
         const data = d.data();
         if (data.plan && data.plan !== "free") {
           planMap[d.id] = data.plan;
+        }
+        // Store member since date
+        if (data.createdAt) {
+          const joinDate = data.createdAt?.toDate?.();
+          if (joinDate) {
+            memberSinceMap[d.id] = joinDate.toLocaleDateString("en-UG", {
+              month: "short", year: "numeric"
+            });
+          }
         }
       });
 
@@ -215,6 +227,7 @@ async function loadProducts() {
         product.shopPlan = planMap[product.userId] || "free";
         product.seller   = product.seller || {};
         product.seller.isVerified = verifSet.has(product.userId);
+        product.seller.memberSince = memberSinceMap[product.userId];
 
         const planScore   = PLAN_SCORE[product.shopPlan] || 1;
         const boostScore  = product.isPremium ? 5000 : 0;
@@ -288,6 +301,14 @@ async function loadFeaturedProducts() {
                   <p class="product-cat">${product.category}</p>
                   <h3 class="product-title">${product.name}</h3>
                   <p class="product-price">UGX ${Number(product.price).toLocaleString()}</p>
+                  <div style="margin-bottom:6px">
+                    ${product.sellerIsVerified
+                      ? `<span style="display:inline-block;background:#10b981;color:white;padding:1px 7px;border-radius:20px;font-size:10px;font-weight:800">✅ Verified</span>`
+                      : ""}
+                    ${product.sellerMemberSince
+                      ? `<p style="color:#adb5bd;font-size:10px;margin:2px 0 0">🗓️ Since ${product.sellerMemberSince}</p>`
+                      : ""}
+                  </div>
                   <div class="card-footer">
                     ${hasPhone ? `
                       <button class="cart-btn" onclick="messageWhatsApp('${phone}', '${product.name}', ${product.price})" style="font-size:11px">💬 WhatsApp</button>
@@ -679,10 +700,19 @@ window.renderProducts = function () {
               View
             </button>
 
-            <p class="location" style="color:#999;font-size:11px;margin:0;cursor:pointer"
-    onclick="event.stopPropagation();window.location.href='user-profile.html?id=${p.userId}'">
-    📍 ${p.location || "Unknown"}
-  </p>
+      <div style="margin-top:4px">
+            <p class="location"
+              style="color:#999;font-size:11px;margin:0 0 2px;cursor:pointer"
+              onclick="event.stopPropagation();window.location.href='user-profile.html?id=${p.userId}'">
+              📍 ${p.location || "Unknown"}
+            </p>
+            ${p.sellerIsVerified
+              ? `<span style="display:inline-block;background:#10b981;color:white;padding:1px 7px;border-radius:20px;font-size:10px;font-weight:800;margin-bottom:2px">✅ Verified</span>`
+              : ""}
+            ${p.sellerMemberSince
+              ? `<p style="color:#adb5bd;font-size:10px;margin:0">🗓️ Since ${p.sellerMemberSince}</p>`
+              : ""}
+          </div>
 
           </div>
         `;
