@@ -171,7 +171,7 @@ window.submitVerification = async function() {
    // Ask for transaction reference before sending to WhatsApp
     const txnRef = prompt(
       "✅ Documents uploaded!\n\n" +
-      "Enter your MTN/Airtel transaction ID after paying UGX 10,000:\n" +
+      "Enter your MTN/Airtel transaction ID after paying UGX 10,0000:\n" +
       "(Check your phone for the confirmation SMS)"
     );
 
