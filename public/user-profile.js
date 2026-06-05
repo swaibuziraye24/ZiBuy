@@ -247,9 +247,26 @@ window.saveProfile = async function() {
     await Promise.all(updates);
 
     // 3. Update page display immediately
-    document.getElementById("profile-name").textContent     = name + (document.getElementById("profile-verified").style.display !== "none" ? " ✅" : "");
-    document.getElementById("profile-location").textContent = "📍 " + (location || "Uganda");
-    document.getElementById("profile-bio").textContent      = bio || "No bio yet";
+    document.getElementById("profile-name").textContent     = sellerName;
+    document.getElementById("profile-location").textContent = "📍 " + sellerLocation;
+    document.getElementById("profile-rating").textContent   = `⭐ ${avgRating} (${reviews.length} reviews)`;
+
+    // Verified badge
+    if (isVerified) {
+      const verifiedEl = document.getElementById("profile-verified");
+      if (verifiedEl) verifiedEl.style.display = "inline-block";
+    }
+
+    // Member since — from user doc createdAt
+    const memberSinceEl = document.getElementById("stat-joined");
+    if (memberSinceEl && userData?.createdAt) {
+      const joinDate = userData.createdAt?.toDate?.();
+      if (joinDate) {
+        memberSinceEl.textContent = joinDate.toLocaleDateString("en-UG", {
+          day: "numeric", month: "long", year: "numeric"
+        });
+      }
+    }
 
     window.sellerPhone = phone;
     window.sellerName  = name;
