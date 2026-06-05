@@ -33,8 +33,16 @@ function loadCheckout() {
     `;
   });
 
-  const delivery = 5000; // Fixed delivery fee
-  const total = subtotal + delivery;
+ const delivery      = 5000;
+    const platformFee   = Math.round(subtotal * 0.03); // 3% ZiBuy fee
+    const total         = subtotal + delivery + platformFee;
+
+    document.getElementById("subtotal").textContent  = "UGX " + subtotal.toLocaleString();
+    document.getElementById("delivery").textContent  = "UGX " + delivery.toLocaleString();
+
+    // Show platform fee line
+    const feeEl = document.getElementById("platform-fee");
+    if (feeEl) feeEl.textContent = "UGX " + platformFee.toLocaleString();
 
   document.getElementById("subtotal").textContent = "UGX " + subtotal.toLocaleString();
   document.getElementById("delivery").textContent = "UGX " + delivery.toLocaleString();
