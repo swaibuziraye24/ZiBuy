@@ -59,12 +59,12 @@ onclick="openMyShop()">
         <span>🛒</span>
         <span>My Orders</span>
       </button>
-      <button class="nav-item" onclick="switchTab('profile')">
+     <button class="nav-item" data-tab="profile" onclick="switchTab('profile')">
         <span>⚙️</span>
         <span>Settings</span>
       </button>
 
-      <button class="nav-item" onclick="switchTab('analytics')">
+      <button class="nav-item" data-tab="analytics" onclick="switchTab('analytics')">
         <span>📊</span>
         <span>Analytics</span>
       </button>
@@ -98,8 +98,9 @@ onclick="openMyShop()">
 </div>
 
 
-    <!-- ORDERS TAB -->
-<div class="dashboard-tab" id="orders-tab">
+ 
+<!-- ORDERS TAB -->
+<div class="dashboard-tab" id="orders-tab" style="display:none">
   <div class="tab-header">
     <h2>🛒 My Orders</h2>
   </div>
@@ -108,8 +109,9 @@ onclick="openMyShop()">
   </div>
 </div>
 
+
 <!-- SETTINGS TAB -->
-<div class="dashboard-tab" id="profile-tab">
+<div class="dashboard-tab" id="profile-tab" style="display:none">
   <div class="tab-header">
     <h2>⚙️ Account Settings</h2>
   </div>
@@ -117,12 +119,11 @@ onclick="openMyShop()">
     <p style="text-align:center;padding:40px;color:#6b7280">Loading settings...</p>
   </div>
 
-<!-- Add this inside the profile-settings section -->
 <div class="settings-section">
   <h3>📦 Account Type</h3>
   <p id="account-type-display" style="font-size:14px;color:#6b7280;margin-bottom:16px">Loading...</p>
   <button id="upgrade-btn" class="btn btn-orange" onclick="window.location.href='business-plans.html'" style="display:none">
-  <h2>🛒 Business Plan</h2>
+    ⬆️ Upgrade Plan
   </button>
   <p id="business-status" style="font-size:13px;color:#10b981;display:none">✅ Business Account Active</p>
 </div>
@@ -154,26 +155,6 @@ onclick="openMyShop()">
   // Run test after page loads
   window.addEventListener('load', testDashboard);
 </script>
-
-<!-- Edit Ad Modal -->
-<div id="edit-modal" class="modal">
-  <div class="modal-box">
-    <div class="modal-header">
-      <h2>✏️ Edit Ad</h2>
-      <button class="modal-close" onclick="closeEditModal()">×</button>
-    </div>
-    <input type="text" id="edit-name" placeholder="Product name"
-      style="width:100%;padding:12px;border:1.5px solid #e5e7eb;border-radius:10px;font-family:var(--font);font-size:14px;margin-bottom:12px;outline:none">
-    <input type="number" id="edit-price" placeholder="Price (UGX)"
-      style="width:100%;padding:12px;border:1.5px solid #e5e7eb;border-radius:10px;font-family:var(--font);font-size:14px;margin-bottom:12px;outline:none">
-    <textarea id="edit-desc" rows="3" placeholder="Description"
-      style="width:100%;padding:12px;border:1.5px solid #e5e7eb;border-radius:10px;font-family:var(--font);font-size:14px;margin-bottom:14px;outline:none;resize:none"></textarea>
-    <button onclick="saveEdit()"
-      style="width:100%;padding:14px;border:none;border-radius:12px;background:var(--orange);color:white;font-size:15px;font-weight:800;font-family:var(--font);cursor:pointer">
-      Save Changes
-    </button>
-  </div>
-</div>
 
 
 <!-- Edit Product Modal -->
