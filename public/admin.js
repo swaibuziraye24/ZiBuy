@@ -128,7 +128,8 @@ async function loadAll() {
     loadOrders(),
     loadPremiumAds(),
     loadVerifications(),
-    loadReports()
+    loadReports(),
+    loadBanners()
   ]);
   renderOverview();
 }
@@ -957,3 +958,92 @@ async function loadBroadcasts() {
     `).join("");
   } catch (e) { console.warn(e); }
 }
+
+
+// ══════════════════════════════════════════════
+//  BANNER ADS
+// ══════════════════════════════════════════════
+async function loadBanners() {
+  try {
+    const snap = await getDocs(collection(db, "banner_ads"));
+    const list = document.getElementById("banners-list");
+    if (!list) return;
+
+    if (snap.empty) {
+      list.innerHTML = "<p style='color:#6b7280;font-size:13px'>No banners yet</p>";
+      return;
+    }
+
+    list.innerHTML = snap.docs.map(d => {
+      const b = { id: d.id, ...d.data() };
+      return `
+        <div style="border:1px solid #e5e7eb;border-radius:10px;padding:14px;margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+            <div>
+              <p style="font-weight:800;margin:0 0 4px">${b.title}</p>
+              <p style="font-size:12px;color:#6b7280;margin:0 0 4px">👁️ ${b.impressions || 0} impressions · 🖱️ ${b.clicks || 0} clicks</p>
+              <p style="font-size:12px;color:#ff6600;font-weight:700;margin:0">UGX ${Number(b.price || 0).toLocaleString()}/mo</p>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button onclick="toggleBanner('${b.id}', ${!b.active})"
+                style="background:${b.active ? '#dcfce7' : '#fee2e2'};color:${b.active ? '#16a34a' : '#ef4444'};border:none;padding:7px 12px;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer">
+                ${b.active ? '✅ Active' : '❌ Paused'}
+              </button>
+              <button onclick="deleteBanner('${b.id}')"
+                style="background:#fee2e2;color:#ef4444;border:none;padding:7px 12px;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer">
+                🗑️ Delete
+              </button>
+            </div>
+          </div>
+          ${b.imageUrl ? `<img src="${b.imageUrl}" style="width:100%;height:80px;object-fit:cover;border-radius:8px;margin-top:10px">` : ""}
+        </div>`;
+    }).join("");
+  } catch (e) { console.error(e); }
+}
+
+window.addBanner = async function() {
+  const title    = document.getElementById("bn-title").value.trim();
+  const imageUrl = document.getElementById("bn-image").value.trim();
+  const url      = document.getElementById("bn-url").value.trim();
+  const price    = Number(document.getElementById("bn-price").value);
+
+  if (!title || !imageUrl || !url) {
+    showToast("Fill all banner fields", "error");
+    return;
+  }
+
+  try {
+    await addDoc(collection(db, "banner_ads"), {
+      title, imageUrl, url, price,
+      active:      true,
+      impressions: 0,
+      clicks:      0,
+      createdAt:   new Date()
+    });
+
+    document.getElementById("bn-title").value  = "";
+    document.getElementById("bn-image").value  = "";
+    document.getElementById("bn-url").value    = "";
+    document.getElementById("bn-price").value  = "";
+
+    showToast("Banner published ✅", "success");
+    loadBanners();
+  } catch (e) { showToast("Failed", "error"); }
+};
+
+window.toggleBanner = async function(bannerId, active) {
+  try {
+    await updateDoc(doc(db, "banner_ads", bannerId), { active });
+    showToast(active ? "Banner activated" : "Banner paused", "info");
+    loadBanners();
+  } catch (e) { showToast("Failed", "error"); }
+};
+
+window.deleteBanner = async function(bannerId) {
+  if (!confirm("Delete this banner?")) return;
+  try {
+    await deleteDoc(doc(db, "banner_ads", bannerId));
+    showToast("Banner deleted", "info");
+    loadBanners();
+  } catch (e) { showToast("Failed", "error"); }
+};
