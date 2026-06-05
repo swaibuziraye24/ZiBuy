@@ -8,6 +8,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <title>Admin Panel — ZiBuy</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="/manifest.json">
   <style>
     body { background: #f1f5f9; }
 
@@ -34,13 +35,12 @@
     }
 
     .admin-sidebar {
-  background: #1f2937;
-  padding: 14px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
+      background: #1f2937;
+      padding: 14px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
 
     .admin-nav-item {
       display: flex;
@@ -62,13 +62,11 @@
     .admin-nav-item.active { background: #ff6600; color: white; }
     .admin-nav-item span   { font-size: 18px; }
 
-    /* Main */
     .admin-main { padding: 24px; }
 
     .admin-section { display: none; }
     .admin-section.active { display: block; }
 
-    /* KPI row */
     .kpi-row {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -85,7 +83,6 @@
     .kpi-label { font-size: 12px; color: var(--gray); font-weight: 700; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
     .kpi-value { font-size: 28px; font-weight: 900; color: var(--dark); }
 
-    /* Data table */
     .admin-card {
       background: white;
       border-radius: 14px;
@@ -123,10 +120,10 @@
       font-size: 11px;
       font-weight: 800;
     }
-    .chip-free   { background: #f3f4f6; color: #6b7280; }
-    .chip-bronze { background: #fef3c7; color: #92400e; }
-    .chip-silver { background: #f1f5f9; color: #475569; }
-    .chip-gold   { background: #fffbeb; color: #b45309; }
+    .chip-free     { background: #f3f4f6; color: #6b7280; }
+    .chip-bronze   { background: #fef3c7; color: #92400e; }
+    .chip-silver   { background: #f1f5f9; color: #475569; }
+    .chip-gold     { background: #fffbeb; color: #b45309; }
     .chip-pending  { background: #dbeafe; color: #1e40af; }
     .chip-expired  { background: #fee2e2; color: #991b1b; }
     .chip-approved { background: #dcfce7; color: #166534; }
@@ -178,15 +175,12 @@
 
     @media (max-width: 768px) {
       .admin-layout { grid-template-columns: 1fr; }
-      .admin-sidebar { display: flex; overflow-x: auto; padding: 10px; gap: 4px; }
+      .admin-sidebar { flex-direction: row; overflow-x: auto; padding: 10px; gap: 4px; }
       .admin-nav-item { padding: 10px 14px; white-space: nowrap; border-radius: 8px; }
       .kpi-value { font-size: 22px; }
     }
   </style>
 </head>
-
-<link rel="manifest" href="/manifest.json">
-
 <body>
 
 <!-- ── TOPBAR ── -->
@@ -194,7 +188,6 @@
   <h1>⚙️ ZiBuy Admin</h1>
   <span id="admin-email-display"></span>
   <div class="ml">
-  
     <button class="btn btn-dark" style="font-size:13px;padding:8px 14px"
       onclick="adminLogout()">Logout</button>
   </div>
@@ -203,81 +196,56 @@
 <div class="admin-layout">
 
   <!-- ── SIDEBAR ── -->
-<aside class="admin-sidebar">
-
-  <!-- OVERVIEW -->
-  <button class="admin-nav-item active"
-    data-section="overview"
-    onclick="window.showSection('overview', this)">
-    <span>📊</span> Overview
-  </button>
-
-  <!-- USERS -->
-  <button class="admin-nav-item"
-    data-section="users"
-    onclick="window.showSection('users', this)">
-    <span>👥</span> Users & Plans
-  </button>
-
-  <!-- SUBSCRIPTIONS -->
-  <button class="admin-nav-item"
-    data-section="subscriptions"
-    onclick="window.showSection('subscriptions', this)">
-    <span>💼</span> Subscriptions
-  </button>
-
-  <!-- BOOSTS -->
-  <button class="admin-nav-item"
-    data-section="boosts"
-    onclick="window.showSection('boosts', this)">
-    <span>⭐</span> Boost Requests
-  </button>
-
-  <!-- ADS -->
-  <button class="admin-nav-item"
-    data-section="ads"
-    onclick="window.showSection('ads', this)">
-    <span>📦</span> All Ads
-  </button>
-
-  <!-- ORDERS -->
-  <button class="admin-nav-item"
-    data-section="orders"
-    onclick="window.showSection('orders', this)">
-    <span>🛍️</span> Orders
-  </button>
-
-  <button class="admin-nav-item"
-    data-section="premium"
-    onclick="window.showSection('premium', this)">
-    <span>⭐</span> Premium Ads
-  </button>
-
-  <button class="admin-nav-item"
-    data-section="verifications"
-    onclick="window.showSection('verifications', this)">
-    <span>✅</span> Verifications
-  </button>
-
-  <button class="admin-nav-item"
-    onclick="window.location.href='admin-reports.html'">
-    <span>🚨</span> Reports
-  </button>
-
-  <button class="admin-nav-item"
-    data-section="broadcast"
-    onclick="window.showSection('broadcast', this)">
-    <span>📣</span> Send Notification
-  </button>
-
-  <!-- ANALYTICS PAGE -->
-  <button class="admin-nav-item"
-    onclick="window.location.href='admin-analytics.html'">
-    <span>📊</span> Analytics
-  </button>
-
-
-</aside>
+  <aside class="admin-sidebar">
+    <button class="admin-nav-item active" data-section="overview"
+      onclick="window.showSection('overview', this)">
+      <span>📊</span> Overview
+    </button>
+    <button class="admin-nav-item" data-section="users"
+      onclick="window.showSection('users', this)">
+      <span>👥</span> Users & Plans
+    </button>
+    <button class="admin-nav-item" data-section="subscriptions"
+      onclick="window.showSection('subscriptions', this)">
+      <span>💼</span> Subscriptions
+    </button>
+    <button class="admin-nav-item" data-section="boosts"
+      onclick="window.showSection('boosts', this)">
+      <span>⭐</span> Boost Requests
+    </button>
+    <button class="admin-nav-item" data-section="ads"
+      onclick="window.showSection('ads', this)">
+      <span>📦</span> All Ads
+    </button>
+    <button class="admin-nav-item" data-section="orders"
+      onclick="window.showSection('orders', this)">
+      <span>🛍️</span> Orders
+    </button>
+    <button class="admin-nav-item" data-section="premium"
+      onclick="window.showSection('premium', this)">
+      <span>⭐</span> Premium Ads
+    </button>
+    <button class="admin-nav-item" data-section="verifications"
+      onclick="window.showSection('verifications', this)">
+      <span>✅</span> Verifications
+    </button>
+    <button class="admin-nav-item" data-section="reports"
+      onclick="window.showSection('reports', this)">
+      <span>🚨</span> Reports
+    </button>
+    <button class="admin-nav-item" data-section="broadcast"
+      onclick="window.showSection('broadcast', this)">
+      <span>📣</span> Send Notification
+    </button>
+    <button class="admin-nav-item" data-section="banners"
+      onclick="window.showSection('banners', this)">
+      <span>📢</span> Banner Ads
+    </button>
+    <button class="admin-nav-item"
+      onclick="window.location.href='admin-analytics.html'">
+      <span>📊</span> Analytics
+    </button>
+  </aside>
 
   <!-- ── MAIN ── -->
   <main class="admin-main">
@@ -286,14 +254,27 @@
     <div class="admin-section active" id="section-overview">
       <h2 style="font-size:22px;font-weight:800;margin-bottom:20px">Overview</h2>
       <div class="kpi-row">
-        <div class="kpi-card"><div class="kpi-label">Total Users</div><div class="kpi-value" id="kpi-users">—</div></div>
-        <div class="kpi-card" style="border-color:#10b981"><div class="kpi-label">Paid Plans</div><div class="kpi-value" id="kpi-paid">—</div></div>
-        <div class="kpi-card" style="border-color:#8b5cf6"><div class="kpi-label">Active Ads</div><div class="kpi-value" id="kpi-ads">—</div></div>
-        <div class="kpi-card" style="border-color:#f59e0b"><div class="kpi-label">Pending Boosts</div><div class="kpi-value" id="kpi-boosts">—</div></div>
-        <div class="kpi-card" style="border-color:#ef4444"><div class="kpi-label">Total Orders</div><div class="kpi-value" id="kpi-orders">—</div></div>
+        <div class="kpi-card">
+          <div class="kpi-label">Total Users</div>
+          <div class="kpi-value" id="kpi-users">—</div>
+        </div>
+        <div class="kpi-card" style="border-color:#10b981">
+          <div class="kpi-label">Paid Plans</div>
+          <div class="kpi-value" id="kpi-paid">—</div>
+        </div>
+        <div class="kpi-card" style="border-color:#8b5cf6">
+          <div class="kpi-label">Active Ads</div>
+          <div class="kpi-value" id="kpi-ads">—</div>
+        </div>
+        <div class="kpi-card" style="border-color:#f59e0b">
+          <div class="kpi-label">Pending Boosts</div>
+          <div class="kpi-value" id="kpi-boosts">—</div>
+        </div>
+        <div class="kpi-card" style="border-color:#ef4444">
+          <div class="kpi-label">Total Orders</div>
+          <div class="kpi-value" id="kpi-orders">—</div>
+        </div>
       </div>
-
-      <!-- Recent activity -->
       <div class="admin-card">
         <h2>🔔 Pending Actions</h2>
         <div id="pending-actions">
@@ -305,18 +286,14 @@
     <!-- ══ USERS & PLANS ═══════════════════════ -->
     <div class="admin-section" id="section-users">
       <h2 style="font-size:22px;font-weight:800;margin-bottom:20px">Users & Plans</h2>
-      <input class="search-input" type="text" id="user-search" placeholder="Search by email…" oninput="filterUsers()">
+      <input class="search-input" type="text" id="user-search"
+        placeholder="Search by email…" oninput="filterUsers()">
       <div class="admin-card">
         <table class="data-table">
           <thead>
             <tr>
-              <th>Email</th>
-              <th>Plan</th>
-              <th>Ads Posted</th>
-              <th>Verified</th>
-              <th>Status</th>
-              <th>Change Plan</th>
-              <th>Action</th>
+              <th>Email</th><th>Plan</th><th>Ads Posted</th>
+              <th>Verified</th><th>Status</th><th>Change Plan</th><th>Action</th>
             </tr>
           </thead>
           <tbody id="users-table-body">
@@ -333,14 +310,8 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th>User</th>
-              <th>Plan</th>
-              <th>Billing</th>
-              <th>Amount</th>
-              <th>Start</th>
-              <th>Expires</th>
-              <th>Status</th>
-              <th>Action</th>
+              <th>User</th><th>Plan</th><th>Billing</th><th>Amount</th>
+              <th>Start</th><th>Expires</th><th>Status</th><th>Action</th>
             </tr>
           </thead>
           <tbody id="subs-table-body">
@@ -357,17 +328,12 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th>Product</th>
-              <th>User</th>
-              <th>Days</th>
-              <th>Amount</th>
-              <th>Requested</th>
-              <th>Status</th>
-              <th>Actions</th>
+              <th>Product</th><th>User</th><th>Days</th><th>Amount</th>
+              <th>Pay Ref</th><th>Requested</th><th>Status</th><th>Actions</th>
             </tr>
           </thead>
           <tbody id="boosts-table-body">
-            <tr class="empty-row"><td colspan="7">Loading…</td></tr>
+            <tr class="empty-row"><td colspan="8">Loading…</td></tr>
           </tbody>
         </table>
       </div>
@@ -376,11 +342,15 @@
     <!-- ══ ALL ADS ═════════════════════════════ -->
     <div class="admin-section" id="section-ads">
       <h2 style="font-size:22px;font-weight:800;margin-bottom:20px">All Ads</h2>
-      <input class="search-input" type="text" id="ads-search" placeholder="Search ads…" oninput="filterAds()">
+      <input class="search-input" type="text" id="ads-search"
+        placeholder="Search ads…" oninput="filterAds()">
       <div class="admin-card">
         <table class="data-table">
           <thead>
-            <tr><th>Image</th><th>Name</th><th>Price</th><th>Seller</th><th>Status</th><th>Expires</th><th>Action</th></tr>
+            <tr>
+              <th>Image</th><th>Name</th><th>Price</th>
+              <th>Seller</th><th>Status</th><th>Expires</th><th>Action</th>
+            </tr>
           </thead>
           <tbody id="ads-table-body">
             <tr class="empty-row"><td colspan="7">Loading…</td></tr>
@@ -395,7 +365,10 @@
       <div class="admin-card">
         <table class="data-table">
           <thead>
-            <tr><th>Order ID</th><th>Customer</th><th>Total</th><th>Payment</th><th>Status</th><th>Date</th><th>Update Status</th></tr>
+            <tr>
+              <th>Order ID</th><th>Customer</th><th>Total</th>
+              <th>Payment</th><th>Status</th><th>Date</th><th>Update Status</th>
+            </tr>
           </thead>
           <tbody id="orders-table-body">
             <tr class="empty-row"><td colspan="7">Loading…</td></tr>
@@ -404,20 +377,30 @@
       </div>
     </div>
 
- </div>
-
     <!-- ══ PREMIUM ADS ════════════════════════ -->
     <div class="admin-section" id="section-premium">
       <h2 style="font-size:22px;font-weight:800;margin-bottom:20px">⭐ Premium Ads</h2>
       <div class="kpi-row">
-        <div class="kpi-card"><div class="kpi-label">Active Boosts</div><div class="kpi-value" id="kpi-active-boosts">—</div></div>
-        <div class="kpi-card" style="border-color:#f59e0b"><div class="kpi-label">Total Revenue</div><div class="kpi-value" id="kpi-boost-revenue">—</div></div>
-        <div class="kpi-card" style="border-color:#8b5cf6"><div class="kpi-label">Avg Clicks</div><div class="kpi-value" id="kpi-avg-clicks">—</div></div>
+        <div class="kpi-card">
+          <div class="kpi-label">Active Boosts</div>
+          <div class="kpi-value" id="kpi-active-boosts">—</div>
+        </div>
+        <div class="kpi-card" style="border-color:#f59e0b">
+          <div class="kpi-label">Total Revenue</div>
+          <div class="kpi-value" id="kpi-boost-revenue">—</div>
+        </div>
+        <div class="kpi-card" style="border-color:#8b5cf6">
+          <div class="kpi-label">Avg Clicks</div>
+          <div class="kpi-value" id="kpi-avg-clicks">—</div>
+        </div>
       </div>
       <div class="admin-card">
         <table class="data-table">
           <thead>
-            <tr><th>Product</th><th>Seller</th><th>Days</th><th>Price</th><th>Clicks</th><th>Expires</th><th>Status</th><th>Action</th></tr>
+            <tr>
+              <th>Product</th><th>Seller</th><th>Days</th><th>Price</th>
+              <th>Clicks</th><th>Expires</th><th>Status</th><th>Action</th>
+            </tr>
           </thead>
           <tbody id="premium-table-body">
             <tr class="empty-row"><td colspan="8">Loading…</td></tr>
@@ -429,19 +412,24 @@
     <!-- ══ VERIFICATIONS ══════════════════════ -->
     <div class="admin-section" id="section-verifications">
       <h2 style="font-size:22px;font-weight:800;margin-bottom:20px">✅ Seller Verifications</h2>
-      <div class="filter-tabs" style="display:flex;gap:8px;margin-bottom:16px">
+      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
         <button class="action-btn btn-approve" onclick="filterVerifs('pending')">⏳ Pending</button>
-        <button class="action-btn" style="background:#dcfce7;color:#166534" onclick="filterVerifs('approved')">✅ Approved</button>
+        <button class="action-btn" style="background:#dcfce7;color:#166534"
+          onclick="filterVerifs('approved')">✅ Approved</button>
         <button class="action-btn btn-reject" onclick="filterVerifs('rejected')">❌ Rejected</button>
-        <button class="action-btn" style="background:#f3f4f6;color:#6b7280" onclick="filterVerifs('all')">All</button>
+        <button class="action-btn" style="background:#f3f4f6;color:#6b7280"
+          onclick="filterVerifs('all')">All</button>
       </div>
       <div class="admin-card">
         <table class="data-table">
           <thead>
-            <tr><th>Name</th><th>Business</th><th>Email</th><th>Phone</th><th>Location</th><th>Status</th><th>Actions</th></tr>
+            <tr>
+              <th>Name</th><th>Business</th><th>Email</th>
+              <th>Phone</th><th>Location</th><th>Txn Ref</th><th>Status</th><th>Actions</th>
+            </tr>
           </thead>
           <tbody id="verif-table-body">
-            <tr class="empty-row"><td colspan="7">Loading…</td></tr>
+            <tr class="empty-row"><td colspan="8">Loading…</td></tr>
           </tbody>
         </table>
       </div>
@@ -453,7 +441,10 @@
       <div class="admin-card">
         <table class="data-table">
           <thead>
-            <tr><th>Reason</th><th>Product ID</th><th>Reported By</th><th>Description</th><th>Status</th><th>Actions</th></tr>
+            <tr>
+              <th>Reason</th><th>Product</th><th>Reported By</th>
+              <th>Description</th><th>Status</th><th>Actions</th>
+            </tr>
           </thead>
           <tbody id="reports-table-body">
             <tr class="empty-row"><td colspan="6">Loading…</td></tr>
@@ -462,32 +453,29 @@
       </div>
     </div>
 
-<!-- ══ BROADCAST NOTIFICATIONS ════════════ -->
+    <!-- ══ BROADCAST NOTIFICATIONS ════════════ -->
     <div class="admin-section" id="section-broadcast">
       <h2 style="font-size:22px;font-weight:800;margin-bottom:20px">📣 Send Notifications</h2>
 
-      <!-- Send to ALL users -->
       <div class="admin-card" style="margin-bottom:20px">
         <h2>🔥 Broadcast to All Users</h2>
-        <p style="font-size:13px;color:var(--gray);margin-bottom:16px">This appears as a banner on everyone's screen and saves to their notifications.</p>
-
+        <p style="font-size:13px;color:var(--gray);margin-bottom:16px">
+          Appears as a banner on everyone's screen and saves to their notifications.
+        </p>
         <input id="bc-title" type="text" placeholder="Title e.g. Flash Sale Today! 🔥"
           class="search-input" style="max-width:100%;margin-bottom:10px">
-
-        <textarea id="bc-message" rows="3" placeholder="Message e.g. Up to 50% off on phones today only. Shop now!"
+        <textarea id="bc-message" rows="3"
+          placeholder="Message e.g. Up to 50% off on phones today only!"
           style="width:100%;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-family:var(--font);font-size:13px;outline:none;resize:none;margin-bottom:10px"></textarea>
-
-        <input id="bc-url" type="text" placeholder="Link URL (optional) e.g. /index.html?cat=phones"
+        <input id="bc-url" type="text" placeholder="Link URL (optional)"
           class="search-input" style="max-width:100%;margin-bottom:16px">
-
         <button class="action-btn btn-approve" style="padding:12px 24px;font-size:14px"
           onclick="sendBroadcast()">
           📣 Send to All Users
         </button>
       </div>
 
-      <!-- Send to specific user -->
-      <div class="admin-card">
+      <div class="admin-card" style="margin-bottom:20px">
         <h2>👤 Send to Specific User</h2>
         <input id="notif-userid" type="text" placeholder="User ID (from Users table)"
           class="search-input" style="max-width:100%;margin-bottom:10px">
@@ -501,7 +489,6 @@
         </button>
       </div>
 
-      <!-- Past broadcasts -->
       <div class="admin-card">
         <h2>📋 Past Broadcasts</h2>
         <div id="broadcasts-list">
@@ -510,87 +497,41 @@
       </div>
     </div>
 
-  </main>
+    <!-- ══ BANNER ADS ══════════════════════════ -->
+    <div class="admin-section" id="section-banners">
+      <h2 style="font-size:22px;font-weight:800;margin-bottom:20px">📢 Banner Advertisements</h2>
 
-
-<!-- Stats -->
-    <div class="admin-stats-row">
-      <div class="stat-card">
-        <div class="stat-label">Total Orders</div>
-        <div class="stat-value" id="total-orders">—</div>
+      <div class="admin-card" style="margin-bottom:20px">
+        <h2>➕ Add New Banner</h2>
+        <input id="bn-title" placeholder="Advertiser name (e.g. MTN Uganda)"
+          class="search-input" style="max-width:100%;margin-bottom:10px">
+        <input id="bn-image" placeholder="Banner image URL (1200×300px recommended)"
+          class="search-input" style="max-width:100%;margin-bottom:10px">
+        <input id="bn-url" placeholder="Click destination URL (https://...)"
+          class="search-input" style="max-width:100%;margin-bottom:10px">
+        <input id="bn-price" type="number" placeholder="Monthly price (UGX)"
+          class="search-input" style="max-width:100%;margin-bottom:16px">
+        <button onclick="addBanner()"
+          style="background:#ff6600;color:white;border:none;padding:12px 24px;border-radius:10px;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit">
+          📢 Publish Banner
+        </button>
       </div>
-      <div class="stat-card">
-        <div class="stat-label">Total Revenue</div>
-        <div class="stat-value" id="total-revenue">—</div>
+
+      <div class="admin-card">
+        <h2>Active Banners</h2>
+        <div id="banners-list">
+          <p style="color:var(--gray);font-size:13px">Loading...</p>
+        </div>
       </div>
     </div>
 
-    <!-- Upload Product -->
-    <p class="admin-section-title">Upload New Product</p>
-
-    <input type="text"   id="product-name"     placeholder="Product Name">
-    <input type="number" id="product-price"    placeholder="Price in UGX">
-
-    <!-- SELLER INFO -->
-    <p class="admin-section-title" style="margin-top:4px">Seller Info</p>
-    <input type="text" id="seller-name"     placeholder="Seller Name (e.g. John Kato)">
-    <input type="tel"  id="seller-phone"    placeholder="Seller WhatsApp/Phone (e.g. 256701234567)">
-    <input type="text" id="seller-location" placeholder="Seller Location (e.g. Kampala, Ntinda)">
-
-    <select id="product-category">
-      <option value="phones">📱 Phones</option>
-      <option value="electronics">💻 Electronics</option>
-      <option value="fashion">👗 Fashion</option>
-      <option value="shoes">👟 Shoes</option>
-      <option value="beauty">💄 Beauty</option>
-      <option value="bags">👜 Bags</option>
-      <option value="groceries">🛒 Groceries</option>
-      <option value="watches">⌚ Watches</option>
-      <option value="computers">🖥️ Computers</option>
-      <option value="gaming">🎮 Gaming</option>
-      <option value="home">🏠 Home</option>
-      <option value="accessories">💎 Accessories</option>
-      <option value="vehicles">🚗 Vehicles</option>
-      <option value="motor-equipment">⚙️ Motor Parts</option>
-      <option value="services">🔧 Services</option>
-      <option value="babies-kids">👶 Babies & Kids</option>
-      <option value="animals-pets">🐾 Animals & Pets</option>
-      <option value="agriculture">🌾 Agriculture</option>
-      <option value="commercial-equipment">🏭 Commercial Equipment</option>
-      <option value="tours-leisure">🏖️ Tours & Leisure</option>
-      <option value="seeking-work">📋 Seeking Work / CVs</option>
-    </select>
-    
-
-    <textarea id="product-desc" placeholder="Product description (optional)" rows="3" style="resize:none"></textarea>
-
-    <input
-      type="file"
-      id="product-image"
-      multiple
-      accept="image/*"
-      onchange="previewImages(event)"
-    >
-
-    <div id="preview-container"></div>
-
-    <button class="full-btn" id="upload-btn" onclick="addProduct()">
-      Upload Product
-    </button>
-
-    <!-- Orders -->
-    <p class="admin-section-title" style="margin-top:24px">Recent Orders</p>
-    <div id="admin-orders"></div>
-
-  </div>
+  </main>
 </div>
 
 <div id="toast-container" class="toast-container"></div>
 
 <script type="module" src="notifications-setup.js"></script>
-
 <script src="nav.js"></script>
-
 <script type="module" src="admin.js"></script>
 </body>
 </html>
