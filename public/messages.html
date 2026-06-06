@@ -35,13 +35,40 @@
     </div>
 
     <!-- Chat window -->
-    <div id="chat-window" style="display:none;height:100%;flex-direction:column">
+    <div id="chat-window" style="display:none;height:100%;flex-direction:column;width:100%">
       <!-- Header -->
       <div class="chat-header">
-        <button class="chat-back-btn" style="display:none;background:none;border:none;font-size:18px;cursor:pointer" onclick="closeChatMobile()">← Back</button>
+        <button onclick="closeChat()"
+          style="background:none;border:none;font-size:20px;cursor:pointer;padding:0;margin-right:8px;color:#6b7280;display:none"
+          id="chat-back-btn">←</button>
         <h3 id="chat-with-name" style="margin:0;flex:1">Chat</h3>
-        <button onclick="closeChat()" style="background:none;border:none;font-size:20px;cursor:pointer;padding:4px">×</button>
+        <button class="btn btn-outline" onclick="closeChat()" style="padding:6px 12px;font-size:12px">Close</button>
       </div>
+      <style>
+       @media(max-width:768px){
+  #chat-back-btn { display:inline-block !important; }
+  .messages-wrap { 
+    grid-template-columns: 1fr !important;
+    height: calc(100vh - 120px);
+  }
+  .messages-sidebar { 
+    display:flex !important;
+    flex-direction:column;
+    height:100%;
+  }
+  .messages-main { 
+    display:none;
+    height:100%;
+  }
+  .messages-main.chat-open {
+    display:flex !important;
+    flex-direction:column;
+  }
+  .messages-sidebar.chat-open {
+    display:none !important;
+  }
+}
+      </style>
 
       <!-- Messages -->
       <div id="messages-container" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px"></div>
@@ -58,10 +85,9 @@
 <div id="overlay" class="overlay" onclick="closeChat()"></div>
 <div id="toast-container" class="toast-container"></div>
 
-<script type="module" src="notifications-setup.js"></script>
-
 <script src="nav.js"></script>
-
+<script type="module" src="notifications-setup.js"></script>
 <script type="module" src="messages.js"></script>
+
 </body>
 </html>
