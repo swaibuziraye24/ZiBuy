@@ -1,9 +1,28 @@
 const functions = require("firebase-functions");
 const admin     = require("firebase-admin");
+const nodemailer = require("nodemailer");
+
+
 admin.initializeApp();
 
 // Set region to match your Firestore (nam5 = us-central1 multi-region)
 const regionalFunctions = functions.region("us-central1");
+
+
+const gmailEmail =
+  process.env.GMAIL_EMAIL;
+
+const gmailPassword =
+  process.env.GMAIL_PASSWORD;
+
+const transporter =
+  nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: gmailEmail,
+      pass: gmailPassword
+    }
+  });
 // ============================================
 // 1. PUSH NOTIFICATIONS (paid plans only)
 // ============================================
@@ -171,7 +190,15 @@ exports.expireSubscriptions = regionalFunctions.pubsub
   // ============================================
 // 4. EMAIL BROADCAST (via Gmail/SendGrid)
 // ============================================
-exports.sendEmailBroadcast = regionalFunctions.firestore
+exports.sendEmailBroadcast =
+  regionalFunctions
+    .runWith({
+      secrets: [
+        "GMAIL_EMAIL",
+        "GMAIL_PASSWORD"
+      ]
+    })
+    .firestore
   .document("email_broadcasts/{broadcastId}")
   .onCreate(async (snap) => {
     try {
@@ -188,42 +215,49 @@ exports.sendEmailBroadcast = regionalFunctions.firestore
 
       if (emails.length === 0) return null;
 
-      // Use Firebase Extensions (Trigger Email) or Nodemailer
-      // Save each email as a mail document for
-      // "Trigger Email" Firebase Extension
-      const batch = emails.map(email =>
-        admin.firestore().collection("mail").add({
-          to:      email,
-          message: {
-            subject: `ZiBuy: ${data.title}`,
-            html: `
-              <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
-                <div style="background:#ff6600;padding:20px;text-align:center">
-                  <h1 style="color:white;margin:0;font-size:24px">ZiBuy Uganda</h1>
-                </div>
-                <div style="padding:24px;background:white">
-                  <h2 style="color:#111827">${data.title}</h2>
-                  <p style="color:#374151;font-size:15px;line-height:1.6">${data.message}</p>
-                  ${data.url && data.url !== "/" ? `
-                    <a href="https://zibuy-5deae.web.app${data.url}"
-                      style="display:inline-block;background:#ff6600;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700;margin-top:16px">
-                      View on ZiBuy →
-                    </a>` : `
-                    <a href="https://zibuy-5deae.web.app"
-                      style="display:inline-block;background:#ff6600;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700;margin-top:16px">
-                      Visit ZiBuy →
-                    </a>`}
-                </div>
-                <div style="padding:16px;background:#f9fafb;text-align:center;font-size:12px;color:#6b7280">
-                  © 2026 ZiBuy Uganda · You received this because you have a ZiBuy account
-                </div>
-              </div>
-            `
-          }
-        })
-      );
+      const emailPromises =
+  emails.map(email =>
+    transporter.sendMail({
+      from: gmailEmail,
+      to: email,
+      subject: `ZiBuy: ${data.title}`,
+      html: `
+        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
+          <div style="background:#ff6600;padding:20px;text-align:center">
+            <h1 style="color:white;margin:0">
+              ZiBuy Uganda
+            </h1>
+          </div>
 
-      await Promise.all(batch);
+          <div style="padding:24px">
+
+            <h2>${data.title}</h2>
+
+            <p>
+              ${data.message}
+            </p>
+
+            <a
+              href="https://zibuy-5deae.web.app"
+              style="
+                display:inline-block;
+                background:#ff6600;
+                color:white;
+                padding:12px 20px;
+                text-decoration:none;
+                border-radius:8px;
+                font-weight:bold;
+              ">
+              Visit ZiBuy
+            </a>
+
+          </div>
+        </div>
+      `
+    })
+  );
+
+await Promise.all(emailPromises);
 
       // Mark broadcast as sent
       await snap.ref.update({
