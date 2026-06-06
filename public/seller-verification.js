@@ -1,228 +1,244 @@
-import {
-  db,
-  auth,
-  collection,
-  addDoc,
-  getDocs,
-  query,
-  doc, 
-  updateDoc,
-  where
-} from "./firebase.js";
+// ============================================
+//   ZiBuy — Seller Verification
+// ============================================
 
-import {
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
+import { db, auth, storage, collection, addDoc, getDocs, query, where, doc, updateDoc } from "./firebase.js";
 import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
-
-import { db, auth, storage, collection, getDocs, addDoc, query, where } from "./firebase.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 let currentUser = null;
 
-// ============================================
-// AUTH CHECK
-// ============================================
-
+// ── Auth check ────────────────────────────────
 onAuthStateChanged(auth, async (user) => {
-
   if (!user) {
-
     window.location.href = "index.html";
-
     return;
   }
 
   currentUser = user;
 
-  checkExistingVerification();
+  // Set payment reference in UI
+  const verifRef = `VERIFY-${user.uid.slice(0, 6).toUpperCase()}`;
+  const mtnEl    = document.getElementById("mtn-ref");
+  const airtelEl = document.getElementById("airtel-ref");
+  if (mtnEl)    mtnEl.textContent    = verifRef;
+  if (airtelEl) airtelEl.textContent = verifRef;
 
+  // Check if already submitted
+  await checkExistingVerification();
 });
 
-// ============================================
-// CHECK EXISTING REQUEST
-// ============================================
-
+// ── Check existing verification ───────────────
 async function checkExistingVerification() {
-
-  const statusBox = document.getElementById("verification-status");
-
   try {
+    const snap = await getDocs(query(
+      collection(db, "seller_verifications"),
+      where("userId", "==", currentUser.uid)
+    ));
 
-    const q = query(
-      collection(db, "verifications"),
-      where("email", "==", currentUser.email)
-    );
+    if (snap.empty) return;
 
-    const snapshot = await getDocs(q);
+    const data   = snap.docs[0].data();
+    const status = data.status || "pending";
 
-    if (!snapshot.empty) {
+    const statusColors = {
+      pending:  { bg: "#fffbeb", border: "#fde68a", color: "#92400e", icon: "⏳" },
+      approved: { bg: "#f0fdf4", border: "#86efac", color: "#166534", icon: "✅" },
+      rejected: { bg: "#fef2f2", border: "#fca5a5", color: "#991b1b", icon: "❌" }
+    };
+    const s = statusColors[status] || statusColors.pending;
 
-      const data = snapshot.docs[0].data();
-
-      statusBox.innerHTML = `
-        <div class="verification-status-box ${data.status}">
-          Current Status:
-          <strong>${data.status.toUpperCase()}</strong>
-        </div>
-      `;
-
-    }
-
-  } catch (err) {
-
-    console.error(err);
-
-  }
-
-}
-
-// ============================================
-// SUBMIT VERIFICATION
-// ============================================
-
-window.submitVerification = async function() {
-  const fullName = document.getElementById("full-name").value.trim();
-
-  // Show payment requirement first
-  const existingFeeNotice = document.getElementById("verif-fee-notice");
-  if (!existingFeeNotice) {
-    const notice = document.createElement("div");
-    notice.id = "verif-fee-notice";
-    notice.style.cssText = "background:#fff4ee;border:2px solid #ff6600;border-radius:12px;padding:16px;margin-bottom:16px";
-    notice.innerHTML = `
-      <h3 style="margin:0 0 8px;font-size:15px;font-weight:800;color:#ff6600">💳 Verification Fee: UGX 10,000</h3>
-      <p style="font-size:13px;color:#374151;margin-bottom:10px">Pay once to get your ✅ Verified badge permanently.</p>
-      <div style="background:white;border:1.5px solid #ffcc00;border-radius:8px;padding:10px;margin-bottom:8px;font-size:13px">
-        <strong>MTN:</strong> Dial *165# → Pay With Momo → Code <strong style="color:#ff6600">27868095</strong> → UGX 10,000 → Ref: <strong style="color:#ff6600">VERIFY-${auth.currentUser?.uid?.slice(0,6).toUpperCase()}</strong>
-      </div>
-      <div style="background:white;border:1.5px solid #ef4444;border-radius:8px;padding:10px;font-size:13px">
-        <strong>Airtel:</strong> Dial *185# → Send Money → <strong style="color:#ef4444">+256575996624</strong> → UGX 10,000 → Ref: <strong style="color:#ef4444">VERIFY-${auth.currentUser?.uid?.slice(0,6).toUpperCase()}</strong>
+    // Hide form, show status
+    document.getElementById("verify-form-wrap").style.display = "none";
+    const statusBox = document.getElementById("verification-status");
+    statusBox.style.display = "block";
+    statusBox.innerHTML = `
+      <div style="background:${s.bg};border:2px solid ${s.border};border-radius:16px;padding:24px;text-align:center">
+        <p style="font-size:48px;margin:0 0 12px">${s.icon}</p>
+        <h2 style="font-size:20px;font-weight:800;color:${s.color};margin:0 0 8px">
+          Verification ${status.charAt(0).toUpperCase() + status.slice(1)}
+        </h2>
+        ${status === "pending"
+          ? `<p style="color:${s.color};font-size:14px;margin:0">
+               Your request is being reviewed. Admin will respond within <strong>24 hours</strong>.
+             </p>`
+          : ""}
+        ${status === "approved"
+          ? `<p style="color:${s.color};font-size:14px;margin:0">
+               🎉 Congratulations! You are now a <strong>Verified Seller</strong> on ZiBuy.
+             </p>`
+          : ""}
+        ${status === "rejected"
+          ? `<p style="color:${s.color};font-size:14px;margin:0 0 8px">
+               ${data.rejectionReason || "Your request was not approved."}
+             </p>
+             <p style="color:${s.color};font-size:13px;margin:0">
+               Contact admin on WhatsApp: <strong>+256790548910</strong>
+             </p>`
+          : ""}
+        <button onclick="window.location.href='dashboard.html'"
+          style="margin-top:20px;background:#ff6600;color:white;border:none;padding:12px 24px;border-radius:10px;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit">
+          ← Back to Dashboard
+        </button>
       </div>
     `;
-    document.querySelector(".verification-form").prepend(notice);
-    return; // Stop here first time — user reads payment instructions
+  } catch (err) {
+    console.error("checkExistingVerification error:", err);
   }
-  const businessName = document.getElementById("business-name").value.trim();
-  const phone = document.getElementById("phone-number").value.trim();
-  const location = document.getElementById("location").value;
-  const bio = document.getElementById("bio").value.trim();
-  const idDoc = document.getElementById("id-document").files[0];
-  const licenseDoc = document.getElementById("business-license").files[0];
+}
 
-  // Validation
-  if (!fullName || !businessName || !phone || !location || !idDoc) {
-    alert("❌ Please fill all required fields and upload ID document");
+// ── Submit verification ───────────────────────
+window.submitVerification = async function() {
+  if (!currentUser) {
+    alert("Please login first");
     return;
   }
 
-  const btn = event.target;
-  btn.textContent = "Submitting...";
-  btn.disabled = true;
+  // Collect values
+  const fullName     = document.getElementById("full-name").value.trim();
+  const businessName = document.getElementById("business-name").value.trim();
+  const phone        = document.getElementById("phone-number").value.trim();
+  const location     = document.getElementById("location").value;
+  const bio          = document.getElementById("bio").value.trim();
+  const txnRef       = document.getElementById("txn-ref").value.trim();
+  const idDoc        = document.getElementById("id-document").files[0];
+  const licenseDoc   = document.getElementById("business-license").files[0];
+
+  // Validate
+  if (!txnRef) {
+    const txnInput = document.getElementById("txn-ref");
+    txnInput.style.borderColor = "#ef4444";
+    txnInput.focus();
+    txnInput.placeholder = "⚠️ Please enter your transaction ID first";
+    return;
+  }
+
+  if (!fullName || !businessName || !phone || !location) {
+    alert("❌ Please fill all required fields");
+    return;
+  }
+
+  if (!idDoc) {
+    alert("❌ Please upload your ID document");
+    return;
+  }
+
+  const btn = document.getElementById("submit-btn");
+  btn.textContent = "Uploading documents...";
+  btn.disabled    = true;
 
   try {
-    // Check for duplicate
-    const q = query(
+    // Check duplicate
+    const existing = await getDocs(query(
       collection(db, "seller_verifications"),
-      where("email", "==", currentUser.email)
-    );
+      where("userId", "==", currentUser.uid),
+      where("status", "==", "pending")
+    ));
 
-    const existing = await getDocs(q);
-
-    if (!existing.empty && existing.docs[0].data().status === "pending") {
-      alert("⏳ You already have a pending verification request");
-      btn.textContent = "Submit for Verification";
-      btn.disabled = false;
+    if (!existing.empty) {
+      alert("⏳ You already have a pending verification request.");
+      btn.textContent = "📲 Submit & Send Reference to Admin WhatsApp";
+      btn.disabled    = false;
       return;
     }
 
-    // Upload ID document
-    const idRef = ref(storage, `seller-verification/${currentUser.uid}/id-${Date.now()}`);
+    // Upload ID
+    btn.textContent = "Uploading ID document...";
+    const idRef  = ref(storage, `seller-verification/${currentUser.uid}/id-${Date.now()}`);
     await uploadBytes(idRef, idDoc);
     const idDocURL = await getDownloadURL(idRef);
 
-    // Upload business license if provided
+    // Upload license if provided
     let licenseURL = null;
     if (licenseDoc) {
-      const licenseRef = ref(storage, `seller-verification/${currentUser.uid}/license-${Date.now()}`);
-      await uploadBytes(licenseRef, licenseDoc);
-      licenseURL = await getDownloadURL(licenseRef);
+      btn.textContent = "Uploading business license...";
+      const licRef = ref(storage, `seller-verification/${currentUser.uid}/license-${Date.now()}`);
+      await uploadBytes(licRef, licenseDoc);
+      licenseURL = await getDownloadURL(licRef);
     }
+
+    btn.textContent = "Saving request...";
+
+    const verifRef = `VERIFY-${currentUser.uid.slice(0, 6).toUpperCase()}`;
 
     // Save to Firestore
     const docRef = await addDoc(collection(db, "seller_verifications"), {
-      userId: currentUser.uid,
-      email: currentUser.email,
+      userId:         currentUser.uid,
+      email:          currentUser.email,
       fullName,
       businessName,
       phone,
       location,
       bio,
-      idDocument: idDocURL,
+      idDocument:     idDocURL,
       businessLicense: licenseURL,
-      paymentAmount: 100000,
-      paymentStatus: "pending",
-      status: "pending",
-      createdAt: new Date()
+      transactionRef: txnRef,
+      paymentRef:     verifRef,
+      paymentAmount:  50000,
+      paymentStatus:  "pending_verification",
+      status:         "pending",
+      createdAt:      new Date()
     });
 
-    // ========== WHATSAPP MESSAGE TO ADMIN ==========
-    const adminWhatsApp = "256790548910"; // ⭐ REPLACE WITH YOUR NUMBER
-   // Ask for transaction reference before sending to WhatsApp
-    const txnRef = prompt(
-      "✅ Documents uploaded!\n\n" +
-      "Enter your MTN/Airtel transaction ID after paying UGX 10,0000:\n" +
-      "(Check your phone for the confirmation SMS)"
-    );
-
-    if (!txnRef || !txnRef.trim()) {
-      alert("⚠️ Please enter your transaction ID to complete verification.");
-      btn.textContent = "Submit for Verification";
-      btn.disabled = false;
-      return;
-    }
-
-    // Save transaction ref to Firestore
-    await updateDoc(doc(db, "seller_verifications", docRef.id), {
-      transactionRef:  txnRef.trim(),
-      paymentAmount:   100000,
-      paymentStatus:   "pending_verification"
-    });
-
-    const verifRef = `VERIFY-${currentUser.uid.slice(0,6).toUpperCase()}`;
-
-    const verificationDetails =
+    // Build WhatsApp message
+    const waMsg =
       `🎉 *New Seller Verification Request*\n\n` +
       `👤 *Seller Details:*\n` +
-      `• Name: ${fullName}\n` +
-      `• Business: ${businessName}\n` +
-      `• Email: ${currentUser.email}\n` +
-      `• Phone: ${phone}\n` +
-      `• Location: ${location}\n\n` +
+      `• Name: *${fullName}*\n` +
+      `• Business: *${businessName}*\n` +
+      `• Email: *${currentUser.email}*\n` +
+      `• Phone: *${phone}*\n` +
+      `• Location: *${location}*\n\n` +
       `💰 *Payment:*\n` +
-      `• Amount: UGX 100,000\n` +
-      `• Reference Code: ${verifRef}\n` +
-      `• Transaction ID: ${txnRef.trim()}\n\n` +
+      `• Amount: *UGX 50,000*\n` +
+      `• Reference Code: *${verifRef}*\n` +
+      `• Transaction ID: *${txnRef}*\n\n` +
       `📄 *Documents:*\n` +
       `• ID: ${idDocURL ? "✅ Uploaded" : "❌ Missing"}\n` +
       `• License: ${licenseURL ? "✅ Uploaded" : "⚠️ Not provided"}\n\n` +
       `🔗 Approve/Reject: https://zibuy-5deae.web.app/admin.html\n` +
       `🆔 Verification ID: ${docRef.id}`;
 
-    const whatsappURL = `https://wa.me/${adminWhatsApp}?text=${encodeURIComponent(verificationDetails)}`;
+    // Open admin WhatsApp
+    window.open(`https://wa.me/256790548910?text=${encodeURIComponent(waMsg)}`, "_blank");
 
-    alert("✅ Verification submitted! Opening WhatsApp to notify admin...");
-    window.open(whatsappURL, "_blank");
-
-    // Redirect to dashboard
-    setTimeout(() => {
-      window.location.href = "dashboard.html";
-    }, 2000);
+    // Show success screen
+    document.getElementById("verify-form-wrap").style.display = "none";
+    const statusBox = document.getElementById("verification-status");
+    statusBox.style.display = "block";
+    statusBox.innerHTML = `
+      <div style="background:#f0fdf4;border:2px solid #86efac;border-radius:16px;padding:32px;text-align:center">
+        <p style="font-size:52px;margin:0 0 12px">✅</p>
+        <h2 style="font-size:20px;font-weight:800;color:#166534;margin:0 0 8px">
+          Verification Submitted!
+        </h2>
+        <p style="color:#166534;font-size:14px;margin:0 0 12px">
+          Your reference has been sent to admin via WhatsApp.
+        </p>
+        <div style="background:white;border-radius:10px;padding:14px;margin-bottom:16px;font-size:13px;text-align:left">
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+            <span style="color:#6b7280">Reference Code</span>
+            <strong style="color:#ff6600">${verifRef}</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between">
+            <span style="color:#6b7280">Transaction ID</span>
+            <strong style="color:#ff6600">${txnRef}</strong>
+          </div>
+        </div>
+        <p style="font-size:13px;color:#6b7280;margin-bottom:20px">
+          Admin will verify your payment and activate your badge within <strong>1 hour</strong>.
+        </p>
+        <button onclick="window.location.href='dashboard.html'"
+          style="background:#ff6600;color:white;border:none;padding:14px 28px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit">
+          Go to Dashboard →
+        </button>
+      </div>
+    `;
 
   } catch (err) {
     console.error("Verification error:", err);
     alert("❌ Submission failed: " + err.message);
-    btn.textContent = "Submit for Verification";
-    btn.disabled = false;
+    btn.textContent = "📲 Submit & Send Reference to Admin WhatsApp";
+    btn.disabled    = false;
   }
 };
