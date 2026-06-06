@@ -23,6 +23,7 @@ let currentStep = 1;
 let selectedCategory = "";
 let uploadedImages = [];
 let currentUser = null;
+const productId = new URLSearchParams(window.location.search).get("id"); // ← add this
 
 // Check if user is logged in
 onAuthStateChanged(auth, (user) => {
