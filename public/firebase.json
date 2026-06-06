@@ -8,13 +8,16 @@
       }
     ],
     "ignore": [
-  "firebase.json",
-  "**/.*",
-  "**/node_modules/**",
-  "DEPLOY_NOW.txt",
-  "DEPLOYMENT.md",
-  "README.md",
-  "PREMIUM_ADS_SETUP.txt"
-]
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**",
+      "DEPLOY_NOW.txt",
+      "DEPLOYMENT.md",
+      "README.md",
+      "PREMIUM_ADS_SETUP.txt"
+    ]
+  },
+  "functions": {
+    "source": "functions"
   }
 }
