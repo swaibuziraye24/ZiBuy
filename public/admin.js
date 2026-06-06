@@ -867,37 +867,61 @@ window.sendBroadcast = async function() {
   if (!confirm(`Send "${title}" to ALL users?`)) return;
 
   try {
-    // Save to broadcasts — all users' pages listen to this
+    // 1. Save to broadcasts — shows banner on all pages
     await addDoc(collection(db, "broadcasts"), {
-      title,
-      message,
-      url,
+      title, message, url,
       active:    true,
       sentBy:    ADMIN_EMAIL,
       createdAt: new Date()
     });
 
-    // Also save to all users' notifications
+    // 2. Save to all users' in-app notifications
     const usersSnap = await getDocs(collection(db, "users"));
-    const batch = [];
-    usersSnap.forEach(d => {
-      batch.push(addDoc(collection(db, "notifications"), {
-        userId:    d.id,
-        type:      "offer",
+    const users     = usersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    const batch = users.map(u =>
+      addDoc(collection(db, "notifications"), {
+        userId:    u.id,
+        type:      "broadcast",
         title,
         message,
         relatedId: url,
         read:      false,
         createdAt: new Date()
-      }));
-    });
+      })
+    );
     await Promise.all(batch);
+
+    // 3. Build WhatsApp broadcast link (opens with pre-filled message)
+    // Admin clicks this to send to users who have shared their phone
+    const usersWithPhone = users.filter(u => u.phone);
+    if (usersWithPhone.length > 0) {
+      const waMsg = encodeURIComponent(
+        `📢 *ZiBuy Update*\n\n` +
+        `*${title}*\n\n${message}\n\n` +
+        `🔗 ${url !== "/" ? `https://zibuy-5deae.web.app${url}` : "https://zibuy-5deae.web.app"}`
+      );
+      // Opens WhatsApp with first user — admin can forward to others
+      window.open(`https://wa.me/?text=${waMsg}`, "_blank");
+    }
+
+    // 4. Save email broadcast job to Firestore
+    // Cloud Function picks this up and sends emails
+    await addDoc(collection(db, "email_broadcasts"), {
+      title,
+      message,
+      url,
+      recipientCount: users.length,
+      sentBy:         ADMIN_EMAIL,
+      status:         "pending",
+      createdAt:      new Date()
+    });
 
     document.getElementById("bc-title").value   = "";
     document.getElementById("bc-message").value = "";
     document.getElementById("bc-url").value     = "";
 
-    showToast(`✅ Sent to ${usersSnap.size} users!`, "success");
+    showToast(`✅ Sent in-app to ${users.length} users! WhatsApp opened for sharing.`, "success");
     loadBroadcasts();
   } catch (e) {
     console.error(e);
