@@ -236,10 +236,10 @@ window.closeChatMobile = function() {
 const originalOpenConversation = window.openConversation;
 window.openConversation = function(email) {
   originalOpenConversation.call(this, email);
-  
-  // On mobile, hide conversations list when opening chat
+
   if (window.innerWidth <= 768) {
-    document.querySelector(".messages-sidebar").classList.add("active");
+    document.querySelector(".messages-sidebar")?.classList.add("chat-open");
+    document.querySelector(".messages-main")?.classList.add("chat-open");
   }
 };
 
@@ -247,9 +247,9 @@ window.openConversation = function(email) {
 const originalCloseChat = window.closeChat;
 window.closeChat = function() {
   originalCloseChat.call(this);
-  
-  // On mobile, show conversations list again
+
   if (window.innerWidth <= 768) {
-    document.querySelector(".messages-sidebar").classList.remove("active");
+    document.querySelector(".messages-sidebar")?.classList.remove("chat-open");
+    document.querySelector(".messages-main")?.classList.remove("chat-open");
   }
 };
