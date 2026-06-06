@@ -2,10 +2,12 @@ const functions = require("firebase-functions");
 const admin     = require("firebase-admin");
 admin.initializeApp();
 
+// Set region to match your Firestore (nam5 = us-central1 multi-region)
+const regionalFunctions = functions.region("us-central1");
 // ============================================
 // 1. PUSH NOTIFICATIONS (paid plans only)
 // ============================================
-exports.sendPushOnNotification = functions.firestore
+exports.sendPushOnNotification = regionalFunctions.firestore
   .document("notifications/{notifId}")
   .onCreate(async (snap) => {
     try {
@@ -61,7 +63,7 @@ exports.sendPushOnNotification = functions.firestore
 // ============================================
 // 2. AUTO-EXPIRE BOOSTS (runs every 24 hours)
 // ============================================
-exports.expireBoosts = functions.pubsub
+exports.expireBoosts = regionalFunctions.pubsub
   .schedule("every 24 hours")
   .onRun(async () => {
     try {
@@ -110,7 +112,7 @@ exports.expireBoosts = functions.pubsub
 // ============================================
 // 3. AUTO-EXPIRE SUBSCRIPTIONS (every 24 hours)
 // ============================================
-exports.expireSubscriptions = functions.pubsub
+exports.expireSubscriptions = regionalFunctions.pubsub
   .schedule("every 24 hours")
   .onRun(async () => {
     try {
@@ -161,6 +163,81 @@ exports.expireSubscriptions = functions.pubsub
 
     } catch (err) {
       console.error("[Subs] Expiry failed:", err.message);
+      return null;
+    }
+  });
+
+
+  // ============================================
+// 4. EMAIL BROADCAST (via Gmail/SendGrid)
+// ============================================
+exports.sendEmailBroadcast = regionalFunctions.firestore
+  .document("email_broadcasts/{broadcastId}")
+  .onCreate(async (snap) => {
+    try {
+      const data = snap.data();
+      if (!data) return null;
+
+      // Get all users with emails
+      const usersSnap = await admin.firestore()
+        .collection("users").get();
+
+      const emails = usersSnap.docs
+        .map(d => d.data().email)
+        .filter(Boolean);
+
+      if (emails.length === 0) return null;
+
+      // Use Firebase Extensions (Trigger Email) or Nodemailer
+      // Save each email as a mail document for
+      // "Trigger Email" Firebase Extension
+      const batch = emails.map(email =>
+        admin.firestore().collection("mail").add({
+          to:      email,
+          message: {
+            subject: `ZiBuy: ${data.title}`,
+            html: `
+              <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
+                <div style="background:#ff6600;padding:20px;text-align:center">
+                  <h1 style="color:white;margin:0;font-size:24px">ZiBuy Uganda</h1>
+                </div>
+                <div style="padding:24px;background:white">
+                  <h2 style="color:#111827">${data.title}</h2>
+                  <p style="color:#374151;font-size:15px;line-height:1.6">${data.message}</p>
+                  ${data.url && data.url !== "/" ? `
+                    <a href="https://zibuy-5deae.web.app${data.url}"
+                      style="display:inline-block;background:#ff6600;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700;margin-top:16px">
+                      View on ZiBuy →
+                    </a>` : `
+                    <a href="https://zibuy-5deae.web.app"
+                      style="display:inline-block;background:#ff6600;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700;margin-top:16px">
+                      Visit ZiBuy →
+                    </a>`}
+                </div>
+                <div style="padding:16px;background:#f9fafb;text-align:center;font-size:12px;color:#6b7280">
+                  © 2026 ZiBuy Uganda · You received this because you have a ZiBuy account
+                </div>
+              </div>
+            `
+          }
+        })
+      );
+
+      await Promise.all(batch);
+
+      // Mark broadcast as sent
+      await snap.ref.update({
+        status:  "sent",
+        sentAt:  admin.firestore.FieldValue.serverTimestamp(),
+        sentTo:  emails.length
+      });
+
+      console.log(`[Email] Broadcast sent to ${emails.length} users`);
+      return null;
+
+    } catch (err) {
+      console.error("[Email] Broadcast failed:", err.message);
+      await snap.ref.update({ status: "failed", error: err.message });
       return null;
     }
   });
