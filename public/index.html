@@ -1,91 +1,66 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#ff6600">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#ff6600">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
   <title>ZiBuy — Buy & Sell in Uganda</title>
   <link rel="stylesheet" href="style.css">
-
-<link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#ff6600">
-
+  <link rel="manifest" href="/manifest.json">
 </head>
 <body>
 
 <!-- ============ TOP BAR ============ -->
 <header class="topbar">
-
- <h1 class="logo" id="secret-admin-trigger">
-  Zi<span>Buy</span>
-</h1>
+  <h1 class="logo" id="secret-admin-trigger">Zi<span>Buy</span></h1>
 
   <div class="search-wrap">
     <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
       <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
     </svg>
-    <input
-      type="text"
-      id="search-input"
+    <input type="text" id="search-input"
       placeholder="Search phones, cars, shoes..."
-      onkeyup="searchProducts()"
-    >
+      onkeyup="searchProducts()">
   </div>
 
   <div class="topbar-actions">
-
-    <button class="btn btn-orange" id="post-ad-btn" onclick="window.location.href='post-ad.html'" style="display:none">
+    <button class="btn btn-orange" id="post-ad-btn"
+      onclick="window.location.href='post-ad.html'" style="display:none">
       + Post Ad
     </button>
-
-    <button class="btn btn-outline" id="messages-btn" onclick="window.location.href='messages.html'" style="display:none">
+    <button class="btn btn-outline" id="messages-btn"
+      onclick="window.location.href='messages.html'" style="display:none">
       💬 Messages
     </button>
-
-    <button class="btn btn-outline" id="notifications-btn" onclick="window.location.href='notifications.html'" style="display:none">
+    <button class="btn btn-outline" id="notifications-btn"
+      onclick="window.location.href='notifications.html'" style="display:none">
       🔔 Notifications
     </button>
-
-    <button class="btn btn-outline" id="dashboard-btn" onclick="window.location.href='dashboard.html'" style="display:none">
+    <button class="btn btn-outline" id="dashboard-btn"
+      onclick="window.location.href='dashboard.html'" style="display:none">
       📊 Dashboard
     </button>
-
-<button
-  class="btn btn-orange"
-  onclick="window.location.href='shops.html'"
->
-  🏪 Shops
-</button>
-
- <button
-  class="btn btn-orange"
-  onclick="window.location.href='business-plans.html'"
->
-  💼 Plans
-</button>
-
-<button class="btn btn-orange" id="admin-panel-btn"
-  onclick="window.location.href='admin.html'"
-  style="display:none">
-  ⚙️ Admin Panel
-</button>
-
+    <button class="btn btn-outline" id="upgrade-btn"
+      onclick="window.location.href='business-plans.html'" style="display:none">
+      💼 Plans
+    </button>
+    <button class="btn btn-orange" onclick="window.location.href='shops.html'">
+      🏪 Shops
+    </button>
+    <button class="btn btn-orange" id="admin-panel-btn"
+      onclick="window.location.href='admin.html'" style="display:none">
+      ⚙️ Admin
+    </button>
     <button class="btn btn-outline" id="account-btn" onclick="openAuthModal()">
       Account
     </button>
-
     <div class="cart-btn-wrap">
-      <button class="btn btn-orange" onclick="toggleCart()">
-        🛒 Cart
-      </button>
+      <button class="btn btn-orange" onclick="toggleCart()">🛒 Cart</button>
       <span class="cart-badge" id="cart-count">0</span>
     </div>
-
   </div>
 </header>
 
@@ -108,117 +83,45 @@
       <strong>Safe</strong>
       <span>Payments</span>
     </div>
+  </div>
+</section>
 
-<div id="installBanner" style="
-  display: none;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px;
-  background: #fff3e6;
-  border: 1px solid #ff6600;
-  margin: 10px;
-  border-radius: 8px;
-">
-  <span>Install ZiBuy for faster shopping & offline access</span>
-
-  <button onclick="installZiBuy()" style="
-    background: #ff6600;
-    color: white;
-    border: none;
-    padding: 8px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-  ">
+<!-- ============ INSTALL BANNER ============ -->
+<div id="installBanner" style="display:none;justify-content:space-between;align-items:center;padding:12px 16px;background:#fff3e6;border:1px solid #ff6600;margin:8px 16px;border-radius:8px">
+  <span style="font-size:13px">Install ZiBuy for faster shopping &amp; offline access</span>
+  <button onclick="installZiBuy()" style="background:#ff6600;color:white;border:none;padding:8px 14px;border-radius:6px;cursor:pointer;font-weight:700;font-size:13px">
     Install
   </button>
 </div>
 
-  </div>
-</section>
-
-
 <!-- ============ AD BANNER SLOT ============ -->
-<div id="top-banner-slot" style="display:none;margin:0;padding:8px 16px;background:#f9fafb">
-  <!-- Admin inserts banner HTML via Firestore broadcasts collection -->
-</div>
+<div id="top-banner-slot" style="display:none;margin:0;padding:8px 16px;background:#f9fafb"></div>
 
 <!-- ============ CATEGORIES ============ -->
 <nav class="categories">
-
-  <button class="cat-btn active" data-cat="all"
-    onclick="filterCategory('all', this)">🏪 All</button>
-
-  <button class="cat-btn" data-cat="phones"
-    onclick="filterCategory('phones', this)">📱 Phones</button>
-
-  <button class="cat-btn" data-cat="electronics"
-    onclick="filterCategory('electronics', this)">💻 Electronics</button>
-
-  <button class="cat-btn" data-cat="fashion"
-    onclick="filterCategory('fashion', this)">👗 Fashion</button>
-
-  <button class="cat-btn" data-cat="shoes"
-    onclick="filterCategory('shoes', this)">👟 Shoes</button>
-
-  <button class="cat-btn" data-cat="beauty"
-    onclick="filterCategory('beauty', this)">💄 Beauty</button>
-
-  <button class="cat-btn" data-cat="bags"
-    onclick="filterCategory('bags', this)">👜 Bags</button>
-
-  <button class="cat-btn" data-cat="groceries"
-    onclick="filterCategory('groceries', this)">🛒 Groceries</button>
-
-  <button class="cat-btn" data-cat="watches"
-    onclick="filterCategory('watches', this)">⌚ Watches</button>
-
-  <button class="cat-btn" data-cat="computers"
-    onclick="filterCategory('computers', this)">🖥️ Computers</button>
-
-  <button class="cat-btn" data-cat="gaming"
-    onclick="filterCategory('gaming', this)">🎮 Gaming</button>
-
-  <button class="cat-btn" data-cat="home"
-    onclick="filterCategory('home', this)">🏠 Home</button>
-
-  <button class="cat-btn" data-cat="accessories"
-    onclick="filterCategory('accessories', this)">💎 Accessories</button>
-
-  <button class="cat-btn" data-cat="vehicles"
-    onclick="filterCategory('vehicles', this)">🚗 Vehicles</button>
-
-  <button class="cat-btn" data-cat="motor-equipment"
-    onclick="filterCategory('motor-equipment', this)">⚙️ Motor Parts</button>
-
-  <button class="cat-btn" data-cat="services"
-    onclick="filterCategory('services', this)">🔧 Services</button>
-
-  <button class="cat-btn" data-cat="babies-kids"
-    onclick="filterCategory('babies-kids', this)">👶 Babies & Kids</button>
-
-  <button class="cat-btn" data-cat="animals-pets"
-    onclick="filterCategory('animals-pets', this)">🐾 Animals & Pets</button>
-
-  <button class="cat-btn" data-cat="agriculture"
-    onclick="filterCategory('agriculture', this)">🌾 Agriculture</button>
-
-  <button class="cat-btn" data-cat="commercial-equipment"
-    onclick="filterCategory('commercial-equipment', this)">🏭 Commercial Equip</button>
-
-  <button class="cat-btn" data-cat="tours-leisure"
-    onclick="filterCategory('tours-leisure', this)">🏖️ Tours & Leisure</button>
-
-  <button class="cat-btn" data-cat="seeking-work"
-    onclick="filterCategory('seeking-work', this)">📋 Seeking Work</button>
-
-  <!-- FILTER BUTTON (FIXED) -->
-  <button
-    class="cat-btn filter-toggle-btn"
-    onclick="toggleFilters()"
-    style="margin-left:auto">
-    ⚙️ Filters
-  </button>
-
+  <button class="cat-btn active" data-cat="all" onclick="filterCategory('all', this)">🏪 All</button>
+  <button class="cat-btn" data-cat="phones" onclick="filterCategory('phones', this)">📱 Phones</button>
+  <button class="cat-btn" data-cat="electronics" onclick="filterCategory('electronics', this)">💻 Electronics</button>
+  <button class="cat-btn" data-cat="fashion" onclick="filterCategory('fashion', this)">👗 Fashion</button>
+  <button class="cat-btn" data-cat="shoes" onclick="filterCategory('shoes', this)">👟 Shoes</button>
+  <button class="cat-btn" data-cat="beauty" onclick="filterCategory('beauty', this)">💄 Beauty</button>
+  <button class="cat-btn" data-cat="bags" onclick="filterCategory('bags', this)">👜 Bags</button>
+  <button class="cat-btn" data-cat="groceries" onclick="filterCategory('groceries', this)">🛒 Groceries</button>
+  <button class="cat-btn" data-cat="watches" onclick="filterCategory('watches', this)">⌚ Watches</button>
+  <button class="cat-btn" data-cat="computers" onclick="filterCategory('computers', this)">🖥️ Computers</button>
+  <button class="cat-btn" data-cat="gaming" onclick="filterCategory('gaming', this)">🎮 Gaming</button>
+  <button class="cat-btn" data-cat="home" onclick="filterCategory('home', this)">🏠 Home</button>
+  <button class="cat-btn" data-cat="accessories" onclick="filterCategory('accessories', this)">💎 Accessories</button>
+  <button class="cat-btn" data-cat="vehicles" onclick="filterCategory('vehicles', this)">🚗 Vehicles</button>
+  <button class="cat-btn" data-cat="motor-equipment" onclick="filterCategory('motor-equipment', this)">⚙️ Motor Parts</button>
+  <button class="cat-btn" data-cat="services" onclick="filterCategory('services', this)">🔧 Services</button>
+  <button class="cat-btn" data-cat="babies-kids" onclick="filterCategory('babies-kids', this)">👶 Babies &amp; Kids</button>
+  <button class="cat-btn" data-cat="animals-pets" onclick="filterCategory('animals-pets', this)">🐾 Animals &amp; Pets</button>
+  <button class="cat-btn" data-cat="agriculture" onclick="filterCategory('agriculture', this)">🌾 Agriculture</button>
+  <button class="cat-btn" data-cat="commercial-equipment" onclick="filterCategory('commercial-equipment', this)">🏭 Commercial Equip</button>
+  <button class="cat-btn" data-cat="tours-leisure" onclick="filterCategory('tours-leisure', this)">🏖️ Tours &amp; Leisure</button>
+  <button class="cat-btn" data-cat="seeking-work" onclick="filterCategory('seeking-work', this)">📋 Seeking Work</button>
+  <button class="cat-btn filter-toggle-btn" onclick="toggleFilters()" style="margin-left:auto">⚙️ Filters</button>
 </nav>
 
 <!-- ============ ADVANCED FILTERS ============ -->
@@ -235,7 +138,7 @@
 
     <div class="filter-group">
       <h3>📍 Location</h3>
-      <select id="filter-location"></select>
+      <select id="filter-location">
         <option value="">All Uganda</option>
         <option value="Kampala">Kampala</option>
         <option value="Wakiso">Wakiso</option>
@@ -247,23 +150,20 @@
         <option value="Mbale">Mbale</option>
         <option value="Masaka">Masaka</option>
         <option value="Fort Portal">Fort Portal</option>
-        <option value="Mbale">📍 Mbale</option>
-        <option value="Fort Portal">📍 Fort Portal</option>
-        <option value="Hoima">📍 Hoima</option>
-        <option value="Kiboga">📍 Kiboga</option>
-        <option value="Mubende">📍 Mubende</option>
-        <option value="Mityana">📍 Mityana</option>
-        <option value="Kyankwanzi">📍 Kyankwanzi</option>
-        <option value="Kaseese">📍 Kaseese</option>
-        <option value="Lugazi">📍 Lugazi</option>
-        <option value="Mpigi">📍 Mpigi</option>
-        <option value="Arua">📍 Arua</option>
-        <option value="Masindi">📍 Masindi</option>
-        <option value="Bushenyi">📍 Bushenyi</option>
-        <option value="Isingiro">📍 Isingiro</option>
-        <option value="Kamuli">📍 Kamuli</option>
-        <option value="Other">📍 Other</option>
-      
+        <option value="Hoima">Hoima</option>
+        <option value="Kiboga">Kiboga</option>
+        <option value="Mubende">Mubende</option>
+        <option value="Mityana">Mityana</option>
+        <option value="Kyankwanzi">Kyankwanzi</option>
+        <option value="Kasese">Kasese</option>
+        <option value="Lugazi">Lugazi</option>
+        <option value="Mpigi">Mpigi</option>
+        <option value="Arua">Arua</option>
+        <option value="Masindi">Masindi</option>
+        <option value="Bushenyi">Bushenyi</option>
+        <option value="Isingiro">Isingiro</option>
+        <option value="Kamuli">Kamuli</option>
+        <option value="Other">Other</option>
       </select>
     </div>
 
@@ -279,7 +179,7 @@
 
     <div class="filter-group">
       <h3>🔄 Sort By</h3>
-      <select id="sort-filter" onchange="applySortFilter()">
+      <select id="filter-sort" onchange="applyFilters()">
         <option value="newest">Newest First</option>
         <option value="price-low">Price: Low to High</option>
         <option value="price-high">Price: High to Low</option>
@@ -294,25 +194,24 @@
   </div>
 </div>
 
-<!-- ============ CATEGORY NAV BAR ============ -->
+<!-- ============ CATEGORY & SUBCATEGORY NAV ============ -->
 <div id="category-nav" class="category-nav"></div>
-<!-- ============ SUBCATEGORY NAV ============ -->
 <div id="subcategory-nav" class="subcategory-nav"></div>
 
-
-<!-- ============ PRODUCT GRID ============ -->
+<!-- ============ SECTION HEADER ============ -->
 <div class="section-header">
   <div>
     <h2>Latest Listings</h2>
     <p id="product-count"></p>
   </div>
-  <select class="sort-select">
-    <option>Newest First</option>
-    <option>Price: Low to High</option>
-    <option>Price: High to Low</option>
+  <select class="sort-select" onchange="applyFilters()">
+    <option value="newest">Newest First</option>
+    <option value="price-low">Price: Low to High</option>
+    <option value="price-high">Price: High to Low</option>
   </select>
 </div>
 
+<!-- ============ PRODUCT GRID ============ -->
 <div id="products"></div>
 
 <!-- ============ SAFETY BANNER ============ -->
@@ -332,20 +231,20 @@
       <p>Uganda's trusted free classifieds marketplace. Buy and sell safely.</p>
     </div>
     <div class="footer-links">
-  <h4>Company</h4>
-  <a href="about.html">About ZiBuy</a>
-  <a href="safety.html">Safety Tips</a>
-  <a href="advertise.html">Advertise</a>
-  <a href="terms.html">Terms And Conditions</a>
-  <a href="privacy.html">Privacy Policy</a>
-</div>
-<div class="footer-links">
-  <h4>Support</h4>
-  <a href="help.html">Help Center</a>
-  <a href="contact.html">Contact Us</a>
-  <a href="report.html">Report Abuse</a>
-  <a href="support.html">Support</a>
-</div>
+      <h4>Company</h4>
+      <a href="about.html">About ZiBuy</a>
+      <a href="safety.html">Safety Tips</a>
+      <a href="advertise.html">Advertise</a>
+      <a href="terms.html">Terms &amp; Conditions</a>
+      <a href="privacy.html">Privacy Policy</a>
+    </div>
+    <div class="footer-links">
+      <h4>Support</h4>
+      <a href="help.html">Help Center</a>
+      <a href="contact.html">Contact Us</a>
+      <a href="report.html">Report Abuse</a>
+      <a href="support.html">Support</a>
+    </div>
   </div>
   <div class="footer-bottom">
     © 2026 ZiBuy Uganda · All rights reserved
@@ -355,7 +254,7 @@
 <!-- ============ OVERLAY ============ -->
 <div id="overlay" class="overlay" onclick="closeCart()"></div>
 
-<!-- ============ TOAST CONTAINER ============ -->
+<!-- ============ TOAST ============ -->
 <div id="toast-container" class="toast-container"></div>
 
 <!-- ============ CART SIDEBAR ============ -->
@@ -364,13 +263,11 @@
     <h2>🛒 Your Cart</h2>
     <button class="close-cart" onclick="closeCart()">×</button>
   </div>
-
   <div id="cart-items"></div>
-
   <div class="cart-footer">
-    <input type="text"  id="customer-name"     placeholder="Your Full Name">
-    <input type="tel"   id="customer-phone"    placeholder="Phone Number (e.g. 0701 234567)">
-    <input type="text"  id="customer-location" placeholder="Delivery Location">
+    <input type="text" id="customer-name" placeholder="Your Full Name">
+    <input type="tel" id="customer-phone" placeholder="Phone Number (e.g. 0701 234567)">
+    <input type="text" id="customer-location" placeholder="Delivery Location">
     <div class="cart-total-row">
       Total: <span>UGX <span id="cart-total">0</span></span>
     </div>
@@ -392,7 +289,7 @@
       <div id="modal-seller-info" class="modal-seller"></div>
       <div class="modal-actions">
         <button class="cart-btn" id="modal-cart-btn">Add to Cart</button>
-        <button class="view-btn" id="modal-view-btn" onclick="closeProductModal()">Full Page</button>
+        <button class="view-btn" id="modal-view-btn">Full Page</button>
         <button class="view-btn" onclick="closeProductModal()">×</button>
       </div>
       <div id="modal-contact-btns" class="contact-btns"></div>
@@ -409,7 +306,6 @@
     </div>
     <input type="email" id="auth-email" placeholder="Email address">
 
-    <!-- Password with toggle -->
     <div style="position:relative;margin-bottom:14px">
       <input type="password" id="auth-password" placeholder="Password"
         style="width:100%;padding:13px 44px 13px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box">
@@ -431,16 +327,14 @@
 
     <div class="modal-divider">— or —</div>
 
-    <!-- Register with password toggle -->
     <div id="register-section" style="display:none">
       <input type="email" id="reg-email" placeholder="Email address"
         style="width:100%;padding:13px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:14px">
       <div style="position:relative;margin-bottom:14px">
         <input type="password" id="reg-password" placeholder="Password (min 6 chars)"
           style="width:100%;padding:13px 44px 13px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box">
-        <button type="button"
+        <button type="button" id="toggle-reg-password"
           onclick="togglePasswordView('reg-password','toggle-reg-password')"
-          id="toggle-reg-password"
           style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;padding:0;color:#6b7280">
           👁️
         </button>
@@ -448,9 +342,8 @@
       <div style="position:relative;margin-bottom:14px">
         <input type="password" id="reg-confirm" placeholder="Confirm password"
           style="width:100%;padding:13px 44px 13px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box">
-        <button type="button"
+        <button type="button" id="toggle-reg-confirm"
           onclick="togglePasswordView('reg-confirm','toggle-reg-confirm')"
-          id="toggle-reg-confirm"
           style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;padding:0;color:#6b7280">
           👁️
         </button>
@@ -467,18 +360,16 @@
     <div id="login-actions">
       <button class="full-btn secondary" onclick="toggleRegister(true)">Create Account</button>
       <div class="modal-divider"></div>
-      <button class="full-btn secondary" onclick="customerLogout()">Logout</button>
+      <button class="full-btn secondary" onclick="logoutCustomer()">Logout</button>
     </div>
 
-    <!-- Change Password section -->
     <div id="change-password-section" style="display:none">
       <div class="modal-divider" style="margin-top:10px">— Change Password —</div>
       <div style="position:relative;margin-bottom:12px;margin-top:12px">
         <input type="password" id="new-password" placeholder="New password (min 6 chars)"
           style="width:100%;padding:13px 44px 13px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box">
-        <button type="button"
+        <button type="button" id="toggle-new-pass"
           onclick="togglePasswordView('new-password','toggle-new-pass')"
-          id="toggle-new-pass"
           style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;padding:0;color:#6b7280">
           👁️
         </button>
@@ -499,46 +390,16 @@
   </div>
 </div>
 
-<!-- ============ ADMIN LOGIN MODAL ============ -->
-<div id="admin-login-modal" class="modal">
-  <div class="modal-box">
-    <div class="modal-header">
-      <h2>🔑 Admin Login</h2>
-      <button class="modal-close" onclick="closeAdminLoginModal()">×</button>
-    </div>
-    <input type="email"    id="admin-email"    placeholder="Admin Email">
-    <input type="password" id="admin-password" placeholder="Password">
-    <button class="full-btn" onclick="adminLogin()">Login as Admin</button>
-  </div>
-</div>
-
-<button id="installBtn" onclick="installZiBuy()" style="
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background: #ff6600;
-  color: white;
-  border: none;
-  padding: 12px 16px;
-  border-radius: 50px;
-  font-size: 14px;
-  display: block;
-  z-index: 9999;
-  cursor: pointer;
-">
-  Install ZiBuy
+<!-- ============ INSTALL BUTTON (FAB) ============ -->
+<button id="installBtn" onclick="installZiBuy()" style="display:none;position:fixed;bottom:20px;right:20px;background:#ff6600;color:white;border:none;padding:12px 18px;border-radius:50px;font-size:14px;font-weight:700;z-index:9999;cursor:pointer;box-shadow:0 4px 16px rgba(255,102,0,0.4)">
+  📲 Install ZiBuy
 </button>
 
-
-
-<body>
-
-  <script type="module" src="notifications-setup.js"></script>
-
-<script src="nav.js"></script>
-
-
+<!-- ============ SCRIPTS ============ -->
 <script type="module" src="app.js"></script>
+<script type="module" src="notifications-setup.js"></script>
+<script src="nav.js"></script>
+<script src="install-btn.js"></script>
 
 <script>
   if ("serviceWorker" in navigator) {
@@ -549,6 +410,7 @@
     });
   }
 </script>
-<script src="install-btn.js"></script>
+
 </body>
 </html>
+
