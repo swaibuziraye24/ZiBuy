@@ -893,6 +893,19 @@ window.addToCart = function(name, price, image) {
 };
 
 
+// Save cart session to Firestore for abandoned cart emails
+if (currentUser) {
+  import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js")
+    .then(({ doc, setDoc }) => {
+      setDoc(doc(db, "cart_sessions", currentUser.uid), {
+        userEmail: currentUser.email,
+        items:     JSON.parse(localStorage.getItem("zibuy-cart") || "[]"),
+        status:    "active",
+        updatedAt: new Date()
+      });
+    });
+}
+
 window.updateCartUI = function () {
   const cart = JSON.parse(localStorage.getItem("zibuy-cart")) || [];
   const count = cart.reduce((sum, item) => sum + item.qty, 0);
