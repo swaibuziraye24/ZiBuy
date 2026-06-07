@@ -1,72 +1,124 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#ff6600">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<title>ZiBuy Safety Tips</title>
-
-<link rel="manifest" href="/manifest.json">
-
-<style>
-
-body{
-  font-family:Arial,sans-serif;
-  background:#f5f5f5;
-  margin:0;
-}
-
-.container{
-  max-width:900px;
-  margin:auto;
-  background:white;
-  padding:25px;
-  line-height:1.7;
-}
-
-h1{
-  color:#ff6600;
-}
-
-.tip{
-  background:#fff7ed;
-  padding:15px;
-  border-radius:10px;
-  margin-bottom:15px;
-}
-
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#ff6600">
+  <title>Safety Tips — ZiBuy</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="/manifest.json">
+  <style>
+    .safety-wrap { max-width: 780px; margin: 0 auto; padding: 32px 20px 80px; }
+    .safety-hero { background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 40px 24px; text-align: center; margin-bottom: 32px; border-radius: 16px; }
+    .safety-hero h1 { font-size: 28px; font-weight: 900; margin: 0 0 8px; }
+    .safety-hero p { margin: 0; opacity: .9; font-size: 14px; }
+    .tip-card { background: white; border-radius: 14px; padding: 22px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 14px; display: flex; gap: 16px; align-items: flex-start; }
+    .tip-icon { font-size: 32px; flex-shrink: 0; }
+    .tip-card h3 { font-size: 16px; font-weight: 800; color: #111827; margin: 0 0 8px; }
+    .tip-card p { font-size: 14px; color: #374151; line-height: 1.7; margin: 0; }
+    .warning-card { background: #fef2f2; border: 1.5px solid #fca5a5; border-radius: 14px; padding: 20px; margin-bottom: 14px; }
+    .warning-card h3 { font-size: 16px; font-weight: 800; color: #991b1b; margin: 0 0 10px; }
+    .warning-card ul { padding-left: 20px; margin: 0; }
+    .warning-card li { font-size: 14px; color: #7f1d1d; line-height: 1.8; }
+    .report-box { background: linear-gradient(135deg, #ff6600, #ff9900); color: white; border-radius: 14px; padding: 24px; text-align: center; margin-top: 24px; }
+    .report-box h3 { font-size: 18px; font-weight: 800; margin: 0 0 10px; }
+    .report-box p { font-size: 14px; opacity: .9; margin: 0 0 16px; }
+  </style>
 </head>
-
 <body>
+<header class="topbar">
+  <a href="index.html"><img src="my_logo.png" alt="ZiBuy" style="height:45px;width:auto"></a>
+  <div style="margin-left:auto">
+    <button class="btn btn-dark" onclick="window.history.back()">← Back</button>
+  </div>
+</header>
 
-<div class="container">
+<div class="safety-wrap">
+  <div class="safety-hero">
+    <h1>🛡️ Safety Tips</h1>
+    <p>Stay safe when buying and selling on ZiBuy Uganda</p>
+  </div>
 
-<h1>🛡️ ZiBuy Safety Tips</h1>
+  <div class="tip-card">
+    <div class="tip-icon">🤝</div>
+    <div>
+      <h3>Meet in a Safe, Public Place</h3>
+      <p>Always arrange to meet buyers or sellers in busy public locations such as shopping malls, banks, or police stations. Never meet at private residences, especially for first-time transactions. Bring a friend or family member if possible.</p>
+    </div>
+  </div>
 
-<div class="tip">
-Always meet sellers in safe public places.
+  <div class="tip-card">
+    <div class="tip-icon">🔍</div>
+    <div>
+      <h3>Inspect Before You Pay</h3>
+      <p>Always thoroughly inspect any item before handing over money. Test electronics to ensure they work. Check documents for vehicles. Verify authenticity of branded goods. Never pay for something you haven't seen in person.</p>
+    </div>
+  </div>
+
+  <div class="tip-card">
+    <div class="tip-icon">💰</div>
+    <div>
+      <h3>Never Pay in Advance</h3>
+      <p>Do not send money to a seller before receiving the item. Legitimate sellers on ZiBuy do not ask for advance payments, deposits, or transfer fees. If someone asks you to pay before meeting, this is a strong warning sign of fraud.</p>
+    </div>
+  </div>
+
+  <div class="tip-card">
+    <div class="tip-icon">✅</div>
+    <div>
+      <h3>Look for Verified Sellers</h3>
+      <p>ZiBuy verified sellers have submitted identity documents and been approved by our team. Look for the ✅ Verified badge on seller profiles and ads. Verified sellers provide an extra layer of trust and accountability.</p>
+    </div>
+  </div>
+
+  <div class="tip-card">
+    <div class="tip-icon">📱</div>
+    <div>
+      <h3>Communicate Through ZiBuy</h3>
+      <p>Use ZiBuy's built-in messaging system to communicate with buyers and sellers. This keeps a record of your conversations. Be cautious of sellers who immediately try to move conversations to external platforms or ask for personal details.</p>
+    </div>
+  </div>
+
+  <div class="tip-card">
+    <div class="tip-icon">📄</div>
+    <div>
+      <h3>Get a Receipt for Vehicles</h3>
+      <p>When buying vehicles, always verify ownership documents (logbook, transfer forms). Ensure the seller's name matches the logbook. Consider using a licensed broker or meeting at the Uganda Revenue Authority (URA) office for vehicle transfers.</p>
+    </div>
+  </div>
+
+  <div class="tip-card">
+    <div class="tip-icon">🏦</div>
+    <div>
+      <h3>Use Safe Payment Methods</h3>
+      <p>For larger transactions, prefer cash on delivery or bank transfers rather than sending mobile money in advance. Always get confirmation of payment before handing over goods as a seller.</p>
+    </div>
+  </div>
+
+  <div class="warning-card">
+    <h3>🚨 Common Scams to Watch Out For</h3>
+    <ul>
+      <li>Sellers asking for M-Pesa/MTN Money transfer before meeting</li>
+      <li>Prices that seem impossibly low for the item</li>
+      <li>Sellers claiming to be overseas and needing shipping fees</li>
+      <li>Requests to move to WhatsApp immediately before showing the item</li>
+      <li>Fake receipts or tampered vehicle documents</li>
+      <li>Buyers sending "proof of payment" screenshots that are fake</li>
+      <li>Requests for your personal ID or bank account details</li>
+    </ul>
+  </div>
+
+  <div class="report-box">
+    <h3>🚩 Seen Something Suspicious?</h3>
+    <p>Help keep ZiBuy safe for everyone. Report any suspicious listings or users immediately.</p>
+    <a href="report.html" style="background:white;color:#ff6600;border:none;padding:12px 28px;border-radius:10px;font-weight:800;font-size:14px;text-decoration:none;display:inline-block">
+      Report Now →
+    </a>
+  </div>
 </div>
-
-<div class="tip">
-Never send money before seeing the product.
-</div>
-
-<div class="tip">
-Report suspicious users immediately.
-</div>
-
-<div class="tip">
-Verify products carefully before payment.
-</div>
-
-</div>
-
-<script type="module" src="notifications-setup.js"></script>
 
 <script src="nav.js"></script>
-
 </body>
 </html>
+
