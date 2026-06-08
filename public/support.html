@@ -1,36 +1,54 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#ff6600">
-  <title>Support — ZiBuy</title>
+  <title>Support Center — ZiBuy</title>
   <link rel="stylesheet" href="style.css">
   <link rel="manifest" href="/manifest.json">
   <style>
-    .support-wrap { max-width: 780px; margin: 0 auto; padding: 32px 20px 80px; }
-    .support-hero { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; padding: 40px 24px; text-align: center; margin-bottom: 32px; border-radius: 16px; }
-    .support-hero h1 { font-size: 28px; font-weight: 900; margin: 0 0 8px; }
-    .support-hero p { margin: 0; opacity: .9; font-size: 14px; }
-    .contact-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
-    .contact-card { background: white; border-radius: 14px; padding: 22px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); text-align: center; text-decoration: none; color: inherit; transition: transform .2s; display: block; }
-    .contact-card:hover { transform: translateY(-4px); }
-    .contact-card .icon { font-size: 36px; margin-bottom: 12px; }
+    .sup-wrap { max-width: 860px; margin: 0 auto; padding: 32px 20px 80px; }
+    .sup-hero {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      border-radius: 20px;
+      padding: 52px 32px;
+      text-align: center;
+      color: white;
+      margin-bottom: 32px;
+    }
+    .sup-hero h1 { font-size: clamp(24px,5vw,38px); font-weight: 900; margin: 0 0 10px; }
+    .sup-hero p { font-size: 15px; opacity: .9; max-width: 480px; margin: 0 auto; line-height: 1.7; }
+    .hours-pill { display: inline-block; background: rgba(255,255,255,.2); border: 1px solid rgba(255,255,255,.3); color: white; padding: 8px 20px; border-radius: 30px; font-size: 13px; font-weight: 700; margin-top: 18px; }
+    .contact-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 24px; }
+    .contact-card { background: white; border-radius: 14px; padding: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); text-align: center; text-decoration: none; color: inherit; display: block; transition: .2s; border-top: 4px solid transparent; }
+    .contact-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+    .contact-card.wa { border-top-color: #25d366; }
+    .contact-card.em { border-top-color: #6366f1; }
+    .contact-card.rp { border-top-color: #ef4444; }
+    .contact-card .icon { font-size: 38px; margin-bottom: 12px; }
     .contact-card h3 { font-size: 16px; font-weight: 800; color: #111827; margin: 0 0 6px; }
-    .contact-card p { font-size: 13px; color: #6b7280; margin: 0 0 14px; }
-    .contact-card .action { display: inline-block; background: #ff6600; color: white; padding: 8px 20px; border-radius: 8px; font-weight: 700; font-size: 13px; text-decoration: none; }
-    .faq-section { background: white; border-radius: 14px; padding: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 16px; }
-    .faq-section h2 { font-size: 18px; font-weight: 800; color: #111827; margin: 0 0 20px; }
-    .faq-item { border-bottom: 1px solid #f0f0f0; padding: 14px 0; }
-    .faq-item:last-child { border-bottom: none; }
-    .faq-q { font-size: 14px; font-weight: 800; color: #111827; margin: 0 0 6px; cursor: pointer; }
-    .faq-a { font-size: 14px; color: #374151; line-height: 1.7; margin: 0; }
-    .hours-box { background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 12px; padding: 16px; margin-bottom: 20px; text-align: center; }
-    .hours-box p { margin: 0; font-size: 14px; color: #166534; font-weight: 600; }
+    .contact-card p { font-size: 13px; color: #6b7280; margin: 0 0 16px; line-height: 1.6; }
+    .card-btn { display: inline-block; padding: 10px 24px; border-radius: 9px; font-weight: 800; font-size: 13px; text-decoration: none; }
+    .card-btn.green { background: #25d366; color: white; }
+    .card-btn.purple { background: #6366f1; color: white; }
+    .card-btn.red { background: #ef4444; color: white; }
+    .faq-card { background: white; border-radius: 16px; padding: 28px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); margin-bottom: 16px; }
+    .faq-card h2 { font-size: 20px; font-weight: 800; color: #111827; margin: 0 0 20px; }
+    .faq-item { border-bottom: 1px solid #f0f0f0; padding: 16px 0; cursor: pointer; }
+    .faq-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .faq-q { font-size: 14px; font-weight: 800; color: #111827; margin: 0 0 8px; display: flex; align-items: center; gap: 8px; }
+    .faq-q::before { content: "❓"; font-size: 16px; }
+    .faq-a { font-size: 14px; color: #374151; line-height: 1.8; margin: 0; }
+    .status-card { background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 14px; padding: 20px; display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+    .status-dot { width: 14px; height: 14px; background: #22c55e; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 0 4px rgba(34,197,94,.2); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{box-shadow:0 0 0 4px rgba(34,197,94,.2)} 50%{box-shadow:0 0 0 8px rgba(34,197,94,.1)} }
+    .status-card p { margin: 0; font-size: 14px; color: #166534; font-weight: 600; }
+    .status-card small { display: block; font-size: 12px; color: #16a34a; margin-top: 2px; font-weight: 400; }
   </style>
 </head>
 <body>
+
 <header class="topbar">
   <a href="index.html"><img src="my_logo.png" alt="ZiBuy" style="height:45px;width:auto"></a>
   <div style="margin-left:auto">
@@ -38,82 +56,96 @@
   </div>
 </header>
 
-<div class="support-wrap">
-  <div class="support-hero">
-    <h1>💬 Support Center</h1>
-    <p>We're here to help you get the most out of ZiBuy Uganda</p>
+<div class="sup-wrap">
+
+  <div class="sup-hero">
+    <h1>💬 How Can We Help?</h1>
+    <p>Our support team is ready to help you with anything on ZiBuy. Choose the fastest way to reach us.</p>
+    <div class="hours-pill">🕐 Mon–Sat · 8:00 AM – 8:00 PM EAT · Reply within 2 hours</div>
   </div>
 
-  <div class="hours-box">
-    <p>🕐 Support Hours: Monday – Saturday, 8:00 AM – 8:00 PM (EAT) · Response within 2 hours</p>
+  <div class="status-card">
+    <div class="status-dot"></div>
+    <div>
+      <p>All ZiBuy systems are operational</p>
+      <small>Platform, payments, and messaging are running normally</small>
+    </div>
   </div>
 
   <div class="contact-grid">
-    <a href="https://wa.me/256790548910?text=Hello ZiBuy Support, I need help with..." target="_blank" class="contact-card">
+    <a href="https://wa.me/256790548910?text=Hello ZiBuy Support! I need help with..." target="_blank" class="contact-card wa">
       <div class="icon">💬</div>
       <h3>WhatsApp Support</h3>
-      <p>Fastest response. Chat with us directly on WhatsApp.</p>
-      <span class="action">Chat Now</span>
+      <p>Fastest response. Chat directly with our team. Average reply: under 30 minutes.</p>
+      <span class="card-btn green">+256 790 548 910</span>
     </a>
-    <a href="mailto:swaibuziraye22@gmail.com?subject=ZiBuy Support Request" class="contact-card">
+    <a href="mailto:swaibuziraye22@gmail.com?subject=ZiBuy Support Request" class="contact-card em">
       <div class="icon">📧</div>
       <h3>Email Support</h3>
-      <p>Send us a detailed message and we'll respond within 24 hours.</p>
-      <span class="action">Send Email</span>
+      <p>Send a detailed message with screenshots. We respond within 24 hours on business days.</p>
+      <span class="card-btn purple">Send Email</span>
     </a>
-    <a href="report.html" class="contact-card">
+    <a href="report.html" class="contact-card rp">
       <div class="icon">🚨</div>
-      <h3>Report a Problem</h3>
-      <p>Report fraudulent listings, scammers, or policy violations.</p>
-      <span class="action">Report Now</span>
+      <h3>Report Abuse</h3>
+      <p>Report scams, fraudulent listings, or policy violations. We investigate within 24 hours.</p>
+      <span class="card-btn red">Report Now</span>
     </a>
   </div>
 
-  <div class="faq-section">
+  <div class="faq-card">
     <h2>❓ Frequently Asked Questions</h2>
 
     <div class="faq-item">
-      <p class="faq-q">How do I post an ad on ZiBuy?</p>
-      <p class="faq-a">Click the "+ Post Ad" button in the top navigation bar. Follow the 4-step process: choose your category, fill in item details, upload photos, and review before publishing. Basic posting is completely free.</p>
+      <p class="faq-q">How do I post a free ad on ZiBuy?</p>
+      <p class="faq-a">Tap <strong>+ Post Ad</strong> in the top bar. Follow the 4 steps — select category, add details and price, upload photos, review and publish. Basic posting is 100% free with no time limit.</p>
     </div>
 
     <div class="faq-item">
-      <p class="faq-q">How do I get my seller verification badge?</p>
-      <p class="faq-a">Go to Dashboard → Get Verified. Upload your National ID and business documents, pay the one-time UGX 10,000 fee via MTN or Airtel Money, and submit. Our team reviews within 24-48 hours.</p>
+      <p class="faq-q">How do I get the Verified Seller badge?</p>
+      <p class="faq-a">Go to <strong>Dashboard → Get Verified</strong>. Pay the one-time UGX 10,000 fee via MTN (Merchant: 27868095) or Airtel (+256575996624), upload your National ID, and submit. Approval takes 24–48 hours.</p>
     </div>
 
     <div class="faq-item">
-      <p class="faq-q">How does ad boosting work?</p>
-      <p class="faq-a">Boosted ads appear at the top of search results with a ⭐ Featured badge. Pay via MTN (Merchant Code: 27868095) or Airtel (+256575996624), then submit your transaction reference. Boost is activated within 1 hour after payment verification.</p>
+      <p class="faq-q">I paid for a boost but it wasn't activated. What do I do?</p>
+      <p class="faq-a">Contact us on WhatsApp at <strong>+256 790 548 910</strong> with your payment reference code and MTN/Airtel transaction ID. We verify and activate within 1 hour during business hours.</p>
     </div>
 
     <div class="faq-item">
-      <p class="faq-q">I paid but my boost/plan wasn't activated. What do I do?</p>
-      <p class="faq-a">Contact us on WhatsApp at +256 790 548 910 with your payment reference code and transaction ID. Our admin will verify and activate within 1 hour during business hours.</p>
+      <p class="faq-q">How do I upgrade or cancel my business plan?</p>
+      <p class="faq-a">Go to <strong>business-plans.html</strong> to upgrade. To downgrade or cancel, go to <strong>Dashboard → Settings → Plan Details</strong>. Your current plan stays active until the end of the billing period.</p>
     </div>
 
     <div class="faq-item">
-      <p class="faq-q">How do I delete my account?</p>
-      <p class="faq-a">Go to Dashboard → Settings → Danger Zone → Delete My Account. You'll need to confirm with your password. All your data and listings will be permanently deleted. This action cannot be undone.</p>
+      <p class="faq-q">Can I message a seller before buying?</p>
+      <p class="faq-a">Yes. On any product page, tap <strong>Send Message</strong> to chat directly with the seller through ZiBuy's secure messaging system. You must be logged in to send messages.</p>
     </div>
 
     <div class="faq-item">
-      <p class="faq-q">Is ZiBuy available as a mobile app?</p>
-      <p class="faq-a">Yes! ZiBuy is a Progressive Web App (PWA). Open ZiBuy in your mobile browser and tap "Install ZiBuy" or "Add to Home Screen" to install it like a native app with offline access.</p>
+      <p class="faq-q">How do I install ZiBuy on my phone?</p>
+      <p class="faq-a">Open ZiBuy in Chrome on Android or Safari on iPhone. Tap the menu (⋮) and select <strong>"Add to Home Screen"</strong> or tap the <strong>"Install ZiBuy"</strong> button that appears at the bottom of the screen.</p>
     </div>
 
     <div class="faq-item">
-      <p class="faq-q">How do I report a scam or suspicious listing?</p>
-      <p class="faq-a">Visit our <a href="report.html" style="color:#ff6600;font-weight:700">Report Abuse</a> page or contact us directly on WhatsApp. Include the listing URL and as much detail as possible. We investigate all reports within 24 hours.</p>
+      <p class="faq-q">How do I delete my account and data?</p>
+      <p class="faq-a">Go to <strong>Dashboard → Settings → Danger Zone → Delete My Account</strong>. Enter your password to confirm. All your data, ads, and account information are permanently deleted. This cannot be undone.</p>
     </div>
 
     <div class="faq-item">
-      <p class="faq-q">What payment methods does ZiBuy accept?</p>
-      <p class="faq-a">For premium services (boosts, plans, verification), we accept MTN Mobile Money and Airtel Money. For purchases between buyers and sellers, ZiBuy recommends cash on delivery as the safest method.</p>
+      <p class="faq-q">Why is my ad not showing up?</p>
+      <p class="faq-a">Ads are reviewed automatically. If yours isn't showing, it may have been flagged for review. Check that it doesn't violate our <a href="terms.html" style="color:#6366f1;font-weight:700">Terms & Conditions</a>. Contact us if you believe this is an error.</p>
     </div>
+
+    <div class="faq-item">
+      <p class="faq-q">What payment methods are accepted?</p>
+      <p class="faq-a">For ZiBuy premium services: <strong>MTN Mobile Money</strong> (Merchant Code: 27868095) and <strong>Airtel Money</strong> (+256575996624). For buyer-seller transactions, we recommend cash on delivery for safety.</p>
+    </div>
+
   </div>
+
 </div>
 
 <script src="nav.js"></script>
 </body>
 </html>
+
