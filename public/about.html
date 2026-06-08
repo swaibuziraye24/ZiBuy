@@ -1,253 +1,143 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="mobile-web-app-capable" content="yes">
-  <title>About ZiBuy</title>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#ff6600">
+  <title>About ZiBuy — Uganda's Trusted Marketplace</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="/manifest.json">
   <style>
-
-    body{
-      margin:0;
-      font-family:Arial,sans-serif;
-      background:#f5f5f5;
-      color:#111827;
+    .about-wrap { max-width: 860px; margin: 0 auto; padding: 32px 20px 80px; }
+    .about-hero {
+      background: linear-gradient(135deg, #ff6600 0%, #ff9900 100%);
+      border-radius: 20px;
+      padding: 56px 32px;
+      text-align: center;
+      color: white;
+      margin-bottom: 32px;
+      position: relative;
+      overflow: hidden;
     }
-
-    .hero{
-      background:#ff6600;
-      color:white;
-      padding:60px 20px;
-      text-align:center;
+    .about-hero::before {
+      content: "🇺🇬";
+      position: absolute;
+      font-size: 200px;
+      opacity: .06;
+      top: -20px;
+      right: -20px;
     }
-
-    .hero img{
-      width:220px;
-      max-width:90%;
-      margin-bottom:20px;
-    }
-
-    .hero h1{
-      margin:0;
-      font-size:38px;
-    }
-
-    .hero p{
-      max-width:700px;
-      margin:18px auto 0;
-      line-height:1.7;
-      font-size:17px;
-    }
-
-    .container{
-      max-width:1100px;
-      margin:auto;
-      padding:30px 20px;
-    }
-
-    .section{
-      background:white;
-      padding:25px;
-      border-radius:14px;
-      margin-bottom:25px;
-      box-shadow:0 2px 10px rgba(0,0,0,0.06);
-    }
-
-    .section h2{
-      color:#ff6600;
-      margin-top:0;
-    }
-
-    .features{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-      gap:18px;
-      margin-top:20px;
-    }
-
-    .feature-box{
-      background:#fff7ed;
-      padding:18px;
-      border-radius:12px;
-    }
-
-    .feature-box h3{
-      margin-top:0;
-      color:#ff6600;
-    }
-
-    .stats{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-      gap:20px;
-      margin-top:20px;
-    }
-
-    .stat-card{
-      background:#111827;
-      color:white;
-      padding:24px;
-      border-radius:12px;
-      text-align:center;
-    }
-
-    .stat-card h2{
-      margin:0;
-      font-size:32px;
-      color:#ff6600;
-    }
-
-    .footer{
-      background:#111827;
-      color:white;
-      text-align:center;
-      padding:25px;
-      margin-top:40px;
-    }
-
-    @media(max-width:768px){
-
-      .hero{
-        padding:40px 16px;
-      }
-
-      .hero h1{
-        font-size:30px;
-      }
-
-      .hero p{
-        font-size:15px;
-      }
-
-    }
-
+    .about-hero h1 { font-size: clamp(28px,5vw,44px); font-weight: 900; margin: 0 0 12px; }
+    .about-hero p { font-size: 16px; opacity: .92; max-width: 560px; margin: 0 auto; line-height: 1.7; }
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; margin-bottom: 28px; }
+    .stat-card { background: white; border-radius: 14px; padding: 20px; text-align: center; box-shadow: 0 2px 12px rgba(0,0,0,0.07); border-top: 4px solid #ff6600; }
+    .stat-card .num { font-size: 28px; font-weight: 900; color: #ff6600; }
+    .stat-card .lbl { font-size: 12px; color: #6b7280; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; margin-top: 4px; }
+    .section-card { background: white; border-radius: 16px; padding: 28px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); margin-bottom: 16px; }
+    .section-card h2 { font-size: 20px; font-weight: 800; color: #111827; margin: 0 0 14px; }
+    .section-card p { font-size: 14px; color: #374151; line-height: 1.8; margin-bottom: 10px; }
+    .values-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-top: 16px; }
+    .value-item { background: #f9fafb; border-radius: 12px; padding: 18px; }
+    .value-item .icon { font-size: 28px; margin-bottom: 8px; }
+    .value-item h4 { font-size: 14px; font-weight: 800; color: #111827; margin: 0 0 6px; }
+    .value-item p { font-size: 13px; color: #6b7280; margin: 0; line-height: 1.6; }
+    .team-note { background: linear-gradient(135deg, #fff4ee, #fffbeb); border: 2px solid #ff6600; border-radius: 14px; padding: 24px; text-align: center; margin-bottom: 16px; }
+    .team-note h3 { font-size: 18px; font-weight: 800; color: #ff6600; margin: 0 0 8px; }
+    .team-note p { font-size: 14px; color: #374151; margin: 0; line-height: 1.7; }
+    .cta-box { background: linear-gradient(135deg, #111827, #374151); border-radius: 16px; padding: 36px; text-align: center; color: white; }
+    .cta-box h2 { font-size: 22px; font-weight: 800; margin: 0 0 10px; }
+    .cta-box p { font-size: 14px; opacity: .85; margin: 0 0 20px; }
+    .cta-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .cta-btn { padding: 13px 28px; border-radius: 10px; font-weight: 800; font-size: 14px; text-decoration: none; }
+    .cta-btn.primary { background: #ff6600; color: white; }
+    .cta-btn.secondary { background: rgba(255,255,255,.15); color: white; border: 1.5px solid rgba(255,255,255,.3); }
   </style>
-
-<link rel="manifest" href="/manifest.json">
-
 </head>
-
 <body>
 
-  <div class="hero">
+<header class="topbar">
+  <a href="index.html"><img src="my_logo.png" alt="ZiBuy" style="height:45px;width:auto"></a>
+  <div style="margin-left:auto">
+    <button class="btn btn-dark" onclick="window.history.back()">← Back</button>
+  </div>
+</header>
 
-    <img src="my_logo.png" alt="ZiBuy Logo">
+<div class="about-wrap">
 
-    <h1>About ZiBuy</h1>
-
-    <p>
-      ZiBuy is a modern Ugandan online marketplace where buyers and sellers
-      connect safely to buy, sell, advertise, and grow businesses online.
-    </p>
-
+  <div class="about-hero">
+    <h1>Uganda's Trusted<br>Free Marketplace 🇺🇬</h1>
+    <p>ZiBuy connects millions of Ugandans to buy, sell, and discover amazing deals — safely, simply, and for free.</p>
   </div>
 
-  <div class="container">
+  <div class="stats-row">
+    <div class="stat-card"><div class="num">851K+</div><div class="lbl">Active Ads</div></div>
+    <div class="stat-card"><div class="num">Free</div><div class="lbl">To Post</div></div>
+    <div class="stat-card"><div class="num">22+</div><div class="lbl">Categories</div></div>
+    <div class="stat-card"><div class="num">Safe</div><div class="lbl">Transactions</div></div>
+    <div class="stat-card"><div class="num">2024</div><div class="lbl">Founded</div></div>
+  </div>
 
-    <div class="section">
+  <div class="section-card">
+    <h2>🌍 Who We Are</h2>
+    <p>ZiBuy is Uganda's fast-growing online classifieds marketplace, designed to make buying and selling as easy, safe, and accessible as possible for every Ugandan — whether you're in Kampala, Gulu, Mbarara, or anywhere across the country.</p>
+    <p>We believe everyone deserves access to a fair, transparent, and trustworthy marketplace. Whether you're a small business owner, an individual seller clearing out your home, or a buyer looking for the best deal, ZiBuy is built for you.</p>
+    <p>Our platform supports phones, electronics, fashion, vehicles, real estate services, agriculture, and much more — everything Ugandans need, in one place.</p>
+  </div>
 
-      <h2>🌍 Our Mission</h2>
-
-      <p>
-        ZiBuy was created to help Ugandans buy and sell products easily,
-        safely, and affordably using modern digital technology.
-      </p>
-
-      <p>
-        We aim to empower small businesses, online sellers,
-        entrepreneurs, and everyday people across Uganda.
-      </p>
-
-    </div>
-
-    <div class="section">
-
-      <h2>🚀 What ZiBuy Offers</h2>
-
-      <div class="features">
-
-        <div class="feature-box">
-          <h3>🛒 Buy & Sell</h3>
-          <p>
-            Easily post and discover products across multiple categories.
-          </p>
-        </div>
-
-        <div class="feature-box">
-          <h3>⭐ Premium Ads</h3>
-          <p>
-            Boost products for higher visibility and faster sales.
-          </p>
-        </div>
-
-        <div class="feature-box">
-          <h3>🏪 Business Accounts</h3>
-          <p>
-            Businesses can open professional seller accounts with advanced features.
-          </p>
-        </div>
-
-        <div class="feature-box">
-          <h3>🔒 Buyer Safety</h3>
-          <p>
-            Reporting systems, moderation, and seller verification help keep users safe.
-          </p>
-        </div>
-
+  <div class="section-card">
+    <h2>🎯 Our Mission</h2>
+    <p>To empower every Ugandan with a free, safe, and professional platform to grow their business and find great deals — connecting communities through commerce.</p>
+    <div class="values-grid">
+      <div class="value-item">
+        <div class="icon">🔒</div>
+        <h4>Safety First</h4>
+        <p>Verified sellers, fraud detection, and safety guidelines to protect every transaction.</p>
       </div>
-
-    </div>
-
-    <div class="section">
-
-      <h2>📈 ZiBuy Growth Vision</h2>
-
-      <div class="stats">
-
-        <div class="stat-card">
-          <h2>24/7</h2>
-          <p>Marketplace Access</p>
-        </div>
-
-        <div class="stat-card">
-          <h2>100%</h2>
-          <p>Ugandan Focused</p>
-        </div>
-
-        <div class="stat-card">
-          <h2>Safe</h2>
-          <p>Moderated Platform</p>
-        </div>
-
+      <div class="value-item">
+        <div class="icon">🆓</div>
+        <h4>Free to All</h4>
+        <p>Basic listing is completely free. Everyone deserves access to a marketplace.</p>
       </div>
-
+      <div class="value-item">
+        <div class="icon">⚡</div>
+        <h4>Simple & Fast</h4>
+        <p>Post an ad in under 5 minutes. No technical skills required.</p>
+      </div>
+      <div class="value-item">
+        <div class="icon">🤝</div>
+        <h4>Community Driven</h4>
+        <p>Built by Ugandans, for Ugandans. Your feedback shapes our platform.</p>
+      </div>
     </div>
-
-    <div class="section">
-
-      <h2>📞 Contact ZiBuy</h2>
-
-      <p>
-        WhatsApp: <strong>+256790548910</strong>
-      </p>
-
-      <p>
-        Email: <strong>support@zibuyug.com</strong>
-      </p>
-
-    </div>
-
   </div>
 
-  <div class="footer">
-    © 2026 ZiBuy Uganda — All Rights Reserved
+  <div class="section-card">
+    <h2>📱 Why Choose ZiBuy?</h2>
+    <p><strong>✅ Verified Sellers</strong> — Our verification system ensures you deal with legitimate, identity-verified sellers.</p>
+    <p><strong>⭐ Featured Ads</strong> — Boost your listings to reach more buyers faster with our affordable promotion plans.</p>
+    <p><strong>💬 Direct Messaging</strong> — Communicate safely with sellers through our built-in messaging system.</p>
+    <p><strong>📊 Seller Dashboard</strong> — Track your ad views, likes, orders, and performance all in one place.</p>
+    <p><strong>📲 Works Offline</strong> — ZiBuy is a Progressive Web App — install it on your phone for offline access.</p>
+    <p><strong>🇺🇬 Uganda-Focused</strong> — Built specifically for the Ugandan market, with local payment methods and locations.</p>
   </div>
 
-<script type="module" src="notifications-setup.js"></script>
+  <div class="team-note">
+    <h3>👨‍💻 Built with ❤️ in Uganda</h3>
+    <p>ZiBuy was founded in Uganda with a simple goal: give every Ugandan a professional platform to grow their business online. We're a passionate team committed to making e-commerce accessible to all.</p>
+  </div>
+
+  <div class="cta-box">
+    <h2>Ready to Start Selling?</h2>
+    <p>Join thousands of Ugandans already buying and selling on ZiBuy. It's free and takes less than 5 minutes.</p>
+    <div class="cta-btns">
+      <a href="post-ad.html" class="cta-btn primary">+ Post Your First Ad</a>
+      <a href="index.html" class="cta-btn secondary">Browse Listings</a>
+    </div>
+  </div>
+
+</div>
+
 <script src="nav.js"></script>
-
 </body>
 </html>
+
