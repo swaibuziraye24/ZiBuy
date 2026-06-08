@@ -1,74 +1,191 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Advertise on ZiBuy</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-
-<style>
-
-body{
-font-family:Arial;
-background:#f5f5f5;
-margin:0;
-}
-
-.container{
-max-width:800px;
-margin:auto;
-background:white;
-padding:25px;
-}
-
-h1{
-color:#ff6600;
-}
-
-.btn{
-display:inline-block;
-background:#ff6600;
-color:white;
-padding:14px 20px;
-border-radius:10px;
-text-decoration:none;
-font-weight:bold;
-margin-top:20px;
-}
-
-</style>
-
-<link rel="manifest" href="/manifest.json">
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#ff6600">
+  <title>Advertise on ZiBuy — Reach Millions of Ugandans</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="/manifest.json">
+  <style>
+    .adv-wrap { max-width: 900px; margin: 0 auto; padding: 32px 20px 80px; }
+    .adv-hero {
+      background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
+      border-radius: 20px;
+      padding: 56px 32px;
+      text-align: center;
+      color: white;
+      margin-bottom: 32px;
+      position: relative;
+      overflow: hidden;
+    }
+    .adv-hero::after {
+      content: "📢";
+      position: absolute;
+      font-size: 180px;
+      opacity: .05;
+      bottom: -20px;
+      right: 10px;
+    }
+    .adv-hero h1 { font-size: clamp(26px,5vw,42px); font-weight: 900; margin: 0 0 14px; }
+    .adv-hero p { font-size: 16px; opacity: .88; max-width: 540px; margin: 0 auto 24px; line-height: 1.7; }
+    .adv-hero a { background: #ff6600; color: white; padding: 14px 32px; border-radius: 12px; font-weight: 800; font-size: 15px; text-decoration: none; display: inline-block; }
+    .reach-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-bottom: 28px; }
+    .reach-card { background: white; border-radius: 14px; padding: 20px; text-align: center; box-shadow: 0 2px 12px rgba(0,0,0,0.07); border-top: 4px solid #ff6600; }
+    .reach-card .num { font-size: 26px; font-weight: 900; color: #ff6600; }
+    .reach-card .lbl { font-size: 12px; color: #6b7280; font-weight: 700; margin-top: 4px; text-transform: uppercase; letter-spacing: .5px; }
+    .section-card { background: white; border-radius: 16px; padding: 28px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); margin-bottom: 16px; }
+    .section-card h2 { font-size: 20px; font-weight: 800; color: #111827; margin: 0 0 18px; }
+    .packages-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+    .package-card { border: 2px solid #e5e7eb; border-radius: 14px; padding: 22px; text-align: center; transition: .2s; position: relative; }
+    .package-card:hover { border-color: #ff6600; transform: translateY(-4px); box-shadow: 0 8px 24px rgba(255,102,0,0.12); }
+    .package-card.popular { border-color: #ff6600; background: #fff4ee; }
+    .popular-badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #ff6600; color: white; font-size: 11px; font-weight: 800; padding: 4px 16px; border-radius: 20px; white-space: nowrap; }
+    .package-card .pkg-icon { font-size: 36px; margin-bottom: 10px; }
+    .package-card h3 { font-size: 17px; font-weight: 800; color: #111827; margin: 0 0 6px; }
+    .package-card .price { font-size: 24px; font-weight: 900; color: #ff6600; margin: 10px 0; }
+    .package-card .price span { font-size: 13px; color: #6b7280; font-weight: 600; }
+    .package-card ul { list-style: none; padding: 0; margin: 0 0 16px; text-align: left; }
+    .package-card li { font-size: 13px; color: #374151; padding: 5px 0; border-bottom: 1px solid #f0f0f0; }
+    .package-card li::before { content: "✅ "; }
+    .package-card li:last-child { border-bottom: none; }
+    .pkg-btn { display: block; background: #ff6600; color: white; padding: 11px; border-radius: 9px; font-weight: 800; font-size: 13px; text-decoration: none; text-align: center; }
+    .pkg-btn.outline { background: transparent; color: #ff6600; border: 2px solid #ff6600; }
+    .ad-formats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
+    .format-card { background: #f9fafb; border-radius: 12px; padding: 18px; }
+    .format-card .icon { font-size: 28px; margin-bottom: 8px; }
+    .format-card h4 { font-size: 14px; font-weight: 800; color: #111827; margin: 0 0 6px; }
+    .format-card p { font-size: 13px; color: #6b7280; margin: 0; line-height: 1.6; }
+    .contact-cta { background: linear-gradient(135deg, #ff6600, #ff9900); border-radius: 16px; padding: 36px; text-align: center; color: white; }
+    .contact-cta h2 { font-size: 22px; font-weight: 800; margin: 0 0 10px; }
+    .contact-cta p { font-size: 14px; opacity: .9; margin: 0 0 20px; }
+    .contact-cta .btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .contact-cta a { padding: 13px 26px; border-radius: 10px; font-weight: 800; font-size: 14px; text-decoration: none; }
+    .btn-white { background: white; color: #ff6600; }
+    .btn-ghost { background: rgba(255,255,255,.2); color: white; border: 1.5px solid rgba(255,255,255,.4); }
+  </style>
 </head>
-
 <body>
 
-<div class="container">
+<header class="topbar">
+  <a href="index.html"><img src="my_logo.png" alt="ZiBuy" style="height:45px;width:auto"></a>
+  <div style="margin-left:auto">
+    <button class="btn btn-dark" onclick="window.history.back()">← Back</button>
+  </div>
+</header>
 
-<h1>📢 Advertise on ZiBuy</h1>
+<div class="adv-wrap">
 
-<p>
-Boost your products and reach thousands of buyers across Uganda.
-</p>
+  <div class="adv-hero">
+    <h1>Reach Millions of<br>Ugandan Buyers 📢</h1>
+    <p>Advertise on ZiBuy and put your business in front of thousands of active buyers across Uganda every single day.</p>
+    <a href="https://wa.me/256790548910?text=Hello, I want to advertise on ZiBuy" target="_blank">Get Started Today →</a>
+  </div>
 
-<p>
-Contact ZiBuy admin on WhatsApp for advertising packages.
-</p>
+  <div class="reach-row">
+    <div class="reach-card"><div class="num">851K+</div><div class="lbl">Active Listings</div></div>
+    <div class="reach-card"><div class="num">Daily</div><div class="lbl">Active Users</div></div>
+    <div class="reach-card"><div class="num">22+</div><div class="lbl">Categories</div></div>
+    <div class="reach-card"><div class="num">UG Wide</div><div class="lbl">Coverage</div></div>
+  </div>
 
-<a
-class="btn"
-href="https://wa.me/256790548910"
-target="_blank"
->
-Contact on WhatsApp
-</a>
+  <div class="section-card">
+    <h2>📦 Advertising Packages</h2>
+    <div class="packages-grid">
+
+      <div class="package-card">
+        <div class="pkg-icon">⭐</div>
+        <h3>Ad Boost</h3>
+        <div class="price">UGX 5,000 <span>/ 7 days</span></div>
+        <ul>
+          <li>Featured at top of results</li>
+          <li>⭐ Featured badge</li>
+          <li>3× more visibility</li>
+          <li>Click tracking</li>
+        </ul>
+        <a href="post-ad.html" class="pkg-btn outline">Boost My Ad</a>
+      </div>
+
+      <div class="package-card popular">
+        <div class="popular-badge">🔥 Most Popular</div>
+        <div class="pkg-icon">📢</div>
+        <h3>Banner Ad</h3>
+        <div class="price">UGX 500,000 <span>/ month</span></div>
+        <ul>
+          <li>Homepage banner slot</li>
+          <li>1,200 × 300px display</li>
+          <li>Clicks to your website</li>
+          <li>Impression tracking</li>
+          <li>Priority placement</li>
+        </ul>
+        <a href="https://wa.me/256790548910?text=I want a Banner Ad on ZiBuy" target="_blank" class="pkg-btn">Contact Admin</a>
+      </div>
+
+      <div class="package-card">
+        <div class="pkg-icon">🥇</div>
+        <h3>Gold Business Plan</h3>
+        <div class="price">UGX 75,000 <span>/ month</span></div>
+        <ul>
+          <li>Unlimited ads</li>
+          <li>25 ad boosts/month</li>
+          <li>Priority placement</li>
+          <li>✅ Verified badge</li>
+          <li>24/7 WhatsApp support</li>
+          <li>Business profile page</li>
+        </ul>
+        <a href="business-plans.html" class="pkg-btn outline">View Plans</a>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="section-card">
+    <h2>🎨 Ad Formats Available</h2>
+    <div class="ad-formats">
+      <div class="format-card">
+        <div class="icon">🖼️</div>
+        <h4>Homepage Banner</h4>
+        <p>Full-width banner shown to all visitors above the product listings. 1200×300px image.</p>
+      </div>
+      <div class="format-card">
+        <div class="icon">⭐</div>
+        <h4>Featured Listings</h4>
+        <p>Your product cards shown first in search results with a Featured badge.</p>
+      </div>
+      <div class="format-card">
+        <div class="icon">📲</div>
+        <h4>Push Notifications</h4>
+        <p>Send promotional messages directly to ZiBuy users' phones via push notification.</p>
+      </div>
+      <div class="format-card">
+        <div class="icon">📧</div>
+        <h4>Email Campaigns</h4>
+        <p>Feature your products in our weekly "Top Deals" email sent to all ZiBuy users.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <h2>🎯 Why Advertise on ZiBuy?</h2>
+    <p><strong>🇺🇬 Uganda-Focused Audience</strong> — Every user on ZiBuy is in Uganda, looking to buy. Your ads reach real, local customers with purchasing intent.</p>
+    <p><strong>📱 Mobile-First Platform</strong> — Over 80% of our users access ZiBuy on mobile devices. Your ads are optimised for mobile visibility.</p>
+    <p><strong>💰 Affordable Rates</strong> — Competitive advertising rates designed for Ugandan businesses of all sizes — from small traders to large corporations.</p>
+    <p><strong>📊 Performance Tracking</strong> — Track impressions, clicks, and conversions through your advertiser dashboard.</p>
+    <p><strong>⚡ Fast Setup</strong> — Banner ads go live within 1 hour of payment confirmation. No lengthy approval processes.</p>
+  </div>
+
+  <div class="contact-cta">
+    <h2>Ready to Advertise?</h2>
+    <p>Contact our team today to discuss the right package for your business. We respond within 2 hours.</p>
+    <div class="btns">
+      <a href="https://wa.me/256790548910?text=Hello, I want to advertise my business on ZiBuy Uganda" target="_blank" class="btn-white">💬 WhatsApp Us</a>
+      <a href="mailto:swaibuziraye22@gmail.com?subject=ZiBuy Advertising Enquiry" class="btn-ghost">📧 Email Us</a>
+    </div>
+  </div>
 
 </div>
 
-<script type="module" src="notifications-setup.js"></script>
-
 <script src="nav.js"></script>
-
 </body>
 </html>
+
