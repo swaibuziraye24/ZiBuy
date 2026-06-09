@@ -425,35 +425,57 @@ function renderBoosts(boosts) {
   }
 
   tbody.innerHTML = boosts.map(b => {
-    const isPending = b.status === "pending" || b.status === "pending_verification";
-    const rowBg     = isPending ? "background:#fffbeb;border-left:4px solid #ff6600" : "";
+    const isPending  = b.status === "pending" || b.status === "pending_verification";
+    const isApproved = b.status === "approved";
+    const isExpired  = b.status === "expired" || b.status === "rejected";
+
+    // Calculate expiry date for approved boosts
+    let expiryDisplay = "—";
+    let expiryWarning = false;
+    if (isApproved && b.approvedAt) {
+      const approvedDate = b.approvedAt?.toDate?.() || new Date(b.approvedAt);
+      const expiryDate   = new Date(approvedDate);
+      expiryDate.setDate(expiryDate.getDate() + (b.days || 0));
+      const daysLeft = Math.ceil((expiryDate - new Date()) / 86400000);
+      expiryWarning  = daysLeft <= 2 && daysLeft > 0;
+      const expired  = daysLeft <= 0;
+      expiryDisplay  = expired
+        ? `<span style="color:#ef4444;font-weight:800">Expired</span>`
+        : `${fmtDate(expiryDate)}<br><span style="font-size:11px;color:${expiryWarning ? "#f59e0b" : "#10b981"};font-weight:700">${daysLeft} day${daysLeft !== 1 ? "s" : ""} left</span>`;
+    }
+
+    const rowBg = isPending
+      ? "background:#fffbeb;border-left:4px solid #ff6600"
+      : isExpired ? "background:#fafafa;opacity:.7" : "";
 
     return `
     <tr style="${rowBg}">
       <td>
         <a href="product.html?id=${b.productId}" target="_blank"
           style="color:var(--orange);font-weight:800;font-size:13px">
-          ${b.productName || b.productId}
+          ${b.productName || b.productId?.slice(0,14) || "—"}
         </a>
         <br>
-        <span style="font-size:11px;color:#6b7280">ID: ${b.productId?.slice(0,10)}</span>
+        <span style="font-size:11px;color:#6b7280">${b.productId?.slice(0,12)}</span>
       </td>
       <td>
-        <span style="font-weight:700;font-size:13px">${b.userEmail}</span>
-        <br>
-        <span style="font-size:11px;color:#6b7280">UID: ${b.userId?.slice(0,10) || "—"}</span>
+        <span style="font-weight:700;font-size:13px">${b.userEmail || "—"}</span>
       </td>
-      <td style="font-weight:700">${b.days} days</td>
+      <td style="font-weight:800;text-align:center">${b.days || "—"} days</td>
       <td style="font-weight:800;color:var(--orange)">UGX ${Number(b.price||0).toLocaleString()}</td>
       <td>
-        <span style="font-size:12px;font-weight:700;color:#ff6600;background:#fff4ee;padding:4px 8px;border-radius:6px;letter-spacing:.5px">
+        <span style="font-size:12px;font-weight:700;color:#ff6600;background:#fff4ee;padding:4px 8px;border-radius:6px;letter-spacing:.5px;display:inline-block">
           ${b.paymentRef || "—"}
         </span>
+        ${b.transactionRef ? `<br><span style="font-size:11px;color:#6b7280">Txn: ${b.transactionRef}</span>` : ""}
       </td>
       <td style="font-size:12px">${fmtDate(b.requestedAt || b.createdAt)}</td>
+      <td style="font-size:12px">${isApproved ? fmtDate(b.approvedAt) : "—"}</td>
+      <td style="font-size:12px">${expiryDisplay}</td>
       <td>
-        <span class="plan-chip ${isPending ? 'chip-pending' : chipClass(b.status)}">
-          ${isPending ? "⏳ PENDING" : b.status}
+        <span class="plan-chip ${isPending ? "chip-pending" : chipClass(b.status)}"
+          style="${expiryWarning ? "background:#fef3c7;color:#92400e" : ""}">
+          ${isPending ? "⏳ Pending" : isApproved ? "✅ Active" : isExpired ? "❌ " + b.status : b.status}
         </span>
       </td>
       <td>
@@ -461,19 +483,19 @@ function renderBoosts(boosts) {
           <div style="display:flex;flex-direction:column;gap:6px">
             <button class="action-btn btn-approve"
               onclick="approveBoost('${b.id}','${b.productId}',${b.days})"
-              style="font-size:13px;padding:8px 14px">
-              ✅ Approve
-            </button>
+              style="font-size:12px;padding:7px 12px">✅ Approve</button>
             <button class="action-btn btn-reject"
               onclick="rejectBoost('${b.id}','${b.productId}')"
-              style="font-size:13px;padding:8px 14px">
-              ✗ Reject
-            </button>
-            <a href="https://wa.me/${b.userPhone || ''}"
-              style="background:#25d366;color:white;border:none;padding:7px 10px;border-radius:8px;font-size:12px;font-weight:700;text-align:center;text-decoration:none;display:block">
-              💬 WhatsApp
-            </a>
-          </div>` : "—"}
+              style="font-size:12px;padding:7px 12px">✗ Reject</button>
+            ${b.userEmail ? `
+            <a href="https://wa.me/?text=${encodeURIComponent("Hi, your ZiBuy boost request has been received.")}"
+              style="background:#25d366;color:white;border:none;padding:7px 10px;border-radius:8px;font-size:11px;font-weight:700;text-align:center;text-decoration:none;display:block">
+              💬 WhatsApp</a>` : ""}
+          </div>` :
+        isApproved ? `
+          <button class="action-btn btn-reject"
+            onclick="revokeBoost('${b.id}','${b.productId}')"
+            style="font-size:12px;padding:7px 12px">🗑️ Revoke</button>` : "—"}
       </td>
     </tr>`;
   }).join("");
@@ -490,15 +512,17 @@ window.approveBoost = async function(boostId, productId, days) {
 
     // ── Step 2: approve the boost request ─────
     await updateDoc(doc(db, "boost_requests", boostId), {
-      status:      "approved",
-      approvedAt:  new Date(),
-      approvedBy:  "admin"
+      status:     "approved",
+      approvedAt: new Date(),
+      approvedBy: "admin",
+      expiresAt               // saves expiry on the boost_request doc too
     });
 
-    // ── Step 3: mark product as premium ───────
     await updateDoc(doc(db, "products", productId), {
       isPremium:        true,
-      premiumExpiresAt: expiresAt
+      premiumExpiresAt: expiresAt,
+      boostApprovedAt:  new Date(),
+      boostExpiresAt:   expiresAt
     });
 
     // ── Step 4: notify the seller ─────────────
@@ -535,6 +559,22 @@ window.rejectBoost = async function(boostId, productId) {
     loadBoosts();
   } catch (e) { showToast("Failed", "error"); }
 };
+
+window.revokeBoost = async function(boostId, productId) {
+  if (!confirm("Revoke this active boost? The seller will lose remaining boost days.")) return;
+  try {
+    await updateDoc(doc(db, "boost_requests", boostId), {
+      status:   "revoked",
+      revokedAt: new Date()
+    });
+    await updateDoc(doc(db, "products", productId), {
+      isPremium: false
+    }).catch(() => {});
+    showToast("Boost revoked", "info");
+    loadBoosts();
+  } catch (e) { showToast("Failed", "error"); }
+};
+
 
 // ══════════════════════════════════════════════
 //  ALL ADS
