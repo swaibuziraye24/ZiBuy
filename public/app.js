@@ -1465,9 +1465,21 @@ window.customerRegister = async function() {
   const password = passEl?.value.trim();
   const confirm  = confirmEl?.value.trim();
 
-  if (!email || !password) { alert("Enter email and password"); return; }
+ if (!email || !password) { alert("Enter email and password"); return; }
   if (confirm && password !== confirm) { alert("Passwords do not match"); return; }
   if (password.length < 6) { alert("Password must be at least 6 characters"); return; }
+
+  const agreeTerms = document.getElementById("agree-terms");
+  if (agreeTerms && !agreeTerms.checked) {
+    agreeTerms.style.outline = "2px solid #ef4444";
+    agreeTerms.parentElement.style.color = "#ef4444";
+    agreeTerms.scrollIntoView({ behavior: "smooth", block: "center" });
+    setTimeout(() => {
+      agreeTerms.style.outline = "";
+      agreeTerms.parentElement.style.color = "#374151";
+    }, 3000);
+    return;
+  }
 
   try {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
