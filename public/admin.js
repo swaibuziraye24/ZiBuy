@@ -863,14 +863,26 @@ function renderReports(reports) {
   }
   tbody.innerHTML = reports.map(r => `
     <tr>
-      <td style="font-weight:700;color:#ef4444">${r.reason || "—"}</td>
-      <td><a href="product.html?id=${r.productId}" target="_blank" style="color:var(--orange);font-weight:700;font-size:12px">${r.productId?.slice(0,10) || "—"}</a></td>
-      <td style="font-size:12px">${r.reportedBy || r.reporterEmail || "—"}</td>
+      <td style="font-weight:800;color:#ef4444">${r.reason || "—"}</td>
+      <td>
+        <span style="font-weight:700;font-size:13px;color:#111827">${r.sellerName || r.productId || "—"}</span>
+        ${r.productRef && r.productRef !== "—"
+          ? `<br><span style="font-size:11px;color:#6b7280">${r.productRef.slice(0,30)}</span>`
+          : ""}
+      </td>
+      <td style="font-size:12px">${r.reporterEmail || r.reportedBy || "—"}</td>
       <td style="font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.description || "—"}</td>
       <td><span class="plan-chip ${r.status === 'resolved' ? 'chip-approved' : 'chip-pending'}">${r.status || "open"}</span></td>
-      <td style="display:flex;gap:6px">
-        ${r.status !== "resolved" ? `<button class="action-btn btn-approve" onclick="resolveReport('${r.id}')">✅ Resolve</button>` : ""}
-        <button class="action-btn btn-reject" onclick="deleteReportedAd('${r.productId}','${r.id}')">🗑️ Delete Ad</button>
+      <td style="display:flex;gap:6px;flex-wrap:wrap">
+        ${r.status !== "resolved"
+          ? `<button class="action-btn btn-approve" onclick="resolveReport('${r.id}')">✅ Resolve</button>`
+          : ""}
+        ${r.sellerName
+          ? `<a href="https://wa.me/?text=${encodeURIComponent("Hello, your account on ZiBuy has been reported for: " + r.reason)}"
+              style="background:#25d366;color:white;padding:6px 10px;border-radius:7px;font-size:12px;font-weight:700;text-decoration:none">
+              💬 Contact</a>`
+          : ""}
+        <button class="action-btn btn-reject" onclick="deleteReportedAd('${r.productId || "x"}','${r.id}')">🗑️ Delete</button>
       </td>
     </tr>`).join("");
 }
