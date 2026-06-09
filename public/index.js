@@ -409,6 +409,21 @@ exports.expireBoosts = regionalFunctions.pubsub
       snap.docs.forEach(d => batch.update(d.ref, { isPremium: false }));
       await batch.commit();
 
+      // Notify each seller their boost expired
+      await Promise.all(snap.docs.map(async d => {
+        const product = d.data();
+        if (!product.userId) return;
+        await db.collection("notifications").add({
+          userId:    product.userId,
+          type:      "boost",
+          title:     "⭐ Your Boost Has Expired",
+          message:   `Your ad "${product.name}" boost has ended. Boost it again to stay featured!`,
+          relatedId: d.id,
+          read:      false,
+          createdAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+      }));
+
       // Also expire boost_requests
       const boostSnap = await db.collection("boost_requests")
         .where("status", "==", "approved").get();
