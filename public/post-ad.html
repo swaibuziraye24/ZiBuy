@@ -158,14 +158,21 @@
       <h2>Add photos</h2>
       <p class="hint">Upload up to 5 photos. The first photo will be your cover image.</p>
 
-      <label class="file-upload-area" id="file-upload-area">
+      <div class="file-upload-area" id="file-upload-area"
+        onclick="document.getElementById('ad-images').click()"
+        style="cursor:pointer">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
         </svg>
-        <p>Tap to upload photos</p>
-        <span>or drag and drop</span>
-        <input type="file" id="ad-images" multiple accept="image/*" onchange="handleImageUpload(event)">
-      </label>
+        <p>Tap to select photos from gallery</p>
+        <span>Up to 5 photos · JPG, PNG, WEBP</span>
+      </div>
+
+      <input type="file" id="ad-images"
+        multiple
+        accept="image/jpeg,image/jpg,image/png,image/webp,image/*"
+        onchange="handleImageUpload(event)"
+        style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none">
 
       <div id="image-preview-container" class="image-preview-grid"></div>
       <p class="char-count"><span id="image-count">0</span>/5 photos</p>
