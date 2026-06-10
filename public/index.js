@@ -2,6 +2,30 @@ const functions = require("firebase-functions");
 const admin     = require("firebase-admin");
 admin.initializeApp();
 
+const nodemailer = require("nodemailer");
+
+// ── Email transporter ─────────────────────────
+function createTransporter() {
+  return nodemailer.createTransporter({
+    service: "gmail",
+    auth: {
+      user: process.env.GMAIL_EMAIL,
+      pass: process.env.GMAIL_PASSWORD
+    }
+  });
+}
+
+async function sendEmail(to, subject, html) {
+  const transporter = createTransporter();
+  await transporter.sendMail({
+    from: `"ZiBuy Uganda" <${process.env.GMAIL_EMAIL}>`,
+    to,
+    subject,
+    html
+  });
+}
+
+
 const db = admin.firestore();
 const regionalFunctions = functions.region("us-central1");
 
@@ -212,38 +236,67 @@ exports.sendEmailBroadcast = regionalFunctions.firestore
   .document("email_broadcasts/{broadcastId}")
   .onCreate(async (snap) => {
     try {
-      const data = snap.data();
+      const data      = snap.data();
       const usersSnap = await db.collection("users").get();
 
       const emails = usersSnap.docs
         .map(d => d.data().email)
         .filter(Boolean);
 
-      if (emails.length === 0) return null;
+      if (emails.length === 0) {
+        await snap.ref.update({ status: "no_users" });
+        return null;
+      }
 
-      const html = emailTemplate(
-        data.title,
-        `<p>${data.message}</p>`,
-        "Visit ZiBuy",
-        data.url && data.url !== "/"
-          ? `https://zibuy-5deae.web.app${data.url}`
-          : "https://zibuy-5deae.web.app"
-      );
+      const html = `
+        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
+          <div style="background:#ff6600;padding:24px;text-align:center">
+            <h1 style="color:white;margin:0;font-size:26px;font-weight:900">ZiBuy Uganda</h1>
+            <p style="color:rgba(255,255,255,.85);margin:4px 0 0;font-size:13px">Uganda's Trusted Marketplace 🇺🇬</p>
+          </div>
+          <div style="padding:32px 24px;background:white">
+            <h2 style="color:#111827;font-size:20px;margin:0 0 14px">${data.title}</h2>
+            <p style="color:#374151;font-size:15px;line-height:1.8;margin:0 0 24px">${data.message}</p>
+            <div style="text-align:center">
+              <a href="https://zibuy-5deae.web.app${data.url && data.url !== "/" ? data.url : ""}"
+                style="background:#ff6600;color:white;padding:14px 32px;border-radius:10px;text-decoration:none;font-weight:700;font-size:15px;display:inline-block">
+                Visit ZiBuy →
+              </a>
+            </div>
+          </div>
+          <div style="padding:16px 24px;background:#f9fafb;border-top:1px solid #e5e7eb;text-align:center">
+            <p style="font-size:12px;color:#6b7280;margin:0">
+              © 2026 ZiBuy Uganda · You received this because you have a ZiBuy account.
+            </p>
+          </div>
+        </div>
+      `;
 
-      await Promise.all(
-        emails.map(email => sendEmail(email, `ZiBuy: ${data.title}`, html))
-      );
+      let sent = 0;
+      let failed = 0;
+
+      for (const email of emails) {
+        try {
+          await sendEmail(email, `📢 ${data.title} — ZiBuy Uganda`, html);
+          sent++;
+        } catch (err) {
+          console.warn(`[Email] Failed for ${email}:`, err.message);
+          failed++;
+        }
+      }
 
       await snap.ref.update({
         status: "sent",
         sentAt: admin.firestore.FieldValue.serverTimestamp(),
-        sentTo: emails.length
+        sentTo: sent,
+        failed
       });
 
-      console.log(`[Broadcast] Sent to ${emails.length} users`);
+      console.log(`[Broadcast] Sent ${sent}, failed ${failed}`);
       return null;
+
     } catch (err) {
-      console.error("[Broadcast] Failed:", err.message);
+      console.error("[Broadcast] Fatal:", err.message);
       await snap.ref.update({ status: "failed", error: err.message });
       return null;
     }
@@ -262,20 +315,35 @@ exports.onUserCreated = regionalFunctions.firestore
       await sendEmail(
         user.email,
         "Welcome to ZiBuy Uganda! 🎉",
-        emailTemplate(
-          `Welcome to ZiBuy, ${user.email.split("@")[0]}! 🇺🇬`,
-          `<p>Thank you for joining Uganda's trusted marketplace.</p>
-           <p>Here's what you can do:</p>
-           <ul>
-             <li>📦 <strong>Post your ads</strong> for free</li>
-             <li>🛒 <strong>Buy</strong> from verified sellers</li>
-             <li>⭐ <strong>Boost your ads</strong> for more visibility</li>
-             <li>✅ <strong>Get verified</strong> to build buyer trust</li>
-           </ul>
-           <p>Start selling today — it's completely free!</p>`,
-          "Start Selling Now",
-          "https://zibuy-5deae.web.app/post-ad.html"
-        )
+        `
+        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
+          <div style="background:#ff6600;padding:24px;text-align:center">
+            <h1 style="color:white;margin:0;font-size:26px;font-weight:900">Welcome to ZiBuy! 🇺🇬</h1>
+          </div>
+          <div style="padding:32px 24px;background:white">
+            <h2 style="color:#111827">Hi ${user.email.split("@")[0]}! 👋</h2>
+            <p style="color:#374151;font-size:15px;line-height:1.8">
+              Thank you for joining <strong>ZiBuy Uganda</strong> — Uganda's trusted free marketplace.
+            </p>
+            <p style="color:#374151;font-size:15px;line-height:1.8">Here's what you can do:</p>
+            <ul style="color:#374151;font-size:14px;line-height:2">
+              <li>📦 <strong>Post free ads</strong> and reach thousands of buyers</li>
+              <li>⭐ <strong>Boost your ads</strong> for maximum visibility</li>
+              <li>✅ <strong>Get verified</strong> to build buyer trust</li>
+              <li>💼 <strong>Upgrade your plan</strong> for unlimited listings</li>
+            </ul>
+            <div style="text-align:center;margin-top:28px">
+              <a href="https://zibuy-5deae.web.app/post-ad.html"
+                style="background:#ff6600;color:white;padding:14px 32px;border-radius:10px;text-decoration:none;font-weight:700;font-size:15px;display:inline-block">
+                Post Your First Ad →
+              </a>
+            </div>
+          </div>
+          <div style="padding:16px;background:#f9fafb;text-align:center;font-size:12px;color:#6b7280">
+            © 2026 ZiBuy Uganda · <a href="https://zibuy-5deae.web.app" style="color:#ff6600">zibuy-5deae.web.app</a>
+          </div>
+        </div>
+        `
       );
 
       console.log(`[Welcome] Sent to ${user.email}`);
@@ -514,8 +582,8 @@ exports.smsGoldSellers = regionalFunctions.firestore
       // Africa's Talking SMS API
       const AfricasTalking = require("africastalking");
       const at = AfricasTalking({
-        apiKey:   functions.config().africastalking?.apikey || "YOUR_AT_API_KEY",
-        username: functions.config().africastalking?.username || "sandbox"
+        apiKey:   process.env.AT_API_KEY   || "YOUR_AT_API_KEY",
+        username: process.env.AT_USERNAME  || "sandbox"
       });
 
       await at.SMS.send({
