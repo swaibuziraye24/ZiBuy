@@ -10,45 +10,53 @@
   <link rel="stylesheet" href="style.css">
   <link rel="manifest" href="/manifest.json">
   <style>
-    body { background: #f1f5f9; }
+    * { box-sizing: border-box; }
+    body { background: #f1f5f9; margin: 0; }
 
+    /* ── TOPBAR ── */
     .admin-topbar {
       background: #111827;
       color: white;
-      padding: 14px 24px;
+      padding: 12px 16px;
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 12px;
       position: sticky;
       top: 0;
-      z-index: 100;
+      z-index: 200;
       box-shadow: 0 2px 12px rgba(0,0,0,0.3);
     }
-    .admin-topbar h1 { font-size: 18px; font-weight: 800; margin: 0; color: #ff6600; }
-    .admin-topbar span { font-size: 13px; color: #9ca3af; }
-    .admin-topbar .ml { margin-left: auto; display: flex; gap: 10px; }
+    .admin-topbar h1 { font-size: 16px; font-weight: 800; margin: 0; color: #ff6600; white-space: nowrap; }
+    .admin-topbar span { font-size: 12px; color: #9ca3af; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 160px; }
+    .admin-topbar .ml { margin-left: auto; display: flex; gap: 8px; flex-shrink: 0; }
 
+    /* ── LAYOUT ── */
     .admin-layout {
       display: grid;
       grid-template-columns: 220px 1fr;
-      min-height: calc(100vh - 56px);
+      min-height: calc(100vh - 50px);
     }
 
+    /* ── SIDEBAR ── */
     .admin-sidebar {
       background: #1f2937;
       padding: 14px 0;
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 2px;
+      position: sticky;
+      top: 50px;
+      height: calc(100vh - 50px);
+      overflow-y: auto;
     }
 
     .admin-nav-item {
       display: flex;
       align-items: center;
       gap: 10px;
-      padding: 12px 20px;
+      padding: 11px 16px;
       color: #9ca3af;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 700;
       cursor: pointer;
       border: none;
@@ -56,56 +64,72 @@
       width: 100%;
       text-align: left;
       font-family: var(--font);
-      transition: .2s;
+      transition: .15s;
+      white-space: nowrap;
     }
     .admin-nav-item:hover  { background: #374151; color: white; }
     .admin-nav-item.active { background: #ff6600; color: white; }
-    .admin-nav-item span   { font-size: 18px; }
+    .admin-nav-item .nav-icon { font-size: 16px; flex-shrink: 0; }
 
-    .admin-main { padding: 24px; }
+    /* ── MAIN ── */
+    .admin-main {
+      padding: 20px;
+      overflow-x: hidden;
+      min-width: 0;
+    }
 
     .admin-section { display: none; }
     .admin-section.active { display: block; }
 
+    /* ── KPI CARDS ── */
     .kpi-row {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 14px;
-      margin-bottom: 24px;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
     }
     .kpi-card {
       background: white;
-      border-radius: 14px;
-      padding: 18px;
+      border-radius: 12px;
+      padding: 16px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.06);
       border-left: 4px solid var(--orange);
     }
-    .kpi-label { font-size: 12px; color: var(--gray); font-weight: 700; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
-    .kpi-value { font-size: 28px; font-weight: 900; color: var(--dark); }
+    .kpi-label { font-size: 11px; color: var(--gray); font-weight: 700; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+    .kpi-value { font-size: 24px; font-weight: 900; color: var(--dark); }
 
+    /* ── ADMIN CARD ── */
     .admin-card {
       background: white;
-      border-radius: 14px;
-      padding: 20px;
+      border-radius: 12px;
+      padding: 16px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-      margin-bottom: 20px;
+      margin-bottom: 16px;
+      overflow-x: auto;        /* ← key: tables scroll horizontally */
     }
-    .admin-card h2 { font-size: 16px; font-weight: 800; color: var(--dark); margin: 0 0 16px; }
+    .admin-card h2 { font-size: 15px; font-weight: 800; color: var(--dark); margin: 0 0 14px; }
 
-    .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    /* ── DATA TABLE ── */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      min-width: 500px;        /* ← forces scroll on mobile */
+    }
     .data-table th {
-      padding: 10px 12px;
+      padding: 9px 10px;
       text-align: left;
       background: #f9fafb;
       font-weight: 800;
-      font-size: 11px;
+      font-size: 10px;
       text-transform: uppercase;
       letter-spacing: .5px;
       color: var(--gray);
       border-bottom: 2px solid #e5e7eb;
+      white-space: nowrap;
     }
     .data-table td {
-      padding: 12px;
+      padding: 10px;
       border-bottom: 1px solid #f0f0f0;
       color: var(--dark);
       vertical-align: middle;
@@ -113,12 +137,14 @@
     .data-table tr:hover td { background: #fafafa; }
     .data-table tr:last-child td { border-bottom: none; }
 
+    /* ── CHIPS ── */
     .plan-chip {
       display: inline-block;
-      padding: 3px 10px;
+      padding: 3px 8px;
       border-radius: 20px;
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 800;
+      white-space: nowrap;
     }
     .chip-free     { background: #f3f4f6; color: #6b7280; }
     .chip-bronze   { background: #fef3c7; color: #92400e; }
@@ -129,15 +155,17 @@
     .chip-approved { background: #dcfce7; color: #166534; }
     .chip-rejected { background: #fee2e2; color: #991b1b; }
 
+    /* ── ACTION BUTTONS ── */
     .action-btn {
-      padding: 6px 12px;
+      padding: 5px 10px;
       border: none;
-      border-radius: 7px;
-      font-size: 12px;
+      border-radius: 6px;
+      font-size: 11px;
       font-weight: 700;
       cursor: pointer;
       font-family: var(--font);
       transition: .15s;
+      white-space: nowrap;
     }
     .btn-approve { background: #dcfce7; color: #166534; }
     .btn-approve:hover { background: #16a34a; color: white; }
@@ -147,37 +175,104 @@
     .btn-unban   { background: #dcfce7; color: #166534; }
 
     .plan-select {
-      padding: 6px 10px;
+      padding: 5px 8px;
       border: 1.5px solid #e5e7eb;
-      border-radius: 8px;
-      font-size: 12px;
+      border-radius: 6px;
+      font-size: 11px;
       font-family: var(--font);
       outline: none;
       background: white;
       cursor: pointer;
+      max-width: 130px;
     }
-    .plan-select:focus { border-color: var(--orange); }
 
     .search-input {
       width: 100%;
-      max-width: 320px;
+      max-width: 100%;
       padding: 10px 14px;
       border: 1.5px solid #e5e7eb;
       border-radius: 10px;
       font-family: var(--font);
       font-size: 13px;
       outline: none;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
     }
     .search-input:focus { border-color: var(--orange); }
 
-    .empty-row td { text-align: center; padding: 40px; color: var(--gray); }
+    .empty-row td { text-align: center; padding: 32px; color: var(--gray); }
 
+    /* ══════════════════════════════════════
+       MOBILE STYLES
+    ══════════════════════════════════════ */
     @media (max-width: 768px) {
-      .admin-layout { grid-template-columns: 1fr; }
-      .admin-sidebar { flex-direction: row; overflow-x: auto; padding: 10px; gap: 4px; }
-      .admin-nav-item { padding: 10px 14px; white-space: nowrap; border-radius: 8px; }
-      .kpi-value { font-size: 22px; }
+
+      /* Stack layout vertically */
+      .admin-layout {
+        grid-template-columns: 1fr;
+      }
+
+      /* Sidebar becomes horizontal scrolling nav bar */
+      .admin-sidebar {
+        position: sticky;
+        top: 50px;
+        height: auto;
+        flex-direction: row;
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding: 8px;
+        gap: 4px;
+        z-index: 100;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+      }
+      .admin-sidebar::-webkit-scrollbar { display: none; }
+
+      .admin-nav-item {
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 12px;
+        flex-shrink: 0;
+        width: auto;
+      }
+      .admin-nav-item .nav-icon { font-size: 14px; }
+
+      /* Main padding */
+      .admin-main { padding: 12px; }
+
+      /* Section title */
+      .admin-section > h2 {
+        font-size: 18px !important;
+        margin-bottom: 14px !important;
+      }
+
+      /* KPI — 2 columns on mobile */
+      .kpi-row {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .kpi-value { font-size: 20px; }
+      .kpi-card  { padding: 12px; }
+
+      /* Cards */
+      .admin-card { padding: 12px; }
+
+      /* Tables scroll horizontally inside card */
+      .data-table { min-width: 560px; font-size: 11px; }
+      .data-table th { font-size: 9px; padding: 7px 8px; }
+      .data-table td { padding: 8px; font-size: 11px; }
+
+      /* Search input full width */
+      .search-input { max-width: 100%; }
+
+      /* Broadcast textareas */
+      textarea { font-size: 14px !important; }
+    }
+
+    /* ── Very small phones ── */
+    @media (max-width: 380px) {
+      .kpi-row { grid-template-columns: 1fr 1fr; }
+      .kpi-value { font-size: 18px; }
+      .admin-topbar span { display: none; }
     }
   </style>
 </head>
@@ -188,7 +283,7 @@
   <h1>⚙️ ZiBuy Admin</h1>
   <span id="admin-email-display"></span>
   <div class="ml">
-    <button class="btn btn-dark" style="font-size:13px;padding:8px 14px"
+    <button class="btn btn-dark" style="font-size:12px;padding:7px 12px"
       onclick="adminLogout()">Logout</button>
   </div>
 </div>
@@ -199,60 +294,60 @@
   <aside class="admin-sidebar">
     <button class="admin-nav-item active" data-section="overview"
       onclick="window.showSection('overview', this)">
-      <span>📊</span> Overview
+      <span class="nav-icon">📊</span> Overview
     </button>
     <button class="admin-nav-item" data-section="users"
       onclick="window.showSection('users', this)">
-      <span>👥</span> Users & Plans
+      <span class="nav-icon">👥</span> Users
     </button>
     <button class="admin-nav-item" data-section="subscriptions"
       onclick="window.showSection('subscriptions', this)">
-      <span>💼</span> Subscriptions
+      <span class="nav-icon">💼</span> Subscriptions
     </button>
     <button class="admin-nav-item" data-section="boosts"
       onclick="window.showSection('boosts', this)">
-      <span>⭐</span> Boost Requests
+      <span class="nav-icon">⭐</span> Boosts
     </button>
     <button class="admin-nav-item" data-section="ads"
       onclick="window.showSection('ads', this)">
-      <span>📦</span> All Ads
+      <span class="nav-icon">📦</span> All Ads
     </button>
     <button class="admin-nav-item" data-section="orders"
       onclick="window.showSection('orders', this)">
-      <span>🛍️</span> Orders
+      <span class="nav-icon">🛍️</span> Orders
     </button>
     <button class="admin-nav-item" data-section="premium"
       onclick="window.showSection('premium', this)">
-      <span>⭐</span> Premium Ads
+      <span class="nav-icon">💎</span> Premium
     </button>
     <button class="admin-nav-item" data-section="verifications"
       onclick="window.showSection('verifications', this)">
-      <span>✅</span> Verifications
+      <span class="nav-icon">✅</span> Verifications
     </button>
     <button class="admin-nav-item" data-section="reports"
       onclick="window.showSection('reports', this)">
-      <span>🚨</span> Reports
+      <span class="nav-icon">🚨</span> Reports
     </button>
     <button class="admin-nav-item" data-section="broadcast"
       onclick="window.showSection('broadcast', this)">
-      <span>📣</span> Send Notification
+      <span class="nav-icon">📣</span> Broadcast
     </button>
     <button class="admin-nav-item" data-section="banners"
       onclick="window.showSection('banners', this)">
-      <span>📢</span> Banner Ads
+      <span class="nav-icon">📢</span> Banners
     </button>
     <button class="admin-nav-item"
       onclick="window.location.href='admin-analytics.html'">
-      <span>📊</span> Analytics
+      <span class="nav-icon">📈</span> Analytics
     </button>
   </aside>
 
   <!-- ── MAIN ── -->
   <main class="admin-main">
 
-    <!-- ══ OVERVIEW ══════════════════════════════ -->
+    <!-- ══ OVERVIEW ══ -->
     <div class="admin-section active" id="section-overview">
-      <h2 style="font-size:22px;font-weight:800;margin-bottom:20px">Overview</h2>
+      <h2 style="font-size:20px;font-weight:800;margin-bottom:16px">📊 Overview</h2>
       <div class="kpi-row">
         <div class="kpi-card">
           <div class="kpi-label">Total Users</div>
@@ -283,29 +378,29 @@
       </div>
     </div>
 
-    <!-- ══ USERS & PLANS ═══════════════════════ -->
+    <!-- ══ USERS ══ -->
     <div class="admin-section" id="section-users">
-      <h2 style="font-size:22px;font-weight:800;margin-bottom:20px">Users & Plans</h2>
+      <h2 style="font-size:20px;font-weight:800;margin-bottom:16px">👥 Users & Plans</h2>
       <input class="search-input" type="text" id="user-search"
         placeholder="Search by email…" oninput="filterUsers()">
       <div class="admin-card">
         <table class="data-table">
           <thead>
             <tr>
-              <th>Email</th><th>Plan</th><th>Ads Posted</th>
-              <th>Verified</th><th>Status</th><th>Change Plan</th><th>Action</th>
+              <th>Email</th><th>Plan</th><th>Ads</th>
+              <th>Verified</th><th>Status</th><th>Plan</th><th>Action</th>
             </tr>
           </thead>
           <tbody id="users-table-body">
-            <tr class="empty-row"><td colspan="7">Loading users…</td></tr>
+            <tr class="empty-row"><td colspan="7">Loading…</td></tr>
           </tbody>
         </table>
       </div>
     </div>
 
-    <!-- ══ SUBSCRIPTIONS ═══════════════════════ -->
+    <!-- ══ SUBSCRIPTIONS ══ -->
     <div class="admin-section" id="section-subscriptions">
-      <h2 style="font-size:22px;font-weight:800;margin-bottom:20px">Subscriptions</h2>
+      <h2 style="font-size:20px;font-weight:800;margin-bottom:16px">💼 Subscriptions</h2>
       <div class="admin-card">
         <table class="data-table">
           <thead>
@@ -321,35 +416,28 @@
       </div>
     </div>
 
-    <!-- ══ BOOST REQUESTS ══════════════════════ -->
+    <!-- ══ BOOST REQUESTS ══ -->
     <div class="admin-section" id="section-boosts">
-      <h2 style="font-size:22px;font-weight:800;margin-bottom:20px">Boost Requests</h2>
+      <h2 style="font-size:20px;font-weight:800;margin-bottom:16px">⭐ Boost Requests</h2>
       <div class="admin-card">
         <table class="data-table">
           <thead>
             <tr>
-              <th>Product</th>
-              <th>User</th>
-              <th>Days</th>
-              <th>Amount</th>
-              <th>Payment Ref</th>
-              <th>Requested</th>
-              <th>Approved</th>
-              <th>Expires</th>
-              <th>Status</th>
-              <th>Actions</th>
+              <th>Product</th><th>User</th><th>Days</th><th>Amount</th>
+              <th>Pay Ref</th><th>Requested</th><th>Approved</th>
+              <th>Expires</th><th>Status</th><th>Actions</th>
             </tr>
           </thead>
           <tbody id="boosts-table-body">
-            <tr class="empty-row"><td colspan="8">Loading…</td></tr>
+            <tr class="empty-row"><td colspan="10">Loading…</td></tr>
           </tbody>
         </table>
       </div>
     </div>
 
-    <!-- ══ ALL ADS ═════════════════════════════ -->
+    <!-- ══ ALL ADS ══ -->
     <div class="admin-section" id="section-ads">
-      <h2 style="font-size:22px;font-weight:800;margin-bottom:20px">All Ads</h2>
+      <h2 style="font-size:20px;font-weight:800;margin-bottom:16px">📦 All Ads</h2>
       <input class="search-input" type="text" id="ads-search"
         placeholder="Search ads…" oninput="filterAds()">
       <div class="admin-card">
@@ -367,15 +455,15 @@
       </div>
     </div>
 
-    <!-- ══ ORDERS ══════════════════════════════ -->
+    <!-- ══ ORDERS ══ -->
     <div class="admin-section" id="section-orders">
-      <h2 style="font-size:22px;font-weight:800;margin-bottom:20px">Orders</h2>
+      <h2 style="font-size:20px;font-weight:800;margin-bottom:16px">🛍️ Orders</h2>
       <div class="admin-card">
         <table class="data-table">
           <thead>
             <tr>
               <th>Order ID</th><th>Customer</th><th>Total</th>
-              <th>Payment</th><th>Status</th><th>Date</th><th>Update Status</th>
+              <th>Payment</th><th>Status</th><th>Date</th><th>Update</th>
             </tr>
           </thead>
           <tbody id="orders-table-body">
@@ -385,9 +473,9 @@
       </div>
     </div>
 
-    <!-- ══ PREMIUM ADS ════════════════════════ -->
+    <!-- ══ PREMIUM ADS ══ -->
     <div class="admin-section" id="section-premium">
-      <h2 style="font-size:22px;font-weight:800;margin-bottom:20px">⭐ Premium Ads</h2>
+      <h2 style="font-size:20px;font-weight:800;margin-bottom:16px">💎 Premium Ads</h2>
       <div class="kpi-row">
         <div class="kpi-card">
           <div class="kpi-label">Active Boosts</div>
@@ -417,10 +505,10 @@
       </div>
     </div>
 
-    <!-- ══ VERIFICATIONS ══════════════════════ -->
+    <!-- ══ VERIFICATIONS ══ -->
     <div class="admin-section" id="section-verifications">
-      <h2 style="font-size:22px;font-weight:800;margin-bottom:20px">✅ Seller Verifications</h2>
-      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+      <h2 style="font-size:20px;font-weight:800;margin-bottom:16px">✅ Seller Verifications</h2>
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
         <button class="action-btn btn-approve" onclick="filterVerifs('pending')">⏳ Pending</button>
         <button class="action-btn" style="background:#dcfce7;color:#166534"
           onclick="filterVerifs('approved')">✅ Approved</button>
@@ -443,13 +531,16 @@
       </div>
     </div>
 
-    <!-- ══ REPORTS ═════════════════════════════ -->
+    <!-- ══ REPORTS ══ -->
     <div class="admin-section" id="section-reports">
-      <h2 style="font-size:22px;font-weight:800;margin-bottom:20px">🚨 Reports</h2>
+      <h2 style="font-size:20px;font-weight:800;margin-bottom:16px">🚨 Reports</h2>
       <div class="admin-card">
         <table class="data-table">
           <thead>
-           <tr><th>Reason</th><th>Seller / Product</th><th>Reported By</th><th>Description</th><th>Status</th><th>Actions</th></tr> 
+            <tr>
+              <th>Reason</th><th>Seller/Product</th><th>Reported By</th>
+              <th>Description</th><th>Status</th><th>Actions</th>
+            </tr>
           </thead>
           <tbody id="reports-table-body">
             <tr class="empty-row"><td colspan="6">Loading…</td></tr>
@@ -458,37 +549,37 @@
       </div>
     </div>
 
-    <!-- ══ BROADCAST NOTIFICATIONS ════════════ -->
+    <!-- ══ BROADCAST ══ -->
     <div class="admin-section" id="section-broadcast">
-      <h2 style="font-size:22px;font-weight:800;margin-bottom:20px">📣 Send Notifications</h2>
+      <h2 style="font-size:20px;font-weight:800;margin-bottom:16px">📣 Send Notifications</h2>
 
-      <div class="admin-card" style="margin-bottom:20px">
+      <div class="admin-card" style="margin-bottom:14px">
         <h2>🔥 Broadcast to All Users</h2>
-        <p style="font-size:13px;color:var(--gray);margin-bottom:16px">
-          Appears as a banner on everyone's screen and saves to their notifications.
+        <p style="font-size:13px;color:var(--gray);margin-bottom:12px">
+          Sends in-app banner + notification bell + email to every user.
         </p>
         <input id="bc-title" type="text" placeholder="Title e.g. Flash Sale Today! 🔥"
-          class="search-input" style="max-width:100%;margin-bottom:10px">
+          class="search-input">
         <textarea id="bc-message" rows="3"
           placeholder="Message e.g. Up to 50% off on phones today only!"
-          style="width:100%;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-family:var(--font);font-size:13px;outline:none;resize:none;margin-bottom:10px"></textarea>
+          style="width:100%;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-family:var(--font);font-size:13px;outline:none;resize:none;margin-bottom:10px;box-sizing:border-box"></textarea>
         <input id="bc-url" type="text" placeholder="Link URL (optional)"
-          class="search-input" style="max-width:100%;margin-bottom:16px">
-        <button class="action-btn btn-approve" style="padding:12px 24px;font-size:14px"
+          class="search-input">
+        <button class="action-btn btn-approve" style="padding:12px 20px;font-size:13px;width:100%"
           onclick="sendBroadcast()">
-          📣 Send to All Users
+          📣 Send to All Users (In-App + Email)
         </button>
       </div>
 
-      <div class="admin-card" style="margin-bottom:20px">
+      <div class="admin-card" style="margin-bottom:14px">
         <h2>👤 Send to Specific User</h2>
         <input id="notif-userid" type="text" placeholder="User ID (from Users table)"
-          class="search-input" style="max-width:100%;margin-bottom:10px">
+          class="search-input">
         <input id="notif-title" type="text" placeholder="Title"
-          class="search-input" style="max-width:100%;margin-bottom:10px">
+          class="search-input">
         <textarea id="notif-message" rows="3" placeholder="Message"
-          style="width:100%;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-family:var(--font);font-size:13px;outline:none;resize:none;margin-bottom:16px"></textarea>
-        <button class="action-btn btn-approve" style="padding:12px 24px;font-size:14px"
+          style="width:100%;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-family:var(--font);font-size:13px;outline:none;resize:none;margin-bottom:12px;box-sizing:border-box"></textarea>
+        <button class="action-btn btn-approve" style="padding:12px 20px;font-size:13px;width:100%"
           onclick="sendToUser()">
           📨 Send Notification
         </button>
@@ -502,22 +593,22 @@
       </div>
     </div>
 
-    <!-- ══ BANNER ADS ══════════════════════════ -->
+    <!-- ══ BANNER ADS ══ -->
     <div class="admin-section" id="section-banners">
-      <h2 style="font-size:22px;font-weight:800;margin-bottom:20px">📢 Banner Advertisements</h2>
+      <h2 style="font-size:20px;font-weight:800;margin-bottom:16px">📢 Banner Advertisements</h2>
 
-      <div class="admin-card" style="margin-bottom:20px">
+      <div class="admin-card" style="margin-bottom:14px">
         <h2>➕ Add New Banner</h2>
         <input id="bn-title" placeholder="Advertiser name (e.g. MTN Uganda)"
-          class="search-input" style="max-width:100%;margin-bottom:10px">
-        <input id="bn-image" placeholder="Banner image URL (1200×300px recommended)"
-          class="search-input" style="max-width:100%;margin-bottom:10px">
+          class="search-input">
+        <input id="bn-image" placeholder="Banner image URL (1200×300px)"
+          class="search-input">
         <input id="bn-url" placeholder="Click destination URL (https://...)"
-          class="search-input" style="max-width:100%;margin-bottom:10px">
+          class="search-input">
         <input id="bn-price" type="number" placeholder="Monthly price (UGX)"
-          class="search-input" style="max-width:100%;margin-bottom:16px">
+          class="search-input">
         <button onclick="addBanner()"
-          style="background:#ff6600;color:white;border:none;padding:12px 24px;border-radius:10px;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit">
+          style="background:#ff6600;color:white;border:none;padding:12px;border-radius:10px;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit;width:100%">
           📢 Publish Banner
         </button>
       </div>
