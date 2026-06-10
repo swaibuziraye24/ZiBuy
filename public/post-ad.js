@@ -405,30 +405,66 @@ descInput.addEventListener("input", () => {
 // ============================================
 
 window.handleImageUpload = function(event) {
-  const files = Array.from(event.target.files);
+
+  const files = Array.from(event.target.files || []);
+
+  if (!files.length) return;
+
+  // Slice to max 5
   uploadedImages = files.slice(0, 5);
 
-  document.getElementById("image-count").textContent = uploadedImages.length;
+  document.getElementById("image-count").textContent =
+    uploadedImages.length;
 
-  const previewContainer = document.getElementById("image-preview-container");
+  const previewContainer =
+    document.getElementById("image-preview-container");
+
   previewContainer.innerHTML = "";
 
-  uploadedImages.forEach((file, index) => {
-    const reader = new FileReader();
+  // Use Promise-based reading so all images load reliably on mobile
+  const readPromises = uploadedImages.map((file, index) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
 
-    reader.onload = function(e) {
-      previewContainer.innerHTML += `
-        <div class="image-preview" style="position:relative">
-          <img src="${e.target.result}" alt="preview ${index}">
-          ${index === 0 ? '<span class="cover-badge">Cover</span>' : ''}
-        </div>
-      `;
-    };
+      reader.onload = function(e) {
+        const div = document.createElement("div");
+        div.className = "image-preview";
+        div.style.cssText = "position:relative;display:inline-block;margin:4px";
 
-    reader.readAsDataURL(file);
+        const img = document.createElement("img");
+        img.src   = e.target.result;
+        img.alt   = `preview ${index + 1}`;
+        img.style.cssText = "width:80px;height:80px;object-fit:cover;border-radius:10px;border:2px solid #e5e7eb;display:block";
+
+        // Cover badge on first image
+        if (index === 0) {
+          const badge = document.createElement("span");
+          badge.textContent = "Cover";
+          badge.style.cssText = "position:absolute;top:4px;left:4px;background:#ff6600;color:white;font-size:9px;font-weight:800;padding:2px 5px;border-radius:4px";
+          div.appendChild(badge);
+        }
+
+        div.appendChild(img);
+        previewContainer.appendChild(div);
+        resolve();
+      };
+
+      reader.onerror = function() {
+        console.warn("Failed to read file:", file.name);
+        resolve(); // don't block others
+      };
+
+      reader.readAsDataURL(file);
+    });
   });
 
-  document.getElementById("step3-next").disabled = uploadedImages.length < 1;
+  Promise.all(readPromises).then(() => {
+    // Scroll to preview so user sees the images
+    previewContainer.scrollIntoView({ behavior: "smooth", block: "nearest" });
+
+    // Enable next button
+    document.getElementById("step3-next").disabled = false;
+  });
 };
 
 // ============================================
