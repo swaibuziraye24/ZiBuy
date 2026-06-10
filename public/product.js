@@ -115,7 +115,13 @@ async function loadProduct() {
           <div class="seller-avatar">${(seller.name || "Z")[0].toUpperCase()}</div>
           <div class="seller-info">
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">
+             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
               <h4 style="margin:0;font-size:15px;font-weight:800">${seller.name || "ZiBuy Seller"}</h4>
+              ${p.userEmail === "swaibuziraye22@gmail.com" ? `
+                <span style="background:linear-gradient(135deg,#111827,#374151);color:white;font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px;display:inline-flex;align-items:center;gap:4px">
+                  <img src="my_logo.png" style="width:12px;height:12px;object-fit:contain;border-radius:2px"> ZiBuy Official
+                </span>` : ""}
+            </div>
               <span id="seller-verified-badge" style="display:none;background:#10b981;color:white;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:800">✅ Verified</span>
             </div>
             <p style="margin:0;font-size:12px;color:#6b7280">📍 ${seller.location || "Uganda"} · <span id="seller-rating-text">Loading...</span></p>
@@ -142,7 +148,7 @@ async function loadProduct() {
             style="background:#ff6600;color:white;border:none;padding:15px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px">
             🛒 Add to Cart
           </button>
-          <button onclick="window.location.href='payment.html'" id="buy-now-btn"
+          <button onclick="openBuyNow('${snap.id}', '${p.name.replace(/'/g,"\\'")}', ${p.price}, '${(seller.phone || "").replace(/\D/g,"")}', '${seller.name || "Seller"}')"
             style="background:#111827;color:white;border:none;padding:15px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px">
             ⚡ Buy Now
           </button>
@@ -391,5 +397,202 @@ window.submitProductReview = async function () {
     console.error("Review submit error:", err);
     alert("Failed to post review. Try again.");
     if (btn) { btn.textContent = "Post Review"; btn.disabled = false; }
+  }
+};
+
+
+// ============================================
+// BUY NOW — Mobile Money payment flow
+// ============================================
+window.openBuyNow = function(productId, productName, price, sellerPhone, sellerName) {
+
+  const existing = document.getElementById("buy-now-modal");
+  if (existing) existing.remove();
+
+  const orderRef  = `ORDER-${productId.slice(0,8).toUpperCase()}-${Date.now().toString().slice(-4)}`;
+  const adminPhone = "256790548910";
+  const payPhone   = sellerPhone || adminPhone; // pay seller directly or admin
+
+  const modal = document.createElement("div");
+  modal.id = "buy-now-modal";
+  modal.style.cssText = `
+    position:fixed;inset:0;background:rgba(0,0,0,0.65);
+    z-index:99999;display:flex;align-items:center;
+    justify-content:center;padding:16px;overflow-y:auto
+  `;
+
+  modal.innerHTML = `
+    <div style="background:white;border-radius:20px;padding:24px;max-width:480px;width:100%;max-height:90vh;overflow-y:auto">
+
+      <!-- Header -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <h2 style="margin:0;font-size:18px;font-weight:800">⚡ Buy Now</h2>
+        <button onclick="document.getElementById('buy-now-modal').remove()"
+          style="background:#f3f4f6;border:none;width:32px;height:32px;border-radius:50%;font-size:18px;cursor:pointer">×</button>
+      </div>
+
+      <!-- Product summary -->
+      <div style="background:#f9fafb;border-radius:12px;padding:14px;margin-bottom:16px">
+        <p style="margin:0;font-size:13px;color:#6b7280">You are buying</p>
+        <p style="margin:4px 0 0;font-size:16px;font-weight:800;color:#111827">${productName}</p>
+        <p style="margin:4px 0 0;font-size:22px;font-weight:900;color:#ff6600">UGX ${Number(price).toLocaleString()}</p>
+        <p style="margin:4px 0 0;font-size:12px;color:#6b7280">Seller: <strong>${sellerName}</strong></p>
+      </div>
+
+      <!-- MTN -->
+      <div style="border:2px solid #ffcc00;border-radius:12px;padding:14px;margin-bottom:10px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <div style="background:#ffcc00;border-radius:6px;padding:4px 8px;font-weight:900;font-size:12px;color:#111">MTN</div>
+          <span style="font-weight:800;font-size:14px">MTN Mobile Money</span>
+        </div>
+        <ol style="padding-left:18px;color:#374151;line-height:2.2;font-size:13px;margin:0">
+          <li>Dial <strong style="color:#ff6600">*165#</strong> on your MTN line</li>
+          <li>Select <strong>Pay With Momo</strong></li>
+          <li>Enter Merchant Code: <strong style="color:#ff6600;font-size:15px">27868095</strong></li>
+          <li>Amount: <strong style="color:#ff6600">UGX ${Number(price).toLocaleString()}</strong></li>
+          <li>Reference: <strong style="color:#ff6600;letter-spacing:.5px">${orderRef}</strong></li>
+          <li>Enter PIN to confirm</li>
+        </ol>
+      </div>
+
+      <!-- Airtel -->
+      <div style="border:2px solid #ef4444;border-radius:12px;padding:14px;margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <div style="background:#ef4444;border-radius:6px;padding:4px 8px;font-weight:900;font-size:12px;color:white">AIRTEL</div>
+          <span style="font-weight:800;font-size:14px">Airtel Money</span>
+        </div>
+        <ol style="padding-left:18px;color:#374151;line-height:2.2;font-size:13px;margin:0">
+          <li>Dial <strong style="color:#ef4444">*185#</strong> on your Airtel line</li>
+          <li>Select <strong>Send Money</strong></li>
+          <li>Send to: <strong style="color:#ef4444;font-size:15px">+256575996624</strong></li>
+          <li>Amount: <strong style="color:#ef4444">UGX ${Number(price).toLocaleString()}</strong></li>
+          <li>Reference: <strong style="color:#ef4444;letter-spacing:.5px">${orderRef}</strong></li>
+          <li>Enter PIN to confirm</li>
+        </ol>
+      </div>
+
+      <!-- Transaction ID input -->
+      <div style="margin-bottom:14px">
+        <label style="font-size:13px;font-weight:800;color:#111827;display:block;margin-bottom:8px">
+          📋 Enter your transaction ID after paying
+        </label>
+        <input type="text" id="buy-txn-ref"
+          placeholder="e.g. 1234567890 or REF123456"
+          style="width:100%;padding:12px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box"
+          onfocus="this.style.borderColor='#ff6600'"
+          onblur="this.style.borderColor='#e5e7eb'">
+        <p style="font-size:12px;color:#6b7280;margin-top:6px">
+          The confirmation ID from your phone after paying
+        </p>
+      </div>
+
+      <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:12px;margin-bottom:14px;font-size:12px;color:#92400e">
+        ⏱️ After entering your transaction ID, tap below to notify the seller via WhatsApp.
+      </div>
+
+      <!-- Buttons -->
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button onclick="confirmBuyNow('${productId}','${productName.replace(/'/g,"\\'")}',${price},'${sellerPhone}','${orderRef}','${sellerName}')"
+          style="background:#ff6600;color:white;border:none;padding:14px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;width:100%">
+          📲 I've Paid — Notify Seller on WhatsApp
+        </button>
+        <button onclick="document.getElementById('buy-now-modal').remove()"
+          style="background:#f3f4f6;color:#6b7280;border:none;padding:12px;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;width:100%">
+          Cancel
+        </button>
+      </div>
+
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+};
+
+window.confirmBuyNow = async function(productId, productName, price, sellerPhone, orderRef, sellerName) {
+  const txnInput = document.getElementById("buy-txn-ref");
+  const txnRef   = txnInput ? txnInput.value.trim() : "";
+
+  if (!txnRef) {
+    if (txnInput) {
+      txnInput.style.borderColor = "#ef4444";
+      txnInput.focus();
+      txnInput.placeholder = "⚠️ Please enter your transaction ID";
+    }
+    return;
+  }
+
+  const btn = event.target;
+  btn.textContent = "Saving order...";
+  btn.disabled    = true;
+
+  try {
+    // Save order to Firestore
+    await addDoc(collection(db, "orders"), {
+      productId,
+      productName,
+      price,
+      orderRef,
+      transactionRef: txnRef,
+      buyerEmail:     auth.currentUser?.email || "guest",
+      buyerUid:       auth.currentUser?.uid   || "guest",
+      sellerName,
+      sellerPhone,
+      paymentMethod:  "mobile_money",
+      status:         "pending_verification",
+      createdAt:      new Date()
+    });
+
+    document.getElementById("buy-now-modal")?.remove();
+
+    // Build WhatsApp message to seller (or admin if no seller phone)
+    const waPhone = sellerPhone || "256790548910";
+    const waMsg   = encodeURIComponent(
+      `Hello ${sellerName} 👋\n\n` +
+      `I have paid for your product on *ZiBuy*.\n\n` +
+      `📦 *Order Details:*\n` +
+      `• Product: *${productName}*\n` +
+      `• Amount: *UGX ${Number(price).toLocaleString()}*\n` +
+      `• Order Ref: *${orderRef}*\n` +
+      `• Transaction ID: *${txnRef}*\n` +
+      `• Buyer Email: *${auth.currentUser?.email || "Guest"}*\n\n` +
+      `Please confirm and arrange delivery. Thank you! 🙏`
+    );
+
+    window.open(`https://wa.me/${waPhone}?text=${waMsg}`, "_blank");
+
+    // Show success
+    const success = document.createElement("div");
+    success.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px`;
+    success.innerHTML = `
+      <div style="background:white;border-radius:20px;padding:32px;max-width:400px;width:100%;text-align:center">
+        <p style="font-size:52px;margin-bottom:12px">✅</p>
+        <h2 style="font-size:20px;font-weight:800;margin-bottom:8px">Order Sent!</h2>
+        <div style="background:#f9fafb;border-radius:10px;padding:14px;margin-bottom:16px;text-align:left">
+          <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px">
+            <span style="color:#6b7280">Order Ref</span>
+            <strong style="color:#ff6600">${orderRef}</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:13px">
+            <span style="color:#6b7280">Transaction ID</span>
+            <strong style="color:#ff6600">${txnRef}</strong>
+          </div>
+        </div>
+        <p style="color:#6b7280;font-size:13px;margin-bottom:20px;line-height:1.6">
+          Your payment reference has been sent to the seller via WhatsApp.
+          The seller will contact you to arrange delivery.
+        </p>
+        <button onclick="this.closest('div').parentElement.remove()"
+          style="background:#ff6600;color:white;border:none;padding:14px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;width:100%">
+          Done →
+        </button>
+      </div>
+    `;
+    document.body.appendChild(success);
+
+  } catch (err) {
+    console.error("Buy now error:", err);
+    alert("Failed to save order. Please try again.");
+    btn.textContent = "📲 I've Paid — Notify Seller on WhatsApp";
+    btn.disabled    = false;
   }
 };
