@@ -266,10 +266,19 @@ async function loadProducts() {
         }
 
         // plan + verified from batch maps — zero extra reads
-        product.shopPlan = planMap[product.userId] || "free";
+       product.shopPlan = planMap[product.userId] || "free";
         product.seller   = product.seller || {};
         product.seller.isVerified = verifSet.has(product.userId);
-        product.seller.memberSince = memberSinceMap[product.userId];
+        product.sellerMemberSince = memberSinceMap[product.userId] || null;
+        product.sellerIsVerified  = verifSet.has(product.userId);
+
+        // Admin-posted ads = ZiBuy official + auto featured
+        const isAdminPost = product.userEmail === "swaibuziraye22@gmail.com";
+        product.isZiBuyOfficial = isAdminPost;
+        if (isAdminPost) {
+          product.isPremium  = true;
+          product.rankScore  = 999999; // always top
+        }
 
         const planScore   = PLAN_SCORE[product.shopPlan] || 1;
         const boostScore  = product.isPremium ? 5000 : 0;
@@ -711,21 +720,20 @@ window.renderProducts = function () {
             <img src="${(p.images && p.images[0]) || 'placeholder.jpg'}"
               style="width:100%; aspect-ratio:1/1; object-fit:cover;">
 
-            ${isTrending ? `
-              <div style="
-                position:absolute;
-                top:5px;
-                left:5px;
-                background:#ff6600;
-                color:white;
-                font-size:10px;
-                padding:3px 6px;
-                border-radius:5px;
-                font-weight:800;
-              ">
+          ${p.isZiBuyOfficial ? `
+              <div style="position:absolute;top:5px;left:5px;background:linear-gradient(135deg,#111827,#374151);color:white;font-size:10px;padding:3px 8px;border-radius:5px;font-weight:800;display:flex;align-items:center;gap:3px">
+                <img src="my_logo.png" style="width:12px;height:12px;object-fit:contain;border-radius:2px"> ZiBuy
+              </div>
+            ` : isTrending ? `
+              <div style="position:absolute;top:5px;left:5px;background:#ff6600;color:white;font-size:10px;padding:3px 6px;border-radius:5px;font-weight:800">
                 🔥 TRENDING
               </div>
             ` : ""}
+            ${p.isPremium && !p.isZiBuyOfficial ? `
+              <div style="position:absolute;top:5px;right:5px;background:linear-gradient(135deg,#ff6600,#ff9900);color:white;font-size:10px;padding:3px 6px;border-radius:5px;font-weight:800">
+                ⭐ Featured
+              </div>
+            ` : ""}  
           </div>
 
           <div style="padding:6px;">
