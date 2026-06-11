@@ -55,6 +55,7 @@ function initApp() {
   console.log("App initialized");
   setupAuthStateListener();
   loadProducts();
+  loadBannerAd();
 
 
 // Load banner ads from Firestore
@@ -91,7 +92,6 @@ async function loadBannerAd() {
   } catch (e) {}
 }
 
-loadBannerAd();
 
 }
 
@@ -275,19 +275,19 @@ async function loadProducts() {
         // Admin-posted ads = ZiBuy official + auto featured
         const isAdminPost = product.userEmail === "swaibuziraye22@gmail.com";
         product.isZiBuyOfficial = isAdminPost;
-        if (isAdminPost) {
-          product.isPremium  = true;
-          product.rankScore  = 999999; // always top
-        }
+        if (isAdminPost) product.isPremium = true;
 
-        const planScore   = PLAN_SCORE[product.shopPlan] || 1;
-        const boostScore  = product.isPremium ? 5000 : 0;
-        const verifScore  = product.seller.isVerified ? 500 : 0;
-        const created     = product.createdAt?.toDate?.() || new Date();
+        const planScore      = PLAN_SCORE[product.shopPlan] || 1;
+        const boostScore     = product.isPremium ? 5000 : 0;
+        const verifScore     = product.seller.isVerified ? 500 : 0;
+        const created        = product.createdAt?.toDate?.() || new Date();
         const freshnessScore = Math.max(0, 100 - (new Date() - created) / 3_600_000);
 
-        product.rankScore =
-          (planScore * 1000) + boostScore + verifScore + freshnessScore;
+        // Admin posts always rank first — never overwrite with calculated score
+        product.rankScore = isAdminPost
+          ? 999999
+          : (planScore * 1000) + boostScore + verifScore + freshnessScore;
+       
 
         return product;
       });
@@ -787,7 +787,7 @@ window.renderProducts = function () {
 
     container.appendChild(section);
   }
-
+  
   renderRow("🔥 Trending", trending);
   renderRow("🆕 New Arrivals", newArrivals);
 
@@ -900,21 +900,27 @@ window.addToCart = function(name, price, image) {
   localStorage.setItem("zibuy-cart", JSON.stringify(cart));
   updateCartUI();
   showToast(`✅ Added to cart`);
+
+  // Save cart session for abandoned cart emails
+  if (currentUser) {
+    import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js")
+      .then(({ doc, setDoc }) => {
+        setDoc(doc(db, "cart_sessions", currentUser.uid), {
+          userEmail: currentUser.email,
+          items:     JSON.parse(localStorage.getItem("zibuy-cart") || "[]"),
+          status:    "active",
+          updatedAt: new Date()
+        });
+      }).catch(() => {});
+  }
 };
 
 
 // Save cart session to Firestore for abandoned cart emails
-if (currentUser) {
-  import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js")
-    .then(({ doc, setDoc }) => {
-      setDoc(doc(db, "cart_sessions", currentUser.uid), {
-        userEmail: currentUser.email,
-        items:     JSON.parse(localStorage.getItem("zibuy-cart") || "[]"),
-        status:    "active",
-        updatedAt: new Date()
-      });
-    });
+window.updateCartUI = function () {
+
 }
+
 
 window.updateCartUI = function () {
   const cart = JSON.parse(localStorage.getItem("zibuy-cart")) || [];
