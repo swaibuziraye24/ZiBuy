@@ -148,7 +148,10 @@ async function loadProduct() {
             style="background:#ff6600;color:white;border:none;padding:15px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px">
             🛒 Add to Cart
           </button>
-          <button onclick="openBuyNow('${snap.id}', '${p.name.replace(/'/g,"\\'")}', ${p.price}, '${(seller.phone || "").replace(/\D/g,"")}', '${seller.name || "Seller"}')"
+          <button onclick="${p.userEmail === 'swaibuziraye22@gmail.com'
+            ? `openBuyNow('${snap.id}','${p.name.replace(/'/g,"\\'")}',${p.price},'${(seller.phone||"").replace(/\D/g,"")}','${seller.name||"Seller"}')`
+            : `buyNowWhatsApp('${p.name.replace(/'/g,"\\'")}',${p.price},'${(seller.phone||"").replace(/\D/g,"")}')`
+          }"
             style="background:#111827;color:white;border:none;padding:15px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px">
             ⚡ Buy Now
           </button>
@@ -595,4 +598,22 @@ window.confirmBuyNow = async function(productId, productName, price, sellerPhone
     btn.textContent = "📲 I've Paid — Notify Seller on WhatsApp";
     btn.disabled    = false;
   }
+};
+
+window.buyNowWhatsApp = function(productName, price, sellerPhone) {
+  const clean = sellerPhone.replace(/\D/g, "");
+
+  if (!clean) {
+    alert("Seller phone number not available. Please use the WhatsApp button to contact the seller.");
+    return;
+  }
+
+  const msg = encodeURIComponent(
+    `Hello! 👋\n\n` +
+    `I want to buy *${productName}* listed on ZiBuy.\n` +
+    `💰 Price: *UGX ${Number(price).toLocaleString()}*\n\n` +
+    `Is it still available? Please let me know how to proceed. 🙏`
+  );
+
+  window.open(`https://wa.me/${clean}?text=${msg}`, "_blank");
 };
