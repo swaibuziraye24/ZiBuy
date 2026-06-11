@@ -361,13 +361,17 @@ async function loadFeaturedProducts() {
               : ""}
                   </div>
                   <div class="card-footer">
+                    <button class="cart-btn"
+                      onclick="window.location.href='product.html?id=${product.id}'"
+                      style="font-size:11px;flex:1">
+                      View Ad
+                    </button>
                     ${hasPhone ? `
-                      <button class="cart-btn" onclick="messageWhatsApp('${phone}', '${product.name}', ${product.price})" style="font-size:11px">💬 WhatsApp</button>
-                      <button class="view-btn" onclick="messageCall('${phone}')" style="font-size:11px">📞 Call</button>
-                    ` : `
-                      <button class="cart-btn" onclick="addToCart('${product.name}', ${product.price}, '${product.images?.[0] || ''}')">🛒 Cart</button>
-                      <button class="view-btn" onclick="openProductModal('${product.id}')">View</button>
-                    `}
+                      <button class="view-btn"
+                        onclick="messageWhatsApp('${phone}','${product.name}',${product.price})"
+                        style="font-size:11px;background:#25d366;color:white;border:none">
+                        💬
+                      </button>` : ""}
                   </div>
                 </div>
               </div>
@@ -784,8 +788,6 @@ window.renderProducts = function () {
     container.appendChild(section);
   }
 
-  renderRow("⭐ Featured Ads", featured);
-  renderRow("⭐ Sponsored", sponsored);
   renderRow("🔥 Trending", trending);
   renderRow("🆕 New Arrivals", newArrivals);
 
