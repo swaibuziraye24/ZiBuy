@@ -536,6 +536,7 @@ window.confirmBuyNow = async function(productId, productName, price, sellerPhone
       price,
       orderRef,
       transactionRef: txnRef,
+      userEmail:      auth.currentUser?.email || "guest",
       buyerEmail:     auth.currentUser?.email || "guest",
       buyerUid:       auth.currentUser?.uid   || "guest",
       sellerName,
