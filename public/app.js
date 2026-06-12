@@ -315,7 +315,85 @@ renderProducts();
 // LOAD FEATURED PRODUCTS
 // ============================================
 
+async function loadFeaturedProducts() {
+  try {
+    const featured = await getFeaturedAds();
 
+    console.log("Featured Ads:", featured);
+
+    const container = document.getElementById("products");
+
+    if (!container || featured.length === 0) return;
+
+    const featuredHtml = `
+      <div style="grid-column:1/-1;background:linear-gradient(135deg, #fff4ee, #fffbeb);border:2px solid #ff6600;border-radius:14px;padding:20px;margin-bottom:20px">
+        <h2 style="margin:0 0 16px;color:#ff6600;font-size:16px;font-weight:800">⭐ FEATURED ADS</h2>
+        <div class="product-row">
+          ${featured.slice(0, 6).map(p => {
+            // Get product details
+            const product = allProducts.find(ap => ap.id === p.productId);
+            if (!product) return "";
+
+            const phone = (product.seller?.phone || "").replace(/\D/g, "");
+            const hasPhone = phone.length > 0;
+
+            return `
+             <div class="product-card" style="
+  position:relative;
+  flex:0 0 auto;
+  width:160px;
+  min-width:160px;
+">
+                <div class="product-image-box">
+                  <img src="${product.images?.[0] || ''}" alt="${product.name}">
+                  <span class="premium-badge">⭐ FEATURED</span>
+                </div>
+                <div class="product-info">
+                  <p class="product-cat">${product.category}</p>
+                  <h3 class="product-title">${product.name}</h3>
+                  <p class="product-price">UGX ${Number(product.price).toLocaleString()}</p>
+                  <div style="margin-bottom:6px">
+                    ${product.sellerIsVerified
+                      ? `<span style="display:inline-block;background:#10b981;color:white;padding:1px 7px;border-radius:20px;font-size:10px;font-weight:800">✅ Verified</span>`
+                      : ""}
+                    ${p.sellerMemberSince
+              ? `<p style="color:#6b7280;font-size:10px;margin:0;font-weight:600">🗓️ ${p.sellerMemberSince}</p>`
+              : ""}
+                  </div>
+                  <div class="card-footer">
+                    <button class="cart-btn"
+                      onclick="window.location.href='product.html?id=${product.id}'"
+                      style="font-size:11px;flex:1">
+                      View Ad
+                    </button>
+                    ${hasPhone ? `
+                      <button class="view-btn"
+                        onclick="messageWhatsApp('${phone}','${product.name}',${product.price})"
+                        style="font-size:11px;background:#25d366;color:white;border:none">
+                        💬
+                      </button>` : ""}
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      </div>
+    `;
+
+    // Insert featured section at the beginning
+    const productsSection = document.querySelector(".section-header");
+    if (productsSection) {
+      const insertPoint = productsSection.nextElementSibling;
+      if (insertPoint) {
+        insertPoint.insertAdjacentHTML("beforebegin", featuredHtml);
+      }
+    }
+
+  } catch (err) {
+    console.error("Error loading featured ads:", err);
+  }
+}
 
 
 function getProductRankScore(product) {
@@ -710,9 +788,6 @@ window.renderProducts = function () {
     container.appendChild(section);
   }
   
-
-  renderRow("⭐ Featured Ads", featured);
-  renderRow("⭐ Sponsored", sponsored);
   renderRow("🔥 Trending", trending);
   renderRow("🆕 New Arrivals", newArrivals);
 
