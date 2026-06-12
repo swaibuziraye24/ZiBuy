@@ -671,12 +671,15 @@ window.renderProducts = function () {
 
     p.score = score;
 
-    console.log("TRENDING SCORE:", p.name, score);
 
-    if (score > 1200) {
-      trending.push(p);
-    }
+    trending.push(p);
+
   });
+
+
+  trending.sort((a, b) => b.score - a.score);
+
+const topTrending = trending.slice(0, 10);
 
   function renderRow(title, list) {
 
@@ -719,7 +722,7 @@ window.renderProducts = function () {
         card.style.scrollSnapAlign = "start";
         card.style.cursor = "pointer";
 
-        const isTrending = (p.score || 0) > 1200;
+        const isTrending = topTrending.some(t => t.id === p.id);
 
         card.innerHTML = `
           <div style="position:relative;background:#f7f7f7;">
@@ -790,7 +793,7 @@ window.renderProducts = function () {
     container.appendChild(section);
   }
   
-  renderRow("🔥 Trending", trending);
+  renderRow("🔥 Trending", topTrending);
   renderRow("🆕 New Arrivals", newArrivals);
 
   Object.keys(grouped).forEach(cat => {
