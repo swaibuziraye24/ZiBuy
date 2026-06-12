@@ -1,203 +1,270 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-
-<meta
-name="viewport"
-content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#ff6600">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 
-<title>Edit Business Profile</title>
+  <title>Set Up Your Shop — ZiBuy</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="/manifest.json">
+  <style>
+    .es-wrap { max-width: 720px; margin: 0 auto; padding: 24px 16px 80px; }
+    .es-hero {
+      background: linear-gradient(135deg, #ff6600, #ff9900);
+      border-radius: 16px;
+      padding: 28px 24px;
+      color: white;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .es-hero h1 { font-size: 22px; font-weight: 900; margin: 0 0 6px; }
+    .es-hero p  { font-size: 13px; opacity: .9; margin: 0; }
 
-<link rel="stylesheet" href="style.css">
-<link rel="manifest" href="/manifest.json">
+    .es-card {
+      background: white;
+      border-radius: 16px;
+      padding: 22px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      margin-bottom: 16px;
+    }
+    .es-card h3 { font-size: 15px; font-weight: 800; color: #111827; margin: 0 0 14px; }
 
-<style>
+    /* Banner / logo upload */
+    .es-banner-wrap {
+      position: relative;
+      height: 140px;
+      border-radius: 12px;
+      background: linear-gradient(135deg,#f3f4f6,#e5e7eb);
+      overflow: hidden;
+      margin-bottom: 16px;
+      cursor: pointer;
+      border: 2px dashed #d1d5db;
+    }
+    .es-banner-wrap img { width: 100%; height: 100%; object-fit: cover; display: none; }
+    .es-banner-wrap.has-img img { display: block; }
+    .es-banner-wrap .es-banner-placeholder {
+      position: absolute; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; color: #9ca3af; font-size: 13px; font-weight: 700;
+    }
+    .es-banner-wrap.has-img .es-banner-placeholder { display: none; }
+    .es-banner-wrap input[type=file] { display: none; }
+    .es-banner-edit-badge {
+      position: absolute; bottom: 8px; right: 8px;
+      background: rgba(0,0,0,0.55); color: white; font-size: 11px; font-weight: 700;
+      padding: 5px 10px; border-radius: 8px;
+    }
 
-body{
-  background:#f3f4f6;
-  font-family:Arial,sans-serif;
-  padding:20px;
-}
+    .es-logo-row { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
+    .es-logo-wrap {
+      width: 84px; height: 84px; border-radius: 16px; flex-shrink: 0;
+      background: linear-gradient(135deg,#f3f4f6,#e5e7eb);
+      border: 2px dashed #d1d5db; cursor: pointer; position: relative; overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .es-logo-wrap img { width: 100%; height: 100%; object-fit: cover; display: none; }
+    .es-logo-wrap.has-img img { display: block; }
+    .es-logo-wrap .es-logo-placeholder { font-size: 24px; color: #9ca3af; }
+    .es-logo-wrap.has-img .es-logo-placeholder { display: none; }
+    .es-logo-wrap input[type=file] { display: none; }
+    .es-logo-info p { margin: 0; font-size: 13px; color: #6b7280; }
+    .es-logo-info strong { font-size: 14px; color: #111827; }
 
-.edit-shop-container{
-  max-width:700px;
-  margin:auto;
-  background:white;
-  padding:24px;
-  border-radius:18px;
-  box-shadow:0 4px 20px rgba(0,0,0,.08);
-}
+    /* Form fields */
+    .es-field { margin-bottom: 14px; }
+    .es-field label {
+      display: block; font-size: 12px; font-weight: 800; color: #374151;
+      text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px;
+    }
+    .es-field input, .es-field select, .es-field textarea {
+      width: 100%; padding: 12px 14px; border: 1.5px solid #e5e7eb; border-radius: 10px;
+      font-size: 14px; font-family: var(--font); outline: none; transition: border-color .2s;
+      box-sizing: border-box; background: white;
+    }
+    .es-field input:focus, .es-field select:focus, .es-field textarea:focus { border-color: #ff6600; }
+    .es-field textarea { resize: vertical; min-height: 80px; }
+    .es-char-count { font-size: 11px; color: #9ca3af; text-align: right; margin-top: 4px; }
 
-.edit-shop-container h1{
-  margin-bottom:20px;
-  font-size:28px;
-}
+    /* Category chips */
+    .es-chip-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+    .es-chip {
+      border: 1.5px solid #e5e7eb; background: white; padding: 8px 14px; border-radius: 20px;
+      font-size: 12px; font-weight: 700; cursor: pointer; transition: .15s; color: #374151;
+      font-family: var(--font);
+    }
+    .es-chip.selected { background: #ff6600; color: white; border-color: #ff6600; }
 
-.form-group{
-  margin-bottom:20px;
-}
+    /* Business hours */
+    .es-hours-row {
+      display: flex; align-items: center; gap: 10px; padding: 8px 0;
+      border-bottom: 1px solid #f3f4f6; font-size: 13px;
+    }
+    .es-hours-row:last-child { border-bottom: none; }
+    .es-hours-row span.day { width: 80px; font-weight: 700; color: #111827; flex-shrink: 0; }
+    .es-hours-row input[type=time] {
+      padding: 7px 10px; border: 1.5px solid #e5e7eb; border-radius: 8px; font-size: 12px;
+      font-family: var(--font); width: 100px;
+    }
+    .es-hours-row label.closed-toggle {
+      display: flex; align-items: center; gap: 5px; font-size: 12px; color: #6b7280; margin-left: auto;
+      cursor: pointer;
+    }
 
-.form-group label{
-  display:block;
-  margin-bottom:8px;
-  font-weight:700;
-}
+    /* Save bar */
+    .es-save-bar {
+      display: flex; gap: 10px; margin-top: 8px;
+    }
+    .es-save-bar button {
+      flex: 1; padding: 14px; border: none; border-radius: 12px; font-weight: 800; font-size: 15px;
+      cursor: pointer; font-family: var(--font); transition: .2s;
+    }
+    .es-btn-save { background: #ff6600; color: white; }
+    .es-btn-save:hover { background: #e55a00; }
+    .es-btn-save:disabled { opacity: .6; cursor: not-allowed; }
+    .es-btn-preview { background: #f3f4f6; color: #374151; }
 
-.form-group input,
-.form-group textarea{
-  width:100%;
-  padding:14px;
-  border:1.5px solid #ddd;
-  border-radius:12px;
-  font-size:15px;
-}
-
-.form-group textarea{
-  resize:vertical;
-  min-height:120px;
-}
-
-.preview-image{
-  width:100%;
-  margin-top:10px;
-  border-radius:14px;
-  object-fit:cover;
-  background:#eee;
-}
-
-#logo-preview{
-  height:120px;
-  max-width:120px;
-}
-
-#banner-preview{
-  height:220px;
-}
-
-.save-btn{
-  background:#ff6600;
-  color:white;
-  border:none;
-  padding:16px;
-  width:100%;
-  border-radius:14px;
-  font-size:16px;
-  font-weight:700;
-  cursor:pointer;
-}
-
-.save-btn:hover{
-  opacity:.92;
-}
-
-.back-btn{
-  display:inline-block;
-  margin-bottom:20px;
-  text-decoration:none;
-  color:#ff6600;
-  font-weight:700;
-}
-
-</style>
+    .es-plan-banner {
+      display: flex; align-items: center; gap: 12px; background: #fff4ee;
+      border: 1.5px solid #ffd9bf; border-radius: 12px; padding: 12px 16px; margin-bottom: 16px;
+      font-size: 13px; color: #92400e;
+    }
+  </style>
 </head>
 <body>
 
-<div class="edit-shop-container">
+<header class="topbar">
+  <a href="index.html"><h1 class="logo">Zi<span>Buy</span></h1></a>
+  <div class="topbar-actions" style="margin-left:auto">
+    <button class="btn btn-dark" onclick="window.location.href='dashboard.html'">← Dashboard</button>
+  </div>
+</header>
 
-<a
-href="shop.html"
-class="back-btn">
-← Back to Shop
-</a>
+<div class="es-wrap">
 
-<h1>🏪 Edit Business Profile</h1>
+  <div class="es-hero">
+    <h1>🏪 Set Up Your Shop</h1>
+    <p>Build a professional storefront — just like the big sellers on Jiji</p>
+  </div>
 
-<div class="form-group">
+  <div id="es-plan-banner" class="es-plan-banner" style="display:none"></div>
 
-<label>
-Business Name
-</label>
+  <!-- Branding -->
+  <div class="es-card">
+    <h3>🎨 Shop Branding</h3>
 
-<input
-type="text"
-id="business-name"
-placeholder="Enter business name">
+    <div class="es-banner-wrap" id="banner-wrap" onclick="document.getElementById('banner-input').click()">
+      <img id="banner-preview" alt="Banner">
+      <div class="es-banner-placeholder">
+        <div style="font-size:28px;margin-bottom:4px">🖼️</div>
+        Tap to upload shop banner (1200×300px)
+      </div>
+      <div class="es-banner-edit-badge">✏️ Edit Banner</div>
+      <input type="file" id="banner-input" accept="image/*" onchange="handleImagePick(event,'banner')">
+    </div>
+
+    <div class="es-logo-row">
+      <div class="es-logo-wrap" id="logo-wrap" onclick="document.getElementById('logo-input').click()">
+        <img id="logo-preview" alt="Logo">
+        <div class="es-logo-placeholder">🏪</div>
+        <input type="file" id="logo-input" accept="image/*" onchange="handleImagePick(event,'logo')">
+      </div>
+      <div class="es-logo-info">
+        <p><strong>Shop Logo</strong></p>
+        <p>Square image works best · Tap the icon to upload</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shop info -->
+  <div class="es-card">
+    <h3>📋 Shop Information</h3>
+
+    <div class="es-field">
+      <label>Shop Name *</label>
+      <input type="text" id="shop-name" placeholder="e.g. Kato Electronics Ltd" maxlength="50">
+    </div>
+
+    <div class="es-field">
+      <label>Description / Tagline *</label>
+      <textarea id="shop-description" placeholder="Tell buyers what your shop sells and why they should trust you..." maxlength="300"></textarea>
+      <p class="es-char-count"><span id="desc-count">0</span>/300</p>
+    </div>
+
+    <div class="es-field">
+      <label>Specialties / Categories</label>
+      <div class="es-chip-grid" id="category-chips">
+        <button type="button" class="es-chip" data-cat="📱 Phones">📱 Phones</button>
+        <button type="button" class="es-chip" data-cat="💻 Electronics">💻 Electronics</button>
+        <button type="button" class="es-chip" data-cat="👗 Fashion">👗 Fashion</button>
+        <button type="button" class="es-chip" data-cat="👟 Shoes">👟 Shoes</button>
+        <button type="button" class="es-chip" data-cat="🚗 Vehicles">🚗 Vehicles</button>
+        <button type="button" class="es-chip" data-cat="🏠 Home">🏠 Home</button>
+        <button type="button" class="es-chip" data-cat="💄 Beauty">💄 Beauty</button>
+        <button type="button" class="es-chip" data-cat="🎮 Gaming">🎮 Gaming</button>
+        <button type="button" class="es-chip" data-cat="🌾 Agriculture">🌾 Agriculture</button>
+        <button type="button" class="es-chip" data-cat="🔧 Services">🔧 Services</button>
+      </div>
+    </div>
+
+    <div class="es-field">
+      <label>Location *</label>
+      <select id="shop-location">
+        <option value="">Select location</option>
+        <option>Kampala</option>
+        <option>Wakiso</option>
+        <option>Mukono</option>
+        <option>Jinja</option>
+        <option>Mbarara</option>
+        <option>Entebbe</option>
+        <option>Gulu</option>
+        <option>Mbale</option>
+        <option>Masaka</option>
+        <option>Fort Portal</option>
+        <option>Other</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Contact -->
+  <div class="es-card">
+    <h3>📞 Contact Details</h3>
+
+    <div class="es-field">
+      <label>Phone Number</label>
+      <input type="tel" id="shop-phone" placeholder="256701234567">
+    </div>
+
+    <div class="es-field">
+      <label>WhatsApp Number</label>
+      <input type="tel" id="shop-whatsapp" placeholder="256701234567 (leave blank if same as phone)">
+    </div>
+
+    <div class="es-field">
+      <label>Email</label>
+      <input type="email" id="shop-email" placeholder="shop@example.com">
+    </div>
+  </div>
+
+  <!-- Business hours -->
+  <div class="es-card">
+    <h3>🕐 Business Hours</h3>
+    <div id="hours-list"></div>
+  </div>
+
+  <!-- Save -->
+  <div class="es-save-bar">
+    <button class="es-btn-preview" onclick="previewShop()">👁️ Preview</button>
+    <button class="es-btn-save" id="save-btn" onclick="saveShop()">💾 Save Shop</button>
+  </div>
 
 </div>
 
-<div class="form-group">
-
-<label>
-Business Description
-</label>
-
-<textarea
-id="business-description"
-placeholder="Describe your business">
-</textarea>
-
-</div>
-
-<div class="form-group">
-
-<label>
-Business Logo
-</label>
-
-<input
-type="file"
-id="logo-input"
-accept="image/*">
-
-<img
-id="logo-preview"
-class="preview-image"
-src=""
-alt="Logo Preview">
-
-</div>
-
-<div class="form-group">
-
-<label>
-Business Banner
-</label>
-
-<input
-type="file"
-id="banner-input"
-accept="image/*">
-
-<img
-id="banner-preview"
-class="preview-image"
-src=""
-alt="Banner Preview">
-
-</div>
-
-<button
-id="save-btn"
-class="save-btn"
-onclick="saveShopProfile()">
-
-Save Business Profile
-
-</button>
-
-</div>
+<div id="toast-container" class="toast-container"></div>
 
 <script type="module" src="notifications-setup.js"></script>
-
 <script src="nav.js"></script>
-
-<script
-type="module"
-src="edit-shop.js">
-</script>
-
+<script type="module" src="edit-shop.js"></script>
 </body>
 </html>
