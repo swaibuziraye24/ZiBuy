@@ -671,7 +671,7 @@ window.renderProducts = function () {
 
     p.score = score;
 
-    console.log(p.name, score);
+    console.log("TRENDING SCORE:", p.name, score);
 
     if (score > 1200) {
       trending.push(p);
