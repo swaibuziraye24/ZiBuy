@@ -710,6 +710,9 @@ window.renderProducts = function () {
     container.appendChild(section);
   }
   
+
+  renderRow("⭐ Featured Ads", featured);
+  renderRow("⭐ Sponsored", sponsored);
   renderRow("🔥 Trending", trending);
   renderRow("🆕 New Arrivals", newArrivals);
 
