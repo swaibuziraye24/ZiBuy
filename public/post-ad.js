@@ -860,6 +860,14 @@ window.requestBoost = async function (productId) {
     return;
   }
 
+  // ── Plan boost limit check ──────────────────
+  const { checkCanBoost } = await import("./plan-limits.js");
+  const boostCheck = await checkCanBoost();
+  if (!boostCheck.allowed) {
+    alert(`⚠️ ${boostCheck.reason}`);
+    return;
+  }
+
   const btn = document.getElementById("request-boost-btn");
   if (btn) { btn.textContent = "Opening WhatsApp..."; btn.disabled = true; }
 
