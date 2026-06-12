@@ -212,6 +212,43 @@ body{
 }
 
 
+#shop-categories{
+display:flex;
+flex-wrap:wrap;
+gap:8px;
+}
+
+#business-hours{
+margin-top:10px;
+}
+
+#business-hours div{
+display:flex;
+justify-content:space-between;
+padding:8px 0;
+border-bottom:1px solid #eee;
+}
+
+@media(max-width:768px){
+
+.business-info{
+flex-direction:column;
+gap:8px;
+}
+
+.shop-stats{
+flex-direction:column;
+gap:8px;
+}
+
+.products-grid{
+grid-template-columns:
+repeat(auto-fill,minmax(160px,1fr));
+}
+
+}
+
+
 </style>
 
 </head>
@@ -335,6 +372,66 @@ body{
     >
       Follow Shop
     </button>
+
+<div class="business-profile-card">
+
+  <div class="business-badges">
+    <span id="verified-badge"></span>
+    <span id="plan-badge"></span>
+  </div>
+
+  <p id="shop-description">
+    Professional ZiBuy seller
+  </p>
+
+  <div class="business-info">
+
+
+<div id="business-location">
+  📍 Uganda
+</div>
+
+<div id="business-contact">
+  📧 Contact Seller
+</div>
+
+<div id="business-phone">
+  📞 Not provided
+</div>
+
+<div id="business-whatsapp">
+  📱 WhatsApp Support
+</div>
+
+
+  </div>
+
+  <div style="margin-top:20px;">
+
+
+<h3 style="margin-bottom:10px;">
+  🏷️ Categories
+</h3>
+
+<div id="shop-categories"></div>
+
+
+  </div>
+
+  <div style="margin-top:20px;">
+
+
+<h3 style="margin-bottom:10px;">
+  🕒 Business Hours
+</h3>
+
+<div id="business-hours"></div>
+
+
+  </div>
+
+</div>
+
 
   </div>
 
