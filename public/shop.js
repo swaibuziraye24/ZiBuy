@@ -134,121 +134,178 @@ async function loadShop() {
 /* ---------------- SHOP HEADER (FIXED) ---------------- */
 async function loadShopHeader() {
 
-  const nameEl =
-    document.getElementById("shop-name");
-
-  const metaEl =
-    document.getElementById("shop-meta");
-
-  try {
-
-    const snapshot = await getDocs(
-      query(
-        collection(db, "shops"),
-        where("ownerId", "==", sellerId)
-      )
-    );
-
-    if (snapshot.empty) {
-
-      nameEl.textContent =
-        "ZiBuy Shop";
-
-      metaEl.textContent =
-        "📍 Uganda";
-
-      return;
-    }
-
-    const shop =
-      snapshot.docs[0].data();
+try {
 
 
-      const verifiedBadge =
-  document.getElementById("verified-badge");
+const snapshot = await getDocs(
+  query(
+    collection(db, "shops"),
+    where("ownerId", "==", sellerId)
+  )
+);
 
-const planBadge =
-  document.getElementById("plan-badge");
+if (snapshot.empty) return;
 
-const descEl =
-  document.getElementById("shop-description");
+const shop = snapshot.docs[0].data();
 
-const locationEl =
-  document.getElementById("business-location");
+// Main Elements
+const nameEl = document.getElementById("shop-name");
+const metaEl = document.getElementById("shop-meta");
+const logoEl = document.getElementById("shop-logo");
+const bannerEl = document.getElementById("shop-banner");
 
-const contactEl =
-  document.getElementById("business-contact");
+// Business Profile Elements
+const verifiedBadge = document.getElementById("verified-badge");
+const planBadge = document.getElementById("plan-badge");
 
-const whatsappEl =
-  document.getElementById("business-whatsapp");
+const descEl = document.getElementById("shop-description");
 
-const plan =
-  shop.plan || "free";
+const locationEl = document.getElementById("business-location");
+const contactEl = document.getElementById("business-contact");
+const whatsappEl = document.getElementById("business-whatsapp");
 
-if(shop.isVerified){
-  verifiedBadge.innerHTML =
-    `<span class="badge badge-verified">
-      ✅ Verified Business
-    </span>`;
+const phoneEl = document.getElementById("business-phone");
+const categoriesEl = document.getElementById("shop-categories");
+const hoursEl = document.getElementById("business-hours");
+
+// Header
+nameEl.textContent = shop.name || "ZiBuy Shop";
+
+metaEl.innerHTML = `
+  📍 ${shop.location || "Uganda"}
+  ${shop.isVerified ? " • ✅ Verified Seller" : ""}
+`;
+
+// Images
+if (shop.logoUrl && logoEl) {
+  logoEl.src = shop.logoUrl;
 }
 
-planBadge.innerHTML =
-  `<span class="badge badge-${plan}">
-    ${plan.toUpperCase()} PLAN
-  </span>`;
+if (shop.bannerUrl && bannerEl) {
+  bannerEl.src = shop.bannerUrl;
+}
 
-descEl.textContent =
-  shop.description ||
-  "Professional ZiBuy seller";
+// Verification Badge
+if (verifiedBadge) {
+  verifiedBadge.innerHTML = shop.isVerified
+    ? `
+      <span class="badge badge-verified">
+        ✅ Verified Business
+      </span>
+    `
+    : "";
+}
 
-locationEl.innerHTML =
-  `📍 ${shop.location || "Uganda"}`;
+// Plan Badge
+if (planBadge) {
+  const plan = (shop.plan || "free").toLowerCase();
 
-contactEl.innerHTML =
-  `📧 ${shop.email || "No email"}`;
+  planBadge.innerHTML = `
+    <span class="badge badge-${plan}">
+      ${plan.toUpperCase()} PLAN
+    </span>
+  `;
+}
 
-if(plan === "gold"){
+// Description
+if (descEl) {
+  descEl.textContent =
+    shop.description ||
+    "Professional ZiBuy Seller";
+}
+
+// Location
+if (locationEl) {
+  locationEl.innerHTML =
+    `📍 ${shop.location || "Uganda"}`;
+}
+
+// Email
+if (contactEl) {
+  contactEl.innerHTML =
+    `📧 ${shop.email || "Not provided"}`;
+}
+
+// Phone
+if (phoneEl) {
+  phoneEl.innerHTML =
+    `📞 ${shop.phone || "Not provided"}`;
+}
+
+// WhatsApp
+if (whatsappEl) {
   whatsappEl.innerHTML =
-    `📱 24/7 WhatsApp Support`;
-}else{
-  whatsappEl.style.display = "none";
+    `📱 ${shop.whatsapp || shop.phone || "Not provided"}`;
 }
 
-    /* LOGO + BANNER */
+// Categories
+if (categoriesEl) {
 
-    const logo =
-      document.getElementById("shop-logo");
+  const categories =
+    shop.categories || [];
 
-    const banner =
-      document.getElementById("shop-banner");
-
-    if (logo && shop.logoUrl) {
-      logo.src = shop.logoUrl;
-    }
-
-    if (banner && shop.bannerUrl) {
-      banner.src = shop.bannerUrl;
-    }
-
-    /* SHOP INFO */
-
-    nameEl.textContent =
-      shop.name || "ZiBuy Shop";
-
-    metaEl.innerHTML = `
-      📍 ${shop.location || "Uganda"}
-      ${shop.isVerified ? "✅ Verified" : ""}
-    `;
-
-  } catch (err) {
-
-    console.error(
-      "Shop header error:",
-      err
-    );
-
-  }
+  categoriesEl.innerHTML =
+    categories.length
+      ? categories.map(cat => `
+          <span
+            style="
+              display:inline-block;
+              background:#fff4ee;
+              color:#ff6600;
+              padding:6px 12px;
+              border-radius:20px;
+              font-size:12px;
+              font-weight:700;
+              margin:4px;
+            "
+          >
+            ${cat}
+          </span>
+        `).join("")
+      : "No categories specified";
 }
+
+// Business Hours
+if (hoursEl && shop.businessHours) {
+
+  hoursEl.innerHTML =
+    Object.entries(shop.businessHours)
+      .map(([day, hours]) => {
+
+        return `
+          <div style="
+            display:flex;
+            justify-content:space-between;
+            padding:6px 0;
+            border-bottom:1px solid #f3f4f6;
+          ">
+            <span>${day}</span>
+            <span>
+              ${hours.closed
+                ? "Closed"
+                : `${hours.open} - ${hours.close}`}
+            </span>
+          </div>
+        `;
+
+      })
+      .join("");
+}
+
+
+} catch (err) {
+
+
+console.error(
+  "Shop header error:",
+  err
+);
+
+
+}
+
+}
+
 /* ---------------- REVIEWS ---------------- */
 async function loadSellerReviews() {
 
