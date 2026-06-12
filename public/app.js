@@ -302,7 +302,7 @@ window.allProducts = allProducts;
 
 filteredProducts = [...allProducts];
 
-loadFeaturedProducts();
+// loadFeaturedProducts();
 renderProducts();
 
 } catch (err) {
