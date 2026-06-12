@@ -629,7 +629,7 @@ window.renderProducts = function () {
 
     const hoursOld = Math.max(1, (Date.now() - created) / 36e5);
 
-    const planBoost = getPlanScore(plan) * 1000;
+    const planBoost = getPlanScore(plan) * 100;
 
     const engagement =
       (likes * 3) +
