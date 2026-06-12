@@ -440,6 +440,14 @@ window.submitDashboardBoost = async function(productId, productName, days, price
     return;
   }
 
+  // ── Plan boost limit check ──────────────────
+  const { checkCanBoost } = await import("./plan-limits.js");
+  const boostCheck = await checkCanBoost();
+  if (!boostCheck.allowed) {
+    alert(`⚠️ ${boostCheck.reason}`);
+    return;
+  }
+
   const btn = event.target;
   btn.textContent = "Saving...";
   btn.disabled    = true;
@@ -1191,6 +1199,17 @@ async function () {
 
     /* NO SHOP YET */
     else {
+
+      // ── Plan gate: Business Profile requires Bronze+ ──
+      const { getCurrentPlanId } = await import("./plan-limits.js");
+      const planId = await getCurrentPlanId(uid);
+
+      if (planId === "free") {
+        if (confirm("📋 A Business Profile Page is available on Bronze plan and above.\n\nUpgrade now to create your shop page?")) {
+          window.location.href = "business-plans.html";
+        }
+        return;
+      }
 
       window.location.href =
         "edit-shop.html";
