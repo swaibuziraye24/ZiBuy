@@ -137,16 +137,15 @@ async function loadShopHeader() {
 try {
 
 
-const snapshot = await getDocs(
-  query(
-    collection(db, "shops"),
-    where("ownerId", "==", sellerId)
-  )
+const shopDoc = await getDoc(
+  doc(db, "shops", sellerId)
 );
 
-if (snapshot.empty) return;
+if (!shopDoc.exists()) return;
 
-const shop = snapshot.docs[0].data();
+const shop = shopDoc.data();
+
+console.log("SHOP DATA:", shop);
 
 // Main Elements
 const nameEl = document.getElementById("shop-name");
