@@ -63,27 +63,44 @@ function renderShops(shops) {
 
       <div
         class="shop-card"
-        onclick="window.location.href='shop.html?seller=${shop.userId}'"
+        onclick="window.location.href='shop.html?seller=${shop.ownerId || shop.userId}'"
       >
 
         <div class="shop-top">
 
-          <div class="shop-avatar">
-
-            ${
-              shop.name
-                ? shop.name.charAt(0).toUpperCase()
-                : "Z"
-            }
-
-          </div>
+          ${
+            shop.logoUrl
+              ? `
+                <img
+                  src="${shop.logoUrl}"
+                  class="shop-avatar"
+                  style="
+                    object-fit:cover;
+                    border:2px solid #ff6600;
+                  "
+                >
+              `
+              : `
+                <div class="shop-avatar">
+                  ${
+                    shop.name
+                      ? shop.name.charAt(0).toUpperCase()
+                      : "Z"
+                  }
+                </div>
+              `
+          }
 
           <div class="shop-info">
 
             <div class="shop-name">
 
+              ${shop.name || "ZiBuy Shop"}
+
               ${
-                shop.name || "ZiBuy Shop"
+                shop.isVerified
+                  ? " ✅"
+                  : ""
               }
 
               ${
@@ -99,16 +116,19 @@ function renderShops(shops) {
             </div>
 
             <div class="shop-meta">
-
-              📦 ${shop.totalAds || 0} listings
-
+              📍 ${shop.location || "Uganda"}
             </div>
 
             <div class="shop-meta">
+              📦 ${shop.totalAds || 0} Listings
+            </div>
 
-              ⭐ Rank Score:
-              ${shop.rankScore || 0}
-
+            <div class="shop-meta">
+              🏷️ ${
+                shop.categories?.length
+                  ? shop.categories.slice(0,2).join(", ")
+                  : "General"
+              }
             </div>
 
           </div>
