@@ -77,56 +77,97 @@ export async function calculateShopRank(userId) {
    GET ALL SHOPS RANKED
 ========================= */
 export async function getRankedShops() {
+
   try {
-    const snap = await getDocs(collection(db, "products"));
 
-    const shopsMap = {};
+    const shopsSnap =
+      await getDocs(collection(db, "shops"));
 
-    snap.forEach(doc => {
-      const p = doc.data();
+    const shops = await Promise.all(
 
-      if (!p.userId) return;
+      shopsSnap.docs.map(async (shopDoc) => {
 
-      if (!shopsMap[p.userId]) {
-        shopsMap[p.userId] = {
-          userId: p.userId,
-          totalAds: 0
+        const shop = shopDoc.data();
+
+        const productsSnap = await getDocs(
+          query(
+            collection(db, "products"),
+            where("userId", "==", shop.ownerId),
+            where("status", "==", "active")
+          )
+        );
+
+        const totalAds =
+          productsSnap.size;
+
+        const plan =
+          shop.plan || "free";
+
+        const planScore =
+          PLAN_SCORE[plan] || 1;
+
+        return {
+
+          userId:
+            shop.ownerId,
+
+          name:
+            shop.name || "ZiBuy Shop",
+
+          logoUrl:
+            shop.logoUrl || "",
+
+          bannerUrl:
+            shop.bannerUrl || "",
+
+          description:
+            shop.description || "",
+
+          location:
+            shop.location || "Uganda",
+
+          phone:
+            shop.phone || "",
+
+          whatsapp:
+            shop.whatsapp || "",
+
+          email:
+            shop.email || "",
+
+          categories:
+            shop.categories || [],
+
+          isVerified:
+            shop.isVerified || false,
+
+          plan,
+
+          totalAds,
+
+          rankScore:
+            (planScore * 1000) +
+            (totalAds * 10)
+
         };
-      }
 
-      shopsMap[p.userId].totalAds++;
-    });
+      })
 
-    const shops = Object.values(shopsMap);
+    );
 
-    const ranked = await Promise.all(
-
-  shops.map(async(shop) => {
-
-    const plan =
-      await getUserPlan(shop.userId);
-
-    const planScore =
-      PLAN_SCORE[plan] || 1;
-
-    return {
-      ...shop,
-      plan,
-      rankScore:
-        (planScore * 1000) +
-        (shop.totalAds * 10)
-    };
-
-  })
-
-);
-
-    return ranked.sort((a, b) => b.rankScore - a.rankScore);
+    return shops.sort(
+      (a, b) =>
+        b.rankScore - a.rankScore
+    );
 
   } catch (err) {
+
     console.error(err);
+
     return [];
+
   }
+
 }
 
 /* =========================
