@@ -56,7 +56,7 @@ function initApp() {
   setupAuthStateListener();
   loadProducts();
   loadBannerAd();
-
+  loadFeaturedShops();
 
 // Load banner ads from Firestore
 async function loadBannerAd() {
@@ -311,6 +311,53 @@ renderProducts();
 
 }
 }
+
+// ============================================
+// FEATURED SHOPS (homepage)
+// ============================================
+async function loadFeaturedShops() {
+  const section   = document.getElementById("featured-shops-section");
+  const container = document.getElementById("featured-shops");
+  if (!section || !container) return;
+
+  try {
+    const snap = await getDocs(query(
+      collection(db, "shops"),
+      where("plan", "in", ["gold", "silver"])
+    ));
+
+    if (snap.empty) {
+      section.style.display = "none";
+      return;
+    }
+
+    const shops = snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (b.plan === "gold" ? 1 : 0) - (a.plan === "gold" ? 1 : 0))
+      .slice(0, 10);
+
+    section.style.display = "block";
+
+    container.innerHTML = shops.map(s => `
+      <div class="shop-card" onclick="window.location.href='shop.html?seller=${s.ownerId || s.id}'">
+        <div class="shop-card-banner" style="${s.bannerUrl ? `background-image:url('${s.bannerUrl}')` : ""}">
+          <img class="shop-card-logo" src="${s.logoUrl || 'https://via.placeholder.com/80?text=Zi'}" alt="${s.name || 'Shop'}">
+        </div>
+        <div class="shop-card-body">
+          <h4>${s.name || "ZiBuy Shop"} ${s.isVerified ? "✅" : ""}</h4>
+          <p class="shop-card-loc">📍 ${s.location || "Uganda"}</p>
+          <span class="shop-card-plan plan-${s.plan}">${s.plan === "gold" ? "🥇 Gold Seller" : "🥈 Silver Seller"}</span>
+        </div>
+      </div>
+    `).join("");
+
+  } catch (e) {
+    console.error("loadFeaturedShops error:", e);
+    section.style.display = "none";
+  }
+}
+
+
 // ============================================
 // LOAD FEATURED PRODUCTS
 // ============================================
