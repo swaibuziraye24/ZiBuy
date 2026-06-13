@@ -7,6 +7,7 @@ import {
   deleteDoc,
   doc,
   query,
+  getDoc,
   where
 } from "./firebase.js";
 
