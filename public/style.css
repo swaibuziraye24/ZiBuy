@@ -8032,3 +8032,94 @@ body {
 body {
   overflow-x: hidden;
 }
+
+
+/* ============================================
+   FEATURED SHOPS (HOMEPAGE)
+   ============================================ */
+
+.featured-shops-section {
+  padding: 4px 24px 8px;
+}
+
+.featured-shops-row {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scrollbar-width: none;
+}
+
+.featured-shops-row::-webkit-scrollbar { display: none; }
+
+.shop-card {
+  flex-shrink: 0;
+  width: 200px;
+  background: white;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition: transform .2s, box-shadow .2s;
+}
+
+.shop-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+.shop-card-banner {
+  height: 70px;
+  background: linear-gradient(135deg, #ff6600, #ff9900);
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+.shop-card-logo {
+  position: absolute;
+  bottom: -22px;
+  left: 14px;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  border: 3px solid white;
+  background: #f3f4f6;
+  object-fit: cover;
+}
+
+.shop-card-body {
+  padding: 28px 14px 14px;
+}
+
+.shop-card-body h4 {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--dark);
+  margin: 0 0 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shop-card-loc {
+  font-size: 12px;
+  color: var(--gray);
+  margin: 0 0 8px;
+}
+
+.shop-card-plan {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.shop-card-plan.plan-gold   { background: #fffbeb; color: #b45309; }
+.shop-card-plan.plan-silver { background: #f1f5f9; color: #475569; }
+
+@media (max-width: 768px) {
+  .featured-shops-section { padding: 4px 16px 4px; }
+  .shop-card { width: 160px; }
+}
