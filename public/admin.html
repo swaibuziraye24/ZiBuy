@@ -348,6 +348,10 @@
       onclick="window.showSection('job-ads', this);loadJobAdsAdmin()">
       <span class="nav-icon">💼</span> Job Ads
     </button>
+    <button class="admin-nav-item"
+      onclick="window.showSection('sponsors', this);loadCategorySponsorsAdmin()">
+      <span class="nav-icon">🗂️</span> Cat. Sponsors
+    </button>
   </aside>
 
   <!-- ── MAIN ── -->
@@ -728,6 +732,65 @@
     </table>
   </div>
     <!-- ══ end section-job-ads ══ -->
+
+
+    <!-- ══ CATEGORY SPONSORS ══ -->
+    <div class="admin-section" id="section-sponsors">
+      <h2 style="font-size:20px;font-weight:800;margin-bottom:16px">🗂️ Category Sponsorships</h2>
+
+      <div class="admin-card" style="margin-bottom:16px">
+        <h2>➕ Add Sponsor</h2>
+        <p style="font-size:13px;color:#6b7280;margin-bottom:14px">
+          UGX 200,000/month per category. Only 1 sponsor per category at a time.
+        </p>
+
+        <select id="cs-category" class="search-input" style="margin-bottom:10px">
+          <option value="">Select Category to Sponsor</option>
+          <option value="phones">📱 Phones</option>
+          <option value="electronics">💻 Electronics</option>
+          <option value="fashion">👗 Fashion</option>
+          <option value="shoes">👟 Shoes</option>
+          <option value="beauty">💄 Beauty</option>
+          <option value="bags">👜 Bags</option>
+          <option value="groceries">🛒 Groceries</option>
+          <option value="watches">⌚ Watches</option>
+          <option value="computers">🖥️ Computers</option>
+          <option value="gaming">🎮 Gaming</option>
+          <option value="home">🏠 Home</option>
+          <option value="accessories">💎 Accessories</option>
+          <option value="vehicles">🚗 Vehicles</option>
+          <option value="animals">🐾 Animals & Pets</option>
+          <option value="babies">👶 Babies & Kids</option>
+          <option value="agriculture">🌾 Agriculture</option>
+          <option value="commercial">🏗️ Commercial Equip.</option>
+          <option value="tours">✈️ Tours & Leisure</option>
+          <option value="seeking-work">💼 Seeking Work</option>
+        </select>
+
+        <input id="cs-name" placeholder="Sponsor / Business Name e.g. MTN Uganda"
+          class="search-input">
+        <input id="cs-url" placeholder="Sponsor website or page URL"
+          class="search-input">
+        <input id="cs-price" type="number" placeholder="Amount paid (UGX)"
+          class="search-input">
+        <input id="cs-txn" placeholder="Transaction ID / Payment reference"
+          class="search-input">
+
+        <button onclick="addCategorySponsor()"
+          style="background:#ff6600;color:white;border:none;padding:12px;
+          border-radius:10px;font-weight:800;font-size:14px;cursor:pointer;
+          font-family:inherit;width:100%">
+          🗂️ Activate Sponsorship
+        </button>
+      </div>
+
+      <div class="admin-card">
+        <h2>Active Sponsorships</h2>
+        <div id="sponsors-list">
+          <p style="color:#6b7280;font-size:13px">Loading...</p>
+        </div>
+      </div>
+    </div>
 
   </main>
 </div>
