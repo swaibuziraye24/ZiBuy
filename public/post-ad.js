@@ -75,11 +75,10 @@ window.selectCategory = function(category) {
     card.classList.remove("selected");
   });
 
-  event.currentTarget.classList.add("selected");
+ event.currentTarget.classList.add("selected");
   document.getElementById("step1-next").disabled = false;
-
-  // Pre-render category-specific fields ready for Step 2
   renderCategoryFields(category);
+  toggleVideoUpload(category);
 
 
 
@@ -770,6 +769,72 @@ descInput.addEventListener("input", () => {
   document.getElementById("desc-count").textContent = descInput.value.length;
 });
 
+
+// ============================================
+// VIDEO UPLOAD (Services category only)
+// ============================================
+
+let uploadedVideo = null;
+
+window.handleVideoUpload = function(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  // Validate type
+  if (!file.type.startsWith("video/")) {
+    alert("Please select a video file (MP4, MOV, etc.)");
+    return;
+  }
+
+  // Max 50MB
+  if (file.size > 50 * 1024 * 1024) {
+    alert("Video too large. Maximum size is 50MB.");
+    event.target.value = "";
+    return;
+  }
+
+  uploadedVideo = file;
+
+  // Show preview
+  const preview = document.getElementById("video-preview-wrap");
+  if (preview) {
+    const url = URL.createObjectURL(file);
+    preview.innerHTML = `
+      <video controls style="width:100%;border-radius:12px;margin-top:10px;max-height:220px;background:#000">
+        <source src="${url}" type="${file.type}">
+      </video>
+      <p style="font-size:12px;color:#10b981;font-weight:700;margin-top:6px">
+        ✅ Video ready: ${file.name} (${(file.size/1024/1024).toFixed(1)}MB)
+      </p>
+      <button type="button" onclick="removeVideo()"
+        style="background:#fee2e2;color:#ef4444;border:none;padding:6px 14px;
+        border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;margin-top:4px">
+        🗑️ Remove Video
+      </button>
+    `;
+  }
+};
+
+window.removeVideo = function() {
+  uploadedVideo = null;
+  const preview = document.getElementById("video-preview-wrap");
+  if (preview) preview.innerHTML = "";
+  const input = document.getElementById("service-video-input");
+  if (input) input.value = "";
+};
+
+// Show/hide video upload section based on category
+function toggleVideoUpload(category) {
+  const section = document.getElementById("video-upload-section");
+  if (!section) return;
+  section.style.display = category === "services" ? "block" : "none";
+  if (category !== "services") {
+    uploadedVideo = null;
+    const preview = document.getElementById("video-preview-wrap");
+    if (preview) preview.innerHTML = "";
+  }
+}
+
 // ============================================
 // IMAGE UPLOAD
 // ============================================
@@ -966,6 +1031,24 @@ if (uploadedImages.length > limit) {
 }
 
   try {
+
+
+    // ── Upload service video (if any) ──────────
+    let videoUrl = "";
+    if (uploadedVideo && selectedCategory === "services") {
+      try {
+        const vRef = ref(storage,
+          `service-videos/${currentUser.uid}/${Date.now()}-${uploadedVideo.name}`
+        );
+        await uploadBytes(vRef, uploadedVideo, { contentType: uploadedVideo.type });
+        videoUrl = await getDownloadURL(vRef);
+      } catch (videoErr) {
+        console.warn("Video upload failed:", videoErr.message);
+        // Non-blocking — ad still posts without video
+      }
+    }
+
+
     // ── 4. Upload images ────────────────────────
     const imageUrls = [];
 
@@ -1026,7 +1109,8 @@ boost: {
         isVerified: false
       },
       details:   collectCategoryFields(selectedCategory),
-      condition: document.getElementById("cf-condition")?.value || ""
+      condition: document.getElementById("cf-condition")?.value || "",
+      videoUrl:  videoUrl || ""
     };
 
     // ── 6. Save to Firestore ────────────────────
