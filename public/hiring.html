@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#ff6600">
+  <title>We Are Hiring — Post a Job on ZiBuy</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .hiring-hero {
+      background: linear-gradient(135deg, #1e40af, #3b82f6);
+      color: white; padding: 44px 24px; text-align: center;
+    }
+    .hiring-hero h1 { font-size: clamp(22px,4vw,36px); font-weight: 900; margin: 0 0 10px; }
+    .hiring-hero p  { font-size: 14px; opacity: .9; max-width: 480px; margin: 0 auto 24px; line-height: 1.6; }
+
+    .hiring-wrap { max-width: 680px; margin: 0 auto; padding: 28px 16px 80px; }
+
+    .hiring-card {
+      background: white; border-radius: 16px; padding: 24px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07); margin-bottom: 16px;
+    }
+    .hiring-card h3 { font-size: 15px; font-weight: 800; color: #111827; margin: 0 0 16px; }
+
+    .hf { margin-bottom: 14px; }
+    .hf label {
+      display: block; font-size: 12px; font-weight: 800; color: #374151;
+      text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px;
+    }
+    .hf input, .hf select, .hf textarea {
+      width: 100%; padding: 12px 14px; border: 1.5px solid #e5e7eb; border-radius: 10px;
+      font-size: 14px; font-family: var(--font); outline: none; box-sizing: border-box;
+      transition: border-color .2s; background: white;
+    }
+    .hf input:focus, .hf select:focus, .hf textarea:focus { border-color: #1e40af; }
+
+    /* Job listing card (on index) */
+    .job-card {
+      background: white; border-radius: 14px; padding: 18px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07); margin-bottom: 12px;
+      border-left: 4px solid #1e40af; transition: .2s;
+    }
+    .job-card:hover { transform: translateX(4px); }
+    .job-badge {
+      display: inline-block; background: #dbeafe; color: #1e40af;
+      padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 800;
+      margin-bottom: 8px;
+    }
+    .job-badge.top { background: #ff6600; color: white; }
+
+    .pay-box {
+      background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 12px;
+      padding: 16px; margin-bottom: 16px;
+    }
+    .pay-box h4 { font-size: 14px; font-weight: 800; color: #92400e; margin: 0 0 10px; }
+    .pay-method {
+      border-radius: 10px; padding: 12px 14px; margin-bottom: 8px;
+      font-size: 13px; color: #374151;
+    }
+    .pay-mtn   { background: #fff9c4; border: 1.5px solid #fde047; }
+    .pay-airtel { background: #fee2e2; border: 1.5px solid #fca5a5; }
+  </style>
+</head>
+<body>
+
+<header class="topbar">
+  <a href="index.html"><h1 class="logo">Zi<span>Buy</span></h1></a>
+  <div class="topbar-actions" style="margin-left:auto">
+    <a href="index.html" class="btn btn-dark">← Back</a>
+  </div>
+</header>
+
+<!-- HERO -->
+<div class="hiring-hero">
+  <h1>💼 Post a Job on ZiBuy</h1>
+  <p>Reach thousands of job seekers in Uganda. Your job ad goes to the top of the Seeking Work section and is seen by verified candidates.</p>
+  <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+    <div style="background:rgba(255,255,255,.15);padding:12px 20px;border-radius:10px;font-size:13px">
+      ⭐ <strong>Top Ad</strong> — UGX 20,000/week
+    </div>
+    <div style="background:rgba(255,255,255,.15);padding:12px 20px;border-radius:10px;font-size:13px">
+      📋 <strong>Standard</strong> — UGX 10,000/week
+    </div>
+  </div>
+</div>
+
+<div class="hiring-wrap">
+
+  <!-- FORM -->
+  <div class="hiring-card">
+    <h3>📋 Job Details</h3>
+
+    <div class="hf">
+      <label>Job Title *</label>
+      <input type="text" id="job-title" placeholder="e.g. Driver Wanted, Cashier Needed, Electrician Required" maxlength="80">
+    </div>
+
+    <div class="hf">
+      <label>Company / Business Name *</label>
+      <input type="text" id="job-company" placeholder="e.g. Kato Supermarket, ABC Construction Ltd">
+    </div>
+
+    <div class="hf">
+      <label>Job Type *</label>
+      <select id="job-type">
+        <option value="">Select job type</option>
+        <option>Full Time</option>
+        <option>Part Time</option>
+        <option>Contract / Temporary</option>
+        <option>Internship</option>
+        <option>Freelance / Remote</option>
+        <option>Volunteer</option>
+      </select>
+    </div>
+
+    <div class="hf">
+      <label>Industry / Category *</label>
+      <select id="job-category">
+        <option value="">Select category</option>
+        <option>Driving & Transport</option>
+        <option>Security & Guard</option>
+        <option>Cleaning & Housekeeping</option>
+        <option>Cooking & Catering</option>
+        <option>Construction & Labour</option>
+        <option>Electrical & Plumbing</option>
+        <option>Sales & Marketing</option>
+        <option>Accounting & Finance</option>
+        <option>IT & Technology</option>
+        <option>Teaching & Tutoring</option>
+        <option>Medical & Healthcare</option>
+        <option>Customer Service & Admin</option>
+        <option>Tailoring & Fashion</option>
+        <option>Agriculture & Farming</option>
+        <option>Beauty & Salon</option>
+        <option>Mechanic & Auto</option>
+        <option>Carpentry & Welding</option>
+        <option>Media & Design</option>
+        <option>NGO & Social Work</option>
+        <option>Other</option>
+      </select>
+    </div>
+
+    <div class="hf">
+      <label>Location *</label>
+      <select id="job-location">
+        <option value="">Select location</option>
+        <option>Kampala</option>
+        <option>Wakiso</option>
+        <option>Mukono</option>
+        <option>Jinja</option>
+        <option>Mbarara</option>
+        <option>Entebbe</option>
+        <option>Gulu</option>
+        <option>Mbale</option>
+        <option>Masaka</option>
+        <option>Fort Portal</option>
+        <option>Multiple Locations</option>
+        <option>Remote / Work from Home</option>
+        <option>Other</option>
+      </select>
+    </div>
+
+    <div class="hf">
+      <label>Salary / Pay *</label>
+      <select id="job-salary">
+        <option value="">Select salary range</option>
+        <option>Negotiable</option>
+        <option>Below UGX 200,000/month</option>
+        <option>UGX 200,000 – 500,000/month</option>
+        <option>UGX 500,000 – 1,000,000/month</option>
+        <option>UGX 1,000,000 – 2,000,000/month</option>
+        <option>UGX 2,000,000 – 5,000,000/month</option>
+        <option>Above UGX 5,000,000/month</option>
+        <option>Daily Rate (specify in description)</option>
+        <option>Commission Based</option>
+      </select>
+    </div>
+
+    <div class="hf">
+      <label>Experience Required</label>
+      <select id="job-experience">
+        <option value="">Any experience level</option>
+        <option>No experience required (fresh welcome)</option>
+        <option>Less than 1 year</option>
+        <option>1–2 years</option>
+        <option>3–5 years</option>
+        <option>5+ years</option>
+      </select>
+    </div>
+
+    <div class="hf">
+      <label>Education Required</label>
+      <select id="job-education">
+        <option value="">Any level</option>
+        <option>No formal education required</option>
+        <option>Primary Level</option>
+        <option>O-Level (UCE)</option>
+        <option>A-Level (UACE)</option>
+        <option>Certificate / Diploma</option>
+        <option>Bachelor's Degree</option>
+        <option>Master's Degree or above</option>
+      </select>
+    </div>
+
+    <div class="hf">
+      <label>Gender Preference</label>
+      <select id="job-gender">
+        <option value="Any">No preference (All welcome)</option>
+        <option value="Male">Male only</option>
+        <option value="Female">Female only</option>
+      </select>
+    </div>
+
+    <div class="hf">
+      <label>Job Description *</label>
+      <textarea id="job-desc" rows="5" maxlength="600"
+        placeholder="Describe the role, responsibilities, requirements and how to apply..."></textarea>
+    </div>
+
+    <div class="hf">
+      <label>How to Apply</label>
+      <input type="text" id="job-apply" placeholder="e.g. Call 0701234567, WhatsApp CV, Walk in to our offices at...">
+    </div>
+
+    <div class="hf">
+      <label>Your Contact Phone *</label>
+      <input type="tel" id="job-phone" placeholder="256701234567">
+    </div>
+
+    <div class="hf">
+      <label>Application Deadline</label>
+      <input type="date" id="job-deadline">
+    </div>
+  </div>
+
+  <!-- PACKAGE SELECTION -->
+  <div class="hiring-card">
+    <h3>📦 Choose Your Package</h3>
+
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
+
+      <label style="display:flex;align-items:center;gap:12px;padding:14px;
+        border:2px solid #e5e7eb;border-radius:12px;cursor:pointer;transition:.2s"
+        id="pkg-top-label">
+        <input type="radio" name="job-pkg" value="top" id="pkg-top"
+          onchange="selectJobPkg('top')" style="width:18px;height:18px;accent-color:#ff6600">
+        <div>
+          <p style="margin:0;font-weight:800;font-size:15px;color:#111827">
+            ⭐ Top Ad — UGX 20,000 / week
+          </p>
+          <p style="margin:4px 0 0;font-size:12px;color:#6b7280">
+            Pinned at the very top of Seeking Work · Bold orange border · 3× more views
+          </p>
+        </div>
+      </label>
+
+      <label style="display:flex;align-items:center;gap:12px;padding:14px;
+        border:2px solid #e5e7eb;border-radius:12px;cursor:pointer;transition:.2s"
+        id="pkg-std-label">
+        <input type="radio" name="job-pkg" value="standard" id="pkg-std"
+          onchange="selectJobPkg('standard')" style="width:18px;height:18px;accent-color:#1e40af">
+        <div>
+          <p style="margin:0;font-weight:800;font-size:15px;color:#111827">
+            📋 Standard — UGX 10,000 / week
+          </p>
+          <p style="margin:4px 0 0;font-size:12px;color:#6b7280">
+            Listed in Seeking Work section · Blue border · Seen by active job seekers
+          </p>
+        </div>
+      </label>
+
+    </div>
+  </div>
+
+  <!-- PAYMENT -->
+  <div class="hiring-card">
+    <h3>💳 Payment — Mobile Money</h3>
+
+    <div class="pay-box">
+      <h4>📱 How to Pay</h4>
+      <div class="pay-method pay-mtn">
+        <strong>MTN Mobile Money</strong><br>
+        Dial <strong>*165#</strong> → Pay With Momo → Merchant Code: <strong>27868095</strong><br>
+        Amount: <strong id="pay-amount-mtn">UGX 20,000</strong>
+      </div>
+      <div class="pay-method pay-airtel">
+        <strong>Airtel Money</strong><br>
+        Send to: <strong>+256575996624</strong><br>
+        Amount: <strong id="pay-amount-airtel">UGX 20,000</strong>
+      </div>
+    </div>
+
+    <div class="hf">
+      <label>Transaction ID / Reference *</label>
+      <input type="text" id="job-txn" placeholder="Enter the ID you received after paying e.g. 1234567890">
+    </div>
+  </div>
+
+  <!-- SUBMIT -->
+  <button id="job-submit-btn" onclick="submitHiringAd()"
+    style="width:100%;background:#1e40af;color:white;border:none;padding:16px;
+    border-radius:14px;font-weight:800;font-size:16px;cursor:pointer;font-family:inherit;
+    transition:.2s">
+    🚀 Submit Job Ad
+  </button>
+
+  <p style="text-align:center;font-size:12px;color:#9ca3af;margin-top:12px">
+    Your ad will be reviewed and published within 1 hour of payment confirmation
+  </p>
+
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+
+<script type="module">
+  import { db, auth, collection, addDoc } from "./firebase.js";
+  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+  let currentUser = null;
+  let selectedPkg = "top";
+
+  onAuthStateChanged(auth, user => { currentUser = user; });
+
+  window.selectJobPkg = function(pkg) {
+    selectedPkg = pkg;
+    const amount = pkg === "top" ? "UGX 20,000" : "UGX 10,000";
+    document.getElementById("pay-amount-mtn").textContent    = amount;
+    document.getElementById("pay-amount-airtel").textContent = amount;
+
+    // Highlight selected
+    document.getElementById("pkg-top-label").style.borderColor =
+      pkg === "top" ? "#ff6600" : "#e5e7eb";
+    document.getElementById("pkg-std-label").style.borderColor =
+      pkg === "standard" ? "#1e40af" : "#e5e7eb";
+  };
+
+  // Default highlight
+  window.selectJobPkg("top");
+  document.getElementById("pkg-top").checked = true;
+  document.getElementById("pkg-top-label").style.borderColor = "#ff6600";
+
+  window.submitHiringAd = async function() {
+    const title    = document.getElementById("job-title").value.trim();
+    const company  = document.getElementById("job-company").value.trim();
+    const type     = document.getElementById("job-type").value;
+    const category = document.getElementById("job-category").value;
+    const location = document.getElementById("job-location").value;
+    const salary   = document.getElementById("job-salary").value;
+    const desc     = document.getElementById("job-desc").value.trim();
+    const phone    = document.getElementById("job-phone").value.trim();
+    const txnRef   = document.getElementById("job-txn").value.trim();
+    const apply    = document.getElementById("job-apply").value.trim();
+    const deadline = document.getElementById("job-deadline").value;
+    const exp      = document.getElementById("job-experience").value;
+    const edu      = document.getElementById("job-education").value;
+    const gender   = document.getElementById("job-gender").value;
+
+    if (!title || !company || !type || !category || !location || !salary || !desc || !phone) {
+      alert("Please fill all required fields marked with *");
+      return;
+    }
+    if (!txnRef) {
+      document.getElementById("job-txn").style.borderColor = "#ef4444";
+      document.getElementById("job-txn").focus();
+      alert("Please enter your transaction ID after paying");
+      return;
+    }
+
+    const price = selectedPkg === "top" ? 20000 : 10000;
+    const payRef = `JOB-${Date.now().toString().slice(-8)}`;
+
+    const btn = document.getElementById("job-submit-btn");
+    btn.textContent = "Submitting...";
+    btn.disabled    = true;
+
+    try {
+      // Save to Firestore
+      await addDoc(collection(db, "job_ads"), {
+        title, company, type, category, location, salary, desc,
+        apply, deadline, experience: exp, education: edu, gender,
+        phone, txnRef, payRef,
+        package:    selectedPkg,
+        price,
+        status:     "pending",           // admin approves after verifying payment
+        isTop:      selectedPkg === "top",
+        isPremium:  selectedPkg === "top",
+        views:      0,
+        userId:     currentUser?.uid || "",
+        userEmail:  currentUser?.email || "",
+        createdAt:  new Date(),
+        expiresAt:  new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
+      });
+
+      // Open admin WhatsApp with all details
+      const waMsg = encodeURIComponent(
+        `Hello ZiBuy Admin 👋\n\n` +
+        `I have submitted a *We Are Hiring* job ad.\n\n` +
+        `📋 *Job Details:*\n` +
+        `• Title: *${title}*\n` +
+        `• Company: *${company}*\n` +
+        `• Type: ${type}\n` +
+        `• Category: ${category}\n` +
+        `• Location: ${location}\n` +
+        `• Salary: ${salary}\n\n` +
+        `💳 *Payment:*\n` +
+        `• Package: *${selectedPkg === "top" ? "⭐ Top Ad" : "📋 Standard"}*\n` +
+        `• Amount: *UGX ${price.toLocaleString()}*\n` +
+        `• Reference: *${payRef}*\n` +
+        `• Transaction ID: *${txnRef}*\n\n` +
+        `📱 Contact: ${phone}\n\n` +
+        `Please verify payment and publish the job ad. Thank you!`
+      );
+
+      window.open(`https://wa.me/256790548910?text=${waMsg}`, "_blank");
+
+      // Success screen
+      document.querySelector(".hiring-wrap").innerHTML = `
+        <div style="text-align:center;padding:60px 20px">
+          <p style="font-size:56px;margin-bottom:16px">✅</p>
+          <h2 style="font-size:22px;font-weight:800;margin-bottom:8px;color:#111827">Job Ad Submitted!</h2>
+          <p style="color:#6b7280;margin-bottom:6px">Reference: <strong style="color:#1e40af">${payRef}</strong></p>
+          <p style="color:#6b7280;margin-bottom:24px">
+            We'll verify your payment and publish your ad within <strong>1 hour</strong>.
+            You'll receive a WhatsApp confirmation.
+          </p>
+          <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+            <a href="index.html" style="background:#ff6600;color:white;padding:13px 24px;
+              border-radius:12px;font-weight:800;text-decoration:none">🏪 Back to ZiBuy</a>
+            <a href="index.html?cat=seeking-work" style="background:#f3f4f6;color:#374151;
+              padding:13px 24px;border-radius:12px;font-weight:800;text-decoration:none">
+              💼 View Job Listings</a>
+          </div>
+        </div>
+      `;
+
+    } catch (err) {
+      console.error(err);
+      alert("Failed to submit: " + err.message);
+      btn.textContent = "🚀 Submit Job Ad";
+      btn.disabled    = false;
+    }
+  };
+</script>
+
+</body>
+</html>
