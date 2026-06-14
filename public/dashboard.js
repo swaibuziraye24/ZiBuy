@@ -227,30 +227,28 @@ async function loadMyProducts() {
           <p class="ad-meta">📅 Posted: ${new Date(p.createdAt?.toDate?.() || p.createdAt).toLocaleDateString()}</p>
           
           <div class="ad-actions">
-            <button class="btn btn-sm btn-edit" onclick="editProduct('${p.id}')">✏️ Edit</button>
-            <button class="btn btn-sm btn-sold" onclick="markSold('${p.id}')">✓ Sold</button>
-            ${!p.isPremium ? `
-          ${p.category === "seeking-work"
-              ? `<button class="btn btn-sm"
-                  style="background:#1e40af;color:white;border:none;cursor:pointer"
-                  onclick="boostCV('${p.id}','${p.name.replace(/'/g,"\\'")}')">
-                  📌 Boost CV
-                </button>`
-              : !p.isPremium
-                ? `<button class="btn btn-sm btn-featured"
-                    onclick="boostFromDashboard('${p.id}','${p.name.replace(/'/g,"\\'")}')">
-                    ⭐ Boost
+              <button class="btn btn-sm btn-edit" onclick="editProduct('${p.id}')">✏️ Edit</button>
+              <button class="btn btn-sm btn-sold" onclick="markSold('${p.id}')">✓ Sold</button>
+
+              ${p.category === "seeking-work"
+                ? `<button class="btn btn-sm"
+                    style="background:#1e40af;color:white;border:none;cursor:pointer;border-radius:8px"
+                    onclick="boostCV('${p.id}','${p.name.replace(/'/g,"\\'")}')">
+                    📌 Boost CV
                   </button>`
-                : `<button class="btn btn-sm"
-                    style="background:#10b981;color:white;border:none;cursor:default">
-                    ✅ Featured
-                  </button>`
-            }
-            ` : `
-              <button class="btn btn-sm" style="background:#10b981;color:white;border:none;cursor:default">✅ Featured</button>
-            `}
-            <button class="btn btn-sm btn-delete" onclick="deleteProduct('${p.id}')">🗑️ Delete</button>
-          </div>
+                : p.isPremium
+                  ? `<button class="btn btn-sm"
+                      style="background:#10b981;color:white;border:none;cursor:default;border-radius:8px">
+                      ✅ Featured
+                    </button>`
+                  : `<button class="btn btn-sm btn-featured"
+                      onclick="boostFromDashboard('${p.id}','${p.name.replace(/'/g,"\\'")}')">
+                      ⭐ Boost
+                    </button>`
+              }
+
+              <button class="btn btn-sm btn-delete" onclick="deleteProduct('${p.id}')">🗑️ Delete</button>
+            </div>
         </div>
       </div>
     `).join("");
