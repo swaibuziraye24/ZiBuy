@@ -340,6 +340,17 @@
       onclick="window.location.href='admin-analytics.html'">
       <span class="nav-icon">📈</span> Analytics
     </button>
+
+  <button class="admin-nav-item" onclick="showSection('banners', this)">
+  🖼️ Banners
+</button>
+<button class="admin-nav-item" onclick="showSection('reminders', this)">
+  📲 WA Reminders
+</button>
+<button class="admin-nav-item" onclick="showSection('job-ads', this)">
+  💼 Job Ads
+</button>
+
   </aside>
 
   <!-- ── MAIN ── -->
@@ -641,6 +652,83 @@
           <p style="color:var(--gray);font-size:13px">Loading...</p>
         </div>
       </div>
+
+<!-- ── WHATSAPP REMINDERS SECTION ── -->
+<div class="admin-section" id="section-reminders">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+    <h2 style="margin:0">📲 WhatsApp Reminders</h2>
+    <button onclick="loadReminders()"
+      style="background:#f3f4f6;border:none;padding:8px 16px;border-radius:8px;
+      font-weight:700;font-size:13px;cursor:pointer">🔄 Refresh</button>
+  </div>
+
+  <div style="background:#fff4ee;border:1.5px solid #ffd9bf;border-radius:12px;
+    padding:14px;margin-bottom:20px;font-size:13px;color:#92400e">
+    💡 These are auto-generated reminders for users whose plans or boosts are
+    expiring soon. Click <strong>Send via WhatsApp</strong> to open WhatsApp
+    with the message pre-filled, then press Send.
+  </div>
+
+  <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+    <button onclick="filterReminders('all')" class="action-btn btn-approve" id="rem-filter-all">
+      All
+    </button>
+    <button onclick="filterReminders('plan_expiry')" class="action-btn" id="rem-filter-plan"
+      style="background:#fef3c7;color:#92400e">
+      Plan Expiry
+    </button>
+    <button onclick="filterReminders('boost_expiry')" class="action-btn" id="rem-filter-boost"
+      style="background:#dbeafe;color:#1e40af">
+      Boost Expiry
+    </button>
+    <button onclick="filterReminders('unsent')" class="action-btn" id="rem-filter-unsent"
+      style="background:#fee2e2;color:#991b1b">
+      Unsent Only
+    </button>
+  </div>
+
+  <div id="reminders-list">
+    <p style="color:#6b7280;text-align:center;padding:40px">
+      Click Refresh to load reminders
+    </p>
+  </div>
+</div>
+
+<!-- ── JOB ADS SECTION ── -->
+<div class="admin-section" id="section-job-ads">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+    <h2 style="margin:0">💼 Job Ads</h2>
+    <button onclick="loadJobAdsAdmin()"
+      style="background:#f3f4f6;border:none;padding:8px 16px;border-radius:8px;
+      font-weight:700;font-size:13px;cursor:pointer">🔄 Refresh</button>
+  </div>
+  <div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;min-width:600px">
+      <thead>
+        <tr style="background:#f9fafb">
+          <th style="padding:12px;text-align:left;font-size:12px;color:#6b7280;
+            text-transform:uppercase;border-bottom:2px solid #e5e7eb">Job Title</th>
+          <th style="padding:12px;text-align:left;font-size:12px;color:#6b7280;
+            text-transform:uppercase;border-bottom:2px solid #e5e7eb">Company</th>
+          <th style="padding:12px;text-align:left;font-size:12px;color:#6b7280;
+            text-transform:uppercase;border-bottom:2px solid #e5e7eb">Package</th>
+          <th style="padding:12px;text-align:left;font-size:12px;color:#6b7280;
+            text-transform:uppercase;border-bottom:2px solid #e5e7eb">Payment</th>
+          <th style="padding:12px;text-align:left;font-size:12px;color:#6b7280;
+            text-transform:uppercase;border-bottom:2px solid #e5e7eb">Status</th>
+          <th style="padding:12px;text-align:left;font-size:12px;color:#6b7280;
+            text-transform:uppercase;border-bottom:2px solid #e5e7eb">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="job-ads-table-body">
+        <tr><td colspan="6" style="text-align:center;padding:40px;color:#6b7280">
+          Click Refresh to load job ads
+        </td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
     </div>
 
   </main>
