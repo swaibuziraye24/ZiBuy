@@ -112,8 +112,8 @@ async function loadBannerAd() {
   .then(({ increment, updateDoc, doc }) => {
     updateDoc(doc(db, "banner_ads", bannerDoc.id), {
       impressions: increment(1)
-    });
-  }).catch(e => console.warn("Impression track failed:", e));
+    }).catch(() => {}); // silent — logged-out users can't write, that's ok
+  }).catch(() => {});
 
 
     }
