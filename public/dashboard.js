@@ -230,7 +230,22 @@ async function loadMyProducts() {
             <button class="btn btn-sm btn-edit" onclick="editProduct('${p.id}')">✏️ Edit</button>
             <button class="btn btn-sm btn-sold" onclick="markSold('${p.id}')">✓ Sold</button>
             ${!p.isPremium ? `
-              <button class="btn btn-sm btn-featured" onclick="boostFromDashboard('${p.id}', '${p.name.replace(/'/g, "\\'")}')">⭐ Boost</button>
+          ${p.category === "seeking-work"
+              ? `<button class="btn btn-sm"
+                  style="background:#1e40af;color:white;border:none;cursor:pointer"
+                  onclick="boostCV('${p.id}','${p.name.replace(/'/g,"\\'")}')">
+                  📌 Boost CV
+                </button>`
+              : !p.isPremium
+                ? `<button class="btn btn-sm btn-featured"
+                    onclick="boostFromDashboard('${p.id}','${p.name.replace(/'/g,"\\'")}')">
+                    ⭐ Boost
+                  </button>`
+                : `<button class="btn btn-sm"
+                    style="background:#10b981;color:white;border:none;cursor:default">
+                    ✅ Featured
+                  </button>`
+            }
             ` : `
               <button class="btn btn-sm" style="background:#10b981;color:white;border:none;cursor:default">✅ Featured</button>
             `}
@@ -517,6 +532,160 @@ window.submitDashboardBoost = async function(productId, productName, days, price
     console.error("Boost submit error:", err);
     alert("❌ Error: " + err.message);
     btn.textContent = "📲 Send Reference to Admin WhatsApp";
+    btn.disabled    = false;
+  }
+};
+
+
+
+// ============================================
+// CV BOOST — pin seeking-work ad to top
+// ============================================
+window.boostCV = function(productId, productName) {
+  if (!currentUser) { alert("Please login first"); return; }
+
+  const payRef = `CV-${productId.slice(0,8).toUpperCase()}`;
+
+  const modal = document.createElement("div");
+  modal.className = "modal open";
+  modal.id = "cv-boost-modal";
+  modal.innerHTML = `
+    <div class="modal-box" style="max-width:460px;max-height:90vh;overflow-y:auto">
+      <div class="modal-header">
+        <h2>📌 Boost Your CV</h2>
+        <button class="modal-close" onclick="document.getElementById('cv-boost-modal').remove()">×</button>
+      </div>
+
+      <p style="color:#6b7280;font-size:14px;margin-bottom:16px;line-height:1.6">
+        Pin <strong>${productName}</strong> to the top of the
+        Seeking Work section — employers see you first!
+      </p>
+
+      <!-- Plans -->
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
+        <div class="boost-option" onclick="selectCVPlan(this,7,5000)">
+          <div>
+            <p style="margin:0;font-weight:800">7 Days — UGX 5,000</p>
+            <p style="margin:4px 0 0;font-size:12px;color:#6b7280">📌 Pinned at top for 7 days</p>
+          </div>
+          <input type="radio" name="cv-plan">
+        </div>
+        <div class="boost-option" onclick="selectCVPlan(this,14,8000)">
+          <div>
+            <p style="margin:0;font-weight:800">14 Days — UGX 8,000</p>
+            <p style="margin:4px 0 0;font-size:12px;color:#6b7280">📌 Pinned at top for 14 days</p>
+          </div>
+          <input type="radio" name="cv-plan">
+        </div>
+        <div class="boost-option" onclick="selectCVPlan(this,30,15000)">
+          <div>
+            <p style="margin:0;font-weight:800">30 Days — UGX 15,000</p>
+            <p style="margin:4px 0 0;font-size:12px;color:#6b7280">📌 Pinned at top for 30 days</p>
+          </div>
+          <input type="radio" name="cv-plan">
+        </div>
+      </div>
+
+      <!-- Payment -->
+      <div id="cv-pay-details" style="display:none;margin-bottom:14px">
+        <div style="background:#fff9c4;border:1.5px solid #fde047;border-radius:10px;
+          padding:12px;margin-bottom:8px;font-size:13px">
+          <strong>MTN:</strong> Dial *165# → Pay With Momo →
+          Merchant: <strong>27868095</strong> →
+          Amount: <strong id="cv-amount-mtn">—</strong>
+        </div>
+        <div style="background:#fee2e2;border:1.5px solid #fca5a5;border-radius:10px;
+          padding:12px;margin-bottom:12px;font-size:13px">
+          <strong>Airtel:</strong> Send to <strong>+256575996624</strong> →
+          Amount: <strong id="cv-amount-airtel">—</strong>
+        </div>
+        <input type="text" id="cv-txn-ref"
+          placeholder="Enter transaction ID after paying"
+          style="width:100%;padding:12px 14px;border:1.5px solid #e5e7eb;border-radius:10px;
+          font-size:14px;font-family:inherit;outline:none;box-sizing:border-box"
+          onfocus="this.style.borderColor='#1e40af'" onblur="this.style.borderColor='#e5e7eb'">
+      </div>
+
+      <button onclick="submitCVBoost('${productId}','${productName}','${payRef}')"
+        style="width:100%;background:#1e40af;color:white;border:none;padding:14px;
+        border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit">
+        📌 Boost My CV
+      </button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+};
+
+window._cvPlan = null;
+
+window.selectCVPlan = function(el, days, price) {
+  document.querySelectorAll("input[name='cv-plan']").forEach(r => r.checked = false);
+  el.querySelector("input").checked = true;
+  window._cvPlan = { days, price };
+
+  const amount = "UGX " + price.toLocaleString();
+  document.getElementById("cv-amount-mtn").textContent    = amount;
+  document.getElementById("cv-amount-airtel").textContent = amount;
+  document.getElementById("cv-pay-details").style.display = "block";
+};
+
+window.submitCVBoost = async function(productId, productName, payRef) {
+  if (!window._cvPlan) { alert("Please select a plan first"); return; }
+
+  const txnRef = document.getElementById("cv-txn-ref").value.trim();
+  if (!txnRef) {
+    document.getElementById("cv-txn-ref").style.borderColor = "#ef4444";
+    document.getElementById("cv-txn-ref").focus();
+    return;
+  }
+
+  const { days, price } = window._cvPlan;
+  const btn = event.target;
+  btn.textContent = "Submitting...";
+  btn.disabled    = true;
+
+  try {
+    await addDoc(collection(db, "cv_boosts"), {
+      productId,
+      productName,
+      userId:    currentUser.uid,
+      userEmail: currentUser.email,
+      days,
+      price,
+      payRef,
+      txnRef,
+      status:    "pending",
+      isTop:     false,
+      createdAt: new Date()
+    });
+
+    document.getElementById("cv-boost-modal").remove();
+
+    // WhatsApp admin
+    const waMsg = encodeURIComponent(
+      `Hello ZiBuy Admin 👋\n\n` +
+      `*CV Boost Request:*\n\n` +
+      `📄 *CV/Ad:* ${productName}\n` +
+      `⏱️ *Duration:* ${days} days\n` +
+      `💰 *Amount:* UGX ${price.toLocaleString()}\n` +
+      `🔖 *Reference:* ${payRef}\n` +
+      `📋 *Transaction ID:* ${txnRef}\n` +
+      `📧 *Email:* ${currentUser.email}\n\n` +
+      `Please verify and pin this CV to the top. Thank you!`
+    );
+    window.open(`https://wa.me/256790548910?text=${waMsg}`, "_blank");
+
+    // Success toast
+    const toast = document.createElement("div");
+    toast.className   = "toast success";
+    toast.textContent = "✅ CV boost request sent! Activates within 1 hour.";
+    document.getElementById("toast-container")?.appendChild(toast);
+    setTimeout(() => toast.remove(), 4000);
+
+  } catch(err) {
+    console.error(err);
+    alert("Failed: " + err.message);
+    btn.textContent = "📌 Boost My CV";
     btn.disabled    = false;
   }
 };
