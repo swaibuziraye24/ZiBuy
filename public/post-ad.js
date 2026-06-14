@@ -561,6 +561,77 @@ accessories: [
     { id:"cf-brand",     label:"Brand (optional)", type:"text", placeholder:"e.g. Pandora, Local Artisan" },
   ],
 
+  services: [
+    { id:"cf-service-type",  label:"Service Type",              type:"select",
+      options:[
+        "Plumbing & Pipe Fitting","Electrical Installation","Construction & Building",
+        "Painting & Decoration","Cleaning & Fumigation","Salon & Hair Dressing",
+        "Barbershop","Massage & Spa","Photography & Videography","Catering & Cooking",
+        "Event Planning & Decoration","Transport & Moving","Boda Boda / Taxi",
+        "Teaching & Tutoring","IT Support & Repair","Web & App Development",
+        "Graphic Design & Printing","Tailoring & Fashion Design","Welding & Fabrication",
+        "Carpentry & Furniture","Mechanics & Auto Repair","Tyre & Exhaust",
+        "Generator Repair","CCTV & Security Installation","Solar Installation",
+        "Borehole Drilling","Landscaping & Gardening","Pest Control",
+        "Laundry & Dry Cleaning","Shoe Repair & Cobbling","Legal Services",
+        "Accounting & Bookkeeping","Medical & Nursing Care","Veterinary Services",
+        "Music & Entertainment","MC / Host","Other"
+      ]
+    },
+    { id:"cf-service-mode",  label:"How Service is Delivered",  type:"select",
+      options:[
+        "I come to the client","Client comes to me","Both options available",
+        "Online / Remote only"
+      ]
+    },
+    { id:"cf-experience",    label:"Years of Experience",       type:"select",
+      options:[
+        "Less than 1 year","1–2 years","3–5 years","5–10 years","10+ years"
+      ]
+    },
+    { id:"cf-pricing-type",  label:"Pricing Type",              type:"select",
+      options:[
+        "Fixed Price","Hourly Rate","Daily Rate","Per Project (Quote)","Negotiable"
+      ]
+    },
+    { id:"cf-availability",  label:"Availability",              type:"select",
+      options:[
+        "Available Now","Monday – Friday","Weekends Only","Evenings Only",
+        "24/7 Available","By Appointment Only","Flexible"
+      ]
+    },
+    { id:"cf-response-time", label:"Response Time",             type:"select",
+      options:[
+        "Within 1 hour","Within a few hours","Same day","Next day","Within 2–3 days"
+      ]
+    },
+    { id:"cf-area-covered",  label:"Area / Location Covered",   type:"select",
+      options:[
+        "Kampala only","Kampala & Wakiso","Greater Kampala","Central Uganda",
+        "Eastern Uganda","Northern Uganda","Western Uganda","All Uganda",
+        "Specific area – see description"
+      ]
+    },
+    { id:"cf-team-size",     label:"Working As",                type:"select",
+      options:[
+        "Individual / Solo","Small team (2–5 people)","Company / Large team"
+      ]
+    },
+    { id:"cf-qualification", label:"Qualifications / Certifications", type:"text",
+      placeholder:"e.g. Certified Electrician, Makerere Degree, 5 years KCCA licensed"
+    },
+    { id:"cf-languages",     label:"Languages Spoken",          type:"select",
+      options:[
+        "English","Luganda","English & Luganda","Swahili","Runyankole",
+        "Acholi","Ateso","Multiple languages"
+      ]
+    },
+    { id:"cf-negotiable",    label:"Price Negotiable?",         type:"select",
+      options:["Yes, open to negotiation","No, fixed price"]
+    },
+  ],
+
+
   vehicles: [
     { id:"cf-make",         label:"Make / Brand",        type:"select",
       options:["Toyota","Nissan","Honda","Suzuki","Mitsubishi","Mercedes-Benz","BMW","Land Rover","Isuzu","Tata","Volkswagen","Subaru","Mazda","Ford","Hyundai","Kia","Other"] },
