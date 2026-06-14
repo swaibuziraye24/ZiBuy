@@ -89,32 +89,24 @@ async function checkExistingVerification() {
 
 // ── Submit verification ───────────────────────
 window.submitVerification = async function() {
-  if (!currentUser) {
-    alert("Please login first");
-    return;
-  }
-
-  // Collect values
   const fullName     = document.getElementById("full-name").value.trim();
   const businessName = document.getElementById("business-name").value.trim();
   const phone        = document.getElementById("phone-number").value.trim();
   const location     = document.getElementById("location").value;
   const bio          = document.getElementById("bio").value.trim();
-  const txnRef       = document.getElementById("txn-ref").value.trim();
   const idDoc        = document.getElementById("id-document").files[0];
-  const licenseDoc   = document.getElementById("business-license").files[0];
+  const txnRef       = document.getElementById("verif-txn-ref").value.trim();
 
-  // Validate
-  if (!txnRef) {
-    const txnInput = document.getElementById("txn-ref");
-    txnInput.style.borderColor = "#ef4444";
-    txnInput.focus();
-    txnInput.placeholder = "⚠️ Please enter your transaction ID first";
+  if (!fullName || !businessName || !phone || !location || !idDoc) {
+    alert("Fill all required fields");
     return;
   }
 
-  if (!fullName || !businessName || !phone || !location) {
-    alert("❌ Please fill all required fields");
+  if (!txnRef) {
+    const txnInput = document.getElementById("verif-txn-ref");
+    txnInput.style.borderColor = "#ef4444";
+    txnInput.focus();
+    alert("Please enter your transaction ID after paying UGX 50,000");
     return;
   }
 
