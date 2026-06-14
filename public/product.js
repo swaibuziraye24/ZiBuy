@@ -70,7 +70,18 @@ function buildDetailsCard(p) {
     destination:"Destination", duration:"Duration", "group-size":"Group Size",
     includes:"Includes", education:"Education Level",
     "location-pref":"Preferred Work Location", salary:"Expected Salary",
-    organic:"Farming Method", "service-type":"Service Type"
+    organic:"Farming Method", "service-type":"Service Type",
+    "service-mode":"How Service is Delivered",
+    experience:"Years of Experience",
+    "pricing-type":"Pricing Type",
+    availability:"Availability",
+    "response-time":"Response Time",
+    "area-covered":"Area Covered",
+    "team-size":"Working As",
+    qualification:"Qualifications",
+    languages:"Languages Spoken",
+    negotiable:"Price Negotiable",
+    delivery:"Can Travel to Client",
   };
 
   // Condition badge color
