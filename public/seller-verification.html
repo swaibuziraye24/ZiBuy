@@ -149,11 +149,51 @@
         style="width:100%;padding:8px;border:1.5px solid #e5e7eb;border-radius:10px;font-family:inherit;box-sizing:border-box">
     </div>
 
-    <!-- Submit button -->
-    <button id="submit-btn" onclick="submitVerification()"
-      style="width:100%;padding:16px;border:none;border-radius:12px;background:#ff6600;color:white;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit">
-      📲 Submit & Send Reference to Admin WhatsApp
-    </button>
+    <!-- Payment section -->
+      <div style="background:linear-gradient(135deg,#fff4ee,#fffbeb);border:2px solid #ff6600;
+        border-radius:14px;padding:18px;margin-bottom:16px">
+        <p style="font-size:15px;font-weight:800;color:#111827;margin:0 0 4px">
+          ✅ Verification Fee — <span style="color:#ff6600">UGX 50,000</span> (One-time)
+        </p>
+        <p style="font-size:12px;color:#6b7280;margin:0 0 14px;line-height:1.6">
+          Pay once and keep your ✅ Verified badge permanently.
+          Buyers trust verified sellers — get more enquiries and sales.
+        </p>
+
+        <!-- MTN -->
+        <div style="background:#fff9c4;border:1.5px solid #fde047;border-radius:10px;
+          padding:12px;margin-bottom:8px;font-size:13px;color:#374151">
+          <strong>MTN Mobile Money</strong><br>
+          Dial <strong style="color:#ff6600">*165#</strong> → Pay With Momo →
+          Merchant Code: <strong style="color:#ff6600">27868095</strong> →
+          Amount: <strong>UGX 50,000</strong>
+        </div>
+
+        <!-- Airtel -->
+        <div style="background:#fee2e2;border:1.5px solid #fca5a5;border-radius:10px;
+          padding:12px;margin-bottom:14px;font-size:13px;color:#374151">
+          <strong>Airtel Money</strong><br>
+          Send to <strong style="color:#ef4444">+256575996624</strong> →
+          Amount: <strong>UGX 50,000</strong>
+        </div>
+
+        <label style="display:block;font-size:12px;font-weight:800;color:#374151;
+          text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">
+          Transaction ID *
+        </label>
+        <input type="text" id="verif-txn-ref"
+          placeholder="Enter the ID from your payment confirmation e.g. 1234567890"
+          style="width:100%;padding:12px 14px;border:1.5px solid #e5e7eb;border-radius:10px;
+          font-size:14px;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:6px"
+          onfocus="this.style.borderColor='#ff6600'" onblur="this.style.borderColor='#e5e7eb'">
+        <p style="font-size:11px;color:#9ca3af;margin:0">
+          The confirmation message ID you received on your phone after paying
+        </p>
+      </div>
+
+      <button onclick="submitVerification()" class="btn btn-orange" style="width:100%;padding:14px">
+        ✅ Submit Verification — UGX 50,000
+      </button>
 
   </div>
 
