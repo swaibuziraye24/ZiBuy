@@ -876,6 +876,135 @@ const topTrending = trending.slice(0, 10);
   });
 };
  
+ 
+// ============================================
+// LOAD JOB ADS (seeking-work category)
+// ============================================
+async function loadJobAds() {
+  const container = document.getElementById("products");
+  if (!container) return;
+
+  try {
+    const snap = await getDocs(query(
+      collection(db, "job_ads"),
+      where("status", "==", "active")
+    ));
+
+    if (snap.empty) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">💼</div>
+          <p>No job listings yet</p>
+          <p style="font-size:13px;margin-top:8px">
+            <a href="hiring.html" style="color:#ff6600;font-weight:700">
+              Post a job →
+            </a>
+          </p>
+        </div>`;
+      return;
+    }
+
+    // Sort: top ads first, then by date
+    const jobs = snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => {
+        if (a.isTop && !b.isTop) return -1;
+        if (!a.isTop && b.isTop)  return  1;
+        return (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0);
+      });
+
+    container.innerHTML = jobs.map(job => {
+      const deadline = job.deadline
+        ? new Date(job.deadline).toLocaleDateString("en-UG", { day:"numeric", month:"short" })
+        : "Open";
+
+      const daysAgo = job.createdAt?.toDate?.()
+        ? Math.floor((new Date() - job.createdAt.toDate()) / 86400000)
+        : 0;
+
+      return `
+        <div onclick="window.location.href='job.html?id=${job.id}'"
+          style="background:white;border-radius:14px;padding:18px;
+          box-shadow:0 2px 12px rgba(0,0,0,0.07);cursor:pointer;
+          border-left:4px solid ${job.isTop ? "#ff6600" : "#1e40af"};
+          transition:.2s;grid-column:1/-1"
+          onmouseover="this.style.transform='translateX(4px)'"
+          onmouseout="this.style.transform='translateX(0)'">
+
+          <div style="display:flex;align-items:flex-start;
+            justify-content:space-between;gap:12px;flex-wrap:wrap">
+
+            <div style="flex:1;min-width:0">
+              <!-- Badges -->
+              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+                ${job.isTop ? `
+                  <span style="background:#ff6600;color:white;padding:3px 10px;
+                    border-radius:20px;font-size:11px;font-weight:800">
+                    ⭐ TOP AD
+                  </span>` : ""}
+                <span style="background:#dbeafe;color:#1e40af;padding:3px 10px;
+                  border-radius:20px;font-size:11px;font-weight:800">
+                  💼 WE ARE HIRING
+                </span>
+                <span style="background:#f3f4f6;color:#374151;padding:3px 10px;
+                  border-radius:20px;font-size:11px;font-weight:700">
+                  ${job.type || "Full Time"}
+                </span>
+              </div>
+
+              <!-- Title -->
+              <h3 style="margin:0 0 4px;font-size:16px;font-weight:800;
+                color:#111827;line-height:1.3">
+                ${job.title}
+              </h3>
+
+              <!-- Company -->
+              <p style="margin:0 0 8px;font-size:13px;font-weight:700;color:#ff6600">
+                🏢 ${job.company}
+              </p>
+
+              <!-- Meta -->
+              <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:#6b7280">
+                <span>📍 ${job.location}</span>
+                <span>💰 ${job.salary}</span>
+                <span>🗂️ ${job.category}</span>
+              </div>
+            </div>
+
+            <!-- Right side -->
+            <div style="text-align:right;flex-shrink:0">
+              <p style="margin:0 0 6px;font-size:11px;color:#9ca3af">
+                ${daysAgo === 0 ? "Today" : daysAgo + "d ago"}
+              </p>
+              <p style="margin:0;font-size:11px;color:#6b7280">
+                Deadline: <strong>${deadline}</strong>
+              </p>
+              <div style="margin-top:10px;background:#ff6600;color:white;
+                padding:8px 16px;border-radius:8px;font-size:12px;font-weight:800">
+                View Job →
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Description preview -->
+          <p style="margin:10px 0 0;font-size:13px;color:#6b7280;
+            line-height:1.6;overflow:hidden;display:-webkit-box;
+            -webkit-line-clamp:2;-webkit-box-orient:vertical">
+            ${job.desc || ""}
+          </p>
+
+        </div>`;
+    }).join("");
+
+    // Make grid single-column for job cards
+    container.style.gridTemplateColumns = "1fr";
+
+  } catch(e) {
+    console.error("loadJobAds error:", e);
+  }
+}
+
 
 // ============================================
 // CATEGORY FILTER
