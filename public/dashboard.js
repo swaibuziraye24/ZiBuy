@@ -541,6 +541,14 @@ window.editProduct = function(productId) {
 
   const modal = document.getElementById("edit-modal");
   modal.style.display = "flex";
+
+  const preview = document.getElementById("edit-image-preview");
+
+preview.innerHTML = product.images.map(img => `
+  <img src="${img}"
+       style="width:80px;height:80px;object-fit:cover;border-radius:8px;margin:4px">
+`).join("");
+
 };
 
 window.closeEditModal = function() {
@@ -567,6 +575,41 @@ window.saveEdit = async function() {
   btn.disabled    = true;
 
   try {
+
+    const imageFiles =
+  document.getElementById("edit-images").files;
+
+let imageUrls = [];
+
+if (imageFiles.length > 0) {
+
+  const {
+    getStorage,
+    ref,
+    uploadBytes,
+    getDownloadURL
+  } = await import(
+    "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js"
+  );
+
+  const storage = getStorage();
+
+  for (const file of imageFiles) {
+
+    const storageRef = ref(
+      storage,
+      `products/${Date.now()}-${file.name}`
+    );
+
+    await uploadBytes(storageRef, file);
+
+    const url =
+      await getDownloadURL(storageRef);
+
+    imageUrls.push(url);
+  }
+}
+
     await updateDoc(doc(db, "products", editingProductId), {
       name,
       price,
