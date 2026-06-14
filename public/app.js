@@ -107,16 +107,15 @@ async function loadBannerAd() {
     `;
 
     // Track impression
-    const bannerDoc = snap.docs[0];
-    const banner = bannerDoc.data(); {
+    const bannerDoc = snap.docs[0]; {
      import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js")
   .then(({ increment, updateDoc, doc }) => {
     updateDoc(doc(db, "banner_ads", bannerDoc.id), {
       impressions: increment(1)
     });
-  });
+  }).catch(e => console.warn("Impression track failed:", e));
 
-  
+
     }
   } catch (e) {}
 }
