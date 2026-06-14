@@ -1444,3 +1444,121 @@ window.expireJobAd = async function(jobId) {
     loadJobAdsAdmin();
   } catch(e) { showToast("Failed", "error"); }
 };
+
+// ══════════════════════════════════════════════
+//  CATEGORY SPONSORS
+// ══════════════════════════════════════════════
+
+window.addCategorySponsor = async function() {
+  const category    = document.getElementById("cs-category").value;
+  const sponsorName = document.getElementById("cs-name").value.trim();
+  const sponsorUrl  = document.getElementById("cs-url").value.trim();
+  const price       = Number(document.getElementById("cs-price").value || 0);
+  const txnRef      = document.getElementById("cs-txn").value.trim();
+
+  if (!category || !sponsorName || !txnRef) {
+    showToast("Fill category, sponsor name and transaction ID", "error");
+    return;
+  }
+
+  try {
+    // Deactivate any existing sponsor for this category
+    const existing = await getDocs(query(
+      collection(db, "category_sponsors"),
+      where("category", "==", category),
+      where("active",   "==", true)
+    ));
+    for (const d of existing.docs) {
+      await updateDoc(doc(db, "category_sponsors", d.id), { active: false });
+    }
+
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 30);
+
+    await addDoc(collection(db, "category_sponsors"), {
+      category,
+      sponsorName,
+      sponsorUrl,
+      price,
+      txnRef,
+      active:    true,
+      expiresAt,
+      createdAt: new Date()
+    });
+
+    document.getElementById("cs-category").value = "";
+    document.getElementById("cs-name").value     = "";
+    document.getElementById("cs-url").value      = "";
+    document.getElementById("cs-price").value    = "";
+    document.getElementById("cs-txn").value      = "";
+
+    showToast(`✅ ${sponsorName} now sponsors ${category}!`, "success");
+    loadCategorySponsorsAdmin();
+  } catch(e) {
+    showToast("Failed: " + e.message, "error");
+  }
+};
+
+window.loadCategorySponsorsAdmin = async function() {
+  const list = document.getElementById("sponsors-list");
+  if (!list) return;
+
+  try {
+    const snap = await getDocs(collection(db, "category_sponsors"));
+    const items = snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
+
+    if (items.length === 0) {
+      list.innerHTML = "<p style='color:#6b7280;font-size:13px'>No sponsors yet</p>";
+      return;
+    }
+
+    list.innerHTML = items.map(s => `
+      <div style="display:flex;justify-content:space-between;align-items:center;
+        padding:12px;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:8px;
+        background:${s.active ? "white" : "#fafafa"};flex-wrap:wrap;gap:10px">
+        <div>
+          <p style="margin:0;font-weight:800;font-size:14px">${s.sponsorName}</p>
+          <p style="margin:3px 0;font-size:12px;color:#ff6600;font-weight:700">
+            Category: ${s.category}
+          </p>
+          <p style="margin:0;font-size:11px;color:#9ca3af">
+            ${fmtDate(s.createdAt)} · Expires: ${fmtDate(s.expiresAt)} ·
+            UGX ${Number(s.price||0).toLocaleString()}
+          </p>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button onclick="toggleSponsor('${s.id}',${!s.active})"
+            style="background:${s.active ? "#dcfce7" : "#fee2e2"};
+            color:${s.active ? "#166534" : "#991b1b"};border:none;
+            padding:6px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">
+            ${s.active ? "✅ Active" : "❌ Paused"}
+          </button>
+          <button onclick="deleteSponsor('${s.id}')"
+            style="background:#fee2e2;color:#ef4444;border:none;
+            padding:6px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">
+            🗑️
+          </button>
+        </div>
+      </div>`).join("");
+
+  } catch(e) { showToast("Failed to load", "error"); }
+};
+
+window.toggleSponsor = async function(id, active) {
+  try {
+    await updateDoc(doc(db, "category_sponsors", id), { active });
+    showToast(active ? "Sponsor activated" : "Sponsor paused", "info");
+    loadCategorySponsorsAdmin();
+  } catch(e) { showToast("Failed", "error"); }
+};
+
+window.deleteSponsor = async function(id) {
+  if (!confirm("Delete this sponsorship?")) return;
+  try {
+    await deleteDoc(doc(db, "category_sponsors", id));
+    showToast("Deleted", "info");
+    loadCategorySponsorsAdmin();
+  } catch(e) { showToast("Failed", "error"); }
+};
