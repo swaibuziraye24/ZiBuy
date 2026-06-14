@@ -340,20 +340,14 @@
       onclick="window.location.href='admin-analytics.html'">
       <span class="nav-icon">📈</span> Analytics
     </button>
-
-  <button class="admin-nav-item" onclick="showSection('banners', this)">
-  🖼️ Banners
-</button>
-<button class="admin-nav-item"
-  onclick="window.showSection('reminders', this)">
-  📲 WA Reminders
-</button>
-
-<button class="admin-nav-item"
-  onclick="window.showSection('job-ads', this)">
-  💼 Job Ads
-</button>
-
+    <button class="admin-nav-item"
+      onclick="window.showSection('reminders', this);loadReminders()">
+      <span class="nav-icon">📲</span> WA Reminders
+    </button>
+    <button class="admin-nav-item"
+      onclick="window.showSection('job-ads', this);loadJobAdsAdmin()">
+      <span class="nav-icon">💼</span> Job Ads
+    </button>
   </aside>
 
   <!-- ── MAIN ── -->
@@ -656,11 +650,14 @@
         </div>
       </div>
 
-<!-- ── WHATSAPP REMINDERS SECTION ── -->
-<div class="admin-section" id="section-reminders">
+    </div>
+    <!-- ══ end section-banners ══ -->
+
+    <!-- ══ WHATSAPP REMINDERS ══ -->
+    <div class="admin-section" id="section-reminders">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
     <h2 style="margin:0">📲 WhatsApp Reminders</h2>
-    <button onclick="loadReminders()"
+    <button onclick="window.loadReminders()"
       style="background:#f3f4f6;border:none;padding:8px 16px;border-radius:8px;
       font-weight:700;font-size:13px;cursor:pointer">🔄 Refresh</button>
   </div>
@@ -730,9 +727,7 @@
       </tbody>
     </table>
   </div>
-</div>
-
-    </div>
+    <!-- ══ end section-job-ads ══ -->
 
   </main>
 </div>
