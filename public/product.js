@@ -262,11 +262,26 @@ async function loadProduct() {
         ${contactHTML}
 
         <!-- Safety tip -->
-        ${buildDetailsCard(p)}
+       ${buildDetailsCard(p)}
+
+        ${p.videoUrl ? `
+          <div style="margin-top:20px;background:white;border:1.5px solid #e5e7eb;
+            border-radius:16px;overflow:hidden">
+            <div style="padding:14px 18px;background:#f9fafb;border-bottom:1.5px solid #e5e7eb">
+              <p style="margin:0;font-size:14px;font-weight:800;color:#111827">🎬 Service Video</p>
+            </div>
+            <div style="padding:14px">
+              <video controls style="width:100%;border-radius:10px;max-height:320px;background:#000"
+                preload="metadata">
+                <source src="${p.videoUrl}">
+                Your browser does not support video playback.
+              </video>
+            </div>
+          </div>
+        ` : ""}
 
         <div style="margin-top:16px;padding:16px;background:#fff4ee;border-radius:12px;font-size:13px;color:#b45309">
-          🛡️ <strong>Safe buying tip:</strong> Meet the seller in a public place and check the item before paying.
-        </div>
+          🛡️ <strong>Safe buying tip:</strong>
 
       </div>
     `;
