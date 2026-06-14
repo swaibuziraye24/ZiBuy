@@ -599,15 +599,37 @@
 
       <div class="admin-card" style="margin-bottom:14px">
         <h2>➕ Add New Banner</h2>
+
         <input id="bn-title" placeholder="Advertiser name (e.g. MTN Uganda)"
           class="search-input">
-        <input id="bn-image" placeholder="Banner image URL (1200×300px)"
+
+        <!-- FILE PICK — replaces the URL input -->
+        <label style="display:flex;align-items:center;gap:12px;padding:14px;
+          border:2px dashed #e5e7eb;border-radius:10px;cursor:pointer;
+          background:#fafafa;margin-bottom:10px"
+          onmouseover="this.style.borderColor='#ff6600'"
+          onmouseout="this.style.borderColor='#e5e7eb'">
+          <span style="font-size:26px">🖼️</span>
+          <div>
+            <p style="margin:0;font-size:13px;font-weight:700;color:#374151">
+              Tap to choose banner image
+            </p>
+            <p style="margin:3px 0 0;font-size:11px;color:#9ca3af">
+              JPG / PNG · 1200×300px recommended · Max 5MB
+            </p>
+          </div>
+          <input type="file" id="bn-file-input" accept="image/*"
+            style="display:none" onchange="handleBannerImagePick(event)">
+        </label>
+        <div id="bn-image-preview"></div>
+
+        <input id="bn-url" placeholder="Destination URL e.g. /product.html?id=abc123"
           class="search-input">
-        <input id="bn-url" placeholder="Click destination URL (https://...)"
+
+        <input id="bn-price" type="number" placeholder="Monthly price (UGX) — optional"
           class="search-input">
-        <input id="bn-price" type="number" placeholder="Monthly price (UGX)"
-          class="search-input">
-        <button onclick="addBanner()"
+
+        <button id="bn-save-btn" onclick="addBanner()"
           style="background:#ff6600;color:white;border:none;padding:12px;border-radius:10px;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit;width:100%">
           📢 Publish Banner
         </button>
