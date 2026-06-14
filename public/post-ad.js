@@ -722,6 +722,16 @@ function categoryEmoji(cat) {
   return map[cat] || "📋";
 }
 
+
+
+const titleInput    = document.getElementById("ad-title");
+
+const descInput     = document.getElementById("ad-description");
+
+const priceInput    = document.getElementById("ad-price");
+
+const locationInput = document.getElementById("ad-location");
+
 // ── Collect all field values to save with the ad ─
 function collectCategoryFields(category) {
   const fields = CATEGORY_FIELDS[category] || [];
