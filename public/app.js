@@ -62,7 +62,7 @@ function initApp() {
   loadProducts();
   loadBannerAd();
   loadFeaturedShops();
-
+}
 
   // ── Restore scroll position and category after back navigation ──
   const savedScroll   = sessionStorage.getItem("zibuy_scroll");
@@ -70,7 +70,13 @@ function initApp() {
 
   if (savedCategory && savedCategory !== "all") {
     // Re-apply last active category filter
-    filterCategory(savedCategory);
+    if (
+  savedCategory &&
+  savedCategory !== "all" &&
+  typeof window.filterCategory === "function"
+) {
+  window.filterCategory(savedCategory);
+}
     document.querySelectorAll(".cat-btn").forEach(btn => {
       btn.classList.toggle("active", btn.dataset.cat === savedCategory);
     });
@@ -121,7 +127,6 @@ async function loadBannerAd() {
 }
 
 
-}
 
 // ============================================
 // ============================================
@@ -331,7 +336,9 @@ window.allProducts = allProducts;
 filteredProducts = [...allProducts];
 
 // loadFeaturedProducts();
-renderProducts();
+if (typeof window.renderProducts === "function") {
+    window.renderProducts();
+}
 
 } catch (err) {
   console.error(err);
@@ -1035,15 +1042,6 @@ window.filterCategory = function(category, el) {
   renderProducts();
 
 
-  // =========================
-// 1.5 SUBCATEGORY FILTER
-// =========================
-if (currentSubcategory && currentSubcategory !== "all") {
-  products = products.filter(p =>
-    (p.subcategory || "").toLowerCase() === currentSubcategory.toLowerCase()
-  );
-}
-
 
 window.openSellerShop = function(userId) {
 
@@ -1547,7 +1545,7 @@ window.addEventListener("beforeinstallprompt", (e) => {
 });
 
 // Install button click
-function installZiBuy() {
+window.installZiBuy = function() {
   if (!deferredPrompt) return;
 
   deferredPrompt.prompt();
@@ -1742,6 +1740,3 @@ window.customerRegister = async function() {
 };
 
 
-window.filterCategory = filterCategory;
-window.renderProducts = renderProducts;
-window.logoutCustomer = logoutCustomer;
