@@ -17,6 +17,11 @@ import {
   PLAN_SCORE
 } from "./ranking-service.js";
 
+// ── Save scroll position before leaving page ──
+window.addEventListener("beforeunload", () => {
+  sessionStorage.setItem("zibuy_scroll", window.scrollY);
+});
+
 // =============================
 // GLOBAL STATE (ZiBuy SAFE FIX)
 // =============================
@@ -57,6 +62,27 @@ function initApp() {
   loadProducts();
   loadBannerAd();
   loadFeaturedShops();
+
+
+  // ── Restore scroll position and category after back navigation ──
+  const savedScroll   = sessionStorage.getItem("zibuy_scroll");
+  const savedCategory = sessionStorage.getItem("zibuy_last_category");
+
+  if (savedCategory && savedCategory !== "all") {
+    // Re-apply last active category filter
+    filterCategory(savedCategory);
+    document.querySelectorAll(".cat-btn").forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.cat === savedCategory);
+    });
+  }
+
+  if (savedScroll) {
+    // Wait for products to render then scroll
+    setTimeout(() => {
+      window.scrollTo({ top: parseInt(savedScroll), behavior: "instant" });
+      sessionStorage.removeItem("zibuy_scroll");
+    }, 400);
+  }
 
 // Load banner ads from Firestore
 async function loadBannerAd() {
@@ -854,6 +880,7 @@ const topTrending = trending.slice(0, 10);
 // ============================================
 
 window.filterCategory = function(category, el) {
+  sessionStorage.setItem("zibuy_last_category", category);
   currentCategory = category;
   currentSubcategory = "all";
 
