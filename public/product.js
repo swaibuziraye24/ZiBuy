@@ -18,6 +18,21 @@ import { showToast } from "./app.js";
 
 import "./app.js";
 
+
+// ── Smart back button ─────────────────────────
+window.goBackToHome = function() {
+  // Always go back to index — browser history handles the rest
+  // But if we came FROM index (referrer), use history.back()
+  // so scroll position and category are preserved
+  const referrer = document.referrer;
+  if (referrer && referrer.includes("index.html") ||
+      referrer && new URL(referrer).pathname === "/") {
+    history.back();
+  } else {
+    window.location.href = "index.html";
+  }
+};
+
 let currentUser = null;
 
 onAuthStateChanged(auth, (user) => {
