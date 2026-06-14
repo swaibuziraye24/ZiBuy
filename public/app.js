@@ -56,6 +56,7 @@ if (document.readyState === "loading") {
   initApp();
 }
 
+
 function initApp() {
   console.log("App initialized");
   setupAuthStateListener();
@@ -64,26 +65,28 @@ function initApp() {
   loadFeaturedShops();
   loadCategorySponsors();
 
-
   // ── Restore scroll position and category after back navigation ──
   const savedScroll   = sessionStorage.getItem("zibuy_scroll");
   const savedCategory = sessionStorage.getItem("zibuy_last_category");
 
   if (savedCategory && savedCategory !== "all") {
-    // Re-apply last active category filter
-    filterCategory(savedCategory);
-    document.querySelectorAll(".cat-btn").forEach(btn => {
-      btn.classList.toggle("active", btn.dataset.cat === savedCategory);
-    });
+    setTimeout(() => {
+      if (typeof filterCategory === "function") {
+        filterCategory(savedCategory);
+        document.querySelectorAll(".cat-btn").forEach(btn => {
+          btn.classList.toggle("active", btn.dataset.cat === savedCategory);
+        });
+      }
+    }, 500);
   }
 
   if (savedScroll) {
-    // Wait for products to render then scroll
     setTimeout(() => {
       window.scrollTo({ top: parseInt(savedScroll), behavior: "instant" });
       sessionStorage.removeItem("zibuy_scroll");
-    }, 400);
+    }, 600);
   }
+
 
 // Load banner ads from Firestore
 async function loadBannerAd() {
@@ -332,7 +335,7 @@ window.allProducts = allProducts;
 filteredProducts = [...allProducts];
 
 // loadFeaturedProducts();
-renderProducts();
+window.renderProducts();
 
 } catch (err) {
   console.error(err);
@@ -1075,25 +1078,10 @@ window.filterCategory = function(category, el) {
   if (el) el.classList.add("active");
 
   renderProducts();
-
-
-  // =========================
-// 1.5 SUBCATEGORY FILTER
-// =========================
-if (currentSubcategory && currentSubcategory !== "all") {
-  products = products.filter(p =>
-    (p.subcategory || "").toLowerCase() === currentSubcategory.toLowerCase()
-  );
-}
-
-
-window.openSellerShop = function(userId) {
-
-  window.location.href =
-    `shop.html?seller=${userId}`;
-
 };
 
+window.openSellerShop = function(userId) {
+  window.location.href = `shop.html?seller=${userId}`;
 };
 
 window.filterSubcategory = function(subcat) {
