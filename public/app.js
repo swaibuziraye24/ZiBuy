@@ -1740,3 +1740,8 @@ window.customerRegister = async function() {
     alert("❌ " + err.message);
   }
 };
+
+
+window.filterCategory = filterCategory;
+window.renderProducts = renderProducts;
+window.logoutCustomer = logoutCustomer;
