@@ -93,24 +93,17 @@ self.addEventListener("fetch", (event) => {
   }
 
 // Everything else: network first, cache fallback
- const reqClone = event.request.clone();
-event.respondWith(
-  caches.match(event.request).then((cachedResponse) => {
-    if (cachedResponse) return cachedResponse;
-
-    return fetch(reqClone).then((fetchResponse) => {
-      if (!fetchResponse || fetchResponse.status !== 200 ||
-          fetchResponse.type === "opaque") {
-        return fetchResponse;
-      }
-      const resClone = fetchResponse.clone();
-      caches.open(CACHE_NAME).then((cache) => {
-        cache.put(event.request, resClone);
-      });
-      return fetchResponse;
-    }).catch(() => caches.match("/offline.html"));
-  })
-);
+  const requestClone = event.request.clone();
+  event.respondWith(
+    fetch(requestClone)
+      .then((res) => {
+        if (!res || res.status !== 200 || res.type === "opaque") return res;
+        const resClone = res.clone();
+        caches.open(CACHE_NAME).then((c) => c.put(event.request, resClone));
+        return res;
+      })
+      .catch(() => caches.match(event.request))
+  );
 });
 
 // ── Push Notifications ────────────────────────
