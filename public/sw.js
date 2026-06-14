@@ -92,14 +92,17 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Everything else: network first, cache fallback
+// Everything else: network first, cache fallback
+  const requestClone = event.request.clone();
   event.respondWith(
-    fetch(request)
+    fetch(requestClone)
       .then((res) => {
-        caches.open(CACHE_NAME).then((c) => c.put(request, res.clone()));
+        if (!res || res.status !== 200 || res.type === "opaque") return res;
+        const resClone = res.clone();
+        caches.open(CACHE_NAME).then((c) => c.put(event.request, resClone));
         return res;
       })
-      .catch(() => caches.match(request))
+      .catch(() => caches.match(event.request))
   );
 });
 
