@@ -842,17 +842,52 @@ window.handleImageUpload = function(event) {
 // ============================================
 
 function updateReview() {
-  document.getElementById("review-cat").textContent = selectedCategory;
-  document.getElementById("review-title").textContent = titleInput.value;
-  document.getElementById("review-price").textContent = "UGX " + Number(priceInput.value).toLocaleString();
-  document.getElementById("review-location").textContent = locationInput.value;
-  document.getElementById("review-desc").textContent = descInput.value;
-  document.getElementById("review-subcat").textContent = selectedSubcategory;
+
+  // Safe setter — skips if element doesn't exist
+  function setText(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val;
+  }
+  function setHTML(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = val;
+  }
+
+  const emoji = { phones:"📱",electronics:"💻",fashion:"👗",shoes:"👟",
+    beauty:"💄",bags:"👜",groceries:"🛒",watches:"⌚",computers:"🖥️",
+    gaming:"🎮",home:"🏠",accessories:"💎",vehicles:"🚗",animals:"🐾",
+    babies:"👶",agriculture:"🌾",commercial:"🏗️",tours:"✈️","seeking-work":"💼" };
+
+  setText("review-cat",
+    (emoji[selectedCategory] || "📋") + " " +
+    selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1).replace("-"," ")
+  );
+  setText("review-title",    titleInput.value);
+  setText("review-price",    "UGX " + Number(priceInput.value).toLocaleString());
+  setText("review-location", locationInput.value);
+  setText("review-desc",     descInput.value);
+
+  // Category details summary
+  const details  = typeof collectCategoryFields === "function"
+    ? collectCategoryFields(selectedCategory) : {};
+  const detailEl = document.getElementById("review-details");
+  if (detailEl && Object.keys(details).length > 0) {
+    detailEl.innerHTML = Object.entries(details)
+      .map(([k, v]) => `
+        <div style="display:flex;justify-content:space-between;
+          padding:6px 0;border-bottom:1px solid #f0f0f0;font-size:13px">
+          <span style="color:#6b7280;text-transform:capitalize">${k.replace(/-/g," ")}</span>
+          <strong style="color:#111827">${v}</strong>
+        </div>`)
+      .join("");
+  }
+
+  // Cover image preview
   if (uploadedImages.length > 0) {
     const reader = new FileReader();
-    reader.onload = function(e) {
-      document.getElementById("review-image").innerHTML = `<img src="${e.target.result}" alt="preview">`;
-    };
+    reader.onload = (e) => setHTML("review-image",
+      `<img src="${e.target.result}" alt="preview" style="width:100%;height:100%;object-fit:cover">`
+    );
     reader.readAsDataURL(uploadedImages[0]);
   }
 }
