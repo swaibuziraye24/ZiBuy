@@ -273,6 +273,13 @@ async function loadProduct() {
         ${contactHTML}
 
         <!-- Safety tip -->
+        <div style="margin-top:14px;padding:14px 16px;background:#fffbeb;border:1px solid #fde68a;border-radius:12px;font-size:13px;color:#92400e;display:flex;gap:8px;align-items:flex-start">
+  <span>🛡️</span>
+  <span>
+    <strong>Safety tip:</strong>
+    Meet in a public place, inspect the item before paying, and avoid sending money in advance.
+  </span>
+</div>
        ${buildDetailsCard(p)}
 
         ${p.videoUrl ? `
