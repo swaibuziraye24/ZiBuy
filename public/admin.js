@@ -1077,18 +1077,63 @@ async function loadBanners() {
   } catch (e) { console.error(e); }
 }
 
-window.addBanner = async function() {
-  const title    = document.getElementById("bn-title").value.trim();
-  const imageUrl = document.getElementById("bn-image").value.trim();
-  const url      = document.getElementById("bn-url").value.trim();
-  const price    = Number(document.getElementById("bn-price").value);
+// ── Banner image file (held in memory until save) ──
+let _bannerImageFile = null;
 
-  if (!title || !imageUrl || !url) {
-    showToast("Fill all banner fields", "error");
+window.handleBannerImagePick = function(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  if (!file.type.startsWith("image/")) {
+    showToast("Please select an image file", "error");
+    return;
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    showToast("Image too large — max 5MB", "error");
     return;
   }
 
+  _bannerImageFile = file;
+
+  // Show preview
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const prev = document.getElementById("bn-image-preview");
+    if (prev) {
+      prev.innerHTML = `
+        <img src="${e.target.result}"
+          style="width:100%;height:100px;object-fit:cover;border-radius:10px;margin-top:8px;border:1.5px solid #e5e7eb">
+        <p style="font-size:11px;color:#10b981;font-weight:700;margin-top:4px">✅ ${file.name}</p>
+      `;
+    }
+  };
+  reader.readAsDataURL(file);
+};
+
+window.addBanner = async function() {
+  const title = document.getElementById("bn-title").value.trim();
+  const url   = document.getElementById("bn-url").value.trim();
+  const price = Number(document.getElementById("bn-price").value || 0);
+
+  if (!title) { showToast("Enter a banner title", "error"); return; }
+  if (!_bannerImageFile) { showToast("Please select a banner image", "error"); return; }
+  if (!url) { showToast("Enter a destination URL", "error"); return; }
+
+  const btn = document.getElementById("bn-save-btn");
+  if (btn) { btn.textContent = "Uploading..."; btn.disabled = true; }
+
   try {
+    // Import storage
+    const { getStorage, ref, uploadBytes, getDownloadURL }
+      = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js");
+    const storage = getStorage();
+
+    // Upload image to Firebase Storage
+    const storageRef = ref(storage, `banner-ads/${Date.now()}-${_bannerImageFile.name}`);
+    await uploadBytes(storageRef, _bannerImageFile, { contentType: _bannerImageFile.type });
+    const imageUrl = await getDownloadURL(storageRef);
+
+    // Save to Firestore
     await addDoc(collection(db, "banner_ads"), {
       title, imageUrl, url, price,
       active:      true,
@@ -1097,14 +1142,24 @@ window.addBanner = async function() {
       createdAt:   new Date()
     });
 
-    document.getElementById("bn-title").value  = "";
-    document.getElementById("bn-image").value  = "";
-    document.getElementById("bn-url").value    = "";
-    document.getElementById("bn-price").value  = "";
+    // Reset form
+    document.getElementById("bn-title").value = "";
+    document.getElementById("bn-url").value   = "";
+    document.getElementById("bn-price").value = "";
+    document.getElementById("bn-file-input").value = "";
+    const prev = document.getElementById("bn-image-preview");
+    if (prev) prev.innerHTML = "";
+    _bannerImageFile = null;
 
     showToast("Banner published ✅", "success");
     loadBanners();
-  } catch (e) { showToast("Failed", "error"); }
+
+  } catch (e) {
+    console.error(e);
+    showToast("Failed: " + e.message, "error");
+  } finally {
+    if (btn) { btn.textContent = "Publish Banner"; btn.disabled = false; }
+  }
 };
 
 window.toggleBanner = async function(bannerId, active) {
