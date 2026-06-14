@@ -673,3 +673,242 @@ exports.aiRecommendations = regionalFunctions.pubsub
       return null;
     }
   });
+
+
+
+  // ============================================
+//   ZiBuy — Expiry Reminder System
+//   Runs in Cloud Functions (functions/index.js)
+//   Add these two functions to your existing
+//   functions/index.js file
+// ============================================
+
+// ── Add these imports at the top of index.js if not already there ──
+// const functions  = require("firebase-functions");
+// const admin      = require("firebase-admin");
+// const nodemailer = require("nodemailer");
+// const regionalFunctions = functions.region("us-central1");
+
+// ============================================
+// 1. PLAN EXPIRY REMINDERS (runs daily at 8am)
+//    Checks business_accounts expiring in 2 days
+//    Sends WhatsApp link + in-app notification
+// ============================================
+
+exports.planExpiryReminders = regionalFunctions
+  .pubsub.schedule("0 8 * * *")          // every day at 8:00am
+  .timeZone("Africa/Kampala")
+  .onRun(async () => {
+
+    const db  = admin.firestore();
+    const now = new Date();
+
+    // Window: expires between now and 48 hours from now
+    const in48h = new Date(now.getTime() + 48 * 60 * 60 * 1000);
+
+    try {
+      const snap = await db.collection("business_accounts")
+        .where("status",  "==", "active")
+        .where("endDate", ">",  now)
+        .where("endDate", "<=", in48h)
+        .get();
+
+      console.log(`Plan expiry reminders: ${snap.size} accounts expiring soon`);
+
+      for (const docSnap of snap.docs) {
+        const sub    = docSnap.data();
+        const userId = sub.userId;
+        const plan   = sub.plan   || "free";
+        const email  = sub.email  || "";
+        const endDate = sub.endDate?.toDate?.() || new Date(sub.endDate);
+        const daysLeft = Math.ceil((endDate - now) / 86400000);
+
+        const planLabels = { bronze:"🥉 Bronze", silver:"🥈 Silver", gold:"🥇 Gold" };
+        const planLabel  = planLabels[plan] || plan;
+
+        const prices = { bronze:"15,000", silver:"35,000", gold:"80,000" };
+        const price  = prices[plan] || "15,000";
+
+        // ── 1. In-app notification ────────────
+        await db.collection("notifications").add({
+          userId,
+          type:      "plan_expiry",
+          title:     `⚠️ Your ${planLabel} Plan Expires in ${daysLeft} Day${daysLeft !== 1 ? "s" : ""}!`,
+          message:   `Renew now to keep your boosted ads, verified badge and business profile active. UGX ${price}/month.`,
+          relatedId: "business-plans.html",
+          read:      false,
+          createdAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        // ── 2. WhatsApp reminder message ──────
+        // Get user's phone from users collection
+        const userSnap = await db.collection("users").doc(userId).get();
+        const userData = userSnap.exists ? userSnap.data() : {};
+        const phone    = (userData.phone || "").replace(/\D/g, "");
+
+        if (phone) {
+          const waMsg = encodeURIComponent(
+            `Hello from ZiBuy 👋\n\n` +
+            `Your *${planLabel} Plan* expires in *${daysLeft} day${daysLeft !== 1 ? "s" : ""}*.\n\n` +
+            `Renew now to keep:\n` +
+            `✅ Your verified seller badge\n` +
+            `✅ Your boosted ads\n` +
+            `✅ Your business profile page\n` +
+            `✅ Priority placement in search\n\n` +
+            `*Renew for UGX ${price}/month:*\n` +
+            `📱 MTN: Dial *165# → Pay With Momo → Merchant: 27868095\n` +
+            `📱 Airtel: Send to +256575996624\n\n` +
+            `After paying, WhatsApp us your transaction ID to activate.\n\n` +
+            `Thank you for using ZiBuy! 🛍️`
+          );
+
+          // Log the WhatsApp link (admin can click to send manually,
+          // or integrate with WhatsApp Business API later)
+          await db.collection("whatsapp_reminders").add({
+            userId,
+            phone,
+            email,
+            plan,
+            daysLeft,
+            waLink:    `https://wa.me/${phone}?text=${waMsg}`,
+            adminLink: `https://wa.me/256${phone.slice(-9)}?text=${waMsg}`,
+            type:      "plan_expiry",
+            sent:      false,
+            createdAt: admin.firestore.FieldValue.serverTimestamp()
+          });
+        }
+
+        // ── 3. Email reminder ─────────────────
+        if (email) {
+          const transporter = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+              user: process.env.GMAIL_EMAIL,
+              pass: process.env.GMAIL_PASSWORD
+            }
+          });
+
+          await transporter.sendMail({
+            from:    `"ZiBuy Uganda" <${process.env.GMAIL_EMAIL}>`,
+            to:      email,
+            subject: `⚠️ Your ZiBuy ${planLabel} Plan Expires in ${daysLeft} Day${daysLeft !== 1 ? "s" : ""}`,
+            html: `
+              <div style="font-family:Arial,sans-serif;max-width:500px;margin:0 auto">
+                <div style="background:#ff6600;padding:24px;text-align:center;border-radius:12px 12px 0 0">
+                  <h1 style="color:white;margin:0;font-size:22px">ZiBuy Uganda</h1>
+                </div>
+                <div style="background:white;padding:28px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px">
+                  <h2 style="color:#111827;margin:0 0 12px">Your ${planLabel} Plan Expires Soon ⚠️</h2>
+                  <p style="color:#6b7280">Your plan expires in <strong style="color:#ef4444">${daysLeft} day${daysLeft !== 1 ? "s" : ""}</strong>. Renew now to keep all your benefits.</p>
+
+                  <div style="background:#fff4ee;border-radius:10px;padding:16px;margin:16px 0">
+                    <p style="margin:0 0 8px;font-weight:700;color:#111827">Benefits you'll lose if you don't renew:</p>
+                    <p style="margin:4px 0;color:#6b7280">✅ Verified seller badge</p>
+                    <p style="margin:4px 0;color:#6b7280">✅ Boosted ad placement</p>
+                    <p style="margin:4px 0;color:#6b7280">✅ Business profile page</p>
+                    <p style="margin:4px 0;color:#6b7280">✅ Priority placement in search</p>
+                  </div>
+
+                  <p style="font-weight:700;color:#111827;margin:16px 0 8px">Renew for UGX ${price}/month:</p>
+                  <p style="color:#6b7280;margin:4px 0">📱 <strong>MTN:</strong> Dial *165# → Pay With Momo → Merchant Code: <strong>27868095</strong></p>
+                  <p style="color:#6b7280;margin:4px 0">📱 <strong>Airtel:</strong> Send to <strong>+256575996624</strong></p>
+                  <p style="color:#6b7280;margin:12px 0">After paying, WhatsApp your transaction ID to <strong>+256790548910</strong></p>
+
+                  <p style="color:#9ca3af;font-size:12px;margin-top:24px">ZiBuy Uganda · Buy & Sell Safely 🇺🇬</p>
+                </div>
+              </div>
+            `
+          }).catch(e => console.warn("Email failed:", e.message));
+        }
+      }
+
+    } catch (e) {
+      console.error("planExpiryReminders error:", e);
+    }
+
+    return null;
+  });
+
+
+// ============================================
+// 2. BOOST EXPIRY REMINDERS (runs daily at 9am)
+//    Checks boost_requests expiring in 2 days
+// ============================================
+
+exports.boostExpiryReminders = regionalFunctions
+  .pubsub.schedule("0 9 * * *")          // every day at 9:00am
+  .timeZone("Africa/Kampala")
+  .onRun(async () => {
+
+    const db  = admin.firestore();
+    const now = new Date();
+    const in48h = new Date(now.getTime() + 48 * 60 * 60 * 1000);
+
+    try {
+      const snap = await db.collection("boost_requests")
+        .where("status",    "==", "approved")
+        .where("expiresAt", ">",  now)
+        .where("expiresAt", "<=", in48h)
+        .get();
+
+      console.log(`Boost expiry reminders: ${snap.size} boosts expiring soon`);
+
+      for (const docSnap of snap.docs) {
+        const boost      = docSnap.data();
+        const userId     = boost.userId;
+        const productName = boost.productName || "Your ad";
+        const expiresAt  = boost.expiresAt?.toDate?.() || new Date(boost.expiresAt);
+        const daysLeft   = Math.ceil((expiresAt - now) / 86400000);
+
+        // ── In-app notification ───────────────
+        await db.collection("notifications").add({
+          userId,
+          type:      "boost_expiry",
+          title:     `⭐ Your Boost Expires in ${daysLeft} Day${daysLeft !== 1 ? "s" : ""}!`,
+          message:   `"${productName}" will lose its featured placement soon. Boost again from UGX 5,000.`,
+          relatedId: boost.productId || null,
+          read:      false,
+          createdAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        // ── WhatsApp reminder ─────────────────
+        const userSnap = await db.collection("users").doc(userId).get();
+        const phone    = ((userSnap.exists ? userSnap.data().phone : "") || "").replace(/\D/g,"");
+
+        if (phone) {
+          const waMsg = encodeURIComponent(
+            `Hello from ZiBuy 👋\n\n` +
+            `Your ad boost for *"${productName}"* expires in *${daysLeft} day${daysLeft !== 1 ? "s" : ""}*.\n\n` +
+            `Without the boost, your ad goes back to normal placement and gets fewer views.\n\n` +
+            `*Re-boost from UGX 5,000:*\n` +
+            `• 7 Days — UGX 5,000\n` +
+            `• 14 Days — UGX 8,000\n` +
+            `• 30 Days — UGX 15,000\n\n` +
+            `📱 MTN: Dial *165# → Pay → Merchant: 27868095\n` +
+            `📱 Airtel: Send to +256575996624\n\n` +
+            `After paying, WhatsApp us your transaction ID and ad name.\n\n` +
+            `ZiBuy Uganda 🛍️`
+          );
+
+          await db.collection("whatsapp_reminders").add({
+            userId,
+            phone,
+            plan:      "boost",
+            productId: boost.productId,
+            productName,
+            daysLeft,
+            waLink:    `https://wa.me/${phone}?text=${waMsg}`,
+            adminLink: `https://wa.me/256${phone.slice(-9)}?text=${waMsg}`,
+            type:      "boost_expiry",
+            sent:      false,
+            createdAt: admin.firestore.FieldValue.serverTimestamp()
+          });
+        }
+      }
+
+    } catch (e) {
+      console.error("boostExpiryReminders error:", e);
+    }
+
+    return null;
+  });
