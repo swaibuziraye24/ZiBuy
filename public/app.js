@@ -107,13 +107,16 @@ async function loadBannerAd() {
     `;
 
     // Track impression
-    if (banner.id) {
-      import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js")
-        .then(({ increment, updateDoc, doc }) => {
-          updateDoc(doc(db, "banner_ads", snap.docs[0].id), {
-            impressions: increment(1)
-          });
-        });
+    const bannerDoc = snap.docs[0];
+    const banner = bannerDoc.data(); {
+     import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js")
+  .then(({ increment, updateDoc, doc }) => {
+    updateDoc(doc(db, "banner_ads", bannerDoc.id), {
+      impressions: increment(1)
+    });
+  });
+
+  
     }
   } catch (e) {}
 }
