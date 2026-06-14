@@ -1287,14 +1287,6 @@ function renderReminders(reminders) {
     </div>`).join("");
 }
 
-function fmtDate(date) {
-  if (!date) return "Unknown";
-
-  const d = date.toDate ? date.toDate() : new Date(date);
-
-  return d.toLocaleString();
-}
-
 
 window.markReminderSent = async function(reminderId) {
   try {
