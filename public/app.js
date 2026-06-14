@@ -62,7 +62,8 @@ function initApp() {
   loadProducts();
   loadBannerAd();
   loadFeaturedShops();
-}
+  loadCategorySponsors();
+
 
   // ── Restore scroll position and category after back navigation ──
   const savedScroll   = sessionStorage.getItem("zibuy_scroll");
@@ -70,13 +71,7 @@ function initApp() {
 
   if (savedCategory && savedCategory !== "all") {
     // Re-apply last active category filter
-    if (
-  savedCategory &&
-  savedCategory !== "all" &&
-  typeof window.filterCategory === "function"
-) {
-  window.filterCategory(savedCategory);
-}
+    filterCategory(savedCategory);
     document.querySelectorAll(".cat-btn").forEach(btn => {
       btn.classList.toggle("active", btn.dataset.cat === savedCategory);
     });
@@ -127,6 +122,7 @@ async function loadBannerAd() {
 }
 
 
+}
 
 // ============================================
 // ============================================
@@ -336,9 +332,7 @@ window.allProducts = allProducts;
 filteredProducts = [...allProducts];
 
 // loadFeaturedProducts();
-if (typeof window.renderProducts === "function") {
-    window.renderProducts();
-}
+renderProducts();
 
 } catch (err) {
   console.error(err);
@@ -883,6 +877,44 @@ const topTrending = trending.slice(0, 10);
   });
 };
  
+
+// ============================================
+// CATEGORY SPONSORSHIP — shows sponsor badge
+// under sponsored category button
+// ============================================
+async function loadCategorySponsors() {
+  try {
+    const snap = await getDocs(query(
+      collection(db, "category_sponsors"),
+      where("active", "==", true)
+    ));
+
+    snap.forEach(d => {
+      const s   = d.data();
+      const cat = s.category; // e.g. "phones"
+
+      // Find the category button
+      const btn = document.querySelector(`.cat-btn[data-cat="${cat}"]`);
+      if (!btn) return;
+
+      // Add sponsor label under button
+      btn.style.position   = "relative";
+      btn.style.paddingBottom = "20px";
+
+      const badge = document.createElement("span");
+      badge.style.cssText = `
+        position:absolute;bottom:3px;left:50%;transform:translateX(-50%);
+        font-size:9px;font-weight:800;color:#ff6600;white-space:nowrap;
+        letter-spacing:.3px;text-transform:uppercase;
+      `;
+      badge.textContent = `Sponsored by ${s.sponsorName}`;
+      btn.appendChild(badge);
+    });
+  } catch(e) {
+    console.warn("loadCategorySponsors:", e.message);
+  }
+}
+
  
 // ============================================
 // LOAD JOB ADS (seeking-work category)
@@ -1020,6 +1052,9 @@ async function loadJobAds() {
 window.filterCategory = function(category, el) {
   sessionStorage.setItem("zibuy_last_category", category);
 
+  // Show sponsor banner if this category is sponsored
+  loadCategoryBanner(category);
+
 // Job ads use a different collection
   if (category === "seeking-work") {
     document.querySelectorAll(".cat-btn").forEach(b =>
@@ -1041,6 +1076,15 @@ window.filterCategory = function(category, el) {
 
   renderProducts();
 
+
+  // =========================
+// 1.5 SUBCATEGORY FILTER
+// =========================
+if (currentSubcategory && currentSubcategory !== "all") {
+  products = products.filter(p =>
+    (p.subcategory || "").toLowerCase() === currentSubcategory.toLowerCase()
+  );
+}
 
 
 window.openSellerShop = function(userId) {
@@ -1102,6 +1146,36 @@ window.closeFilters = function() {
     panel.classList.remove("active");
   }
 };
+
+
+async function loadCategoryBanner(category) {
+  const strip = document.getElementById("sponsor-banner-strip");
+  const text  = document.getElementById("sponsor-strip-text");
+  const link  = document.getElementById("sponsor-strip-link");
+  if (!strip) return;
+
+  try {
+    const snap = await getDocs(query(
+      collection(db, "category_sponsors"),
+      where("category", "==", category),
+      where("active",   "==", true)
+    ));
+
+    if (snap.empty) {
+      strip.style.display = "none";
+      return;
+    }
+
+    const s = snap.docs[0].data();
+    strip.style.display     = "flex";
+    text.textContent        = `${category.charAt(0).toUpperCase()+category.slice(1)} — Brought to you by ${s.sponsorName}`;
+    link.href               = s.sponsorUrl || "#";
+    link.textContent        = `Visit ${s.sponsorName} →`;
+
+  } catch(e) {
+    strip.style.display = "none";
+  }
+}
 
 // ============================================
 // CART FUNCTIONS
@@ -1545,7 +1619,7 @@ window.addEventListener("beforeinstallprompt", (e) => {
 });
 
 // Install button click
-window.installZiBuy = function() {
+function installZiBuy() {
   if (!deferredPrompt) return;
 
   deferredPrompt.prompt();
