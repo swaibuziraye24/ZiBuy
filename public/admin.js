@@ -1178,3 +1178,266 @@ window.deleteBanner = async function(bannerId) {
     loadBanners();
   } catch (e) { showToast("Failed", "error"); }
 };
+
+
+// ══════════════════════════════════════════════
+//  WHATSAPP REMINDERS
+// ══════════════════════════════════════════════
+
+let allReminders    = [];
+let currentRemFilter = "all";
+
+window.loadReminders = async function() {
+  const list = document.getElementById("reminders-list");
+  if (!list) return;
+  list.innerHTML = `<p style="text-align:center;color:#6b7280;padding:40px">Loading...</p>`;
+
+  try {
+    const snap = await getDocs(collection(db, "whatsapp_reminders"));
+    allReminders = snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
+
+    renderReminders(allReminders);
+  } catch(e) {
+    list.innerHTML = `<p style="color:red;text-align:center;padding:40px">
+      Failed to load: ${e.message}</p>`;
+  }
+};
+
+window.filterReminders = function(filter) {
+  currentRemFilter = filter;
+  let filtered = allReminders;
+
+  if (filter === "plan_expiry")  filtered = allReminders.filter(r => r.type === "plan_expiry");
+  if (filter === "boost_expiry") filtered = allReminders.filter(r => r.type === "boost_expiry");
+  if (filter === "unsent")       filtered = allReminders.filter(r => !r.sent);
+
+  renderReminders(filtered);
+};
+
+function renderReminders(reminders) {
+  const list = document.getElementById("reminders-list");
+  if (!list) return;
+
+  if (reminders.length === 0) {
+    list.innerHTML = `<p style="color:#6b7280;text-align:center;padding:40px">
+      No reminders found</p>`;
+    return;
+  }
+
+  list.innerHTML = reminders.map(r => `
+    <div style="background:white;border-radius:12px;padding:16px;
+      margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06);
+      border-left:4px solid ${r.sent ? "#10b981" : r.type === "plan_expiry" ? "#f59e0b" : "#3b82f6"}">
+
+      <div style="display:flex;justify-content:space-between;
+        align-items:flex-start;gap:12px;flex-wrap:wrap">
+        <div>
+          <div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap">
+            <span style="background:${r.type === "plan_expiry" ? "#fef3c7" : "#dbeafe"};
+              color:${r.type === "plan_expiry" ? "#92400e" : "#1e40af"};
+              padding:2px 8px;border-radius:20px;font-size:11px;font-weight:800">
+              ${r.type === "plan_expiry" ? "📅 Plan Expiry" : "⭐ Boost Expiry"}
+            </span>
+            <span style="background:${r.sent ? "#dcfce7" : "#fee2e2"};
+              color:${r.sent ? "#166534" : "#991b1b"};
+              padding:2px 8px;border-radius:20px;font-size:11px;font-weight:800">
+              ${r.sent ? "✅ Sent" : "⏳ Unsent"}
+            </span>
+            <span style="background:#f3f4f6;color:#374151;
+              padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700">
+              ${r.daysLeft} day${r.daysLeft !== 1 ? "s" : ""} left
+            </span>
+          </div>
+
+          <p style="margin:0 0 3px;font-weight:800;font-size:14px;color:#111827">
+            ${r.email || r.userId?.slice(0,16) || "Unknown user"}
+          </p>
+          <p style="margin:0;font-size:12px;color:#6b7280">
+            📱 ${r.phone || "No phone"} ·
+            ${r.plan ? "Plan: " + r.plan.toUpperCase() : ""}
+            ${r.productName ? "Ad: " + r.productName : ""}
+          </p>
+          <p style="margin:4px 0 0;font-size:11px;color:#9ca3af">
+            ${fmtDate(r.createdAt)}
+          </p>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:6px">
+          ${!r.sent ? `
+            <a href="${r.adminLink || r.waLink || "#"}" target="_blank"
+              onclick="markReminderSent('${r.id}')"
+              style="background:#25d366;color:white;padding:8px 14px;border-radius:8px;
+              font-size:12px;font-weight:800;text-decoration:none;text-align:center;
+              white-space:nowrap">
+              💬 Send WhatsApp
+            </a>` : `
+            <span style="background:#f3f4f6;color:#9ca3af;padding:8px 14px;
+              border-radius:8px;font-size:12px;font-weight:700;text-align:center">
+              ✅ Already Sent
+            </span>`}
+          <button onclick="deleteReminder('${r.id}')"
+            style="background:#fee2e2;color:#ef4444;border:none;padding:6px 14px;
+            border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">
+            🗑️ Remove
+          </button>
+        </div>
+      </div>
+    </div>`).join("");
+}
+
+window.markReminderSent = async function(reminderId) {
+  try {
+    await updateDoc(doc(db, "whatsapp_reminders", reminderId), {
+      sent:   true,
+      sentAt: new Date()
+    });
+    showToast("Marked as sent ✅", "success");
+    loadReminders();
+  } catch(e) { showToast("Failed", "error"); }
+};
+
+window.deleteReminder = async function(reminderId) {
+  if (!confirm("Remove this reminder?")) return;
+  try {
+    await deleteDoc(doc(db, "whatsapp_reminders", reminderId));
+    showToast("Removed", "info");
+    loadReminders();
+  } catch(e) { showToast("Failed", "error"); }
+};
+
+// ══════════════════════════════════════════════
+//  JOB ADS ADMIN
+// ══════════════════════════════════════════════
+
+window.loadJobAdsAdmin = async function() {
+  const tbody = document.getElementById("job-ads-table-body");
+  if (!tbody) return;
+  tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;
+    padding:30px;color:#6b7280">Loading...</td></tr>`;
+
+  try {
+    const snap = await getDocs(collection(db, "job_ads"));
+    const jobs  = snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
+
+    if (jobs.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;
+        padding:30px;color:#6b7280">No job ads yet</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = jobs.map(j => `
+      <tr style="border-bottom:1px solid #f0f0f0">
+        <td style="padding:12px">
+          <p style="margin:0;font-weight:800;font-size:13px">${j.title}</p>
+          <p style="margin:2px 0 0;font-size:11px;color:#6b7280">
+            📍 ${j.location} · ${j.type || "Full Time"}
+          </p>
+        </td>
+        <td style="padding:12px;font-size:13px;font-weight:700">${j.company}</td>
+        <td style="padding:12px">
+          <span style="background:${j.isTop ? "#fff4ee" : "#f3f4f6"};
+            color:${j.isTop ? "#ff6600" : "#374151"};padding:3px 8px;
+            border-radius:20px;font-size:11px;font-weight:800">
+            ${j.isTop ? "⭐ Top" : "📋 Standard"}
+          </span>
+        </td>
+        <td style="padding:12px">
+          <p style="margin:0;font-size:12px;color:#ff6600;font-weight:800">
+            UGX ${Number(j.price||0).toLocaleString()}
+          </p>
+          <p style="margin:2px 0 0;font-size:11px;color:#6b7280">
+            Ref: ${j.txnRef || "—"}
+          </p>
+        </td>
+        <td style="padding:12px">
+          <span class="plan-chip ${j.status === "active" ? "chip-approved" :
+            j.status === "pending" ? "chip-pending" : "chip-expired"}">
+            ${j.status}
+          </span>
+        </td>
+        <td style="padding:12px">
+          <div style="display:flex;flex-direction:column;gap:6px">
+            ${j.status === "pending" ? `
+              <button class="action-btn btn-approve"
+                onclick="approveJobAd('${j.id}','${j.userId}')"
+                style="font-size:12px;padding:6px 10px">✅ Approve</button>
+              <button class="action-btn btn-reject"
+                onclick="rejectJobAd('${j.id}')"
+                style="font-size:12px;padding:6px 10px">✗ Reject</button>` : ""}
+            ${j.status === "active" ? `
+              <button class="action-btn btn-reject"
+                onclick="expireJobAd('${j.id}')"
+                style="font-size:12px;padding:6px 10px">⏹ Expire</button>` : ""}
+            ${j.phone ? `
+              <a href="https://wa.me/${j.phone.replace(/\D/g,"")}"
+                target="_blank"
+                style="background:#25d366;color:white;padding:6px 10px;border-radius:7px;
+                font-size:11px;font-weight:700;text-decoration:none;text-align:center">
+                💬 Contact
+              </a>` : ""}
+          </div>
+        </td>
+      </tr>`).join("");
+
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="6" style="color:red;text-align:center;
+      padding:30px">Error: ${e.message}</td></tr>`;
+  }
+};
+
+window.approveJobAd = async function(jobId, userId) {
+  if (!confirm("Approve and publish this job ad?")) return;
+  try {
+    await updateDoc(doc(db, "job_ads", jobId), {
+      status:     "active",
+      approvedAt: new Date(),
+      approvedBy: "admin"
+    });
+
+    // Notify the employer
+    if (userId) {
+      await addDoc(collection(db, "notifications"), {
+        userId,
+        type:      "job_approved",
+        title:     "✅ Your Job Ad is Now Live!",
+        message:   "Your hiring ad has been approved and is now visible to job seekers on ZiBuy.",
+        relatedId: jobId,
+        read:      false,
+        createdAt: new Date()
+      });
+    }
+
+    showToast("Job ad approved ✅", "success");
+    loadJobAdsAdmin();
+  } catch(e) { showToast("Failed: " + e.message, "error"); }
+};
+
+window.rejectJobAd = async function(jobId) {
+  const reason = prompt("Reason for rejection (sent to employer):");
+  if (reason === null) return;
+  try {
+    await updateDoc(doc(db, "job_ads", jobId), {
+      status:          "rejected",
+      rejectionReason: reason || "Does not meet our guidelines",
+      rejectedAt:      new Date()
+    });
+    showToast("Job ad rejected", "info");
+    loadJobAdsAdmin();
+  } catch(e) { showToast("Failed", "error"); }
+};
+
+window.expireJobAd = async function(jobId) {
+  if (!confirm("Expire this job ad now?")) return;
+  try {
+    await updateDoc(doc(db, "job_ads", jobId), {
+      status:    "expired",
+      expiredAt: new Date()
+    });
+    showToast("Job ad expired", "info");
+    loadJobAdsAdmin();
+  } catch(e) { showToast("Failed", "error"); }
+};
