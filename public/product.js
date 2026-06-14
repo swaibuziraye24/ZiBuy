@@ -27,6 +27,92 @@ onAuthStateChanged(auth, (user) => {
 const params = new URLSearchParams(window.location.search);
 const id = params.get("id");
 
+
+// ============================================
+// BUILD PRODUCT DETAILS CARD
+// Shows all category-specific fields saved with the ad
+// ============================================
+function buildDetailsCard(p) {
+  const details   = p.details   || {};
+  const condition = p.condition || details.condition || "";
+
+  // Field label map — human-readable labels
+ const LABELS = {
+    brand:"Brand", condition:"Condition", storage:"Storage", ram:"RAM",
+    network:"Network", battery:"Battery", os:"Operating System", warranty:"Warranty",
+    color:"Color", type:"Type", screen:"Screen Size", transmission:"Transmission",
+    fuel:"Fuel Type", mileage:"Mileage", drive:"Drive", year:"Year",
+    make:"Make / Brand", model:"Model", gender:"For", size:"Size",
+    material:"Material", origin:"Made In", quantity:"Quantity",
+    packaging:"Packaging", volume:"Size / Volume", movement:"Movement",
+    processor:"Processor", platform:"Platform", controllers:"Controllers",
+    dimensions:"Dimensions", "service-type":"Service Type",
+    experience:"Years of Experience", availability:"Availability",
+    delivery:"Delivery", freshness:"Freshness", body:"Body Type",
+    engine:"Engine Size", negotiable:"Price Negotiable",
+    breed:"Breed / Variety", age:"Age", vaccinated:"Vaccinated",
+    purpose:"Purpose", "age-group":"Suitable Age", power:"Power / Capacity",
+    destination:"Destination", duration:"Duration", "group-size":"Group Size",
+    includes:"Includes", education:"Education Level",
+    "location-pref":"Preferred Work Location", salary:"Expected Salary",
+    organic:"Farming Method", "service-type":"Service Type"
+  };
+
+  // Condition badge color
+  function conditionBadge(val) {
+    if (!val) return "";
+    const colors = {
+      "Brand New":              { bg:"#dcfce7", color:"#166534" },
+      "Brand New (Sealed)":     { bg:"#dcfce7", color:"#166534" },
+      "Brand New (Open Box)":   { bg:"#d1fae5", color:"#065f46" },
+      "Foreign Used (UK)":      { bg:"#dbeafe", color:"#1e40af" },
+      "Foreign Used (Dubai)":   { bg:"#dbeafe", color:"#1e40af" },
+      "Foreign Used":           { bg:"#dbeafe", color:"#1e40af" },
+      "Local Used":             { bg:"#fef3c7", color:"#92400e" },
+      "Thrift (Mitumba)":       { bg:"#fce7f3", color:"#9d174d" },
+      "Refurbished":            { bg:"#ede9fe", color:"#5b21b6" },
+      "Fresh Today":            { bg:"#dcfce7", color:"#166534" },
+      "Farm Fresh":             { bg:"#dcfce7", color:"#166534" },
+    };
+    const c = colors[val] || { bg:"#f3f4f6", color:"#374151" };
+    return `<span style="background:${c.bg};color:${c.color};padding:4px 12px;border-radius:20px;font-size:12px;font-weight:800;display:inline-block">${val}</span>`;
+  }
+
+  // Collect all detail rows (skip condition — shown as badge)
+  const rows = Object.entries(details)
+    .filter(([k, v]) => v && k !== "condition")
+    .map(([k, v]) => {
+      const label = LABELS[k] || k.charAt(0).toUpperCase() + k.slice(1).replace(/-/g," ");
+      return `
+        <div style="display:flex;justify-content:space-between;align-items:center;
+          padding:10px 0;border-bottom:1px solid #f3f4f6;font-size:13px;gap:12px">
+          <span style="color:#6b7280;font-weight:600;flex-shrink:0">${label}</span>
+          <span style="font-weight:700;color:#111827;text-align:right">${v}</span>
+        </div>`;
+    });
+
+  if (!condition && rows.length === 0) return "";
+
+  return `
+    <div style="margin-top:20px;background:white;border:1.5px solid #e5e7eb;
+      border-radius:16px;overflow:hidden">
+
+      <!-- Header -->
+      <div style="padding:14px 18px;background:#f9fafb;border-bottom:1.5px solid #e5e7eb;
+        display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+        <p style="margin:0;font-size:14px;font-weight:800;color:#111827">📋 Item Details</p>
+        ${conditionBadge(condition)}
+      </div>
+
+      <!-- Rows -->
+      <div style="padding:4px 18px 4px">
+        ${rows.length > 0 ? rows.join("") : `<p style="color:#9ca3af;font-size:13px;padding:12px 0">No additional details provided.</p>`}
+      </div>
+
+    </div>`;
+}
+
+
 /* ============================================
    LOAD PRODUCT
 ============================================ */
@@ -161,9 +247,10 @@ async function loadProduct() {
         ${contactHTML}
 
         <!-- Safety tip -->
-        <div style="margin-top:14px;padding:14px 16px;background:#fffbeb;border:1px solid #fde68a;border-radius:12px;font-size:13px;color:#92400e;display:flex;gap:8px;align-items:flex-start">
-          <span>🛡️</span>
-          <span><strong>Safety tip:</strong> Meet in a public place, verify the item before paying.</span>
+        ${buildDetailsCard(p)}
+
+        <div style="margin-top:16px;padding:16px;background:#fff4ee;border-radius:12px;font-size:13px;color:#b45309">
+          🛡️ <strong>Safe buying tip:</strong> Meet the seller in a public place and check the item before paying.
         </div>
 
       </div>
