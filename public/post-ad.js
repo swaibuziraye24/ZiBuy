@@ -374,215 +374,337 @@ window.prevStep = function() {
 // CATEGORY-SPECIFIC FIELD DEFINITIONS
 // ============================================
 
+// ============================================
+// CATEGORY-SPECIFIC FIELD DEFINITIONS
+// All 12 categories — complete fields
+// ============================================
+
 const CATEGORY_FIELDS = {
 
   phones: [
-    { id: "cf-brand",     label: "Brand",           type: "select",
-      options: ["Samsung","iPhone/Apple","Tecno","Itel","Infinix","Huawei","Nokia","Oppo","Xiaomi","Other"] },
-    { id: "cf-condition", label: "Condition",        type: "select",
-      options: ["Brand New","Foreign Used (UK)","Foreign Used (Dubai)","Local Used"] },
-    { id: "cf-storage",   label: "Storage",          type: "select",
-      options: ["16GB","32GB","64GB","128GB","256GB","512GB","1TB","Other"] },
-    { id: "cf-ram",       label: "RAM",              type: "select",
-      options: ["1GB","2GB","3GB","4GB","6GB","8GB","12GB","16GB","Other"] },
-    { id: "cf-network",   label: "Network",          type: "select",
-      options: ["4G LTE","5G","3G","Dual SIM"] },
-    { id: "cf-warranty",  label: "Warranty",         type: "select",
-      options: ["No Warranty","Shop Warranty (1 month)","Shop Warranty (3 months)","Manufacturer Warranty"] },
+    { id:"cf-brand",     label:"Brand",       type:"select",
+      options:["Samsung","iPhone/Apple","Tecno","Itel","Infinix","Huawei","Nokia","Oppo","Xiaomi","Vivo","Other"] },
+    { id:"cf-condition", label:"Condition",    type:"select",
+      options:["Brand New","Foreign Used (UK)","Foreign Used (Dubai)","Local Used"] },
+    { id:"cf-storage",   label:"Storage",      type:"select",
+      options:["16GB","32GB","64GB","128GB","256GB","512GB","1TB"] },
+    { id:"cf-ram",       label:"RAM",          type:"select",
+      options:["1GB","2GB","3GB","4GB","6GB","8GB","12GB","16GB"] },
+    { id:"cf-network",   label:"Network",      type:"select",
+      options:["4G LTE","5G","3G","Dual SIM 4G","Dual SIM 5G"] },
+    { id:"cf-battery",   label:"Battery",      type:"select",
+      options:["Below 3000mAh","3000–4000mAh","4000–5000mAh","Above 5000mAh"] },
+    { id:"cf-os",        label:"Operating System", type:"select",
+      options:["Android","iOS (iPhone)","Other"] },
+    { id:"cf-warranty",  label:"Warranty",     type:"select",
+      options:["No Warranty","Shop Warranty (1 month)","Shop Warranty (3 months)","Manufacturer Warranty"] },
+    { id:"cf-color",     label:"Color",        type:"text", placeholder:"e.g. Midnight Black, Gold" },
   ],
 
   electronics: [
-    { id: "cf-type",      label: "Type",             type: "select",
-      options: ["TV","Speaker","Camera","Laptop","Tablet","Radio","DVD Player","Decoder","Generator","Other"] },
-    { id: "cf-brand",     label: "Brand",            type: "select",
-      options: ["Samsung","LG","Sony","Hisense","TCL","Panasonic","Canon","Nikon","HP","Dell","Other"] },
-    { id: "cf-condition", label: "Condition",        type: "select",
-      options: ["Brand New","Foreign Used","Local Used"] },
-    { id: "cf-warranty",  label: "Warranty",         type: "select",
-      options: ["No Warranty","Shop Warranty","Manufacturer Warranty"] },
-  ],
-
-  vehicles: [
-    { id: "cf-make",      label: "Make / Brand",     type: "select",
-      options: ["Toyota","Nissan","Honda","Suzuki","Mitsubishi","Mercedes","BMW","Land Rover","Isuzu","Tata","Other"] },
-    { id: "cf-year",      label: "Year of Manufacture", type: "select",
-      options: ["2024","2023","2022","2021","2020","2019","2018","2017","2016","2015","2014","2013","2012","Before 2012"] },
-    { id: "cf-condition", label: "Condition",        type: "select",
-      options: ["Brand New","Foreign Used","Local Used"] },
-    { id: "cf-transmission", label: "Transmission",  type: "select",
-      options: ["Automatic","Manual"] },
-    { id: "cf-fuel",      label: "Fuel Type",        type: "select",
-      options: ["Petrol","Diesel","Electric","Hybrid"] },
-    { id: "cf-mileage",   label: "Mileage (km)",     type: "text",  placeholder: "e.g. 45000" },
-    { id: "cf-color",     label: "Color",            type: "text",  placeholder: "e.g. Silver" },
-    { id: "cf-drive",     label: "Drive",            type: "select",
-      options: ["Right Hand Drive","Left Hand Drive"] },
+    { id:"cf-type",      label:"Type",         type:"select",
+      options:["TV","Flat Screen","Speaker / Sound System","Camera","Decoder / DSTV","DVD Player","Radio","Generator","Solar Panel","Air Conditioner","Fan","Iron Box","Other"] },
+    { id:"cf-brand",     label:"Brand",        type:"select",
+      options:["Samsung","LG","Sony","Hisense","TCL","Panasonic","Canon","Nikon","Sayona","Bruhm","Ramtons","Other"] },
+    { id:"cf-condition", label:"Condition",    type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
+    { id:"cf-screen",    label:"Screen Size (TVs)", type:"select",
+      options:["Not Applicable","24 inch","32 inch","40 inch","43 inch","50 inch","55 inch","65 inch","75 inch","Other"] },
+    { id:"cf-warranty",  label:"Warranty",     type:"select",
+      options:["No Warranty","Shop Warranty","Manufacturer Warranty"] },
   ],
 
   fashion: [
-    { id: "cf-condition", label: "Condition",        type: "select",
-      options: ["Brand New","Foreign Used","Local Used","Thrift (Mitumba)"] },
-    { id: "cf-gender",    label: "For",              type: "select",
-      options: ["Men","Women","Unisex","Kids"] },
-    { id: "cf-size",      label: "Size",             type: "select",
-      options: ["XS","S","M","L","XL","XXL","3XL","Free Size","Other"] },
-    { id: "cf-material",  label: "Material",         type: "text",  placeholder: "e.g. Cotton, Polyester" },
+    { id:"cf-type",      label:"Clothing Type", type:"select",
+      options:["T-Shirt","Shirt","Dress","Trousers / Jeans","Skirt","Suit","Jacket / Coat","Hoodie / Sweater","Underwear","Sportswear","Traditional Wear","Kids Clothing","Other"] },
+    { id:"cf-condition", label:"Condition",     type:"select",
+      options:["Brand New","Foreign Used","Local Used","Thrift (Mitumba)"] },
+    { id:"cf-gender",    label:"For",           type:"select",
+      options:["Men","Women","Unisex","Boys","Girls","Babies"] },
+    { id:"cf-size",      label:"Size",          type:"select",
+      options:["XS (Extra Small)","S (Small)","M (Medium)","L (Large)","XL (Extra Large)","XXL","3XL","Free Size","Other"] },
+    { id:"cf-material",  label:"Material",      type:"text",  placeholder:"e.g. Cotton, Polyester, Silk" },
+    { id:"cf-color",     label:"Color",         type:"text",  placeholder:"e.g. Red, Navy Blue, Multi-color" },
+    { id:"cf-brand",     label:"Brand (optional)", type:"text", placeholder:"e.g. Nike, H&M, Local Brand" },
   ],
 
   shoes: [
-    { id: "cf-condition", label: "Condition",        type: "select",
-      options: ["Brand New","Foreign Used","Local Used"] },
-    { id: "cf-gender",    label: "For",              type: "select",
-      options: ["Men","Women","Unisex","Kids"] },
-    { id: "cf-size",      label: "Shoe Size",        type: "select",
-      options: ["36","37","38","39","40","41","42","43","44","45","46","47"] },
-    { id: "cf-brand",     label: "Brand",            type: "select",
-      options: ["Nike","Adidas","Puma","Vans","Timberland","Bata","Converse","Other"] },
-  ],
-
-  home: [
-    { id: "cf-type",      label: "Item Type",        type: "select",
-      options: ["Sofa / Furniture","Bed / Mattress","Kitchen Appliance","Fridge / Freezer","Washing Machine","Curtains","Carpet","Decoration","Other"] },
-    { id: "cf-condition", label: "Condition",        type: "select",
-      options: ["Brand New","Foreign Used","Local Used"] },
-    { id: "cf-brand",     label: "Brand (optional)", type: "text",  placeholder: "e.g. Mika, Ramtons" },
+    { id:"cf-type",      label:"Shoe Type",    type:"select",
+      options:["Sneakers","Heels","Sandals","Boots","Loafers","Flip Flops","Formal Shoes","Sports Shoes","Kids Shoes","Other"] },
+    { id:"cf-condition", label:"Condition",    type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
+    { id:"cf-gender",    label:"For",          type:"select",
+      options:["Men","Women","Unisex","Boys","Girls","Babies"] },
+    { id:"cf-size",      label:"Shoe Size",    type:"select",
+      options:["28","29","30","31","32","33","34","35","36","37","38","39","40","41","42","43","44","45","46","47","48"] },
+    { id:"cf-brand",     label:"Brand",        type:"select",
+      options:["Nike","Adidas","Puma","Vans","Timberland","Bata","Converse","Reebok","Under Armour","No Brand","Other"] },
+    { id:"cf-color",     label:"Color",        type:"text",  placeholder:"e.g. Black, White, Brown" },
+    { id:"cf-material",  label:"Material",     type:"select",
+      options:["Leather","Canvas","Rubber","Suede","Synthetic","Other"] },
   ],
 
   beauty: [
-    { id: "cf-type",      label: "Product Type",     type: "select",
-      options: ["Skincare","Haircare","Makeup","Perfume","Nail Care","Body Lotion","Soap","Other"] },
-    { id: "cf-condition", label: "Condition",        type: "select",
-      options: ["Brand New","Open Box"] },
-    { id: "cf-brand",     label: "Brand",            type: "text",  placeholder: "e.g. Nivea, Neutrogena" },
-    { id: "cf-origin",    label: "Made In",          type: "select",
-      options: ["Uganda","Kenya","South Africa","UK","USA","China","Other"] },
-  ],
-
-  computers: [
-    { id: "cf-type",      label: "Type",             type: "select",
-      options: ["Laptop","Desktop PC","MacBook","Tablet","Monitor","Printer","Keyboard/Mouse","Other"] },
-    { id: "cf-brand",     label: "Brand",            type: "select",
-      options: ["HP","Dell","Lenovo","Apple","Asus","Acer","Samsung","Toshiba","Other"] },
-    { id: "cf-condition", label: "Condition",        type: "select",
-      options: ["Brand New","Foreign Used","Local Used"] },
-    { id: "cf-ram",       label: "RAM",              type: "select",
-      options: ["2GB","4GB","8GB","16GB","32GB","Other"] },
-    { id: "cf-storage",   label: "Storage",          type: "select",
-      options: ["128GB","256GB","512GB","1TB","2TB","Other"] },
-    { id: "cf-processor", label: "Processor",        type: "select",
-      options: ["Intel Core i3","Intel Core i5","Intel Core i7","Intel Core i9","AMD Ryzen 3","AMD Ryzen 5","AMD Ryzen 7","Apple M1","Apple M2","Other"] },
-  ],
-
-  gaming: [
-    { id: "cf-platform",  label: "Platform",         type: "select",
-      options: ["PlayStation 5","PlayStation 4","Xbox Series X","Xbox One","Nintendo Switch","PC Gaming","Mobile Gaming","Other"] },
-    { id: "cf-type",      label: "Item Type",        type: "select",
-      options: ["Console","Controller","Game (CD/Digital)","Gaming Chair","Headset","Monitor","Other"] },
-    { id: "cf-condition", label: "Condition",        type: "select",
-      options: ["Brand New","Foreign Used","Local Used"] },
-  ],
-
-  services: [
-    { id: "cf-service-type", label: "Service Type",  type: "select",
-      options: ["Plumbing","Electrical","Construction","Cleaning","Painting","Salon & Beauty","Photography","Catering","Transport","Teaching/Tutoring","IT & Tech","Event Planning","Design","Legal","Medical","Other"] },
-    { id: "cf-experience",   label: "Experience",    type: "select",
-      options: ["Less than 1 year","1–2 years","3–5 years","5–10 years","10+ years"] },
-    { id: "cf-availability", label: "Availability",  type: "select",
-      options: ["Full Time","Part Time","Weekdays Only","Weekends Only","Flexible"] },
-    { id: "cf-delivery",     label: "Can Travel To Client?", type: "select",
-      options: ["Yes – I come to you","No – Client comes to me","Both options available"] },
-  ],
-
-  agriculture: [
-    { id: "cf-type",      label: "Product Type",     type: "select",
-      options: ["Crops / Produce","Livestock","Poultry","Fish","Seeds","Fertilizer","Farm Equipment","Land","Other"] },
-    { id: "cf-condition", label: "Condition",        type: "select",
-      options: ["Fresh","Dried / Processed","Brand New Equipment","Used Equipment"] },
-    { id: "cf-quantity",  label: "Quantity / Unit",  type: "text",  placeholder: "e.g. 1 tonne, 50 bags, 100 birds" },
+    { id:"cf-type",      label:"Product Type", type:"select",
+      options:["Face Cream / Moisturiser","Body Lotion","Sunscreen","Foundation / BB Cream","Lipstick / Lip Gloss","Mascara / Eyeliner","Perfume / Cologne","Hair Oil / Relaxer","Shampoo / Conditioner","Weave / Wig / Extensions","Nail Polish","Soap / Body Wash","Deodorant","Men Grooming","Other"] },
+    { id:"cf-condition", label:"Condition",    type:"select",
+      options:["Brand New (Sealed)","Brand New (Open Box)"] },
+    { id:"cf-brand",     label:"Brand",        type:"text",  placeholder:"e.g. Nivea, Neutrogena, L'Oreal" },
+    { id:"cf-gender",    label:"Suitable For", type:"select",
+      options:["Women","Men","Unisex","Kids","All"] },
+    { id:"cf-origin",    label:"Made In",      type:"select",
+      options:["Uganda","Kenya","South Africa","UK","USA","France","China","India","Other"] },
+    { id:"cf-volume",    label:"Size / Volume", type:"text", placeholder:"e.g. 250ml, 100g, 1 piece" },
   ],
 
   bags: [
-    { id: "cf-type",      label: "Bag Type",         type: "select",
-      options: ["Handbag","Backpack","Laptop Bag","Travel Bag","School Bag","Clutch","Wallet","Other"] },
-    { id: "cf-condition", label: "Condition",        type: "select",
-      options: ["Brand New","Foreign Used","Local Used"] },
-    { id: "cf-brand",     label: "Brand",            type: "select",
-      options: ["Gucci","Louis Vuitton","Nike","Adidas","Local Brand","No Brand","Other"] },
-    { id: "cf-material",  label: "Material",         type: "select",
-      options: ["Leather","Canvas","Nylon","Polyester","Other"] },
-  ],
-
-  watches: [
-    { id: "cf-brand",     label: "Brand",            type: "select",
-      options: ["Casio","Rolex","Seiko","Citizen","Fossil","Hublot","Tag Heuer","No Brand","Other"] },
-    { id: "cf-condition", label: "Condition",        type: "select",
-      options: ["Brand New","Foreign Used","Local Used"] },
-    { id: "cf-gender",    label: "For",              type: "select",
-      options: ["Men","Women","Unisex","Kids"] },
-    { id: "cf-type",      label: "Type",             type: "select",
-      options: ["Analog","Digital","Smart Watch","Sports Watch"] },
+    { id:"cf-type",      label:"Bag Type",     type:"select",
+      options:["Handbag","Backpack","Laptop Bag","Travel / Suitcase","School Bag","Clutch Bag","Wallet","Gym Bag","Shopping Bag","Other"] },
+    { id:"cf-condition", label:"Condition",    type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
+    { id:"cf-gender",    label:"For",          type:"select",
+      options:["Women","Men","Unisex","Kids"] },
+    { id:"cf-brand",     label:"Brand",        type:"select",
+      options:["Gucci","Louis Vuitton","Nike","Adidas","Puma","Samsonite","Local Brand","No Brand","Other"] },
+    { id:"cf-material",  label:"Material",     type:"select",
+      options:["Genuine Leather","Faux Leather","Canvas","Nylon","Polyester","Fabric","Other"] },
+    { id:"cf-color",     label:"Color",        type:"text",  placeholder:"e.g. Black, Brown, Red" },
   ],
 
   groceries: [
-    { id: "cf-type",      label: "Product Type",     type: "select",
-      options: ["Rice","Maize Flour","Cooking Oil","Sugar","Beans","Meat","Fish","Vegetables","Fruits","Bread","Beverages","Dairy","Other"] },
-    { id: "cf-origin",    label: "Origin",           type: "select",
-      options: ["Uganda Made","Imported","Organic / Farm Fresh"] },
-    { id: "cf-quantity",  label: "Quantity / Unit",  type: "text",  placeholder: "e.g. 1kg, 5 litres, 1 crate" },
+    { id:"cf-type",      label:"Product Type", type:"select",
+      options:["Rice","Maize Flour (Posho)","Cooking Oil","Sugar","Beans","Groundnuts","Matooke","Cassava","Sweet Potatoes","Meat / Chicken","Fish","Eggs","Milk / Dairy","Bread / Baked Goods","Beverages / Drinks","Spices & Seasoning","Processed / Canned Food","Baby Food","Other"] },
+    { id:"cf-condition", label:"Freshness",    type:"select",
+      options:["Fresh Today","Farm Fresh","Packaged / Sealed","Expires in 1 week","Expires in 1 month","Expires in 3+ months"] },
+    { id:"cf-origin",    label:"Origin",       type:"select",
+      options:["Uganda Grown","Imported","Organic / Chemical Free","Other"] },
+    { id:"cf-quantity",  label:"Quantity / Unit", type:"text", placeholder:"e.g. 1 bag (100kg), 5 litres, 1 crate (30 eggs)" },
+    { id:"cf-packaging", label:"Packaging",    type:"select",
+      options:["Loose (Unpackaged)","Bagged","Bottled","Boxed","Wrapped"] },
   ],
 
-  accessories: [
-    { id: "cf-type",      label: "Accessory Type",   type: "select",
-      options: ["Jewellery","Sunglasses","Belt","Hat/Cap","Scarf","Tie","Bracelet","Necklace","Earrings","Other"] },
-    { id: "cf-condition", label: "Condition",        type: "select",
-      options: ["Brand New","Foreign Used","Local Used"] },
-    { id: "cf-material",  label: "Material",         type: "select",
-      options: ["Gold","Silver","Stainless Steel","Plastic","Leather","Fabric","Other"] },
+  watches: [
+    { id:"cf-brand",     label:"Brand",        type:"select",
+      options:["Casio","Rolex","Seiko","Citizen","Fossil","Hublot","Tag Heuer","Timex","Armani","No Brand","Other"] },
+    { id:"cf-type",      label:"Watch Type",   type:"select",
+      options:["Analog","Digital","Smart Watch","Sports Watch","Luxury Watch","Kids Watch"] },
+    { id:"cf-condition", label:"Condition",    type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
+    { id:"cf-gender",    label:"For",          type:"select",
+      options:["Men","Women","Unisex","Kids"] },
+    { id:"cf-movement",  label:"Movement",     type:"select",
+      options:["Quartz (Battery)","Automatic","Solar","Smart / Connected","Manual Wind"] },
+    { id:"cf-material",  label:"Strap Material", type:"select",
+      options:["Leather","Stainless Steel","Rubber / Silicone","Fabric","Plastic","Other"] },
+    { id:"cf-color",     label:"Color",        type:"text",  placeholder:"e.g. Black dial, Gold case" },
+    { id:"cf-warranty",  label:"Warranty",     type:"select",
+      options:["No Warranty","Shop Warranty","Manufacturer Warranty"] },
   ],
+
+  computers: [
+    { id:"cf-type",      label:"Type",         type:"select",
+      options:["Laptop","Desktop PC","MacBook","iMac","Tablet","Monitor","Printer","Keyboard & Mouse","UPS / Battery Backup","Other"] },
+    { id:"cf-brand",     label:"Brand",        type:"select",
+      options:["HP","Dell","Lenovo","Apple","Asus","Acer","Samsung","Toshiba","MSI","Microsoft Surface","Other"] },
+    { id:"cf-condition", label:"Condition",    type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
+    { id:"cf-processor", label:"Processor",    type:"select",
+      options:["Intel Core i3","Intel Core i5","Intel Core i7","Intel Core i9","AMD Ryzen 3","AMD Ryzen 5","AMD Ryzen 7","Apple M1","Apple M2","Apple M3","Celeron / Pentium","Other"] },
+    { id:"cf-ram",       label:"RAM",          type:"select",
+      options:["2GB","4GB","8GB","16GB","32GB","64GB","Other"] },
+    { id:"cf-storage",   label:"Storage",      type:"select",
+      options:["128GB SSD","256GB SSD","512GB SSD","1TB SSD","1TB HDD","2TB HDD","Other"] },
+    { id:"cf-screen",    label:"Screen Size",  type:"select",
+      options:["11 inch","13 inch","14 inch","15 inch","15.6 inch","17 inch","Not Applicable"] },
+    { id:"cf-os",        label:"Operating System", type:"select",
+      options:["Windows 11","Windows 10","Windows 7","macOS","Chrome OS","No OS (Freedos)","Other"] },
+    { id:"cf-warranty",  label:"Warranty",     type:"select",
+      options:["No Warranty","Shop Warranty","Manufacturer Warranty"] },
+  ],
+
+  gaming: [
+    { id:"cf-platform",  label:"Platform",     type:"select",
+      options:["PlayStation 5 (PS5)","PlayStation 4 (PS4)","PlayStation 3 (PS3)","Xbox Series X/S","Xbox One","Nintendo Switch","PC Gaming","Mobile Gaming","Retro Console","Other"] },
+    { id:"cf-type",      label:"Item Type",    type:"select",
+      options:["Console (Full Set)","Console Only","Controller / Gamepad","Game CD / Cartridge","Gaming Chair","Gaming Headset","Gaming Monitor","Gaming Keyboard & Mouse","VR Headset","Other"] },
+    { id:"cf-condition", label:"Condition",    type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
+    { id:"cf-storage",   label:"Console Storage", type:"select",
+      options:["Not Applicable","256GB","512GB","1TB","2TB","Other"] },
+    { id:"cf-controllers", label:"Controllers Included", type:"select",
+      options:["Not Applicable","1 Controller","2 Controllers","No Controller"] },
+    { id:"cf-warranty",  label:"Warranty",     type:"select",
+      options:["No Warranty","Shop Warranty","Manufacturer Warranty"] },
+  ],
+
+  home: [
+    { id:"cf-type",      label:"Item Type",    type:"select",
+      options:["Sofa / Couch","Bed Frame","Mattress","Dining Table & Chairs","Wardrobe / Closet","Fridge / Refrigerator","Freezer","Washing Machine","Microwave","Gas Cooker / Stove","Water Dispenser","Curtains","Carpet / Rug","Wall Decor","Lighting / Lamps","Kitchenware","Bedding / Linen","Baby Furniture","Office Desk & Chair","Other"] },
+    { id:"cf-condition", label:"Condition",    type:"select",
+      options:["Brand New","Foreign Used","Local Used","Refurbished"] },
+    { id:"cf-brand",     label:"Brand (optional)", type:"text", placeholder:"e.g. Mika, Ramtons, Ariston, IKEA" },
+    { id:"cf-material",  label:"Material",     type:"select",
+      options:["Wood","Metal","Plastic","Glass","Fabric / Upholstery","Foam","Mixed","Other"] },
+    { id:"cf-color",     label:"Color",        type:"text",  placeholder:"e.g. Brown, White, Grey" },
+    { id:"cf-dimensions",label:"Size / Dimensions", type:"text", placeholder:"e.g. 6x6 bed, 3-seater, 50 litres" },
+  ],
+
+accessories: [
+    { id:"cf-type",      label:"Accessory Type", type:"select",
+      options:["Necklace","Earrings","Bracelet / Bangle","Ring","Anklet","Brooch","Chain","Sunglasses","Belt","Hat / Cap","Scarf / Shawl","Tie","Hair Accessories","Phone Case","Wallet","Other"] },
+    { id:"cf-condition", label:"Condition",      type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
+    { id:"cf-gender",    label:"For",            type:"select",
+      options:["Women","Men","Unisex","Kids"] },
+    { id:"cf-material",  label:"Material",       type:"select",
+      options:["Gold (14k/18k)","Gold Plated","Silver","Stainless Steel","Beads","Plastic","Fabric","Crystal","Other"] },
+    { id:"cf-color",     label:"Color / Finish", type:"text",  placeholder:"e.g. Rose Gold, Silver, Black" },
+    { id:"cf-brand",     label:"Brand (optional)", type:"text", placeholder:"e.g. Pandora, Local Artisan" },
+  ],
+
+  vehicles: [
+    { id:"cf-make",         label:"Make / Brand",        type:"select",
+      options:["Toyota","Nissan","Honda","Suzuki","Mitsubishi","Mercedes-Benz","BMW","Land Rover","Isuzu","Tata","Volkswagen","Subaru","Mazda","Ford","Hyundai","Kia","Other"] },
+    { id:"cf-model",        label:"Model",               type:"text",  placeholder:"e.g. Corolla, Premio, Ipsum, RAV4" },
+    { id:"cf-year",         label:"Year of Manufacture", type:"select",
+      options:["2024","2023","2022","2021","2020","2019","2018","2017","2016","2015","2014","2013","2012","2011","2010","2005–2009","Before 2005"] },
+    { id:"cf-condition",    label:"Condition",           type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
+    { id:"cf-transmission", label:"Transmission",        type:"select",
+      options:["Automatic","Manual","CVT"] },
+    { id:"cf-fuel",         label:"Fuel Type",           type:"select",
+      options:["Petrol","Diesel","Electric","Hybrid","LPG / Gas"] },
+    { id:"cf-drive",        label:"Drive",               type:"select",
+      options:["Right Hand Drive (RHD)","Left Hand Drive (LHD)","4WD / AWD","2WD"] },
+    { id:"cf-mileage",      label:"Mileage (km)",        type:"text",  placeholder:"e.g. 45,000 km" },
+    { id:"cf-color",        label:"Color",               type:"text",  placeholder:"e.g. Silver, Black, White" },
+    { id:"cf-body",         label:"Body Type",           type:"select",
+      options:["Saloon / Sedan","SUV / 4x4","Station Wagon","Pick-Up Truck","Mini Van","Coupe","Convertible","Bus / Minibus","Lorry / Truck","Motorcycle / Boda","Tractor","Other"] },
+    { id:"cf-engine",       label:"Engine Size",         type:"select",
+      options:["1000cc","1300cc","1500cc","1800cc","2000cc","2500cc","3000cc","3500cc","Above 4000cc","Other"] },
+    { id:"cf-negotiable",   label:"Price Negotiable?",   type:"select",
+      options:["Yes, negotiable","No, fixed price"] },
+  ],
+
+  animals: [
+    { id:"cf-type",       label:"Animal Type",      type:"select",
+      options:["Dog","Cat","Cow / Bull","Goat","Sheep","Pig","Rabbit","Chicken / Poultry","Duck","Turkey","Parrot / Bird","Fish (Aquarium)","Horse","Donkey","Other"] },
+    { id:"cf-breed",      label:"Breed / Variety",  type:"text",  placeholder:"e.g. German Shepherd, Friesian Cow, Boer Goat" },
+    { id:"cf-age",        label:"Age",              type:"select",
+      options:["Newborn / Chick","1–3 months","3–6 months","6–12 months","1–2 years","2–5 years","5+ years"] },
+    { id:"cf-gender",     label:"Gender",           type:"select",
+      options:["Male","Female","Pair (Male & Female)","Mixed Group"] },
+    { id:"cf-vaccinated", label:"Vaccinated?",      type:"select",
+      options:["Yes – fully vaccinated","Partially vaccinated","Not vaccinated","Not applicable"] },
+    { id:"cf-purpose",    label:"Purpose",          type:"select",
+      options:["Pet / Companion","Breeding","Dairy (Milk)","Meat","Work / Farm","Show / Exhibition","Other"] },
+    { id:"cf-quantity",   label:"Quantity",         type:"text",  placeholder:"e.g. 1 animal, 10 chicks, 1 pair" },
+  ],
+
+  babies: [
+    { id:"cf-type",       label:"Item Type",        type:"select",
+      options:["Baby Clothes","Baby Shoes","Diapers / Nappies","Baby Food / Formula","Pram / Stroller","Baby Cot / Crib","Car Seat","Baby Monitor","Baby Carrier","Breast Pump","Feeding Bottles","Baby Toys","Kids Books","Kids Bicycle","Kids Clothes (2–12 yrs)","Kids Shoes (2–12 yrs)","School Bag","Kids Furniture","Other"] },
+    { id:"cf-condition",  label:"Condition",        type:"select",
+      options:["Brand New","Slightly Used","Used – Good Condition","Used – Fair Condition"] },
+    { id:"cf-age-group",  label:"Suitable Age",     type:"select",
+      options:["0–3 months","3–6 months","6–12 months","1–2 years","2–3 years","3–5 years","5–8 years","8–12 years","All ages"] },
+    { id:"cf-gender",     label:"For",              type:"select",
+      options:["Boys","Girls","Unisex"] },
+    { id:"cf-brand",      label:"Brand (optional)", type:"text",  placeholder:"e.g. Chicco, Graco, Pampers, Local Brand" },
+    { id:"cf-size",       label:"Size / Clothing Size", type:"select",
+      options:["Newborn","0–3M","3–6M","6–9M","9–12M","12–18M","18–24M","2T","3T","4T","5T","6","8","10","12","14","Other"] },
+  ],
+
+  agriculture: [
+    { id:"cf-type",       label:"Product / Service Type", type:"select",
+      options:["Maize / Corn","Beans","Rice","Cassava","Sweet Potatoes","Matooke / Bananas","Coffee","Tea","Cotton","Groundnuts","Soybeans","Sunflower","Vegetables","Fruits","Fish (Farmed)","Cattle","Goats","Pigs","Poultry","Seeds","Fertilizer / Manure","Pesticides / Herbicides","Irrigation Equipment","Farm Tools","Tractor / Ploughing Service","Land for Farming","Other"] },
+    { id:"cf-condition",  label:"Condition / State",     type:"select",
+      options:["Fresh Harvest","Dried / Processed","Ready for Market","Seedlings / Young Plants","Brand New (Equipment)","Used (Equipment)"] },
+    { id:"cf-quantity",   label:"Quantity / Volume",     type:"text",  placeholder:"e.g. 2 tonnes, 50 bags (100kg each), 1 acre" },
+    { id:"cf-origin",     label:"Farm Location",         type:"select",
+      options:["Kampala Region","Eastern Uganda","Northern Uganda","Western Uganda","Central Uganda","Other"] },
+    { id:"cf-organic",    label:"Farming Method",        type:"select",
+      options:["Conventional","Organic / No Chemicals","Mixed","Not Applicable"] },
+    { id:"cf-delivery",   label:"Delivery Available?",   type:"select",
+      options:["Yes – I can deliver","No – Buyer collects","Both options"] },
+  ],
+
+  commercial: [
+    { id:"cf-type",       label:"Equipment Type",    type:"select",
+      options:["Generator","Compressor","Welding Machine","Printing Machine","Cutting Machine","Lathe / CNC Machine","Borehole / Water Pump","Scaffolding","Forklift / Crane","Concrete Mixer","Solar Panels (Commercial)","CCTV / Security System","POS / Cash Register","Refrigeration / Cold Room","Industrial Oven / Bakery","Sewing Machine (Industrial)","Salon Equipment","Gym Equipment","Medical Equipment","Office Furniture (Bulk)","Other"] },
+    { id:"cf-condition",  label:"Condition",         type:"select",
+      options:["Brand New","Foreign Used","Local Used","Refurbished / Serviced"] },
+    { id:"cf-brand",      label:"Brand",             type:"text",  placeholder:"e.g. Cummins, Kipor, Honda, Local Brand" },
+    { id:"cf-power",      label:"Power / Capacity",  type:"text",  placeholder:"e.g. 5KVA, 10 tonnes, 500 litres/hr" },
+    { id:"cf-warranty",   label:"Warranty",          type:"select",
+      options:["No Warranty","Shop Warranty (1 month)","Shop Warranty (3 months)","Manufacturer Warranty"] },
+    { id:"cf-negotiable", label:"Price Negotiable?", type:"select",
+      options:["Yes, negotiable","No, fixed price"] },
+  ],
+
+  tours: [
+    { id:"cf-type",       label:"Tour / Experience Type", type:"select",
+      options:["Safari (Wildlife)","Gorilla Trekking","Chimpanzee Trekking","Mountain Hiking","Boat Cruise","Beach / Resort","City Tour","Cultural / Heritage Tour","Birdwatching","White Water Rafting","Camping","Honeymoon Package","Family Holiday","School Trip","Corporate Retreat","International Travel Package","Other"] },
+    { id:"cf-destination",label:"Destination",            type:"text",  placeholder:"e.g. Bwindi, Queen Elizabeth, Lake Victoria, Zanzibar" },
+    { id:"cf-duration",   label:"Duration",               type:"select",
+      options:["Half Day (4–6 hours)","Full Day","Weekend (2 days)","3 Days","4 Days","5 Days","1 Week","2 Weeks","Custom / Flexible"] },
+    { id:"cf-group-size", label:"Group Size",             type:"select",
+      options:["1 Person (Solo)","2 People (Couple)","Small Group (3–6)","Medium Group (7–15)","Large Group (15+)","Any Size"] },
+    { id:"cf-includes",   label:"Includes",               type:"text",  placeholder:"e.g. Transport, Accommodation, Meals, Park Fees" },
+    { id:"cf-availability",label:"Availability",          type:"select",
+      options:["Any time","Weekends only","School holidays","Seasonal","Specific dates – contact me"] },
+    { id:"cf-negotiable", label:"Price Negotiable?",      type:"select",
+      options:["Yes, negotiable","No, fixed price"] },
+  ],
+
+  "seeking-work": [
+    { id:"cf-type",       label:"Job / Service Type",   type:"select",
+      options:["Driver / Chauffeur","Security Guard","Cleaner / Housekeeper","Cook / Chef","Gardener","Nanny / Babysitter","Nurse / Caregiver","Teacher / Tutor","Accountant","IT / Developer","Designer","Electrician","Plumber","Mason / Builder","Mechanic","Carpenter","Tailor / Seamstress","Sales Person","Receptionist / Admin","Data Entry","Social Media Manager","Event Planner","Photographer / Videographer","Other"] },
+    { id:"cf-experience", label:"Years of Experience",  type:"select",
+      options:["No experience (fresh graduate)","Less than 1 year","1–2 years","3–5 years","5–10 years","10+ years"] },
+    { id:"cf-education",  label:"Highest Education",    type:"select",
+      options:["Primary Level","O-Level (UCE)","A-Level (UACE)","Certificate","Diploma","Bachelor's Degree","Master's Degree","PhD","Professional Certification","Other"] },
+    { id:"cf-availability",label:"Availability",        type:"select",
+      options:["Immediately available","Available in 2 weeks","Available in 1 month","Part-time only","Weekends only","Remote / Online only","Flexible"] },
+    { id:"cf-location-pref",label:"Preferred Work Location", type:"select",
+      options:["Kampala only","Any location in Uganda","Open to relocation","Remote / Work from Home","Flexible"] },
+    { id:"cf-salary",     label:"Expected Salary",      type:"text",  placeholder:"e.g. UGX 500,000/month or Negotiable" },
+    { id:"cf-gender",     label:"Gender",               type:"select",
+      options:["Male","Female","Prefer not to say"] },
+  ],
+
 };
 
-// ============================================
-// STEP 2 INPUTS
-// ============================================
-
-const titleInput    = document.getElementById("ad-title");
-const descInput     = document.getElementById("ad-description");
-const priceInput    = document.getElementById("ad-price");
-const locationInput = document.getElementById("ad-location");
-
-// ============================================
-// RENDER CATEGORY-SPECIFIC FIELDS
-// ============================================
-
+// ── Render dynamic fields into Step 2 ────────
 function renderCategoryFields(category) {
   const container = document.getElementById("category-fields");
   if (!container) return;
 
   const fields = CATEGORY_FIELDS[category] || [];
-
-  if (fields.length === 0) {
-    container.innerHTML = "";
-    return;
-  }
+  if (fields.length === 0) { container.innerHTML = ""; return; }
 
   container.innerHTML = `
-    <div style="border-top:1.5px solid #f0f0f0;margin:12px 0 16px"></div>
-    <p style="font-size:13px;font-weight:800;color:#ff6600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px">
-      📋 ${category.charAt(0).toUpperCase()+category.slice(1)} Details
-    </p>
+    <div style="border-top:1.5px solid #f0f0f0;margin:16px 0"></div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+      <span style="font-size:18px">${categoryEmoji(category)}</span>
+      <p style="font-size:13px;font-weight:800;color:#ff6600;text-transform:uppercase;letter-spacing:.5px;margin:0">
+        ${category.charAt(0).toUpperCase()+category.slice(1)} Details
+      </p>
+    </div>
     ${fields.map(f => `
-      <div style="margin-bottom:12px">
+      <div style="margin-bottom:14px">
         <label style="display:block;font-size:12px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">
           ${f.label}
         </label>
         ${f.type === "select" ? `
-          <select id="${f.id}" style="width:100%;padding:13px 14px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:14px;font-family:var(--font);outline:none;background:white;transition:border-color .2s" onfocus="this.style.borderColor='#ff6600'" onblur="this.style.borderColor='#e5e7eb'">
+          <select id="${f.id}" style="width:100%;padding:13px 14px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:14px;font-family:var(--font);outline:none;background:white;box-sizing:border-box"
+            onfocus="this.style.borderColor='#ff6600'" onblur="this.style.borderColor='#e5e7eb'">
             <option value="">Select ${f.label}</option>
             ${f.options.map(o => `<option value="${o}">${o}</option>`).join("")}
           </select>
         ` : `
           <input type="text" id="${f.id}" placeholder="${f.placeholder || ""}"
-            style="width:100%;padding:13px 14px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:14px;font-family:var(--font);outline:none;background:white;box-sizing:border-box;transition:border-color .2s"
+            style="width:100%;padding:13px 14px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:14px;font-family:var(--font);outline:none;background:white;box-sizing:border-box"
             onfocus="this.style.borderColor='#ff6600'" onblur="this.style.borderColor='#e5e7eb'">
         `}
       </div>
@@ -590,13 +712,23 @@ function renderCategoryFields(category) {
   `;
 }
 
-// Collect category field values to save with the ad
+function categoryEmoji(cat) {
+  const map = {
+    phones:"📱", electronics:"💻", fashion:"👗", shoes:"👟", beauty:"💄",
+    bags:"👜", groceries:"🛒", watches:"⌚", computers:"🖥️", gaming:"🎮",
+    home:"🏠", accessories:"💎", vehicles:"🚗", animals:"🐾", babies:"👶",
+    agriculture:"🌾", commercial:"🏗️", tours:"✈️", "seeking-work":"💼"
+  };
+  return map[cat] || "📋";
+}
+
+// ── Collect all field values to save with the ad ─
 function collectCategoryFields(category) {
   const fields = CATEGORY_FIELDS[category] || [];
   const data   = {};
   fields.forEach(f => {
     const el = document.getElementById(f.id);
-    if (el && el.value) data[f.id.replace("cf-", "")] = el.value;
+    if (el && el.value) data[f.id.replace("cf-","")] = el.value;
   });
   return data;
 }
