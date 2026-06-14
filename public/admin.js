@@ -129,7 +129,9 @@ async function loadAll() {
     loadPremiumAds(),
     loadVerifications(),
     loadReports(),
-    loadBanners()
+    loadBanners(),
+    loadReminders(),
+    loadJobAdsAdmin()
   ]);
   renderOverview();
 }
