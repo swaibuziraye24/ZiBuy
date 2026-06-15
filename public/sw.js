@@ -63,18 +63,22 @@ self.addEventListener("fetch", (event) => {
 
   // HTML: network first → cache → offline page
   if (request.headers.get("accept")?.includes("text/html")) {
+    const htmlReqClone = event.request.clone();
     event.respondWith(
-      fetch(request)
+      fetch(htmlReqClone)
         .then((res) => {
-          caches.open(CACHE_NAME).then((c) => c.put(request, res.clone()));
+          if (!res || res.status !== 200) return res;
+          const resClone = res.clone();
+          caches.open(CACHE_NAME).then((c) => c.put(event.request, resClone));
           return res;
         })
         .catch(() =>
-          caches.match(request).then((cached) => cached || caches.match(OFFLINE_PAGE))
+          caches.match(event.request).then((cached) => cached || caches.match(OFFLINE_PAGE))
         )
     );
     return;
   }
+  
 
   // CSS / JS / Images: cache first, update in background
   if (/\.(css|js|png|jpg|jpeg|svg|ico|webp|woff2?)$/.test(url.pathname)) {
