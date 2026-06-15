@@ -57,9 +57,7 @@ function emailTemplate(title, body, ctaText, ctaUrl) {
   `;
 }
 
-async function sendEmail(to, subject, html) {
-  await db.collection("mail").add({ to, message: { subject, html } });
-}
+
 
 async function getUserData(userId) {
   const snap = await db.collection("users").doc(userId).get();
@@ -676,31 +674,12 @@ exports.aiRecommendations = regionalFunctions.pubsub
 
 
 
-  // ============================================
-//   ZiBuy — Expiry Reminder System
-//   Runs in Cloud Functions (functions/index.js)
-//   Add these two functions to your existing
-//   functions/index.js file
-// ============================================
-
-// ── Add these imports at the top of index.js if not already there ──
-// const functions  = require("firebase-functions");
-// const admin      = require("firebase-admin");
-// const nodemailer = require("nodemailer");
-// const regionalFunctions = functions.region("us-central1");
-
-// ============================================
-// 1. PLAN EXPIRY REMINDERS (runs daily at 8am)
-//    Checks business_accounts expiring in 2 days
-//    Sends WhatsApp link + in-app notification
-// ============================================
-
 exports.planExpiryReminders = regionalFunctions
   .pubsub.schedule("0 8 * * *")          // every day at 8:00am
   .timeZone("Africa/Kampala")
+  
   .onRun(async () => {
 
-    const db  = admin.firestore();
     const now = new Date();
 
     // Window: expires between now and 48 hours from now
@@ -780,13 +759,7 @@ exports.planExpiryReminders = regionalFunctions
 
         // ── 3. Email reminder ─────────────────
         if (email) {
-          const transporter = nodemailer.createTransport({
-            service: "gmail",
-            auth: {
-              user: process.env.GMAIL_EMAIL,
-              pass: process.env.GMAIL_PASSWORD
-            }
-          });
+          const transporter = createTransporter();
 
           await transporter.sendMail({
             from:    `"ZiBuy Uganda" <${process.env.GMAIL_EMAIL}>`,
@@ -830,18 +803,14 @@ exports.planExpiryReminders = regionalFunctions
   });
 
 
-// ============================================
-// 2. BOOST EXPIRY REMINDERS (runs daily at 9am)
-//    Checks boost_requests expiring in 2 days
-// ============================================
+
 
 exports.boostExpiryReminders = regionalFunctions
   .pubsub.schedule("0 9 * * *")          // every day at 9:00am
   .timeZone("Africa/Kampala")
   .onRun(async () => {
 
-    const db  = admin.firestore();
-    const now = new Date();
+    const now   = new Date();
     const in48h = new Date(now.getTime() + 48 * 60 * 60 * 1000);
 
     try {
@@ -912,3 +881,31 @@ exports.boostExpiryReminders = regionalFunctions
 
     return null;
   });
+
+
+
+  // ── TEMP TEST FUNCTION — delete after testing ──
+exports.testBoostReminders = regionalFunctions.https.onRequest(async (req, res) => {
+  const now   = new Date();
+  const in48h = new Date(now.getTime() + 48 * 60 * 60 * 1000);
+
+  try {
+    const snap = await db.collection("boost_requests")
+      .where("status",    "==", "approved")
+      .where("expiresAt", ">",  now)
+      .where("expiresAt", "<=", in48h)
+      .get();
+
+    res.json({
+      found: snap.size,
+      boosts: snap.docs.map(d => ({
+        id:          d.id,
+        productName: d.data().productName,
+        expiresAt:   d.data().expiresAt?.toDate?.().toISOString(),
+        userId:      d.data().userId
+      }))
+    });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
