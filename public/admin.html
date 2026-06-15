@@ -611,11 +611,9 @@
 
       <div class="admin-card" style="margin-bottom:14px">
         <h2>➕ Add New Banner</h2>
-
         <input id="bn-title" placeholder="Advertiser name (e.g. MTN Uganda)"
           class="search-input">
 
-        <!-- FILE PICK — replaces the URL input -->
         <label style="display:flex;align-items:center;gap:12px;padding:14px;
           border:2px dashed #e5e7eb;border-radius:10px;cursor:pointer;
           background:#fafafa;margin-bottom:10px"
@@ -637,12 +635,12 @@
 
         <input id="bn-url" placeholder="Destination URL e.g. /product.html?id=abc123"
           class="search-input">
-
         <input id="bn-price" type="number" placeholder="Monthly price (UGX) — optional"
           class="search-input">
 
         <button id="bn-save-btn" onclick="addBanner()"
-          style="background:#ff6600;color:white;border:none;padding:12px;border-radius:10px;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit;width:100%">
+          style="background:#ff6600;color:white;border:none;padding:12px;border-radius:10px;
+          font-weight:800;font-size:14px;cursor:pointer;font-family:inherit;width:100%">
           📢 Publish Banner
         </button>
       </div>
@@ -653,85 +651,84 @@
           <p style="color:var(--gray);font-size:13px">Loading...</p>
         </div>
       </div>
-
     </div>
-    <!-- ══ end section-banners ══ -->
 
     <!-- ══ WHATSAPP REMINDERS ══ -->
     <div class="admin-section" id="section-reminders">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-    <h2 style="margin:0">📲 WhatsApp Reminders</h2>
-    <button onclick="window.loadReminders()"
-      style="background:#f3f4f6;border:none;padding:8px 16px;border-radius:8px;
-      font-weight:700;font-size:13px;cursor:pointer">🔄 Refresh</button>
-  </div>
+      <h2 style="font-size:20px;font-weight:800;margin-bottom:16px">📲 WhatsApp Reminders</h2>
 
-  <div style="background:#fff4ee;border:1.5px solid #ffd9bf;border-radius:12px;
-    padding:14px;margin-bottom:20px;font-size:13px;color:#92400e">
-    💡 These are auto-generated reminders for users whose plans or boosts are
-    expiring soon. Click <strong>Send via WhatsApp</strong> to open WhatsApp
-    with the message pre-filled, then press Send.
-  </div>
+      <div style="background:#fff4ee;border:1.5px solid #ffd9bf;border-radius:12px;
+        padding:14px;margin-bottom:20px;font-size:13px;color:#92400e;line-height:1.6">
+        💡 Auto-generated reminders for users whose plans or boosts expire within 48 hours.
+        Click <strong>Send WhatsApp</strong> to open WhatsApp with the message pre-filled — just press Send.
+      </div>
 
-  <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
-    <button onclick="filterReminders('all')" class="action-btn btn-approve" id="rem-filter-all">
-      All
-    </button>
-    <button onclick="filterReminders('plan_expiry')" class="action-btn" id="rem-filter-plan"
-      style="background:#fef3c7;color:#92400e">
-      Plan Expiry
-    </button>
-    <button onclick="filterReminders('boost_expiry')" class="action-btn" id="rem-filter-boost"
-      style="background:#dbeafe;color:#1e40af">
-      Boost Expiry
-    </button>
-    <button onclick="filterReminders('unsent')" class="action-btn" id="rem-filter-unsent"
-      style="background:#fee2e2;color:#991b1b">
-      Unsent Only
-    </button>
-  </div>
+      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+        <button onclick="filterReminders('all')"
+          style="background:#ff6600;color:white;border:none;padding:8px 14px;
+          border-radius:8px;font-weight:700;font-size:13px;cursor:pointer">All</button>
+        <button onclick="filterReminders('plan_expiry')"
+          style="background:#fef3c7;color:#92400e;border:none;padding:8px 14px;
+          border-radius:8px;font-weight:700;font-size:13px;cursor:pointer">📅 Plan Expiry</button>
+        <button onclick="filterReminders('boost_expiry')"
+          style="background:#dbeafe;color:#1e40af;border:none;padding:8px 14px;
+          border-radius:8px;font-weight:700;font-size:13px;cursor:pointer">⭐ Boost Expiry</button>
+        <button onclick="filterReminders('unsent')"
+          style="background:#fee2e2;color:#991b1b;border:none;padding:8px 14px;
+          border-radius:8px;font-weight:700;font-size:13px;cursor:pointer">⏳ Unsent Only</button>
+        <button onclick="loadReminders()"
+          style="background:#f3f4f6;color:#374151;border:none;padding:8px 14px;
+          border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;margin-left:auto">
+          🔄 Refresh</button>
+      </div>
 
-  <div id="reminders-list">
-    <p style="color:#6b7280;text-align:center;padding:40px">
-      Click Refresh to load reminders
-    </p>
-  </div>
-</div>
+      <div id="reminders-list">
+        <p style="color:#6b7280;text-align:center;padding:60px 20px">
+          Click 🔄 Refresh to load reminders
+        </p>
+      </div>
+    </div>
 
-<!-- ── JOB ADS SECTION ── -->
-<div class="admin-section" id="section-job-ads">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-    <h2 style="margin:0">💼 Job Ads</h2>
-    <button onclick="loadJobAdsAdmin()"
-      style="background:#f3f4f6;border:none;padding:8px 16px;border-radius:8px;
-      font-weight:700;font-size:13px;cursor:pointer">🔄 Refresh</button>
-  </div>
-  <div style="overflow-x:auto">
-    <table style="width:100%;border-collapse:collapse;min-width:600px">
-      <thead>
-        <tr style="background:#f9fafb">
-          <th style="padding:12px;text-align:left;font-size:12px;color:#6b7280;
-            text-transform:uppercase;border-bottom:2px solid #e5e7eb">Job Title</th>
-          <th style="padding:12px;text-align:left;font-size:12px;color:#6b7280;
-            text-transform:uppercase;border-bottom:2px solid #e5e7eb">Company</th>
-          <th style="padding:12px;text-align:left;font-size:12px;color:#6b7280;
-            text-transform:uppercase;border-bottom:2px solid #e5e7eb">Package</th>
-          <th style="padding:12px;text-align:left;font-size:12px;color:#6b7280;
-            text-transform:uppercase;border-bottom:2px solid #e5e7eb">Payment</th>
-          <th style="padding:12px;text-align:left;font-size:12px;color:#6b7280;
-            text-transform:uppercase;border-bottom:2px solid #e5e7eb">Status</th>
-          <th style="padding:12px;text-align:left;font-size:12px;color:#6b7280;
-            text-transform:uppercase;border-bottom:2px solid #e5e7eb">Actions</th>
-        </tr>
-      </thead>
-      <tbody id="job-ads-table-body">
-        <tr><td colspan="6" style="text-align:center;padding:40px;color:#6b7280">
-          Click Refresh to load job ads
-        </td></tr>
-      </tbody>
-    </table>
-  </div>
-    <!-- ══ end section-job-ads ══ -->
+    <!-- ══ JOB ADS ══ -->
+    <div class="admin-section" id="section-job-ads">
+      <h2 style="font-size:20px;font-weight:800;margin-bottom:16px">💼 Job Ads</h2>
+
+      <div style="background:#dbeafe;border:1.5px solid #93c5fd;border-radius:12px;
+        padding:14px;margin-bottom:20px;font-size:13px;color:#1e40af;line-height:1.6">
+        💼 Job ads submitted via <strong>hiring.html</strong> appear here as
+        <strong>pending</strong>. Verify payment then click Approve to make them live.
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+        <button onclick="loadJobAdsAdmin()"
+          style="background:#f3f4f6;border:none;padding:8px 16px;border-radius:8px;
+          font-weight:700;font-size:13px;cursor:pointer;font-family:inherit">
+          🔄 Refresh
+        </button>
+      </div>
+
+      <div class="admin-card">
+        <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Job Title</th>
+                <th>Company</th>
+                <th>Package</th>
+                <th>Payment Ref</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="job-ads-table-body">
+              <tr><td colspan="6" style="text-align:center;padding:40px;color:#6b7280">
+                Click 🔄 Refresh to load job ads
+              </td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
 
     <!-- ══ CATEGORY SPONSORS ══ -->
     <div class="admin-section" id="section-sponsors">
@@ -740,7 +737,7 @@
       <div class="admin-card" style="margin-bottom:16px">
         <h2>➕ Add Sponsor</h2>
         <p style="font-size:13px;color:var(--gray);margin-bottom:14px">
-          UGX 200,000/month per category. Only 1 sponsor per category at a time.
+          UGX 200,000/month per category. Only 1 active sponsor per category at a time.
         </p>
 
         <select id="cs-category" class="search-input">
@@ -768,7 +765,7 @@
 
         <input id="cs-name" placeholder="Sponsor / Business Name e.g. MTN Uganda"
           class="search-input">
-        <input id="cs-url" placeholder="Sponsor website e.g. https://mtn.co.ug"
+        <input id="cs-url" placeholder="Full URL e.g. https://mtn.co.ug"
           class="search-input">
         <input id="cs-price" type="number" placeholder="Amount paid (UGX)"
           class="search-input">
@@ -784,13 +781,19 @@
       </div>
 
       <div class="admin-card">
-        <h2>Active Sponsorships</h2>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <h2 style="margin:0">Active Sponsorships</h2>
+          <button onclick="loadCategorySponsorsAdmin()"
+            style="background:#f3f4f6;border:none;padding:6px 14px;border-radius:8px;
+            font-weight:700;font-size:12px;cursor:pointer;font-family:inherit">
+            🔄 Refresh
+          </button>
+        </div>
         <div id="sponsors-list">
-          <p style="color:var(--gray);font-size:13px">Loading...</p>
+          <p style="color:var(--gray);font-size:13px">Click Refresh to load</p>
         </div>
       </div>
     </div>
-    <!-- ══ end section-sponsors ══ -->
 
   </main>
 </div>
