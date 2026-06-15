@@ -1475,10 +1475,16 @@ window.addCategorySponsor = async function() {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 30);
 
+    // Ensure URL has protocol before saving
+    let cleanUrl = sponsorUrl;
+    if (cleanUrl && !cleanUrl.startsWith("http")) {
+      cleanUrl = "https://" + cleanUrl;
+    }
+
     await addDoc(collection(db, "category_sponsors"), {
       category,
       sponsorName,
-      sponsorUrl,
+      sponsorUrl: cleanUrl,
       price,
       txnRef,
       active:    true,
