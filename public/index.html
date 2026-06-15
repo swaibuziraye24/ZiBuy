@@ -1,4 +1,6 @@
+bash
 
+cat > /mnt/user-data/outputs/index.html << 'HTMLEOF'
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,259 +8,730 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#ff6600">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="mobile-web-app-capable" content="yes">
   <title>ZiBuy — Buy & Sell in Uganda</title>
   <link rel="stylesheet" href="style.css">
-  <link rel="manifest" href="/manifest.json">
+  <style>
+    /* ── NEW TOPBAR ── */
+    .zb-topbar {
+      background: #fff;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid #f0f0f0;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .zb-logo {
+      font-size: 26px;
+      font-weight: 900;
+      color: #111827;
+      text-decoration: none;
+      flex-shrink: 0;
+      font-family: 'Syne', sans-serif;
+    }
+    .zb-logo span { color: #ff6600; }
+
+    .zb-search-wrap {
+      flex: 1;
+      display: flex;
+      max-width: 580px;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .zb-search-wrap select {
+      border: none;
+      border-right: 1.5px solid #e5e7eb;
+      padding: 0 12px;
+      font-size: 13px;
+      font-family: inherit;
+      background: #f9fafb;
+      color: #374151;
+      outline: none;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .zb-search-wrap input {
+      flex: 1;
+      border: none;
+      padding: 10px 14px;
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+    }
+    .zb-search-btn {
+      background: #ff6600;
+      color: white;
+      border: none;
+      padding: 0 20px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+    .zb-topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-shrink: 0;
+    }
+    .zb-icon-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 11px;
+      color: #374151;
+      font-weight: 600;
+      font-family: inherit;
+      position: relative;
+    }
+    .zb-icon-btn svg { color: #374151; }
+    .zb-cart-badge {
+      position: absolute;
+      top: -4px;
+      right: -8px;
+      background: #ff6600;
+      color: white;
+      font-size: 10px;
+      font-weight: 800;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .zb-login-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #ff6600;
+      color: white;
+      border: none;
+      padding: 9px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+
+    /* ── SECOND NAV ── */
+    .zb-subnav {
+      background: #fff;
+      border-bottom: 1px solid #f0f0f0;
+      padding: 0 20px;
+      display: flex;
+      align-items: center;
+      gap: 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .zb-subnav::-webkit-scrollbar { display: none; }
+    .zb-subnav-browse {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px 12px 0;
+      font-size: 13px;
+      font-weight: 800;
+      color: #111827;
+      border-right: 1px solid #e5e7eb;
+      margin-right: 8px;
+      white-space: nowrap;
+      cursor: pointer;
+      background: none;
+      border-top: none;
+      border-bottom: none;
+      border-left: none;
+      font-family: inherit;
+    }
+    .zb-subnav a {
+      padding: 12px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #374151;
+      text-decoration: none;
+      white-space: nowrap;
+      border-bottom: 2px solid transparent;
+      transition: .15s;
+    }
+    .zb-subnav a:hover { color: #ff6600; border-bottom-color: #ff6600; }
+    .zb-subnav a.active { color: #ff6600; border-bottom-color: #ff6600; font-weight: 700; }
+    .zb-subnav-sell {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      background: #fff4ee;
+      border: 1.5px solid #ff6600;
+      border-radius: 7px;
+      font-size: 12px;
+      font-weight: 800;
+      color: #ff6600;
+      cursor: pointer;
+      white-space: nowrap;
+      text-decoration: none;
+      font-family: inherit;
+      flex-shrink: 0;
+    }
+
+    /* ── HERO ── */
+    .zb-hero {
+      background: linear-gradient(135deg, #fff8f4 0%, #fff3ec 100%);
+      min-height: 380px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: center;
+      padding: 40px 40px 0;
+      position: relative;
+      overflow: hidden;
+    }
+    .zb-hero::before {
+      content: "";
+      position: absolute;
+      right: 15%;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 340px;
+      height: 340px;
+      background: #ff6600;
+      border-radius: 50%;
+      opacity: .12;
+    }
+    .zb-hero-text { z-index: 2; }
+    .zb-hero-text h1 {
+      font-size: clamp(28px, 4vw, 50px);
+      font-weight: 900;
+      color: #111827;
+      line-height: 1.15;
+      margin: 0 0 14px;
+      font-family: 'Syne', sans-serif;
+    }
+    .zb-hero-text h1 span { color: #ff6600; }
+    .zb-hero-text p { font-size: 15px; color: #6b7280; margin: 0 0 24px; line-height: 1.6; }
+    .zb-hero-btns { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 28px; }
+    .zb-btn-primary {
+      display: flex; align-items: center; gap: 8px;
+      background: #ff6600; color: white; border: none;
+      padding: 13px 24px; border-radius: 8px; font-weight: 800;
+      font-size: 14px; cursor: pointer; font-family: inherit;
+      text-decoration: none;
+    }
+    .zb-btn-secondary {
+      display: flex; align-items: center; gap: 8px;
+      background: white; color: #111827;
+      border: 1.5px solid #e5e7eb;
+      padding: 13px 24px; border-radius: 8px; font-weight: 700;
+      font-size: 14px; cursor: pointer; font-family: inherit;
+      text-decoration: none;
+    }
+    .zb-hero-trust {
+      display: flex; gap: 20px; flex-wrap: wrap;
+    }
+    .zb-trust-item {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; color: #6b7280; font-weight: 600;
+    }
+    .zb-hero-img {
+      z-index: 2; display: flex; justify-content: flex-end; align-items: flex-end;
+      position: relative;
+    }
+    .zb-hero-img img {
+      height: 360px; object-fit: contain; position: relative; z-index: 2;
+    }
+    .zb-safe-card {
+      position: absolute;
+      bottom: 40px;
+      right: 20px;
+      background: white;
+      border-radius: 14px;
+      padding: 16px 20px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+      z-index: 3;
+      min-width: 160px;
+    }
+    .zb-safe-card .zb-safe-icon {
+      width: 40px; height: 40px; background: #fff4ee; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; margin-bottom: 8px;
+    }
+    .zb-safe-card p { margin: 0; font-size: 13px; font-weight: 800; color: #111827; }
+    .zb-safe-card span { font-size: 11px; color: #6b7280; }
+    .zb-safe-card a { font-size: 12px; color: #ff6600; font-weight: 700; text-decoration: none; }
+
+    /* ── FEATURE STRIP ── */
+    .zb-features {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      background: white;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      margin: 0 20px;
+      border-radius: 14px;
+      transform: translateY(-28px);
+      overflow: hidden;
+    }
+    .zb-feature {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 20px 18px;
+      border-right: 1px solid #f0f0f0;
+    }
+    .zb-feature:last-child { border-right: none; }
+    .zb-feature-icon {
+      width: 48px; height: 48px; background: #fff4ee; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; flex-shrink: 0;
+    }
+    .zb-feature h4 { font-size: 13px; font-weight: 800; color: #111827; margin: 0 0 3px; }
+    .zb-feature p  { font-size: 11px; color: #6b7280; margin: 0; line-height: 1.4; }
+
+    /* ── CATEGORY GRID ── */
+    .zb-cat-section {
+      padding: 0 20px 32px;
+    }
+    .zb-cat-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+    .zb-cat-header h2 {
+      font-size: 20px; font-weight: 800; color: #111827; margin: 0;
+      font-family: 'Syne', sans-serif;
+    }
+    .zb-cat-header a {
+      font-size: 13px; font-weight: 700; color: #ff6600; text-decoration: none;
+    }
+    .zb-cat-grid {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 12px;
+    }
+    .zb-cat-card {
+      background: white;
+      border-radius: 12px;
+      padding: 16px 8px 14px;
+      text-align: center;
+      border: 1.5px solid #f0f0f0;
+      cursor: pointer;
+      transition: all .2s;
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .zb-cat-card:hover {
+      border-color: #ff6600;
+      box-shadow: 0 4px 16px rgba(255,102,0,0.12);
+      transform: translateY(-3px);
+    }
+    .zb-cat-card.active { border-color: #ff6600; background: #fff4ee; }
+    .zb-cat-img {
+      width: 56px; height: 56px; object-fit: contain;
+    }
+    .zb-cat-card span {
+      font-size: 12px; font-weight: 700; color: #111827;
+    }
+
+    /* ── CATEGORY SPONSOR STRIP ── */
+    #sponsor-banner-strip {
+      margin: 0 20px 16px;
+      border-radius: 10px;
+    }
+
+    /* ── OLD CATEGORIES NAV — hide it ── */
+    .categories { display: none !important; }
+    .hero        { display: none !important; }
+    .topbar      { display: none !important; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .zb-cat-grid { grid-template-columns: repeat(4, 1fr); }
+      .zb-features { grid-template-columns: repeat(2, 1fr); margin: 0 12px; }
+      .zb-feature  { border-right: none; border-bottom: 1px solid #f0f0f0; }
+      .zb-hero { grid-template-columns: 1fr; padding: 28px 20px 0; min-height: auto; }
+      .zb-hero-img { display: none; }
+      .zb-hero::before { display: none; }
+    }
+    @media (max-width: 600px) {
+      .zb-topbar { padding: 10px 12px; gap: 8px; }
+      .zb-search-wrap select { display: none; }
+      .zb-topbar-right .zb-icon-btn:not(:last-child):not(.keep) { display: none; }
+      .zb-cat-grid { grid-template-columns: repeat(4, 1fr); gap: 8px; }
+      .zb-cat-section { padding: 0 12px 24px; }
+      .zb-hero { padding: 20px 12px 0; }
+      .zb-subnav { padding: 0 12px; }
+      .zb-features { margin: 0 12px; }
+    }
+    @media (max-width: 400px) {
+      .zb-cat-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+  </style>
 </head>
 <body>
 
-<!-- ============ TOP BAR ============ -->
-<header class="topbar">
-  <h1 class="logo" id="secret-admin-trigger">
-  <a href="index.html">
-    <img
-      src="my_logo.png"
-      alt="ZiBuy"
-      style="height:55px;width:auto;"
-    >
-  </a>
-</h1>
+<!-- ══ NEW TOPBAR ══ -->
+<header class="zb-topbar">
+  <a href="index.html" class="zb-logo" id="secret-admin-trigger">Zi<span>Buy</span></a>
 
-  <div class="search-wrap">
-    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-    </svg>
-    <input type="text" id="search-input"
-      placeholder="Search phones, cars, shoes..."
+  <div class="zb-search-wrap">
+    <select>
+      <option>All Categories</option>
+      <option>Phones</option>
+      <option>Electronics</option>
+      <option>Vehicles</option>
+      <option>Fashion</option>
+      <option>Home</option>
+    </select>
+    <input type="text" id="search-input" placeholder="Search for anything..."
       onkeyup="searchProducts()">
+    <button class="zb-search-btn" onclick="searchProducts()">Search</button>
   </div>
 
-  <div class="topbar-actions">
-    <button class="btn btn-orange" id="post-ad-btn"
-      onclick="window.location.href='post-ad.html'" style="display:none">
+  <div class="zb-topbar-right">
+    <!-- Wishlist -->
+    <button class="zb-icon-btn" onclick="window.location.href='dashboard.html'" id="dashboard-btn" style="display:none">
+      <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+      </svg>
+      Wishlist
+    </button>
+
+    <!-- Cart -->
+    <button class="zb-icon-btn keep" onclick="toggleCart()">
+      <div style="position:relative">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
+        </svg>
+        <span class="zb-cart-badge" id="cart-count">0</span>
+      </div>
+      Cart
+    </button>
+
+    <!-- Notifications -->
+    <button class="zb-icon-btn" onclick="window.location.href='notifications.html'" id="notifications-btn" style="display:none">
+      <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>
+      </svg>
+      Alerts
+    </button>
+
+    <!-- Login / Account -->
+    <button class="zb-login-btn" id="account-btn" onclick="openAuthModal()">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
+      </svg>
+      Login / Sign Up
+    </button>
+
+    <!-- Post Ad -->
+    <button class="zb-btn-primary" id="post-ad-btn" onclick="window.location.href='post-ad.html'" style="display:none;padding:9px 16px;font-size:13px">
       + Post Ad
     </button>
-    <button class="btn btn-outline" id="messages-btn"
-      onclick="window.location.href='messages.html'" style="display:none">
-      💬 Messages
-    </button>
-    <button class="btn btn-outline" id="notifications-btn"
-      onclick="window.location.href='notifications.html'" style="display:none">
-      🔔 Notifications
-    </button>
-    <button class="btn btn-outline" id="dashboard-btn"
-      onclick="window.location.href='dashboard.html'" style="display:none">
-      📊 Dashboard
-    </button>
-    <button class="btn btn-outline" id="upgrade-btn"
-      onclick="window.location.href='business-plans.html'" style="display:none">
-      💼 Plans
-    </button>
-    <button class="btn btn-orange" onclick="window.location.href='shops.html'">
-      🏪 Shops
-    </button>
-    <button class="btn btn-orange" id="admin-panel-btn"
-      onclick="window.location.href='admin.html'" style="display:none">
-      ⚙️ Admin
-    </button>
-    <button class="btn btn-outline" id="account-btn" onclick="openAuthModal()">
-      Account
-    </button>
-    <div class="cart-btn-wrap">
-      <button class="btn btn-orange" onclick="toggleCart()">🛒 Cart</button>
-      <span class="cart-badge" id="cart-count">0</span>
-    </div>
   </div>
 </header>
 
-<!-- ============ HERO ============ -->
-<section class="hero">
-  <div class="hero-text">
-    <h2>Buy & Sell Anything<br>in Uganda 🇺🇬</h2>
-    <p>Uganda's trusted free classifieds marketplace</p>
-  </div>
-  <div class="hero-stats">
-    <div class="stat-pill">
-      <strong>851K</strong>
-      <span>Active Ads</span>
-    </div>
-    <div class="stat-pill">
-      <strong>Free</strong>
-      <span>To Post</span>
-    </div>
-    <div class="stat-pill">
-      <strong>Safe</strong>
-      <span>Payments</span>
-    </div>
-  </div>
-</section>
-
-<!-- ============ INSTALL BANNER ============ -->
-<div id="installBanner" style="display:none;justify-content:space-between;align-items:center;padding:12px 16px;background:#fff3e6;border:1px solid #ff6600;margin:8px 16px;border-radius:8px">
-  <span style="font-size:13px">Install ZiBuy for faster shopping &amp; offline access</span>
-  <button onclick="installZiBuy()" style="background:#ff6600;color:white;border:none;padding:8px 14px;border-radius:6px;cursor:pointer;font-weight:700;font-size:13px">
-    Install
+<!-- ══ SECOND NAV ══ -->
+<nav class="zb-subnav">
+  <button class="zb-subnav-browse">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+      <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+    Browse Categories
   </button>
-</div>
-
-<!-- ============ AD BANNER SLOT ============ -->
-<div id="top-banner-slot" style="display:none;margin:0;padding:8px 16px;background:#f9fafb"></div>
-
-<!-- ============ CATEGORIES ============ -->
-<nav class="categories">
-  <button class="cat-btn active" data-cat="all" onclick="filterCategory('all', this)">🏪 All</button>
-  <button class="cat-btn" data-cat="phones" onclick="filterCategory('phones', this)">📱 Phones</button>
-  <button class="cat-btn" data-cat="electronics" onclick="filterCategory('electronics', this)">💻 Electronics</button>
-  <button class="cat-btn" data-cat="fashion" onclick="filterCategory('fashion', this)">👗 Fashion</button>
-  <button class="cat-btn" data-cat="shoes" onclick="filterCategory('shoes', this)">👟 Shoes</button>
-  <button class="cat-btn" data-cat="beauty" onclick="filterCategory('beauty', this)">💄 Beauty</button>
-  <button class="cat-btn" data-cat="bags" onclick="filterCategory('bags', this)">👜 Bags</button>
-  <button class="cat-btn" data-cat="groceries" onclick="filterCategory('groceries', this)">🛒 Groceries</button>
-  <button class="cat-btn" data-cat="watches" onclick="filterCategory('watches', this)">⌚ Watches</button>
-  <button class="cat-btn" data-cat="computers" onclick="filterCategory('computers', this)">🖥️ Computers</button>
-  <button class="cat-btn" data-cat="gaming" onclick="filterCategory('gaming', this)">🎮 Gaming</button>
-  <button class="cat-btn" data-cat="home" onclick="filterCategory('home', this)">🏠 Home</button>
- <button class="cat-btn" data-cat="accessories"        onclick="filterCategory('accessories')">💎 Accessories</button>
-  <button class="cat-btn" data-cat="services"           onclick="filterCategory('services')">🔧 Services</button>
-  <button class="cat-btn" data-cat="vehicles"           onclick="filterCategory('vehicles')">🚗 Vehicles</button>
-  <button class="cat-btn" data-cat="animals"            onclick="filterCategory('animals')">🐾 Animals & Pets</button>
-  <button class="cat-btn" data-cat="babies"             onclick="filterCategory('babies')">👶 Babies & Kids</button>
-  <button class="cat-btn" data-cat="agriculture"        onclick="filterCategory('agriculture')">🌾 Agriculture</button>
-  <button class="cat-btn" data-cat="commercial"         onclick="filterCategory('commercial')">🏗️ Commercial Equip.</button>
-  <button class="cat-btn" data-cat="tours"              onclick="filterCategory('tours')">✈️ Tours & Leisure</button>
-  <button class="cat-btn" data-cat="seeking-work"       onclick="filterCategory('seeking-work')">💼 Seeking Work / CVs</button>
-  <button class="cat-btn filter-toggle-btn" onclick="toggleFilters()" style="margin-left:auto">🔽 Filters</button>
-  
+  <a href="index.html" class="active">Home</a>
+  <a href="index.html">Products</a>
+  <a href="index.html?cat=all" onclick="filterCategory('all');return false">Stores</a>
+  <a href="dashboard.html" id="messages-btn" style="display:none">💬 Messages</a>
+  <a href="post-ad.html">Boost Ads</a>
+  <a href="business-plans.html">Subscriptions</a>
+  <a href="advertise.html">Advertise</a>
+  <a href="support.html">Help</a>
+  <a href="post-ad.html" class="zb-subnav-sell">
+    🏪 Sell on ZiBuy
+  </a>
 </nav>
 
-<!-- ============ FEATURED SHOPS ============ -->
-<section class="featured-shops-section" id="featured-shops-section" style="display:none">
-  <div class="section-header">
-    <div>
-      <h2>🏪 Featured Shops</h2>
-      <p>Trusted business sellers on ZiBuy</p>
+<!-- ══ HERO ══ -->
+<section class="zb-hero">
+  <div class="zb-hero-text">
+    <h1>Buy. Sell. Grow<br>With <span>ZiBuy</span></h1>
+    <p>Uganda's trusted marketplace for amazing deals,<br>reliable sellers, and happy buyers. 🇺🇬</p>
+    <div class="zb-hero-btns">
+      <a href="index.html" class="zb-btn-primary" onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'});return false">
+        🛍️ Shop Now
+      </a>
+      <a href="post-ad.html" class="zb-btn-secondary">
+        🏪 Sell Your Product
+      </a>
+    </div>
+    <div class="zb-hero-trust">
+      <div class="zb-trust-item">
+        <svg width="14" height="14" fill="none" stroke="#ff6600" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        Trusted Sellers
+      </div>
+      <div class="zb-trust-item">
+        <svg width="14" height="14" fill="none" stroke="#ff6600" stroke-width="2" viewBox="0 0 24 24">
+          <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+        </svg>
+        Secure Payments
+      </div>
+      <div class="zb-trust-item">
+        <svg width="14" height="14" fill="none" stroke="#ff6600" stroke-width="2" viewBox="0 0 24 24">
+          <rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+        </svg>
+        Fast Delivery
+      </div>
     </div>
   </div>
-  <div id="featured-shops" class="featured-shops-row"></div>
+  <div class="zb-hero-img">
+    <!-- Safe card overlay -->
+    <div class="zb-safe-card">
+      <div class="zb-safe-icon">🛡️</div>
+      <p>Safe & Secure</p>
+      <span>Your safety is our top priority</span><br>
+      <a href="safety.html">Learn more →</a>
+    </div>
+  </div>
 </section>
 
-<!-- ============ ADVANCED FILTERS ============ -->
-<div id="filters-panel" class="filters-panel">
-  <div class="filters-container">
-    <div class="filter-group">
-      <h3>💰 Price Range</h3>
-      <div class="price-inputs">
-        <input type="number" id="price-min" placeholder="Min UGX" value="0">
-        <span>—</span>
-        <input type="number" id="price-max" placeholder="Max UGX" value="100000000">
-      </div>
+<!-- ══ FEATURE STRIP ══ -->
+<div class="zb-features">
+  <div class="zb-feature">
+    <div class="zb-feature-icon">🛍️</div>
+    <div>
+      <h4>Wide Range of Products</h4>
+      <p>From electronics to fashion, find everything you need</p>
     </div>
-
-    <div class="filter-group">
-      <h3>📍 Location</h3>
-      <select id="filter-location">
-        <option value="">All Uganda</option>
-        <option value="Kampala">Kampala</option>
-        <option value="Wakiso">Wakiso</option>
-        <option value="Mukono">Mukono</option>
-        <option value="Jinja">Jinja</option>
-        <option value="Mbarara">Mbarara</option>
-        <option value="Entebbe">Entebbe</option>
-        <option value="Gulu">Gulu</option>
-        <option value="Mbale">Mbale</option>
-        <option value="Masaka">Masaka</option>
-        <option value="Fort Portal">Fort Portal</option>
-        <option value="Hoima">Hoima</option>
-        <option value="Kiboga">Kiboga</option>
-        <option value="Mubende">Mubende</option>
-        <option value="Mityana">Mityana</option>
-        <option value="Kyankwanzi">Kyankwanzi</option>
-        <option value="Kasese">Kasese</option>
-        <option value="Lugazi">Lugazi</option>
-        <option value="Mpigi">Mpigi</option>
-        <option value="Arua">Arua</option>
-        <option value="Masindi">Masindi</option>
-        <option value="Bushenyi">Bushenyi</option>
-        <option value="Isingiro">Isingiro</option>
-        <option value="Kamuli">Kamuli</option>
-        <option value="Other">Other</option>
-      </select>
+  </div>
+  <div class="zb-feature">
+    <div class="zb-feature-icon">✅</div>
+    <div>
+      <h4>Verified Sellers</h4>
+      <p>We verify sellers to ensure quality and trust</p>
     </div>
-
-    <div class="filter-group">
-      <h3>📅 Posted</h3>
-      <div class="date-filter-btns">
-        <button class="date-filter-btn active" onclick="filterByDate('all')">All Time</button>
-        <button class="date-filter-btn" onclick="filterByDate('24h')">Last 24h</button>
-        <button class="date-filter-btn" onclick="filterByDate('7d')">Last 7 Days</button>
-        <button class="date-filter-btn" onclick="filterByDate('30d')">Last 30 Days</button>
-      </div>
+  </div>
+  <div class="zb-feature">
+    <div class="zb-feature-icon">📱</div>
+    <div>
+      <h4>Secure Payments</h4>
+      <p>Pay safely with MTN, Airtel or credit cards</p>
     </div>
-
-    <div class="filter-group">
-      <h3>🔄 Sort By</h3>
-      <select id="filter-sort" onchange="applyFilters()">
-        <option value="newest">Newest First</option>
-        <option value="price-low">Price: Low to High</option>
-        <option value="price-high">Price: High to Low</option>
-        <option value="views">Most Viewed</option>
-      </select>
-    </div>
-
-    <div class="filter-actions">
-      <button class="btn btn-outline" onclick="resetFilters()">Reset Filters</button>
-      <button class="btn btn-orange" onclick="applyFilters()">Apply Filters</button>
+  </div>
+  <div class="zb-feature">
+    <div class="zb-feature-icon">🚚</div>
+    <div>
+      <h4>Fast & Reliable Delivery</h4>
+      <p>Get your products delivered fast and on time</p>
     </div>
   </div>
 </div>
 
-<!-- ============ CATEGORY & SUBCATEGORY NAV ============ -->
-<div id="category-nav" class="category-nav"></div>
-
-
-<!-- ============ SECTION HEADER ============ -->
-<div class="section-header">
-  <div>
-    <h2>Latest Listings</h2>
-    <p id="product-count"></p>
-  </div>
-  <a href="hiring.html"
-    style="display:inline-flex;align-items:center;gap:6px;
-    background:#1e40af;color:white;padding:10px 18px;border-radius:10px;
-    font-weight:800;font-size:13px;text-decoration:none;white-space:nowrap">
-    💼 Post a Job
-  </a>
-  <select class="sort-select" onchange="applyFilters()">
-    <option value="newest">Newest First</option>
-    <option value="price-low">Price: Low to High</option>
-    <option value="price-high">Price: High to Low</option>
-  </select>
-</div>
-
-
-
-<!-- ============ CATEGORY SPONSOR BANNER ============ -->
+<!-- ══ CATEGORY SPONSOR STRIP ══ -->
 <div id="sponsor-banner-strip" style="display:none;
   background:linear-gradient(135deg,#fff4ee,#fffbeb);
-  border-top:1px solid #fde68a;border-bottom:1px solid #fde68a;
-  padding:10px 24px;font-size:12px;color:#92400e;
-  display:flex;align-items:center;gap:10px">
+  border:1px solid #fde68a;padding:10px 24px;
+  font-size:12px;color:#92400e;
+  align-items:center;gap:10px;margin:0 20px 8px;border-radius:10px">
   <span style="font-weight:800">📣 Sponsored Category:</span>
   <span id="sponsor-strip-text"></span>
   <a id="sponsor-strip-link" href="#" target="_blank"
     style="margin-left:auto;background:#ff6600;color:white;
     padding:5px 12px;border-radius:6px;font-weight:800;
-    font-size:11px;text-decoration:none">
-    Visit →
+    font-size:11px;text-decoration:none">Visit →</a>
+</div>
+
+<!-- ══ BANNER AD SLOT ══ -->
+<div id="top-banner-slot" style="display:none;padding:0 20px;margin-bottom:12px"></div>
+
+<!-- ══ FEATURED SHOPS ══ -->
+<section class="featured-shops-section" id="featured-shops-section" style="display:none;padding:0 20px 8px">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+    <h2 style="font-size:18px;font-weight:800;margin:0;font-family:'Syne',sans-serif">🏪 Featured Shops</h2>
+    <a href="#" style="font-size:13px;font-weight:700;color:#ff6600;text-decoration:none">View all →</a>
+  </div>
+  <div id="featured-shops" class="featured-shops-row"></div>
+</section>
+
+<!-- ══ SHOP BY CATEGORY ══ -->
+<section class="zb-cat-section">
+  <div class="zb-cat-header">
+    <h2>Shop by Category</h2>
+    <a href="#" onclick="filterCategory('all');return false">View all categories →</a>
+  </div>
+
+  <div class="zb-cat-grid">
+    <div class="zb-cat-card active" onclick="filterCategory('all');setActiveCard(this)">
+      <span style="font-size:40px">🏪</span>
+      <span>All</span>
+    </div>
+    <div class="zb-cat-card" onclick="filterCategory('electronics');setActiveCard(this)">
+      <span style="font-size:40px">💻</span>
+      <span>Electronics</span>
+    </div>
+    <div class="zb-cat-card" onclick="filterCategory('phones');setActiveCard(this)">
+      <span style="font-size:40px">📱</span>
+      <span>Phones</span>
+    </div>
+    <div class="zb-cat-card" onclick="filterCategory('fashion');setActiveCard(this)">
+      <span style="font-size:40px">👗</span>
+      <span>Fashion</span>
+    </div>
+    <div class="zb-cat-card" onclick="filterCategory('home');setActiveCard(this)">
+      <span style="font-size:40px">🏠</span>
+      <span>Home & Living</span>
+    </div>
+    <div class="zb-cat-card" onclick="filterCategory('beauty');setActiveCard(this)">
+      <span style="font-size:40px">💄</span>
+      <span>Beauty</span>
+    </div>
+    <div class="zb-cat-card" onclick="filterCategory('vehicles');setActiveCard(this)">
+      <span style="font-size:40px">🚗</span>
+      <span>Vehicles</span>
+    </div>
+    <div class="zb-cat-card" onclick="filterCategory('shoes');setActiveCard(this)">
+      <span style="font-size:40px">👟</span>
+      <span>Shoes</span>
+    </div>
+    <div class="zb-cat-card" onclick="filterCategory('bags');setActiveCard(this)">
+      <span style="font-size:40px">👜</span>
+      <span>Bags</span>
+    </div>
+    <div class="zb-cat-card" onclick="filterCategory('watches');setActiveCard(this)">
+      <span style="font-size:40px">⌚</span>
+      <span>Watches</span>
+    </div>
+    <div class="zb-cat-card" onclick="filterCategory('computers');setActiveCard(this)">
+      <span style="font-size:40px">🖥️</span>
+      <span>Computers</span>
+    </div>
+    <div class="zb-cat-card" onclick="filterCategory('gaming');setActiveCard(this)">
+      <span style="font-size:40px">🎮</span>
+      <span>Gaming</span>
+    </div>
+    <div class="zb-cat-card" onclick="filterCategory('agriculture');setActiveCard(this)">
+      <span style="font-size:40px">🌾</span>
+      <span>Agriculture</span>
+    </div>
+    <div class="zb-cat-card" onclick="filterCategory('animals');setActiveCard(this)">
+      <span style="font-size:40px">🐾</span>
+      <span>Animals & Pets</span>
+    </div>
+    <div class="zb-cat-card" onclick="filterCategory('babies');setActiveCard(this)">
+      <span style="font-size:40px">👶</span>
+      <span>Babies & Kids</span>
+    </div>
+    <div class="zb-cat-card" onclick="filterCategory('services');setActiveCard(this)">
+      <span style="font-size:40px">🔧</span>
+      <span>Services</span>
+    </div>
+    <div class="zb-cat-card" onclick="filterCategory('commercial');setActiveCard(this)">
+      <span style="font-size:40px">🏗️</span>
+      <span>Commercial</span>
+    </div>
+    <div class="zb-cat-card" onclick="filterCategory('tours');setActiveCard(this)">
+      <span style="font-size:40px">✈️</span>
+      <span>Tours</span>
+    </div>
+    <div class="zb-cat-card" onclick="filterCategory('seeking-work');setActiveCard(this)">
+      <span style="font-size:40px">💼</span>
+      <span>Seeking Work</span>
+    </div>
+    <div class="zb-cat-card" onclick="filterCategory('groceries');setActiveCard(this)">
+      <span style="font-size:40px">🛒</span>
+      <span>Groceries</span>
+    </div>
+    <div class="zb-cat-card" onclick="filterCategory('accessories');setActiveCard(this)">
+      <span style="font-size:40px">💎</span>
+      <span>Accessories</span>
+    </div>
+  </div>
+</section>
+
+<!-- ══ FILTERS BAR ══ -->
+<div class="filters-bar" style="padding:8px 20px">
+  <button class="filter-toggle-btn" onclick="toggleFilters()">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+    </svg>
+    Filters
+  </button>
+  <div class="filters-panel" id="filters-panel">
+    <div class="filter-group">
+      <label class="filter-label">💰 Price Range</label>
+      <div class="price-inputs">
+        <input type="number" id="price-min" placeholder="Min UGX" value="0" onchange="applyFilters()">
+        <span class="price-dash">-</span>
+        <input type="number" id="price-max" placeholder="Max UGX" value="99999999" onchange="applyFilters()">
+      </div>
+    </div>
+    <div class="filter-group">
+      <label class="filter-label">📍 Location</label>
+      <select id="filter-location" onchange="applyFilters()">
+        <option value="">All Uganda</option>
+        <option>Kampala</option><option>Wakiso</option><option>Mukono</option>
+        <option>Jinja</option><option>Mbarara</option><option>Entebbe</option>
+        <option>Gulu</option><option>Mbale</option><option>Masaka</option>
+        <option>Fort Portal</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label class="filter-label">📅 Posted</label>
+      <div class="filter-radios">
+        <label><input type="radio" name="date-filter" value="all" checked onchange="applyFilters()"> All Time</label>
+        <label><input type="radio" name="date-filter" value="7" onchange="applyFilters()"> Last 7 days</label>
+        <label><input type="radio" name="date-filter" value="30" onchange="applyFilters()"> Last 30 days</label>
+      </div>
+    </div>
+    <div class="filter-group">
+      <label class="filter-label">⬆️ Sort By</label>
+      <select id="filter-sort" onchange="applyFilters()">
+        <option value="newest">Newest First</option>
+        <option value="oldest">Oldest First</option>
+        <option value="price-low">Price: Low to High</option>
+        <option value="price-high">Price: High to Low</option>
+      </select>
+    </div>
+    <button class="btn btn-orange" onclick="applyFilters()" style="width:100%;margin-top:12px">Apply Filters</button>
+    <button class="btn btn-outline" onclick="resetFilters()" style="width:100%;margin-top:8px">Reset All</button>
+  </div>
+  <div class="active-filters" id="active-filters"></div>
+</div>
+
+<!-- ══ SECTION HEADER ══ -->
+<div class="section-header" style="padding:8px 20px 12px">
+  <div>
+    <h2 style="font-family:'Syne',sans-serif">Latest Listings</h2>
+    <p id="product-count"></p>
+  </div>
+  <a href="hiring.html"
+    style="display:inline-flex;align-items:center;gap:6px;
+    background:#1e40af;color:white;padding:10px 18px;border-radius:10px;
+    font-weight:800;font-size:13px;text-decoration:none">
+    💼 Post a Job
   </a>
 </div>
 
-<!-- ============ PRODUCT GRID ============ -->
-<div id="products"></div>
+<!-- ══ PRODUCTS ══ -->
+<div id="products" class="products" style="padding:0 20px 40px"></div>
 
-<!-- ============ SAFETY BANNER ============ -->
-<div class="safety-banner">
+<!-- ══ SAFETY BANNER ══ -->
+<div class="safety-banner" style="margin:0 20px 20px;border-radius:12px">
   <span class="shield">🛡️</span>
   <div>
     <h4>Stay Safe When Buying on ZiBuy</h4>
@@ -266,49 +739,41 @@
   </div>
 </div>
 
-<!-- ============ FOOTER ============ -->
+<!-- ══ FOOTER ══ -->
 <footer>
   <div class="footer-top">
     <div class="footer-brand">
-       <h1 class="logo" id="secret-admin-trigger">
-  <a href="index.html">
-    <img
-      src="my_logo.png"
-      alt="ZiBuy"
-      style="height:55px;width:auto;"
-    >
-  </a>
-</h1>
+      <div class="logo">Zi<span style="color:white">Buy</span></div>
       <p>Uganda's trusted free classifieds marketplace. Buy and sell safely.</p>
     </div>
     <div class="footer-links">
       <h4>Company</h4>
       <a href="about.html">About ZiBuy</a>
       <a href="safety.html">Safety Tips</a>
-      <a href="advertise.html">Advertise With Us</a>
+      <a href="advertise.html">Advertise</a>
       <a href="hiring.html">Post a Job</a>
-      <a href="terms.html">Terms &amp; Conditions</a>
-      <a href="privacy.html">Privacy Policy</a>
     </div>
     <div class="footer-links">
-             <h4>Help</h4>
-      <a href="contact.html">Contact Us</a>
+      <h4>Support</h4>
+      <a href="support.html">Help Center</a>
+      <a href="support.html">Contact Us</a>
       <a href="report.html">Report Abuse</a>
-      <a href="support.html">Support</a>
+    </div>
+    <div class="footer-links">
+      <h4>Sellers</h4>
+      <a href="business-plans.html">Business Plans</a>
+      <a href="seller-verification.html">Get Verified</a>
+      <a href="post-ad.html">Post Free Ad</a>
     </div>
   </div>
-  <div class="footer-bottom">
-    © 2026 ZiBuy Uganda · All rights reserved
-  </div>
+  <div class="footer-bottom">© 2026 ZiBuy Uganda · All rights reserved</div>
 </footer>
 
-<!-- ============ OVERLAY ============ -->
+<!-- ══ OVERLAY ══ -->
 <div id="overlay" class="overlay" onclick="closeCart()"></div>
-
-<!-- ============ TOAST ============ -->
 <div id="toast-container" class="toast-container"></div>
 
-<!-- ============ CART SIDEBAR ============ -->
+<!-- ══ CART SIDEBAR ══ -->
 <div id="cart-sidebar" class="cart-sidebar">
   <div class="cart-top">
     <h2>🛒 Your Cart</h2>
@@ -319,14 +784,12 @@
     <input type="text" id="customer-name" placeholder="Your Full Name">
     <input type="tel" id="customer-phone" placeholder="Phone Number (e.g. 0701 234567)">
     <input type="text" id="customer-location" placeholder="Delivery Location">
-    <div class="cart-total-row">
-      Total: <span>UGX <span id="cart-total">0</span></span>
-    </div>
+    <div class="cart-total-row">Total: <span>UGX <span id="cart-total">0</span></span></div>
     <button class="checkout-btn" onclick="checkout()">Place Order</button>
   </div>
 </div>
 
-<!-- ============ PRODUCT QUICK-VIEW MODAL ============ -->
+<!-- ══ PRODUCT QUICK-VIEW MODAL ══ -->
 <div id="product-modal" class="product-modal">
   <div class="product-modal-content">
     <div class="modal-img-slider">
@@ -340,7 +803,7 @@
       <div id="modal-seller-info" class="modal-seller"></div>
       <div class="modal-actions">
         <button class="cart-btn" id="modal-cart-btn">Add to Cart</button>
-        <button class="view-btn" id="modal-view-btn">Full Page</button>
+        <button class="view-btn" id="modal-view-btn" onclick="closeProductModal()">Full Page</button>
         <button class="view-btn" onclick="closeProductModal()">×</button>
       </div>
       <div id="modal-contact-btns" class="contact-btns"></div>
@@ -348,7 +811,7 @@
   </div>
 </div>
 
-<!-- ============ AUTH MODAL ============ -->
+<!-- ══ AUTH MODAL ══ -->
 <div id="auth-modal" class="modal">
   <div class="modal-box">
     <div class="modal-header">
@@ -356,124 +819,100 @@
       <button class="modal-close" onclick="closeAuthModal()">×</button>
     </div>
     <input type="email" id="auth-email" placeholder="Email address">
-
-    <div style="position:relative;margin-bottom:14px">
-      <input type="password" id="auth-password" placeholder="Password"
-        style="width:100%;padding:13px 44px 13px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box">
-      <button type="button" id="toggle-password"
-        onclick="togglePasswordView('auth-password','toggle-password')"
-        style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;padding:0;color:#6b7280">
-        👁️
-      </button>
-    </div>
-
+    <input type="password" id="auth-password" placeholder="Password">
     <button class="full-btn" onclick="customerLogin()">Login</button>
-
-    <div style="text-align:center;margin:-4px 0 10px">
-      <button type="button" onclick="openChangePassword()"
-        style="background:none;border:none;color:#ff6600;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">
-        Forgot / Change Password?
-      </button>
-    </div>
-
     <div class="modal-divider">— or —</div>
-
-    <div id="register-section" style="display:none">
-      <input type="email" id="reg-email" placeholder="Email address"
-        style="width:100%;padding:13px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:14px">
-      <div style="position:relative;margin-bottom:14px">
-        <input type="password" id="reg-password" placeholder="Password (min 6 chars)"
-          style="width:100%;padding:13px 44px 13px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box">
-        <button type="button" id="toggle-reg-password"
-          onclick="togglePasswordView('reg-password','toggle-reg-password')"
-          style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;padding:0;color:#6b7280">
-          👁️
-        </button>
-      </div>
-      <div style="position:relative;margin-bottom:14px">
-        <input type="password" id="reg-confirm" placeholder="Confirm password"
-          style="width:100%;padding:13px 44px 13px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box">
-        <button type="button" id="toggle-reg-confirm"
-          onclick="togglePasswordView('reg-confirm','toggle-reg-confirm')"
-          style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;padding:0;color:#6b7280">
-          👁️
-        </button>
-      </div>
-      <div style="margin-bottom:14px">
-        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:13px;color:#374151;line-height:1.6">
-          <input type="checkbox" id="agree-terms"
-            style="width:18px;height:18px;margin-top:2px;accent-color:#ff6600;flex-shrink:0;cursor:pointer">
-          <span>
-            I agree to ZiBuy's
-            <a href="terms.html" target="_blank" style="color:#ff6600;font-weight:700;text-decoration:underline">Terms & Conditions</a>
-            and
-            <a href="privacy.html" target="_blank" style="color:#ff6600;font-weight:700;text-decoration:underline">Privacy Policy</a>
-          </span>
-        </label>
-      </div>
-      <button class="full-btn" onclick="customerRegister()">Create Account</button>
-      <p style="text-align:center;margin-top:10px;font-size:13px">
-        <button type="button" onclick="toggleRegister(false)"
-          style="background:none;border:none;color:#ff6600;font-weight:700;cursor:pointer;font-family:inherit">
-          ← Back to Login
-        </button>
-      </p>
-    </div>
-
-    <div id="login-actions">
-      <button class="full-btn secondary" onclick="toggleRegister(true)">Create Account</button>
-      <div class="modal-divider"></div>
-      <button class="full-btn secondary" onclick="logoutCustomer()">Logout</button>
-    </div>
-
-    <div id="change-password-section" style="display:none">
-      <div class="modal-divider" style="margin-top:10px">— Change Password —</div>
-      <div style="position:relative;margin-bottom:12px;margin-top:12px">
-        <input type="password" id="new-password" placeholder="New password (min 6 chars)"
-          style="width:100%;padding:13px 44px 13px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box">
-        <button type="button" id="toggle-new-pass"
-          onclick="togglePasswordView('new-password','toggle-new-pass')"
-          style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;padding:0;color:#6b7280">
-          👁️
-        </button>
-      </div>
-      <button class="full-btn" onclick="changeUserPassword()">Update Password</button>
-      <p style="text-align:center;margin-top:8px;font-size:13px;color:#6b7280">
-        Or
-        <button type="button" onclick="sendPasswordReset()"
-          style="background:none;border:none;color:#ff6600;font-weight:700;cursor:pointer;font-family:inherit;font-size:13px">
-          send reset link to email
-        </button>
-      </p>
-      <button type="button" onclick="closeChangePassword()"
-        style="width:100%;background:none;border:none;color:#6b7280;font-size:13px;cursor:pointer;padding:8px;font-family:inherit">
-        Cancel
-      </button>
-    </div>
+    <button class="full-btn secondary" onclick="customerRegister()">Create Account</button>
+    <div class="modal-divider"></div>
+    <button class="full-btn secondary" onclick="customerLogout()">Logout</button>
   </div>
 </div>
 
-<!-- ============ INSTALL BUTTON (FAB) ============ -->
-<button id="installBtn" onclick="installZiBuy()" style="display:none;position:fixed;bottom:20px;right:20px;background:#ff6600;color:white;border:none;padding:12px 18px;border-radius:50px;font-size:14px;font-weight:700;z-index:9999;cursor:pointer;box-shadow:0 4px 16px rgba(255,102,0,0.4)">
-  📲 Install ZiBuy
-</button>
+<!-- ══ ADMIN PANEL MODAL ══ -->
+<div id="admin-modal" class="modal">
+  <div class="modal-box admin-box" id="admin-panel-content" style="display:none">
+    <div class="modal-header">
+      <h2>📦 Seller Dashboard</h2>
+      <div style="display:flex;gap:8px">
+        <button id="admin-verify-btn" class="btn btn-orange"
+          onclick="window.location.href='admin.html'"
+          style="padding:8px 12px;font-size:12px;display:none">
+          🛠️ Admin Panel
+        </button>
+        <button class="modal-close" onclick="closeAdminPanel()">×</button>
+      </div>
+    </div>
+    <div class="admin-stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Total Orders</div>
+        <div class="stat-value" id="total-orders">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Revenue</div>
+        <div class="stat-value" id="total-revenue">—</div>
+      </div>
+    </div>
+    <div class="admin-header"><h2>Post New Ad</h2></div>
+    <div class="admin-form">
+      <div class="admin-form-group"><label>Product Name</label><input type="text" id="product-name" placeholder="Enter product name"></div>
+      <div class="admin-form-group"><label>Price (UGX)</label><input type="number" id="product-price" placeholder="Enter price in UGX"></div>
+      <div class="admin-form-group"><label>Category</label>
+        <select id="product-category">
+          <option value="phones">📱 Phones</option><option value="electronics">💻 Electronics</option>
+          <option value="fashion">👗 Fashion</option><option value="shoes">👟 Shoes</option>
+          <option value="beauty">💄 Beauty</option><option value="bags">👜 Bags</option>
+          <option value="groceries">🛒 Groceries</option><option value="watches">⌚ Watches</option>
+          <option value="computers">🖥️ Computers</option><option value="gaming">🎮 Gaming</option>
+          <option value="home">🏠 Home</option><option value="accessories">💎 Accessories</option>
+          <option value="vehicles">🚗 Vehicles</option><option value="services">🔧 Services</option>
+        </select>
+      </div>
+      <div class="admin-form-group"><label>Seller Name</label><input type="text" id="seller-name" placeholder="e.g. John Kato"></div>
+      <div class="admin-form-group"><label>Seller Phone</label><input type="tel" id="seller-phone" placeholder="256701234567"></div>
+      <div class="admin-form-group"><label>Seller Location</label><input type="text" id="seller-location" placeholder="Kampala, Ntinda"></div>
+      <div class="admin-form-group full-width"><label>Description</label><textarea id="product-desc" rows="4" placeholder="Write product description"></textarea></div>
+      <div class="admin-form-group full-width"><label>Product Images</label><input type="file" id="product-image" multiple accept="image/*" onchange="previewImages(event)"></div>
+      <div class="admin-form-group full-width"><div id="preview-container"></div></div>
+      <div class="admin-form-group full-width"><button class="full-btn" id="upload-btn" onclick="addProduct()">Post Ad</button></div>
+    </div>
+    <p class="admin-section-title" style="margin-top:24px">Recent Orders</p>
+    <div id="admin-orders"></div>
+  </div>
+</div>
 
-<!-- ============ SCRIPTS ============ -->
-<script type="module" src="app.js"></script>
-<script type="module" src="notifications-setup.js"></script>
-<script src="nav.js"></script>
-<script src="install-btn.js"></script>
+<!-- ══ HIDDEN LEGACY ELEMENTS (keep for JS compatibility) ══ -->
+<nav class="categories" style="display:none">
+  <button class="cat-btn active" data-cat="all" onclick="filterCategory('all')">All</button>
+  <button class="cat-btn" data-cat="phones" onclick="filterCategory('phones')">Phones</button>
+  <button class="cat-btn" data-cat="electronics" onclick="filterCategory('electronics')">Electronics</button>
+  <button class="cat-btn" data-cat="fashion" onclick="filterCategory('fashion')">Fashion</button>
+  <button class="cat-btn" data-cat="shoes" onclick="filterCategory('shoes')">Shoes</button>
+  <button class="cat-btn" data-cat="beauty" onclick="filterCategory('beauty')">Beauty</button>
+  <button class="cat-btn" data-cat="bags" onclick="filterCategory('bags')">Bags</button>
+  <button class="cat-btn" data-cat="groceries" onclick="filterCategory('groceries')">Groceries</button>
+  <button class="cat-btn" data-cat="watches" onclick="filterCategory('watches')">Watches</button>
+  <button class="cat-btn" data-cat="computers" onclick="filterCategory('computers')">Computers</button>
+  <button class="cat-btn" data-cat="gaming" onclick="filterCategory('gaming')">Gaming</button>
+  <button class="cat-btn" data-cat="home" onclick="filterCategory('home')">Home</button>
+  <button class="cat-btn" data-cat="accessories" onclick="filterCategory('accessories')">Accessories</button>
+  <button class="cat-btn" data-cat="vehicles" onclick="filterCategory('vehicles')">Vehicles</button>
+  <button class="cat-btn" data-cat="animals" onclick="filterCategory('animals')">Animals</button>
+  <button class="cat-btn" data-cat="babies" onclick="filterCategory('babies')">Babies</button>
+  <button class="cat-btn" data-cat="agriculture" onclick="filterCategory('agriculture')">Agriculture</button>
+  <button class="cat-btn" data-cat="commercial" onclick="filterCategory('commercial')">Commercial</button>
+  <button class="cat-btn" data-cat="tours" onclick="filterCategory('tours')">Tours</button>
+  <button class="cat-btn" data-cat="seeking-work" onclick="filterCategory('seeking-work')">Seeking Work</button>
+  <button class="cat-btn" data-cat="services" onclick="filterCategory('services')">Services</button>
+</nav>
 
 <script>
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-      navigator.serviceWorker.register("/sw.js")
-        .then(reg => console.log("[SW] Registered:", reg.scope))
-        .catch(err => console.warn("[SW] Failed:", err));
-    });
-  }
+// Active category card highlight
+window.setActiveCard = function(el) {
+  document.querySelectorAll('.zb-cat-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+};
 </script>
 
+<script type="module" src="app.js"></script>
 </body>
 </html>
-
