@@ -1,6 +1,3 @@
-bash
-
-cat > /mnt/user-data/outputs/index.html << 'HTMLEOF'
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -357,28 +354,206 @@ cat > /mnt/user-data/outputs/index.html << 'HTMLEOF'
     .hero        { display: none !important; }
     .topbar      { display: none !important; }
 
-    /* ── RESPONSIVE ── */
-    @media (max-width: 900px) {
-      .zb-cat-grid { grid-template-columns: repeat(4, 1fr); }
-      .zb-features { grid-template-columns: repeat(2, 1fr); margin: 0 12px; }
-      .zb-feature  { border-right: none; border-bottom: 1px solid #f0f0f0; }
-      .zb-hero { grid-template-columns: 1fr; padding: 28px 20px 0; min-height: auto; }
-      .zb-hero-img { display: none; }
-      .zb-hero::before { display: none; }
-    }
-    @media (max-width: 600px) {
-      .zb-topbar { padding: 10px 12px; gap: 8px; }
-      .zb-search-wrap select { display: none; }
-      .zb-topbar-right .zb-icon-btn:not(:last-child):not(.keep) { display: none; }
-      .zb-cat-grid { grid-template-columns: repeat(4, 1fr); gap: 8px; }
-      .zb-cat-section { padding: 0 12px 24px; }
-      .zb-hero { padding: 20px 12px 0; }
-      .zb-subnav { padding: 0 12px; }
-      .zb-features { margin: 0 12px; }
-    }
-    @media (max-width: 400px) {
-      .zb-cat-grid { grid-template-columns: repeat(3, 1fr); }
-    }
+    /* =========================
+   RESPONSIVE FIXES
+========================= */
+
+/* Tablets */
+@media (max-width: 1024px) {
+
+  .zb-topbar {
+    flex-wrap: wrap;
+    padding: 10px 15px;
+  }
+
+  .zb-search-wrap {
+    order: 3;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .zb-hero {
+    grid-template-columns: 1fr;
+    text-align: center;
+    padding: 30px 20px;
+  }
+
+  .zb-hero-img {
+    justify-content: center;
+    margin-top: 20px;
+  }
+
+  .zb-hero-img img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .zb-safe-card {
+    position: static;
+    margin: 20px auto 0;
+  }
+
+  .zb-features {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .zb-feature:nth-child(2) {
+    border-right: none;
+  }
+}
+
+/* Phones */
+@media (max-width: 768px) {
+
+  .zb-topbar {
+    gap: 10px;
+  }
+
+  .zb-logo {
+    font-size: 22px;
+  }
+
+  .zb-search-wrap {
+    width: 100%;
+  }
+
+  .zb-search-wrap select {
+    display: none;
+  }
+
+  .zb-search-wrap input {
+    font-size: 14px;
+  }
+
+  .zb-search-btn {
+    padding: 0 12px;
+  }
+
+  .zb-topbar-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .zb-login-btn {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
+  .zb-subnav {
+    overflow-x: auto;
+    white-space: nowrap;
+    padding: 0 10px;
+  }
+
+  .zb-subnav a,
+  .zb-subnav-browse {
+    flex-shrink: 0;
+  }
+
+  .zb-subnav-sell {
+    margin-left: 10px;
+  }
+
+  .zb-hero {
+    padding: 25px 15px;
+  }
+
+  .zb-hero-text h1 {
+    font-size: 32px;
+  }
+
+  .zb-hero-text p {
+    font-size: 14px;
+  }
+
+  .zb-hero-btns {
+    justify-content: center;
+  }
+
+  .zb-hero-trust {
+    justify-content: center;
+  }
+
+  .zb-features {
+    grid-template-columns: 1fr;
+    margin: 0 10px;
+    transform: none;
+  }
+
+  .zb-feature {
+    border-right: none;
+    border-bottom: 1px solid #eee;
+  }
+
+  .zb-feature:last-child {
+    border-bottom: none;
+  }
+}
+
+/* Very Small Phones */
+@media (max-width: 480px) {
+
+  .zb-topbar {
+    padding: 8px;
+  }
+
+  .zb-logo {
+    font-size: 20px;
+  }
+
+  .zb-search-wrap input {
+    padding: 8px;
+    font-size: 13px;
+  }
+
+  .zb-search-btn {
+    font-size: 12px;
+    padding: 0 10px;
+  }
+
+  .zb-login-btn {
+    font-size: 11px;
+    padding: 7px 10px;
+  }
+
+  .zb-topbar-right {
+    gap: 8px;
+  }
+
+  .zb-icon-btn {
+    font-size: 10px;
+  }
+
+  .zb-hero-text h1 {
+    font-size: 26px;
+    line-height: 1.2;
+  }
+
+  .zb-hero-text p {
+    font-size: 13px;
+  }
+
+  .zb-btn-primary,
+  .zb-btn-secondary {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .zb-hero-btns {
+    flex-direction: column;
+  }
+
+  .zb-hero-trust {
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .zb-safe-card {
+    width: 100%;
+    max-width: 250px;
+  }
+}
   </style>
 </head>
 <body>
@@ -681,13 +856,33 @@ cat > /mnt/user-data/outputs/index.html << 'HTMLEOF'
       </div>
     </div>
     <div class="filter-group">
-      <label class="filter-label">📍 Location</label>
-      <select id="filter-location" onchange="applyFilters()">
+      <h3>📍 Location</h3>
+      <select id="filter-location">
         <option value="">All Uganda</option>
-        <option>Kampala</option><option>Wakiso</option><option>Mukono</option>
-        <option>Jinja</option><option>Mbarara</option><option>Entebbe</option>
-        <option>Gulu</option><option>Mbale</option><option>Masaka</option>
-        <option>Fort Portal</option>
+        <option value="Kampala">Kampala</option>
+        <option value="Wakiso">Wakiso</option>
+        <option value="Mukono">Mukono</option>
+        <option value="Jinja">Jinja</option>
+        <option value="Mbarara">Mbarara</option>
+        <option value="Entebbe">Entebbe</option>
+        <option value="Gulu">Gulu</option>
+        <option value="Mbale">Mbale</option>
+        <option value="Masaka">Masaka</option>
+        <option value="Fort Portal">Fort Portal</option>
+        <option value="Hoima">Hoima</option>
+        <option value="Kiboga">Kiboga</option>
+        <option value="Mubende">Mubende</option>
+        <option value="Mityana">Mityana</option>
+        <option value="Kyankwanzi">Kyankwanzi</option>
+        <option value="Kasese">Kasese</option>
+        <option value="Lugazi">Lugazi</option>
+        <option value="Mpigi">Mpigi</option>
+        <option value="Arua">Arua</option>
+        <option value="Masindi">Masindi</option>
+        <option value="Bushenyi">Bushenyi</option>
+        <option value="Isingiro">Isingiro</option>
+        <option value="Kamuli">Kamuli</option>
+        <option value="Other">Other</option>
       </select>
     </div>
     <div class="filter-group">
@@ -707,11 +902,16 @@ cat > /mnt/user-data/outputs/index.html << 'HTMLEOF'
         <option value="price-high">Price: High to Low</option>
       </select>
     </div>
+    
     <button class="btn btn-orange" onclick="applyFilters()" style="width:100%;margin-top:12px">Apply Filters</button>
     <button class="btn btn-outline" onclick="resetFilters()" style="width:100%;margin-top:8px">Reset All</button>
   </div>
   <div class="active-filters" id="active-filters"></div>
 </div>
+
+     <!-- ============ CATEGORY & SUBCATEGORY NAV ============ -->
+<div id="category-nav" class="category-nav"></div>
+
 
 <!-- ══ SECTION HEADER ══ -->
 <div class="section-header" style="padding:8px 20px 12px">
