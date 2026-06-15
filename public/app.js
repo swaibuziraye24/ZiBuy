@@ -1155,10 +1155,19 @@ async function loadCategoryBanner(category) {
     }
 
     const s = snap.docs[0].data();
-    strip.style.display     = "flex";
-    text.textContent        = `${category.charAt(0).toUpperCase()+category.slice(1)} — Brought to you by ${s.sponsorName}`;
-    link.href               = s.sponsorUrl || "#";
-    link.textContent        = `Visit ${s.sponsorName} →`;
+
+    // Ensure URL has protocol — fixes blank new window bug
+    let sponsorUrl = s.sponsorUrl || "#";
+    if (sponsorUrl !== "#" && !sponsorUrl.startsWith("http")) {
+      sponsorUrl = "https://" + sponsorUrl;
+    }
+
+    strip.style.display  = "flex";
+    text.textContent     = `${category.charAt(0).toUpperCase()+category.slice(1)} — Brought to you by ${s.sponsorName}`;
+    link.href            = sponsorUrl;
+    link.textContent     = `Visit ${s.sponsorName} →`;
+    link.target          = "_blank";
+    link.rel             = "noopener noreferrer";
 
   } catch(e) {
     strip.style.display = "none";
