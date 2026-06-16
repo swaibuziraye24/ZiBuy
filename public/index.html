@@ -560,7 +560,7 @@
 <body>
 
 <!-- ══ NEW TOPBAR ══ -->
-<header class="topbar">
+<header class="zb-topbar">
   <h1 class="logo" id="secret-admin-trigger">
   <a href="index.html">
     <img
@@ -612,14 +612,13 @@
       Alerts
     </button>
 
-    <!-- Login / Account -->
-    <button class="btn btn-outline" id="login-btn" onclick="openAuthModal()">
-      
-      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
-      </svg>
-      Login / Sign Up
-    </button>
+    <button class="zb-login-btn" id="login-btn" onclick="openAuthModal()">
+  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+    <circle cx="12" cy="7" r="4"/>
+  </svg>
+  Login / Sign Up
+</button>
 
     <!-- Post Ad -->
     <button class="zb-btn-primary" id="post-ad-btn" onclick="window.location.href='post-ad.html'" style="display:none;padding:9px 16px;font-size:13px">
@@ -639,7 +638,7 @@
   <a href="index.html" class="active">Home</a>
   <a href="index.html">Products</a>
   <a href="index.html?cat=all" onclick="filterCategory('all');return false">Stores</a>
-  <a href="dashboard.html" id="dashboard-btn" style="display:none">💬 Messages</a>
+  <a href="dashboard.html" id="messages-btn" style="display:none">💬 Messages</a>
   <a href="post-ad.html">Boost Ads</a>
   <a href="business-plans.html">Subscriptions</a>
   <a href="advertise.html">Advertise</a>
@@ -652,10 +651,10 @@
 <!-- ══ HERO ══ -->
 <section class="zb-hero">
   <div class="zb-hero-text">
-    <h1>Buy. Sell. Grow<br>With <span>ZiBuy</span></h1>
+    <h1>Buy & Sell Anything<br>in Uganda 🇺🇬 </h1>
     <p>Uganda's trusted marketplace for amazing deals,<br>reliable sellers, and happy buyers. 🇺🇬</p>
     <div class="zb-hero-btns">
-      <a href="index.html" class="zb-btn-primary" onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'});return false">
+      <a href="shops.html" class="zb-btn-primary" onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'});return false">
         🛍️ Shop Now
       </a>
       <a href="post-ad.html" class="zb-btn-secondary">
