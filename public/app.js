@@ -200,12 +200,41 @@ function setupAuthStateListener() {
       }
     }
 
-    // Update cart button visibility
+   // Update cart button visibility
     const cartBtn = document.querySelector(".cart-btn-wrap");
     if (cartBtn && user) {
       cartBtn.style.display = "flex";
     }
+
+    // Load unread notification count
+    if (user) {
+      loadUnreadNotifCount(user.uid);
+    } else {
+      const badge = document.getElementById("notif-count");
+      if (badge) badge.style.display = "none";
+    }
   });
+}
+
+async function loadUnreadNotifCount(uid) {
+  try {
+    const snap = await getDocs(query(
+      collection(db, "notifications"),
+      where("userId", "==", uid),
+      where("read", "==", false)
+    ));
+    const badge = document.getElementById("notif-count");
+    if (!badge) return;
+
+    if (snap.size > 0) {
+      badge.textContent = snap.size > 9 ? "9+" : snap.size;
+      badge.style.display = "flex";
+    } else {
+      badge.style.display = "none";
+    }
+  } catch (e) {
+    console.warn("loadUnreadNotifCount:", e.message);
+  }
 }
 
 // ============================================
