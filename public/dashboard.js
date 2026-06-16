@@ -92,7 +92,8 @@ window.switchTab = async function(tabName) {
     "orders":    "orders-tab",
     "profile":   "profile-tab",
     "analytics": "analytics-tab",
-    "myprofile": "myprofile-tab"
+    "myprofile": "myprofile-tab",
+    "wishlist":  "wishlist-tab"
   };
 
   const tabId = tabMap[tabName] || "";
@@ -128,6 +129,8 @@ window.switchTab = async function(tabName) {
       await loadAnalytics();
     } else if (tabName === "myprofile") {
       await loadMyProfile();
+    } else if (tabName === "wishlist") {
+      await loadWishlist();
     }
   
   } catch (err) {
@@ -137,7 +140,81 @@ window.switchTab = async function(tabName) {
   }
 }
 
+// ============================================
+// WISHLIST — liked products
+// ============================================
+async function loadWishlist() {
+  const container = document.getElementById("wishlist-list");
+  if (!container || !currentUser) return;
 
+  container.innerHTML = `
+    <div style="text-align:center;padding:40px;color:#6b7280">Loading...</div>
+  `;
+
+  try {
+    const snap = await getDocs(query(
+      collection(db, "likes"),
+      where("userId", "==", currentUser.uid)
+    ));
+
+    if (snap.empty) {
+      container.innerHTML = `
+        <div style="text-align:center;padding:60px 20px;color:#6b7280">
+          <p style="font-size:48px;margin-bottom:12px">❤️</p>
+          <p style="font-size:16px;font-weight:700">No liked products yet</p>
+          <p style="font-size:13px;margin-bottom:16px">Tap the heart icon on any product to save it here</p>
+          <a href="index.html" class="btn btn-orange" style="display:inline-block;padding:12px 24px;text-decoration:none">
+            🛍️ Browse Products
+          </a>
+        </div>`;
+      return;
+    }
+
+    const productIds = snap.docs.map(d => d.data().productId).filter(Boolean);
+
+    const products = [];
+    for (const pid of productIds) {
+      const pSnap = await getDoc(doc(db, "products", pid));
+      if (pSnap.exists()) products.push({ id: pSnap.id, ...pSnap.data() });
+    }
+
+    if (products.length === 0) {
+      container.innerHTML = `
+        <div style="text-align:center;padding:60px 20px;color:#6b7280">
+          <p style="font-size:48px;margin-bottom:12px">❤️</p>
+          <p>No liked products found (they may have been removed)</p>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px">
+        ${products.map(p => `
+          <div onclick="window.location.href='product.html?id=${p.id}'"
+            style="background:white;border-radius:12px;overflow:hidden;
+            box-shadow:0 2px 8px rgba(0,0,0,0.06);cursor:pointer">
+            <img src="${p.images?.[0] || ''}" alt="${p.name}"
+              onerror="this.src='https://via.placeholder.com/200?text=No+Image'"
+              style="width:100%;height:140px;object-fit:cover">
+            <div style="padding:10px">
+              <p style="margin:0 0 4px;font-weight:700;font-size:13px;
+                overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+                ${p.name}
+              </p>
+              <p style="margin:0;color:#ff6600;font-weight:800;font-size:14px">
+                UGX ${Number(p.price || 0).toLocaleString()}
+              </p>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+    `;
+
+  } catch (err) {
+    console.error("loadWishlist error:", err);
+    container.innerHTML = `<p style="color:red;padding:20px">Failed to load wishlist</p>`;
+  }
+}
 
 // ============================================
 // LOAD MY PRODUCTS
