@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#ff6600">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
   <title>ZiBuy — Buy & Sell in Uganda</title>
   <link rel="stylesheet" href="style.css">
   <style>
@@ -559,9 +560,16 @@
 <body>
 
 <!-- ══ NEW TOPBAR ══ -->
-<header class="zb-topbar">
-  <a href="index.html" class="zb-logo" id="secret-admin-trigger">Zi<span>Buy</span></a>
-
+<header class="topbar">
+  <h1 class="logo" id="secret-admin-trigger">
+  <a href="index.html">
+    <img
+      src="my_logo.png"
+      alt="ZiBuy"
+      style="height:55px;width:auto;"
+    >
+  </a>
+</h1>
   <div class="zb-search-wrap">
     <select>
       <option>All Categories</option>
@@ -630,7 +638,7 @@
   <a href="index.html" class="active">Home</a>
   <a href="index.html">Products</a>
   <a href="index.html?cat=all" onclick="filterCategory('all');return false">Stores</a>
-  <a href="dashboard.html" id="messages-btn" style="display:none">💬 Messages</a>
+  <a href="dashboard.html" id="dashboard-btn" style="display:none">💬 Messages</a>
   <a href="post-ad.html">Boost Ads</a>
   <a href="business-plans.html">Subscriptions</a>
   <a href="advertise.html">Advertise</a>
@@ -838,6 +846,7 @@
   </div>
 </section>
 
+
 <!-- ══ FILTERS BAR ══ -->
 <div class="filters-bar" style="padding:8px 20px">
   <button class="filter-toggle-btn" onclick="toggleFilters()">
@@ -913,22 +922,28 @@
 <div id="category-nav" class="category-nav"></div>
 
 
-<!-- ══ SECTION HEADER ══ -->
-<div class="section-header" style="padding:8px 20px 12px">
+<!-- ============ SECTION HEADER ============ -->
+<div class="section-header">
   <div>
-    <h2 style="font-family:'Syne',sans-serif">Latest Listings</h2>
+    <h2>Latest Listings</h2>
     <p id="product-count"></p>
   </div>
   <a href="hiring.html"
     style="display:inline-flex;align-items:center;gap:6px;
     background:#1e40af;color:white;padding:10px 18px;border-radius:10px;
-    font-weight:800;font-size:13px;text-decoration:none">
+    font-weight:800;font-size:13px;text-decoration:none;white-space:nowrap">
     💼 Post a Job
   </a>
+  <select class="sort-select" onchange="applyFilters()">
+    <option value="newest">Newest First</option>
+    <option value="price-low">Price: Low to High</option>
+    <option value="price-high">Price: High to Low</option>
+  </select>
 </div>
 
+
 <!-- ══ PRODUCTS ══ -->
-<div id="products" class="products" style="padding:0 20px 40px"></div>
+<div id="products" style="padding:0 20px 40px"></div>
 
 <!-- ══ SAFETY BANNER ══ -->
 <div class="safety-banner" style="margin:0 20px 20px;border-radius:12px">
@@ -939,34 +954,40 @@
   </div>
 </div>
 
-<!-- ══ FOOTER ══ -->
+<!-- ============ FOOTER ============ -->
 <footer>
   <div class="footer-top">
     <div class="footer-brand">
-      <div class="logo">Zi<span style="color:white">Buy</span></div>
+       <h1 class="logo" id="secret-admin-trigger">
+  <a href="index.html">
+    <img
+      src="my_logo.png"
+      alt="ZiBuy"
+      style="height:55px;width:auto;"
+    >
+  </a>
+</h1>
       <p>Uganda's trusted free classifieds marketplace. Buy and sell safely.</p>
     </div>
     <div class="footer-links">
       <h4>Company</h4>
       <a href="about.html">About ZiBuy</a>
       <a href="safety.html">Safety Tips</a>
-      <a href="advertise.html">Advertise</a>
+      <a href="advertise.html">Advertise With Us</a>
       <a href="hiring.html">Post a Job</a>
+      <a href="terms.html">Terms &amp; Conditions</a>
+      <a href="privacy.html">Privacy Policy</a>
     </div>
     <div class="footer-links">
-      <h4>Support</h4>
-      <a href="support.html">Help Center</a>
-      <a href="support.html">Contact Us</a>
+             <h4>Help</h4>
+      <a href="contact.html">Contact Us</a>
       <a href="report.html">Report Abuse</a>
-    </div>
-    <div class="footer-links">
-      <h4>Sellers</h4>
-      <a href="business-plans.html">Business Plans</a>
-      <a href="seller-verification.html">Get Verified</a>
-      <a href="post-ad.html">Post Free Ad</a>
+      <a href="support.html">Support</a>
     </div>
   </div>
-  <div class="footer-bottom">© 2026 ZiBuy Uganda · All rights reserved</div>
+  <div class="footer-bottom">
+    © 2026 ZiBuy Uganda · All rights reserved
+  </div>
 </footer>
 
 <!-- ══ OVERLAY ══ -->
@@ -1011,7 +1032,7 @@
   </div>
 </div>
 
-<!-- ══ AUTH MODAL ══ -->
+<!-- ============ AUTH MODAL ============ -->
 <div id="auth-modal" class="modal">
   <div class="modal-box">
     <div class="modal-header">
@@ -1019,14 +1040,103 @@
       <button class="modal-close" onclick="closeAuthModal()">×</button>
     </div>
     <input type="email" id="auth-email" placeholder="Email address">
-    <input type="password" id="auth-password" placeholder="Password">
+
+    <div style="position:relative;margin-bottom:14px">
+      <input type="password" id="auth-password" placeholder="Password"
+        style="width:100%;padding:13px 44px 13px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box">
+      <button type="button" id="toggle-password"
+        onclick="togglePasswordView('auth-password','toggle-password')"
+        style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;padding:0;color:#6b7280">
+        👁️
+      </button>
+    </div>
+
     <button class="full-btn" onclick="customerLogin()">Login</button>
+
+    <div style="text-align:center;margin:-4px 0 10px">
+      <button type="button" onclick="openChangePassword()"
+        style="background:none;border:none;color:#ff6600;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">
+        Forgot / Change Password?
+      </button>
+    </div>
+
     <div class="modal-divider">— or —</div>
-    <button class="full-btn secondary" onclick="customerRegister()">Create Account</button>
-    <div class="modal-divider"></div>
-    <button class="full-btn secondary" onclick="customerLogout()">Logout</button>
+
+    <div id="register-section" style="display:none">
+      <input type="email" id="reg-email" placeholder="Email address"
+        style="width:100%;padding:13px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:14px">
+      <div style="position:relative;margin-bottom:14px">
+        <input type="password" id="reg-password" placeholder="Password (min 6 chars)"
+          style="width:100%;padding:13px 44px 13px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box">
+        <button type="button" id="toggle-reg-password"
+          onclick="togglePasswordView('reg-password','toggle-reg-password')"
+          style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;padding:0;color:#6b7280">
+          👁️
+        </button>
+      </div>
+      <div style="position:relative;margin-bottom:14px">
+        <input type="password" id="reg-confirm" placeholder="Confirm password"
+          style="width:100%;padding:13px 44px 13px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box">
+        <button type="button" id="toggle-reg-confirm"
+          onclick="togglePasswordView('reg-confirm','toggle-reg-confirm')"
+          style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;padding:0;color:#6b7280">
+          👁️
+        </button>
+      </div>
+      <div style="margin-bottom:14px">
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:13px;color:#374151;line-height:1.6">
+          <input type="checkbox" id="agree-terms"
+            style="width:18px;height:18px;margin-top:2px;accent-color:#ff6600;flex-shrink:0;cursor:pointer">
+          <span>
+            I agree to ZiBuy's
+            <a href="terms.html" target="_blank" style="color:#ff6600;font-weight:700;text-decoration:underline">Terms & Conditions</a>
+            and
+            <a href="privacy.html" target="_blank" style="color:#ff6600;font-weight:700;text-decoration:underline">Privacy Policy</a>
+          </span>
+        </label>
+      </div>
+      <button class="full-btn" onclick="customerRegister()">Create Account</button>
+      <p style="text-align:center;margin-top:10px;font-size:13px">
+        <button type="button" onclick="toggleRegister(false)"
+          style="background:none;border:none;color:#ff6600;font-weight:700;cursor:pointer;font-family:inherit">
+          ← Back to Login
+        </button>
+      </p>
+    </div>
+
+    <div id="login-actions">
+      <button class="full-btn secondary" onclick="toggleRegister(true)">Create Account</button>
+      <div class="modal-divider"></div>
+      <button class="full-btn secondary" onclick="logoutCustomer()">Logout</button>
+    </div>
+
+    <div id="change-password-section" style="display:none">
+      <div class="modal-divider" style="margin-top:10px">— Change Password —</div>
+      <div style="position:relative;margin-bottom:12px;margin-top:12px">
+        <input type="password" id="new-password" placeholder="New password (min 6 chars)"
+          style="width:100%;padding:13px 44px 13px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box">
+        <button type="button" id="toggle-new-pass"
+          onclick="togglePasswordView('new-password','toggle-new-pass')"
+          style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;padding:0;color:#6b7280">
+          👁️
+        </button>
+      </div>
+      <button class="full-btn" onclick="changeUserPassword()">Update Password</button>
+      <p style="text-align:center;margin-top:8px;font-size:13px;color:#6b7280">
+        Or
+        <button type="button" onclick="sendPasswordReset()"
+          style="background:none;border:none;color:#ff6600;font-weight:700;cursor:pointer;font-family:inherit;font-size:13px">
+          send reset link to email
+        </button>
+      </p>
+      <button type="button" onclick="closeChangePassword()"
+        style="width:100%;background:none;border:none;color:#6b7280;font-size:13px;cursor:pointer;padding:8px;font-family:inherit">
+        Cancel
+      </button>
+    </div>
   </div>
 </div>
+
 
 <!-- ══ ADMIN PANEL MODAL ══ -->
 <div id="admin-modal" class="modal">
@@ -1105,6 +1215,12 @@
   <button class="cat-btn" data-cat="services" onclick="filterCategory('services')">Services</button>
 </nav>
 
+
+<!-- ============ INSTALL BUTTON (FAB) ============ -->
+<button id="installBtn" onclick="installZiBuy()" style="display:none;position:fixed;bottom:20px;right:20px;background:#ff6600;color:white;border:none;padding:12px 18px;border-radius:50px;font-size:14px;font-weight:700;z-index:9999;cursor:pointer;box-shadow:0 4px 16px rgba(255,102,0,0.4)">
+  📲 Install ZiBuy
+</button>
+
 <script>
 // Active category card highlight
 window.setActiveCard = function(el) {
@@ -1113,6 +1229,22 @@ window.setActiveCard = function(el) {
 };
 </script>
 
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("/sw.js")
+        .then(reg => console.log("[SW] Registered:", reg.scope))
+        .catch(err => console.warn("[SW] Failed:", err));
+    });
+  }
+</script>
+
+
+
+<!-- ============ SCRIPTS ============ -->
 <script type="module" src="app.js"></script>
+<script type="module" src="notifications-setup.js"></script>
+<script src="nav.js"></script>
+<script src="install-btn.js"></script>
 </body>
 </html>
