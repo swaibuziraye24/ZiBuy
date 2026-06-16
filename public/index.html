@@ -521,14 +521,7 @@
 </h1>
 
   <div class="zb-search-wrap">
-    <select>
-      <option>All Categories</option>
-      <option>Phones</option>
-      <option>Electronics</option>
-      <option>Vehicles</option>
-      <option>Fashion</option>
-      <option>Home</option>
-    </select>
+    
     <input type="text" id="search-input" placeholder="Search for anything..."
       onkeyup="searchProducts()">
     <button class="zb-search-btn" onclick="searchProducts()">Search</button>
@@ -585,12 +578,7 @@
 
 <!-- ══ SECOND NAV ══ -->
 <nav class="zb-subnav">
-  <button class="zb-subnav-browse" onclick="document.querySelector('.zb-cat-section').scrollIntoView({behavior:'smooth'})">
-    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-      <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
-    </svg>
-    Browse Categories
-  </button>
+
   <a href="index.html" class="active" onclick="window.scrollTo({top:0,behavior:'smooth'});return location.pathname.includes('index.html')?false:true">
     🏠 Home
   </a>
