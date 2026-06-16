@@ -8,6 +8,141 @@
   <meta name="mobile-web-app-capable" content="yes">
   <title>ZiBuy — Buy & Sell in Uganda</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="/manifest.json">
+
+  <style>
+    /* ── NEW TOPBAR ── */
+    .zb-hero{
+  background:linear-gradient(135deg,#fff8f4 0%,#fff3ec 100%);
+  display:grid;
+  grid-template-columns:55% 45%;
+  align-items:center;
+  min-height:540px;
+  padding:40px 60px 80px;
+  position:relative;
+  overflow:hidden;
+}
+
+.zb-hero-text{
+  max-width:620px;
+}
+
+.zb-hero-text h1{
+  font-size:72px;
+  font-weight:900;
+  line-height:1.05;
+  margin-bottom:20px;
+}
+
+.zb-hero-text p{
+  font-size:22px;
+  line-height:1.6;
+  margin-bottom:30px;
+}
+
+.zb-hero-btns{
+  display:flex;
+  gap:18px;
+  margin-bottom:30px;
+}
+
+.zb-hero-trust{
+  display:flex;
+  gap:30px;
+  flex-wrap:wrap;
+}
+
+.zb-hero-img{
+  display:flex;
+  justify-content:center;
+  align-items:flex-end;
+  position:relative;
+}
+
+.zb-hero-img img{
+  width:100%;
+  max-width:560px;
+  height:auto;
+}
+
+.zb-safe-card{
+  position:absolute;
+  right:20px;
+  bottom:80px;
+  width:180px;
+}
+
+.zb-features{
+  width:90%;
+  margin:-60px auto 30px;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  background:#fff;
+  border-radius:18px;
+  box-shadow:0 10px 30px rgba(0,0,0,.08);
+  overflow:hidden;
+  position:relative;
+  z-index:20;
+}
+
+.zb-feature{
+  padding:25px;
+}
+
+@media (max-width:768px){
+
+  .zb-hero{
+    grid-template-columns:1fr;
+    text-align:center;
+    padding:30px 15px;
+  }
+
+  .zb-hero-text h1{
+    font-size:42px;
+  }
+
+  .zb-hero-text p{
+    font-size:16px;
+  }
+
+  .zb-hero-btns{
+    justify-content:center;
+    flex-wrap:wrap;
+  }
+
+  .zb-hero-trust{
+    justify-content:center;
+  }
+
+  .zb-hero-img{
+    margin-top:20px;
+  }
+
+  .zb-features{
+    width:95%;
+    margin:20px auto;
+    grid-template-columns:1fr;
+  }
+
+}
+  </style>
+</head>
+<body>
+
+<!-- ══ NEW TOPBAR ══ -->
+
+bash
+
+cat > /mnt/user-data/outputs/index.html << 'HTMLEOF'
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#ff6600">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>ZiBuy — Buy & Sell in Uganda</title>
+  <link rel="stylesheet" href="style.css">
   <style>
     /* ── NEW TOPBAR ── */
     .zb-topbar {
@@ -355,221 +490,38 @@
     .hero        { display: none !important; }
     .topbar      { display: none !important; }
 
-    /* =========================
-   RESPONSIVE FIXES
-========================= */
-
-/* Tablets */
-@media (max-width: 1024px) {
-
-  .zb-topbar {
-    flex-wrap: wrap;
-    padding: 10px 15px;
-  }
-
-  .zb-search-wrap {
-    order: 3;
-    width: 100%;
-    max-width: 100%;
-  }
-
-  .zb-hero {
-    grid-template-columns: 1fr;
-    text-align: center;
-    padding: 30px 20px;
-  }
-
-  .zb-hero-img {
-    justify-content: center;
-    margin-top: 20px;
-  }
-
-  .zb-hero-img img {
-    max-width: 100%;
-    height: auto;
-  }
-
-  .zb-safe-card {
-    position: static;
-    margin: 20px auto 0;
-  }
-
-  .zb-features {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .zb-feature:nth-child(2) {
-    border-right: none;
-  }
-}
-
-/* Phones */
-@media (max-width: 768px) {
-
-  .zb-topbar {
-    gap: 10px;
-  }
-
-  .zb-logo {
-    font-size: 22px;
-  }
-
-  .zb-search-wrap {
-    width: 100%;
-  }
-
-  .zb-search-wrap select {
-    display: none;
-  }
-
-  .zb-search-wrap input {
-    font-size: 14px;
-  }
-
-  .zb-search-btn {
-    padding: 0 12px;
-  }
-
-  .zb-topbar-right {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .zb-login-btn {
-    padding: 8px 12px;
-    font-size: 12px;
-  }
-
-  .zb-subnav {
-    overflow-x: auto;
-    white-space: nowrap;
-    padding: 0 10px;
-  }
-
-  .zb-subnav a,
-  .zb-subnav-browse {
-    flex-shrink: 0;
-  }
-
-  .zb-subnav-sell {
-    margin-left: 10px;
-  }
-
-  .zb-hero {
-    padding: 25px 15px;
-  }
-
-  .zb-hero-text h1 {
-    font-size: 32px;
-  }
-
-  .zb-hero-text p {
-    font-size: 14px;
-  }
-
-  .zb-hero-btns {
-    justify-content: center;
-  }
-
-  .zb-hero-trust {
-    justify-content: center;
-  }
-
-  .zb-features {
-    grid-template-columns: 1fr;
-    margin: 0 10px;
-    transform: none;
-  }
-
-  .zb-feature {
-    border-right: none;
-    border-bottom: 1px solid #eee;
-  }
-
-  .zb-feature:last-child {
-    border-bottom: none;
-  }
-}
-
-/* Very Small Phones */
-@media (max-width: 480px) {
-
-  .zb-topbar {
-    padding: 8px;
-  }
-
-  .zb-logo {
-    font-size: 20px;
-  }
-
-  .zb-search-wrap input {
-    padding: 8px;
-    font-size: 13px;
-  }
-
-  .zb-search-btn {
-    font-size: 12px;
-    padding: 0 10px;
-  }
-
-  .zb-login-btn {
-    font-size: 11px;
-    padding: 7px 10px;
-  }
-
-  .zb-topbar-right {
-    gap: 8px;
-  }
-
-  .zb-icon-btn {
-    font-size: 10px;
-  }
-
-  .zb-hero-text h1 {
-    font-size: 26px;
-    line-height: 1.2;
-  }
-
-  .zb-hero-text p {
-    font-size: 13px;
-  }
-
-  .zb-btn-primary,
-  .zb-btn-secondary {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .zb-hero-btns {
-    flex-direction: column;
-  }
-
-  .zb-hero-trust {
-    flex-direction: column;
-    gap: 10px;
-    align-items: center;
-  }
-
-  .zb-safe-card {
-    width: 100%;
-    max-width: 250px;
-  }
-}
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .zb-cat-grid { grid-template-columns: repeat(4, 1fr); }
+      .zb-features { grid-template-columns: repeat(2, 1fr); margin: 0 12px; }
+      .zb-feature  { border-right: none; border-bottom: 1px solid #f0f0f0; }
+      .zb-hero { grid-template-columns: 1fr; padding: 28px 20px 0; min-height: auto; }
+      .zb-hero-img { display: none; }
+      .zb-hero::before { display: none; }
+    }
+    @media (max-width: 600px) {
+      .zb-topbar { padding: 10px 12px; gap: 8px; }
+      .zb-search-wrap select { display: none; }
+      .zb-topbar-right .zb-icon-btn:not(:last-child):not(.keep) { display: none; }
+      .zb-cat-grid { grid-template-columns: repeat(4, 1fr); gap: 8px; }
+      .zb-cat-section { padding: 0 12px 24px; }
+      .zb-hero { padding: 20px 12px 0; }
+      .zb-subnav { padding: 0 12px; }
+      .zb-features { margin: 0 12px; }
+    }
+    @media (max-width: 400px) {
+      .zb-cat-grid { grid-template-columns: repeat(3, 1fr); }
+    }
   </style>
 </head>
 <body>
 
 <!-- ══ NEW TOPBAR ══ -->
 <header class="zb-topbar">
-  <h1 class="logo" id="secret-admin-trigger">
-  <a href="index.html">
-    <img
-      src="my_logo.png"
-      alt="ZiBuy"
-      style="height:55px;width:auto;"
-    >
-  </a>
-</h1>
+  <a href="index.html" class="zb-logo" id="secret-admin-trigger">Zi<span>Buy</span></a>
+
+  <div class="zb-search-wrap">
+    <select>
   <div class="zb-search-wrap">
     <select>
       <option>All Categories</option>
