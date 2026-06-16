@@ -88,7 +88,7 @@ function initApp() {
   }
 
 
-// Load banner ads from Firestore
+// Load banner ads from Firestore — rotates if multiple
 async function loadBannerAd() {
   try {
     const snap = await getDocs(query(
@@ -97,31 +97,70 @@ async function loadBannerAd() {
     ));
     if (snap.empty) return;
 
-    const banner = snap.docs[0].data();
+    const banners = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     const slot = document.getElementById("top-banner-slot");
     if (!slot) return;
 
     slot.style.display = "block";
+
+    // Build all banner slides + dots
     slot.innerHTML = `
-      <a href="${banner.url || '#'}" target="_blank"
-        style="display:block;border-radius:12px;overflow:hidden;cursor:pointer">
-        <img src="${banner.imageUrl}" alt="${banner.title || 'Ad'}"
-          style="width:100%;height:auto;max-height:100px;object-fit:cover;border-radius:12px">
-      </a>
+      <div style="position:relative;border-radius:12px;overflow:hidden">
+        <div id="banner-slides" style="position:relative;height:100px">
+          ${banners.map((b, i) => `
+            <a href="${b.url || '#'}" target="_blank" data-banner-idx="${i}"
+              style="position:absolute;inset:0;display:block;opacity:${i === 0 ? 1 : 0};
+              transition:opacity .6s ease;border-radius:12px;overflow:hidden">
+              <img src="${b.imageUrl}" alt="${b.title || 'Ad'}"
+                style="width:100%;height:100px;object-fit:cover;border-radius:12px">
+            </a>
+          `).join("")}
+        </div>
+        ${banners.length > 1 ? `
+          <div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);
+            display:flex;gap:6px;z-index:5">
+            ${banners.map((_, i) => `
+              <span class="banner-dot" data-dot-idx="${i}"
+                style="width:7px;height:7px;border-radius:50%;
+                background:${i === 0 ? '#ff6600' : 'rgba(255,255,255,.6)'};
+                box-shadow:0 1px 3px rgba(0,0,0,.3);transition:.3s"></span>
+            `).join("")}
+          </div>` : ""}
+      </div>
     `;
 
-    // Track impression
-    const bannerDoc = snap.docs[0]; {
-     import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js")
-  .then(({ increment, updateDoc, doc }) => {
-    updateDoc(doc(db, "banner_ads", bannerDoc.id), {
-      impressions: increment(1)
-    }).catch(() => {}); // silent — logged-out users can't write, that's ok
-  }).catch(() => {});
+    // Track impression for first banner shown
+    trackBannerImpression(banners[0].id);
 
+    // Rotate if more than 1 banner
+    if (banners.length > 1) {
+      let current = 0;
+      setInterval(() => {
+        const slides = slot.querySelectorAll("[data-banner-idx]");
+        const dots   = slot.querySelectorAll(".banner-dot");
 
+        slides[current].style.opacity = "0";
+        dots[current].style.background = "rgba(255,255,255,.6)";
+
+        current = (current + 1) % banners.length;
+
+        slides[current].style.opacity = "1";
+        dots[current].style.background = "#ff6600";
+
+        trackBannerImpression(banners[current].id);
+      }, 4000); // changes every 4 seconds
     }
-  } catch (e) {}
+
+  } catch (e) { console.warn("loadBannerAd:", e.message); }
+}
+
+function trackBannerImpression(bannerId) {
+  import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js")
+    .then(({ increment, updateDoc, doc }) => {
+      updateDoc(doc(db, "banner_ads", bannerId), {
+        impressions: increment(1)
+      }).catch(() => {});
+    }).catch(() => {});
 }
 
 
