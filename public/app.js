@@ -177,7 +177,8 @@ function setupAuthStateListener() {
       "upgrade-btn":       user && !isAdmin ? "block" : "none",
       "messages-btn":      user ? "block" : "none",
       "notifications-btn": user ? "block" : "none",
-      "admin-panel-btn":   isAdmin ? "block" : "none"
+      "admin-panel-btn":   isAdmin ? "block" : "none",
+      "go-admin-btn":      isAdmin ? "flex"  : "none"
     };
 
     Object.keys(elements).forEach(id => {
