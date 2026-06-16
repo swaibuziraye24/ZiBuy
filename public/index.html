@@ -395,9 +395,10 @@
       /* Row 2: full-width search bar */
       .zb-search-wrap {
         order: 3;
-        flex: 1 1 100%;
-        width: 100%;
-        max-width: 100%;
+        flex: 1 1 auto;
+        width: 88%;
+        max-width: 88%;
+        margin: 0 auto;
       }
       .zb-search-wrap select { display: none; }
       .zb-search-wrap input { padding: 9px 10px; font-size: 13px; }
@@ -416,11 +417,11 @@
       .zb-topbar-right .zb-icon-btn svg { width: 22px; height: 22px; }
 
       .zb-login-btn {
-        padding: 8px 10px;
-        gap: 0;
+        padding: 8px 14px;
+        gap: 6px;
       }
-      .zb-login-btn span { display: none; }
-      .zb-login-btn svg { width: 18px; height: 18px; }
+      .zb-login-btn span { display: inline; font-size: 12px; }
+      .zb-login-btn svg { width: 16px; height: 16px; }
 
       #post-ad-btn {
         padding: 8px 10px !important;
@@ -451,24 +452,30 @@
       .zb-hero-text { order: 1; }
       .zb-hero-btns { justify-content: center; }
       .zb-hero-trust { justify-content: center; }
-      .zb-hero-img {
+     .zb-hero-img {
         order: 2;
         display: flex !important;
         justify-content: center;
-        margin-top: 20px;
+        margin-top: 16px;
         position: relative;
-        min-height: 260px;
+        min-height: 220px;
       }
       .zb-hero-img img {
         height: 220px;
+        width: 100%;
+        object-fit: cover;
+        border-radius: 20px;
       }
       .zb-safe-card {
         position: absolute;
-        bottom: 0;
+        top: 16px;
         right: 50%;
         transform: translateX(50%);
-        min-width: 140px;
+        min-width: 200px;
+        max-width: 260px;
         padding: 12px 16px;
+        text-align: center;
+        z-index: 3;
       }
 
       .zb-cat-grid { grid-template-columns: repeat(4, 1fr); gap: 8px; }
@@ -616,19 +623,16 @@
       <span>Payments</span>
     </div>
   </div>
-
-  <!-- Safe card overlay -->
+  <div class="zb-hero-img">
+    <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600&q=80"
+      alt="ZiBuy customer shopping" loading="lazy">
+    <!-- Safe card overlays top of the image, level with "Free to Post" stat -->
     <div class="zb-safe-card">
       <div class="zb-safe-icon">🛡️</div>
       <p>Safe & Secure</p>
       <span>Your safety is our top priority</span><br>
       <a href="safety.html">Learn more →</a>
     </div>
-    
-  <div class="zb-hero-img">
-    <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600&q=80"
-      alt="ZiBuy customer shopping" loading="lazy">
-    
   </div>
 </section>
 
