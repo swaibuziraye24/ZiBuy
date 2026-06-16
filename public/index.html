@@ -114,13 +114,13 @@
     .zb-login-btn {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       background: #ff6600;
       color: white;
       border: none;
-      padding: 9px 18px;
+      padding: 8px 12px;
       border-radius: 8px;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 700;
       cursor: pointer;
       font-family: inherit;
@@ -232,18 +232,18 @@
     .zb-hero-text p { font-size: 15px; color: #6b7280; margin: 0 0 24px; line-height: 1.6; }
     .zb-hero-btns { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 28px; }
     .zb-btn-primary {
-      display: flex; align-items: center; gap: 8px;
+      display: flex; align-items: center; gap: 6px;
       background: #ff6600; color: white; border: none;
-      padding: 13px 24px; border-radius: 8px; font-weight: 800;
-      font-size: 14px; cursor: pointer; font-family: inherit;
+      padding: 11px 18px; border-radius: 8px; font-weight: 800;
+      font-size: 13px; cursor: pointer; font-family: inherit;
       text-decoration: none;
     }
     .zb-btn-secondary {
-      display: flex; align-items: center; gap: 8px;
+      display: flex; align-items: center; gap: 6px;
       background: white; color: #111827;
       border: 1.5px solid #e5e7eb;
-      padding: 13px 24px; border-radius: 8px; font-weight: 700;
-      font-size: 14px; cursor: pointer; font-family: inherit;
+      padding: 11px 18px; border-radius: 8px; font-weight: 700;
+      font-size: 13px; cursor: pointer; font-family: inherit;
       text-decoration: none;
     }
     .zb-hero-trust {
@@ -338,12 +338,12 @@
     .zb-cat-grid {
       display: grid;
       grid-template-columns: repeat(8, 1fr);
-      gap: 12px;
+      gap: 8px;
     }
     .zb-cat-card {
       background: white;
-      border-radius: 12px;
-      padding: 16px 8px 14px;
+      border-radius: 10px;
+      padding: 10px 6px 8px;
       text-align: center;
       border: 1.5px solid #f0f0f0;
       cursor: pointer;
@@ -352,7 +352,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 8px;
+      gap: 5px;
     }
     .zb-cat-card:hover {
       border-color: #ff6600;
@@ -364,7 +364,7 @@
       width: 56px; height: 56px; object-fit: contain;
     }
     .zb-cat-card span {
-      font-size: 12px; font-weight: 700; color: #111827;
+      font-size: 10px; font-weight: 700; color: #111827;
     }
 
     /* ── CATEGORY SPONSOR STRIP ── */
@@ -490,13 +490,13 @@
         z-index: 3;
       }
 
-      .zb-cat-grid { grid-template-columns: repeat(4, 1fr); gap: 8px; }
+      .zb-cat-grid { grid-template-columns: repeat(5, 1fr); gap: 6px; }
       .zb-cat-section { padding: 0 12px 24px; }
       .zb-subnav { padding: 0 12px; }
       .zb-features { margin: 0 12px; }
     }
     @media (max-width: 480px) {
-      .zb-cat-grid { grid-template-columns: repeat(3, 1fr); }
+      .zb-cat-grid { grid-template-columns: repeat(4, 1fr); }
       .zb-topbar-right { gap: 6px; }
       .zb-hero-img img { height: 180px; }
       .zb-safe-card { min-width: 120px; padding: 10px 12px; }
@@ -696,87 +696,87 @@
 
   <div class="zb-cat-grid">
     <div class="zb-cat-card active" onclick="filterCategory('all');setActiveCard(this)">
-      <span style="font-size:40px">🏪</span>
+      <span style="font-size:26px">🏪</span>
       <span>All</span>
     </div>
     <div class="zb-cat-card" onclick="filterCategory('electronics');setActiveCard(this)">
-      <span style="font-size:40px">💻</span>
+      <span style="font-size:26px">💻</span>
       <span>Electronics</span>
     </div>
     <div class="zb-cat-card" onclick="filterCategory('phones');setActiveCard(this)">
-      <span style="font-size:40px">📱</span>
+      <span style="font-size:26px">📱</span>
       <span>Phones</span>
     </div>
     <div class="zb-cat-card" onclick="filterCategory('fashion');setActiveCard(this)">
-      <span style="font-size:40px">👗</span>
+      <span style="font-size:26px">👗</span>
       <span>Fashion</span>
     </div>
     <div class="zb-cat-card" onclick="filterCategory('home');setActiveCard(this)">
-      <span style="font-size:40px">🏠</span>
+      <span style="font-size:26px">🏠</span>
       <span>Home & Living</span>
     </div>
     <div class="zb-cat-card" onclick="filterCategory('beauty');setActiveCard(this)">
-      <span style="font-size:40px">💄</span>
+      <span style="font-size:26px">💄</span>
       <span>Beauty</span>
     </div>
     <div class="zb-cat-card" onclick="filterCategory('vehicles');setActiveCard(this)">
-      <span style="font-size:40px">🚗</span>
+      <span style="font-size:26px">🚗</span>
       <span>Vehicles</span>
     </div>
     <div class="zb-cat-card" onclick="filterCategory('shoes');setActiveCard(this)">
-      <span style="font-size:40px">👟</span>
+      <span style="font-size:26px">👟</span>
       <span>Shoes</span>
     </div>
     <div class="zb-cat-card" onclick="filterCategory('bags');setActiveCard(this)">
-      <span style="font-size:40px">👜</span>
+      <span style="font-size:26px">👜</span>
       <span>Bags</span>
     </div>
     <div class="zb-cat-card" onclick="filterCategory('watches');setActiveCard(this)">
-      <span style="font-size:40px">⌚</span>
+      <span style="font-size:26px">⌚</span>
       <span>Watches</span>
     </div>
     <div class="zb-cat-card" onclick="filterCategory('computers');setActiveCard(this)">
-      <span style="font-size:40px">🖥️</span>
+      <span style="font-size:26px">🖥️</span>
       <span>Computers</span>
     </div>
     <div class="zb-cat-card" onclick="filterCategory('gaming');setActiveCard(this)">
-      <span style="font-size:40px">🎮</span>
+      <span style="font-size:26px">🎮</span>
       <span>Gaming</span>
     </div>
     <div class="zb-cat-card" onclick="filterCategory('agriculture');setActiveCard(this)">
-      <span style="font-size:40px">🌾</span>
+      <span style="font-size:26px">🌾</span>
       <span>Agriculture</span>
     </div>
     <div class="zb-cat-card" onclick="filterCategory('animals');setActiveCard(this)">
-      <span style="font-size:40px">🐾</span>
+      <span style="font-size:26px">🐾</span>
       <span>Animals & Pets</span>
     </div>
     <div class="zb-cat-card" onclick="filterCategory('babies');setActiveCard(this)">
-      <span style="font-size:40px">👶</span>
+      <span style="font-size:26px">👶</span>
       <span>Babies & Kids</span>
     </div>
     <div class="zb-cat-card" onclick="filterCategory('services');setActiveCard(this)">
-      <span style="font-size:40px">🔧</span>
+      <span style="font-size:26px">🔧</span>
       <span>Services</span>
     </div>
     <div class="zb-cat-card" onclick="filterCategory('commercial');setActiveCard(this)">
-      <span style="font-size:40px">🏗️</span>
+      <span style="font-size:26px">🏗️</span>
       <span>Commercial</span>
     </div>
     <div class="zb-cat-card" onclick="filterCategory('tours');setActiveCard(this)">
-      <span style="font-size:40px">✈️</span>
+      <span style="font-size:26px">✈️</span>
       <span>Tours</span>
     </div>
     <div class="zb-cat-card" onclick="filterCategory('seeking-work');setActiveCard(this)">
-      <span style="font-size:40px">💼</span>
+      <span style="font-size:26px">💼</span>
       <span>Seeking Work</span>
     </div>
     <div class="zb-cat-card" onclick="filterCategory('groceries');setActiveCard(this)">
-      <span style="font-size:40px">🛒</span>
+      <span style="font-size:26px">🛒</span>
       <span>Groceries</span>
     </div>
     <div class="zb-cat-card" onclick="filterCategory('accessories');setActiveCard(this)">
-      <span style="font-size:40px">💎</span>
+      <span style="font-size:26px">💎</span>
       <span>Accessories</span>
     </div>
   </div>
