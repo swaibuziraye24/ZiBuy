@@ -346,3 +346,128 @@ exports.expireSubscriptions = onSchedule(
     await batch.commit();
   }
 );
+
+
+exports.smsGoldSellers = onDocumentCreated(
+  "orders/{orderId}",
+  async (event) => {
+    try {
+      const order = event.data.data();
+      const productId = order.items?.[0]?.productId;
+
+      if (!productId) return;
+
+      const productSnap = await db.collection("products").doc(productId).get();
+      if (!productSnap.exists) return;
+
+      const product = productSnap.data();
+      const seller = await getUser(product.userId);
+
+      if (!seller || seller.plan !== "gold") return;
+      if (!seller.phone) return;
+
+      const AfricasTalking = require("africastalking");
+      const at = AfricasTalking({
+        apiKey: process.env.AT_API_KEY,
+        username: process.env.AT_USERNAME || "sandbox",
+      });
+
+      await at.SMS.send({
+        to: [seller.phone],
+        message: `ZiBuy: New order from ${order.customerName}. Total UGX ${order.total}`,
+        from: "ZiBuy",
+      });
+
+      console.log("[SMS] Sent to gold seller");
+    } catch (err) {
+      console.error("[SMS] Failed:", err.message);
+    }
+  }
+);
+
+
+exports.aiRecommendations = onSchedule(
+  {
+    schedule: "every friday 10:00",
+    timeZone: "Africa/Kampala",
+  },
+  async () => {
+    try {
+      const usersSnap = await db.collection("users").limit(2000).get();
+      const productsSnap = await db
+        .collection("products")
+        .where("status", "==", "active")
+        .limit(200)
+        .get();
+
+      const products = productsSnap.docs.map(d => ({
+        id: d.id,
+        ...d.data(),
+      }));
+
+      for (const userDoc of usersSnap.docs) {
+        const user = userDoc.data();
+        if (!user.email) continue;
+
+        const ordersSnap = await db
+          .collection("orders")
+          .where("userEmail", "==", user.email)
+          .limit(10)
+          .get();
+
+        const categoryScore = {};
+
+        ordersSnap.docs.forEach(o => {
+          (o.data().items || []).forEach(i => {
+            if (i.category) {
+              categoryScore[i.category] =
+                (categoryScore[i.category] || 0) + 1;
+            }
+          });
+        });
+
+        const scored = products
+          .map(p => ({
+            ...p,
+            score:
+              (categoryScore[p.category] || 0) * 10 +
+              (p.views || 0) * 0.1 +
+              (p.likes || 0) * 0.5,
+          }))
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 4);
+
+        if (!scored.length) continue;
+
+        const html = scored
+          .map(
+            p => `
+            <div style="margin:10px;padding:10px;border:1px solid #eee">
+              <h3>${p.name}</h3>
+              <p>UGX ${Number(p.price).toLocaleString()}</p>
+              <a href="https://zibuy-5deae.web.app/product.html?id=${p.id}">
+                View Product
+              </a>
+            </div>
+          `
+          )
+          .join("");
+
+        await sendEmail(
+          user.email,
+          "🎯 Recommended for you on ZiBuy",
+          emailTemplate(
+            "We found deals for you 🇺🇬",
+            `<p>Hello ${user.email.split("@")[0]}</p>${html}`,
+            "Shop Now",
+            "https://zibuy-5deae.web.app"
+          )
+        );
+      }
+
+      console.log("[AI] Recommendations sent");
+    } catch (err) {
+      console.error("[AI] Failed:", err.message);
+    }
+  }
+);
