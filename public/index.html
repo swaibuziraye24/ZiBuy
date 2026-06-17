@@ -559,7 +559,7 @@
         <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
         <circle cx="12" cy="7" r="4"/>
       </svg>
-      <span>Login / Sign Up</span>
+      <span>Login/SignUp</span>
     </button>
 
     <!-- Admin Panel (admin only) -->
@@ -574,27 +574,24 @@
 
 <!-- ══ SECOND NAV ══ -->
 <nav class="zb-subnav">
-
-  <a href="index.html" class="active" onclick="window.scrollTo({top:0,behavior:'smooth'});return location.pathname.includes('index.html')?false:true">
-    🏠 Home
+  <a href="business-plans.html">
+    💼 Subscriptions
   </a>
 
-  <a href="shops.html">
-    🏪 Stores
-  </a>
   <a href="dashboard.html" id="messages-btn" style="display:none">💬 Messages</a>
   <a href="post-ad.html">
     ⭐ Boost Ads
   </a>
-  <a href="business-plans.html">
-    💼 Subscriptions
-  </a>
+  
   <a href="advertise.html">
     📣 Advertise
   </a>
   <a href="support.html">
     🆘 Help
   </a>
+
+  <a href="safety.html">Safty Tips →</a>
+
   <a href="blog.html">
     📰 Blog
   </a>
@@ -608,14 +605,7 @@
   <div class="zb-hero-text">
     <h1>Buy & Sell Anything<br>in Uganda 🇺🇬 </h1>
     <p>Uganda's trusted marketplace for amazing deals,<br>reliable sellers, and happy buyers. 🇺🇬</p>
-    <div class="zb-hero-btns">
-      <a href="shops.html" class="zb-btn-primary">
-        🛍️ All Shops
-      </a>
-      <a href="post-ad.html" class="zb-btn-primary">
-        🏪 Sell Your Product
-      </a>
-    </div>
+    
     <div class="hero-stats">
     <div class="stat-pill">
       <strong>851K</strong>
@@ -630,36 +620,17 @@
       <span>Payments</span>
     </div>
   </div>
-  <div class="zb-hero-img">
-    <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600&q=80"
-      alt="ZiBuy customer shopping" loading="lazy">
-    <!-- Safe card overlays top of the image, level with "Free to Post" stat -->
-    <div class="zb-safe-card">
-      <div class="zb-safe-icon">🛡️</div>
-      <p>Safe & Secure</p>
-      <span>Your safety is our top priority</span><br>
-      <a href="safety.html">Learn more →</a>
-    </div>
-  </div>
-</section>
 
-<!-- ══ FEATURE STRIP ══ -->
-<div class="zb-features">
-  <div class="zb-feature">
-    <div class="zb-feature-icon">🛍️</div>
-    <div>
-      <h4>Wide Range of Products</h4>
-      <p>From electronics to fashion, find everything you need</p>
+  <div class="zb-hero-btns">
+      <a href="shops.html" class="zb-btn-primary">
+        🛍️ All Shops
+      </a>
+      <a href="post-ad.html" class="zb-btn-primary">
+        🏪 +Post Ad
+      </a>
     </div>
-  </div>
-  <div class="zb-feature">
-    <div class="zb-feature-icon">✅</div>
-    <div>
-      <h4>Verified Sellers</h4>
-      <p>We verify sellers to ensure quality and trust</p>
-    </div>
-  </div>
-</div>
+ 
+</section>
 
 <!-- ══ CATEGORY SPONSOR STRIP ══ -->
 <div id="sponsor-banner-strip" style="display:none;
@@ -782,6 +753,11 @@
   </div>
 </section>
 
+<select class="sort-select" onchange="applyFilters()">
+    <option value="newest">Newest First</option>
+    <option value="price-low">Price: Low to High</option>
+    <option value="price-high">Price: High to Low</option>
+  </select>
 
 <!-- ══ FILTERS BAR ══ -->
 <div class="filters-bar" style="padding:8px 20px">
@@ -870,11 +846,7 @@
     font-weight:800;font-size:13px;text-decoration:none;white-space:nowrap">
     💼 Post a Job
   </a>
-  <select class="sort-select" onchange="applyFilters()">
-    <option value="newest">Newest First</option>
-    <option value="price-low">Price: Low to High</option>
-    <option value="price-high">Price: High to Low</option>
-  </select>
+  
 </div>
 
 
