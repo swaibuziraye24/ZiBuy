@@ -1,30 +1,22 @@
-// ============================================
-// ZiBuy — Firebase Functions v2 Clean Version
-// ============================================
-
 const admin = require("firebase-admin");
 const nodemailer = require("nodemailer");
 
 admin.initializeApp();
 const db = admin.firestore();
 
-const {
-  onDocumentCreated,
-} = require("firebase-functions/v2/firestore");
+const { setGlobalOptions } = require("firebase-functions/v2");
+const { onDocumentCreated } = require("firebase-functions/v2/firestore");
+const { onSchedule } = require("firebase-functions/v2/scheduler");
 
-const {
-  onSchedule,
-} = require("firebase-functions/v2/scheduler");
-
-const {
-  setGlobalOptions,
-} = require("firebase-functions/v2");
-
-setGlobalOptions({ region: "us-central1" });
+setGlobalOptions({
+  region: "us-central1",
+  memory: "512MiB",
+  timeoutSeconds: 60,
+});
 
 
 // ============================================
-// EMAIL TRANSPORTER
+// EMAIL SETUP
 // ============================================
 
 function createTransporter() {
@@ -38,13 +30,17 @@ function createTransporter() {
 }
 
 async function sendEmail(to, subject, html) {
-  const transporter = createTransporter();
-  await transporter.sendMail({
-    from: `"ZiBuy Uganda" <${process.env.GMAIL_EMAIL}>`,
-    to,
-    subject,
-    html,
-  });
+  try {
+    const transporter = createTransporter();
+    await transporter.sendMail({
+      from: `"ZiBuy Uganda" <${process.env.GMAIL_EMAIL}>`,
+      to,
+      subject,
+      html,
+    });
+  } catch (err) {
+    console.error("Email failed:", to, err.message);
+  }
 }
 
 
@@ -52,270 +48,211 @@ async function sendEmail(to, subject, html) {
 // HELPERS
 // ============================================
 
-function emailTemplate(title, body, ctaText, ctaUrl) {
-  return `
-    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff">
-      <div style="background:#ff6600;padding:24px;text-align:center">
-        <h1 style="color:white;margin:0;font-size:28px;font-weight:900">ZiBuy</h1>
-        <p style="color:rgba(255,255,255,0.85);margin:4px 0 0;font-size:13px">Uganda's Trusted Marketplace</p>
-      </div>
-      <div style="padding:28px 24px">
-        <h2 style="color:#111827;font-size:20px;margin:0 0 14px">${title}</h2>
-        <div style="color:#374151;font-size:15px;line-height:1.7">${body}</div>
-        ${
-          ctaText
-            ? `<div style="text-align:center;margin:28px 0 8px">
-                <a href="${ctaUrl}" style="background:#ff6600;color:white;padding:14px 32px;border-radius:10px;text-decoration:none;font-weight:700;font-size:15px;display:inline-block">
-                  ${ctaText}
-                </a>
-              </div>`
-            : ""
-        }
-      </div>
-    </div>
-  `;
+async function getUser(userId) {
+  const snap = await db.collection("users").doc(userId).get();
+  return snap.exists ? snap.data() : null;
 }
 
-
-// ============================================
-// USER HELPER
-// ============================================
-
-async function getUserData(userId) {
-  const snap = await db.collection("users").doc(userId).get();
+async function getProduct(productId) {
+  const snap = await db.collection("products").doc(productId).get();
   return snap.exists ? snap.data() : null;
 }
 
 
 // ============================================
-// 1. PUSH NOTIFICATIONS
+// PUSH NOTIFICATIONS
 // ============================================
 
 exports.sendPushOnNotification = onDocumentCreated(
-  "notifications/{notifId}",
+  "notifications/{id}",
   async (event) => {
+    const data = event.data.data();
+    if (!data?.userId) return;
+
+    const user = await getUser(data.userId);
+    if (!user?.fcmToken || user.plan === "free") return;
+
     try {
-      const data = event.data.data();
-      if (!data?.userId) return;
-
-      const userData = await getUserData(data.userId);
-      if (!userData) return;
-
-      const token = userData.fcmToken;
-      const plan = userData.plan || "free";
-
-      if (plan === "free" || !token) return;
-
       await admin.messaging().send({
-        token,
+        token: user.fcmToken,
         notification: {
           title: data.title || "ZiBuy",
           body: data.message || "",
         },
-        data: {
-          type: data.type || "",
-          url: data.url || "https://zibuy-5deae.web.app",
-        },
       });
-
-      console.log(`[Push] Sent to ${data.userId}`);
     } catch (err) {
-      console.error("[Push] Failed:", err.message);
+      console.error("Push failed:", err.message);
     }
   }
 );
 
 
 // ============================================
-// 2. ORDER CREATED
+// ORDER SYSTEM (SINGLE MASTER TRIGGER)
 // ============================================
 
 exports.onNewOrder = onDocumentCreated(
   "orders/{orderId}",
   async (event) => {
-    try {
-      const order = event.data.data();
-      const orderId = event.params.orderId;
+    const order = event.data.data();
+    const orderId = event.params.orderId;
 
-      const productSnap = await db
-        .collection("products")
-        .doc(order.items?.[0]?.productId || "x")
-        .get();
+    const product = await getProduct(order.items?.[0]?.productId);
 
-      const sellerEmail = productSnap.exists
-        ? productSnap.data().userEmail
-        : null;
+    const seller = product?.userId ? await getUser(product.userId) : null;
 
-      const itemList = (order.items || [])
-        .map(
-          (i) =>
-            `<li>${i.name} × ${i.qty} — UGX ${(
-              i.price * i.qty
-            ).toLocaleString()}</li>`
-        )
-        .join("");
+    const itemList = (order.items || [])
+      .map(i => `<li>${i.name} × ${i.qty}</li>`)
+      .join("");
 
-      if (order.userEmail) {
-        await sendEmail(
-          order.userEmail,
-          `Order Confirmed — ${orderId}`,
-          emailTemplate(
-            "Your order is confirmed 🎉",
-            `<p>Hi ${order.customerName || "there"},</p>
-             <p>Order <strong>${orderId}</strong> placed successfully.</p>
-             <ul>${itemList}</ul>
-             <p>Total: UGX ${Number(order.total).toLocaleString()}</p>`,
-            "Track Order",
-            "https://zibuy-5deae.web.app/dashboard.html?tab=orders"
-          )
-        );
-      }
-
-      if (sellerEmail) {
-        await sendEmail(
-          sellerEmail,
-          `New Order — ${orderId}`,
-          emailTemplate(
-            "New order received",
-            `<p>You received a new order.</p><ul>${itemList}</ul>`
-          )
-        );
-      }
-
-      console.log(`[Order] Processed ${orderId}`);
-    } catch (err) {
-      console.error("[Order] Failed:", err.message);
+    // BUYER EMAIL
+    if (order.userEmail) {
+      await sendEmail(
+        order.userEmail,
+        `Order Confirmed ${orderId}`,
+        `<h2>Your order is confirmed</h2>
+         <ul>${itemList}</ul>`
+      );
     }
+
+    // SELLER EMAIL
+    if (seller?.email) {
+      await sendEmail(
+        seller.email,
+        `New Order ${orderId}`,
+        `<h2>You received an order</h2>
+         <ul>${itemList}</ul>`
+      );
+    }
+
+    // SMS ONLY FOR GOLD SELLERS
+    if (seller?.plan === "gold" && seller.phone) {
+      try {
+        const AfricasTalking = require("africastalking");
+        const at = AfricasTalking({
+          apiKey: process.env.AT_API_KEY,
+          username: process.env.AT_USERNAME || "sandbox",
+        });
+
+        await at.SMS.send({
+          to: [seller.phone],
+          message: `New order from ${order.customerName} - UGX ${order.total}`,
+          from: "ZiBuy",
+        });
+      } catch (err) {
+        console.error("SMS failed:", err.message);
+      }
+    }
+
+    console.log(`[Order] Processed ${orderId}`);
   }
 );
 
 
 // ============================================
-// 3. CHAT MESSAGE
+// CHAT MESSAGES
 // ============================================
 
 exports.onNewMessage = onDocumentCreated(
-  "messages/{msgId}",
+  "messages/{id}",
   async (event) => {
-    try {
-      const msg = event.data.data();
+    const msg = event.data.data();
+    if (!msg?.participants) return;
 
-      if (!msg?.participants || !msg.senderEmail) return;
+    const recipient = msg.participants.find(p => p !== msg.senderEmail);
+    if (!recipient) return;
 
-      const recipientEmail = msg.participants.find(
-        (p) => p !== msg.senderEmail
-      );
-      if (!recipientEmail) return;
+    const users = await db.collection("users")
+      .where("email", "==", recipient)
+      .limit(1)
+      .get();
 
-      const recipientSnap = await db
-        .collection("users")
-        .where("email", "==", recipientEmail)
-        .limit(1)
-        .get();
+    if (users.empty) return;
 
-      if (recipientSnap.empty) return;
+    const userDoc = users.docs[0];
+    const user = userDoc.data();
 
-      const recipient = recipientSnap.docs[0];
-      const userData = recipient.data();
+    await db.collection("notifications").add({
+      userId: userDoc.id,
+      title: "New Message",
+      message: msg.text?.slice(0, 80),
+      type: "message",
+      read: false,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
 
-      await db.collection("notifications").add({
-        userId: recipient.id,
-        type: "message",
-        title: `New message from ${msg.senderEmail.split("@")[0]}`,
-        message: msg.text?.slice(0, 80),
-        read: false,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    if (user.plan !== "free" && user.fcmToken) {
+      await admin.messaging().send({
+        token: user.fcmToken,
+        notification: {
+          title: "New Message",
+          body: msg.text?.slice(0, 100),
+        },
       });
-
-      if (userData.plan !== "free" && userData.fcmToken) {
-        await admin.messaging().send({
-          token: userData.fcmToken,
-          notification: {
-            title: "New Message",
-            body: msg.text?.slice(0, 100),
-          },
-        });
-      }
-
-      console.log(`[Chat] Notified ${recipientEmail}`);
-    } catch (err) {
-      console.error("[Chat] Failed:", err.message);
     }
   }
 );
 
 
 // ============================================
-// 4. EMAIL BROADCAST
+// EMAIL BROADCAST (SAFE BATCHED)
 // ============================================
 
 exports.sendEmailBroadcast = onDocumentCreated(
   "email_broadcasts/{id}",
   async (event) => {
-    try {
-      const data = event.data.data();
+    const data = event.data.data();
 
-      const usersSnap = await db.collection("users").get();
-      const emails = usersSnap.docs
-        .map((d) => d.data().email)
-        .filter(Boolean);
+    const users = await db.collection("users").limit(2000).get();
+    const emails = users.docs.map(d => d.data().email).filter(Boolean);
 
-      const html = emailTemplate(data.title, data.message);
+    const batchSize = 50;
 
-      for (const email of emails) {
-        await sendEmail(email, data.title, html);
-      }
+    for (let i = 0; i < emails.length; i += batchSize) {
+      const batch = emails.slice(i, i + batchSize);
 
-      console.log(`[Broadcast] Sent to ${emails.length}`);
-    } catch (err) {
-      console.error("[Broadcast] Failed:", err.message);
+      await Promise.all(
+        batch.map(email =>
+          sendEmail(email, data.title, data.message)
+        )
+      );
     }
+
+    console.log(`[Broadcast] Sent to ${emails.length}`);
   }
 );
 
 
 // ============================================
-// 5. WELCOME EMAIL
+// WELCOME EMAIL
 // ============================================
 
 exports.onUserCreated = onDocumentCreated(
-  "users/{userId}",
+  "users/{id}",
   async (event) => {
-    try {
-      const user = event.data.data();
+    const user = event.data.data();
 
-      if (!user?.email) return;
+    if (!user?.email) return;
 
-      await sendEmail(
-        user.email,
-        "Welcome to ZiBuy 🎉",
-        emailTemplate(
-          "Welcome!",
-          `<p>Hello ${user.email.split("@")[0]}, welcome to ZiBuy Uganda.</p>`
-        )
-      );
-
-      console.log(`[Welcome] Sent`);
-    } catch (err) {
-      console.error("[Welcome] Failed:", err.message);
-    }
+    await sendEmail(
+      user.email,
+      "Welcome to ZiBuy",
+      `<h2>Welcome ${user.email.split("@")[0]}</h2>`
+    );
   }
 );
 
 
 // ============================================
-// 6. ABANDONED CART (SCHEDULE)
+// ABANDONED CART
 // ============================================
 
 exports.abandonedCartEmails = onSchedule(
-  {
-    schedule: "every 24 hours",
-  },
+  { schedule: "every 24 hours" },
   async () => {
-    const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const cutoff = new Date(Date.now() - 86400000);
 
-    const snap = await db
-      .collection("cart_sessions")
+    const snap = await db.collection("cart_sessions")
       .where("status", "==", "active")
       .where("updatedAt", "<=", cutoff)
       .get();
@@ -324,62 +261,41 @@ exports.abandonedCartEmails = onSchedule(
       const s = d.data();
       if (!s.userEmail) continue;
 
-      const items = (s.items || [])
-        .map((i) => `<li>${i.name}</li>`)
-        .join("");
-
       await sendEmail(
         s.userEmail,
-        "You left items in your cart 🛒",
-        emailTemplate(
-          "Complete your order",
-          `<ul>${items}</ul>`
-        )
+        "You left items in your cart",
+        `<p>Complete your order now.</p>`
       );
 
-      await d.ref.update({ status: "email_sent" });
+      await d.ref.update({ status: "emailed" });
     }
-
-    console.log(`[Cart] Sent ${snap.size}`);
   }
 );
 
 
 // ============================================
-// 7. WEEKLY DEALS
+// WEEKLY DEALS
 // ============================================
 
 exports.weeklyTopDeals = onSchedule(
-  {
-    schedule: "every monday 08:00",
-    timeZone: "Africa/Kampala",
-  },
+  { schedule: "every monday 08:00", timeZone: "Africa/Kampala" },
   async () => {
-    const productsSnap = await db
-      .collection("products")
-      .where("status", "==", "active")
-      .orderBy("views", "desc")
-      .limit(6)
-      .get();
+    const users = await db.collection("users").limit(2000).get();
+    const emails = users.docs.map(d => d.data().email).filter(Boolean);
 
-    const usersSnap = await db.collection("users").get();
-    const emails = usersSnap.docs.map((d) => d.data().email);
+    await Promise.all(
+      emails.map(email =>
+        sendEmail(email, "Top Deals This Week", "Check ZiBuy deals")
+      )
+    );
 
-    for (const email of emails) {
-      await sendEmail(
-        email,
-        "Top Deals This Week 🔥",
-        emailTemplate("Deals", "Check new deals on ZiBuy")
-      );
-    }
-
-    console.log(`[Weekly] Sent`);
+    console.log(`[Weekly] Sent to ${emails.length}`);
   }
 );
 
 
 // ============================================
-// 8. BOOST EXPIRY
+// BOOST EXPIRY
 // ============================================
 
 exports.expireBoosts = onSchedule(
@@ -387,15 +303,14 @@ exports.expireBoosts = onSchedule(
   async () => {
     const now = admin.firestore.Timestamp.now();
 
-    const snap = await db
-      .collection("products")
+    const snap = await db.collection("products")
       .where("isPremium", "==", true)
       .where("premiumExpiresAt", "<=", now)
       .get();
 
     const batch = db.batch();
 
-    snap.docs.forEach((d) =>
+    snap.docs.forEach(d =>
       batch.update(d.ref, { isPremium: false })
     );
 
@@ -407,7 +322,7 @@ exports.expireBoosts = onSchedule(
 
 
 // ============================================
-// 9. SUBSCRIPTION EXPIRY
+// SUBSCRIPTIONS
 // ============================================
 
 exports.expireSubscriptions = onSchedule(
@@ -415,14 +330,13 @@ exports.expireSubscriptions = onSchedule(
   async () => {
     const now = new Date();
 
-    const snap = await db
-      .collection("business_accounts")
+    const snap = await db.collection("business_accounts")
       .where("status", "==", "active")
       .get();
 
     const batch = db.batch();
 
-    snap.docs.forEach((d) => {
+    snap.docs.forEach(d => {
       const end = d.data().endDate?.toDate?.();
       if (end && now > end) {
         batch.update(d.ref, { status: "expired" });
@@ -430,55 +344,5 @@ exports.expireSubscriptions = onSchedule(
     });
 
     await batch.commit();
-
-    console.log(`[Subs] Expired`);
-  }
-);
-
-
-// ============================================
-// 10. SMS GOLD SELLERS
-// ============================================
-
-exports.smsGoldSellers = onDocumentCreated(
-  "orders/{orderId}",
-  async (event) => {
-    try {
-      const order = event.data.data();
-
-      const productSnap = await db
-        .collection("products")
-        .doc(order.items?.[0]?.productId || "x")
-        .get();
-
-      if (!productSnap.exists) return;
-
-      const seller = await getUserData(
-        productSnap.data().userId
-      );
-
-      if (!seller || seller.plan !== "gold") return;
-
-      console.log(`[SMS] Would send to ${seller.phone}`);
-    } catch (err) {
-      console.error(err.message);
-    }
-  }
-);
-
-
-// ============================================
-// 11. AI RECOMMENDATIONS
-// ============================================
-
-exports.aiRecommendations = onSchedule(
-  {
-    schedule: "every friday 10:00",
-    timeZone: "Africa/Kampala",
-  },
-  async () => {
-    const usersSnap = await db.collection("users").get();
-
-    console.log(`[AI] Running recommendations`);
   }
 );
