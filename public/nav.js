@@ -47,7 +47,7 @@
     <button class="zbn-item ${page==='dashboard.html' && !location.search.includes('wishlist') ?'active':''}"
       onclick="window.location.href='dashboard.html'">
       <span class="zbn-icon">👤</span>
-      <span class="zbn-label">Account</span>
+      <span class="zbn-label">Dashboard</span>
     </button>
   `;
   document.body.appendChild(nav);
