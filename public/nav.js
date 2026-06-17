@@ -31,13 +31,20 @@
       <span class="zbn-cart-dot" id="nav-cart-count" style="display:none"></span>
     </button>
 
-    <button class="zbn-item ${page==='messages.html'?'active':''}"
-      onclick="window.location.href='messages.html'">
-      <span class="zbn-icon">💬</span>
-      <span class="zbn-label">Messages</span>
+    <button class="zbn-item ${page==='dashboard.html' && location.search.includes('wishlist') ?'active':''}"
+      onclick="window.location.href='dashboard.html?tab=wishlist'">
+      <span class="zbn-icon">❤️</span>
+      <span class="zbn-label">Wishlist</span>
     </button>
 
-    <button class="zbn-item ${page==='dashboard.html'?'active':''}"
+    <button class="zbn-item zbn-notif ${page==='notifications.html'?'active':''}"
+      onclick="window.location.href='notifications.html'">
+      <span class="zbn-icon">🔔</span>
+      <span class="zbn-label">Alerts</span>
+      <span class="zbn-cart-dot" id="nav-notif-count" style="display:none"></span>
+    </button>
+
+    <button class="zbn-item ${page==='dashboard.html' && !location.search.includes('wishlist') ?'active':''}"
       onclick="window.location.href='dashboard.html'">
       <span class="zbn-icon">👤</span>
       <span class="zbn-label">Account</span>
@@ -94,6 +101,41 @@
 
   syncCartBadge();
   window.addEventListener("storage", syncCartBadge);
+
+  // ── Notification badge sync ─────────────────
+  async function syncNotifBadge() {
+    const dot = document.getElementById("nav-notif-count");
+    if (!dot) return;
+
+    try {
+      const { getAuth }       = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js");
+      const { getFirestore, collection, query, where, getDocs } =
+        await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+
+      const auth = getAuth();
+      const user = auth.currentUser;
+      if (!user) { dot.style.display = "none"; return; }
+
+      const db = getFirestore();
+      const snap = await getDocs(query(
+        collection(db, "notifications"),
+        where("userId", "==", user.uid),
+        where("read", "==", false)
+      ));
+
+      if (snap.size > 0) {
+        dot.textContent = snap.size > 9 ? "9+" : snap.size;
+        dot.style.display = "flex";
+      } else {
+        dot.style.display = "none";
+      }
+    } catch (e) {
+      // silent — page may not have firebase initialized yet
+    }
+  }
+
+  syncNotifBadge();
+  setInterval(syncNotifBadge, 30000); // refresh every 30s
 
 
   
