@@ -131,8 +131,21 @@ async function logOnce(key, data = {}) {
     return true;
 
   } catch (e) {
+    return false; // already exists
+  }
+}
 
-    return false;
+
+async function auditLog(action, adminName, details = "") {
+  try {
+    await db.collection("function_logs").add({
+      type: action,
+      admin: adminName || "system",
+      details,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+  } catch (err) {
+    console.error("[AUDIT]", err.message);
   }
 }
 
@@ -264,7 +277,13 @@ exports.onNewOrder = onDocumentCreated(
       }
     }
 
-    console.log(`[ORDER] ${orderId}`);
+    await auditLog(
+  "NEW_ORDER",
+  order.userEmail || "customer",
+  `Order ${orderId} Total UGX ${order.total}`
+);
+
+console.log(`[ORDER] ${orderId}`);
   }
 );
 
@@ -366,6 +385,13 @@ exports.onUserCreated = onDocumentCreated(
       "Welcome to ZiBuy",
       `<h2>Welcome ${user.email.split("@")[0]}</h2>`
     );
+
+    await auditLog(
+  "NEW_USER",
+  user.email,
+  "New account created"
+);
+
   }
 );
 
@@ -516,7 +542,7 @@ await docRef.set({
         username: process.env.AT_USERNAME || "sandbox",
       });
 
-      
+      await auditLog("SMS_SENT", "system", `SMS sent to gold seller: ${seller.phone}`);
 
       await at.SMS.send({
         to: [seller.phone],
@@ -662,6 +688,7 @@ exports.logRevenueEvent = onDocumentCreated(
     const data = event.data.data();
 
     await db.collection("revenue_logs").add({
+
       type: data.type, // boost | subscription
       amount: data.amount || 0,
       productId: data.productId || null,
@@ -670,7 +697,11 @@ exports.logRevenueEvent = onDocumentCreated(
   }
 );
 
-
+await auditLog(
+  "PAYMENT_APPROVED",
+  "system",
+  `Revenue event: ${data.type} UGX ${data.amount || 0}`
+);
 
 
 // ============================================
@@ -725,6 +756,12 @@ exports.momoPaymentVerify = onDocumentCreated(
         });
       }
     }
+
+    await auditLog(
+  "MOMO_PAYMENT",
+  data.userId,
+  `Transaction ${data.txRef} Amount ${data.amount}`
+);
 
     console.log("[MOMO] Payment activated:", data.txRef);
   }
