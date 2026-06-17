@@ -1028,6 +1028,41 @@ function updateReview() {
   }
 }
 
+
+
+// ── Pick the most relevant field to use as subcategory ──
+function getAutoSubcategory(category) {
+  // Priority field per category — whichever exists becomes the subcategory
+  const priorityField = {
+    phones:        "cf-brand",
+    electronics:   "cf-type",
+    fashion:       "cf-type",
+    shoes:         "cf-type",
+    beauty:        "cf-type",
+    bags:          "cf-type",
+    groceries:     "cf-type",
+    watches:       "cf-type",
+    computers:     "cf-type",
+    gaming:        "cf-platform",
+    home:          "cf-type",
+    accessories:   "cf-type",
+    vehicles:      "cf-make",
+    animals:       "cf-type",
+    babies:        "cf-type",
+    agriculture:   "cf-type",
+    commercial:    "cf-type",
+    tours:         "cf-type",
+    "seeking-work":"cf-type",
+    services:      "cf-service-type"
+  };
+
+  const fieldId = priorityField[category];
+  if (!fieldId) return "";
+
+  const el = document.getElementById(fieldId);
+  return el && el.value ? el.value : "";
+}
+
 // ============================================
 // SUBMIT AD - UPLOAD TO FIREBASE
 // ============================================
@@ -1179,8 +1214,9 @@ boost: {
         location:   locationInput.value,
         isVerified: false
       },
-      details:   collectCategoryFields(selectedCategory),
-      condition: document.getElementById("cf-condition")?.value || "",
+      details:     collectCategoryFields(selectedCategory),
+      condition:   document.getElementById("cf-condition")?.value || "",
+      subcategory: getAutoSubcategory(selectedCategory),
       videoUrl:  videoUrl || ""
     };
 
