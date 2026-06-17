@@ -119,19 +119,22 @@ function emailTemplate(title, content, buttonText = "", buttonUrl = "") {
 // QUEUE-STYLE SAFE LOGGING (ANTI DUPLICATION AT SCALE)
 // ============================================
 
-async function logOnce(key) {
+async function logOnce(key, data = {}) {
   const ref = db.collection("function_logs").doc(key);
 
   try {
     await ref.create({
+      ...data,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
+
     return true;
+
   } catch (e) {
-    return false; // already exists
+
+    return false;
   }
 }
-
 
 // ============================================
 // HELPERS (OPTIMIZED FOR SCALE)
@@ -232,7 +235,15 @@ exports.onNewOrder = onDocumentCreated(
 
     // SMS (SAFE + DEDUP SCALE LOCK)
     if (seller?.plan === "gold" && seller.phone) {
-      const lock = await logOnce(`sms_order_${orderId}`);
+      const lock = await logOnce(
+  `order_${orderId}`,
+  {
+    type: "order",
+    orderId,
+    customer: order.customerName || "",
+    amount: order.total || 0
+  }
+);
       if (!lock) return;
 
       try {
