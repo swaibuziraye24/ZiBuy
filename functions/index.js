@@ -4,6 +4,9 @@ admin.initializeApp();
 
 const nodemailer = require("nodemailer");
 
+const db = admin.firestore();
+const regionalFunctions = functions.region("us-central1");
+
 // ── Email transporter ─────────────────────────
 function createTransporter() {
   return nodemailer.createTransporter({
@@ -25,9 +28,6 @@ async function sendEmail(to, subject, html) {
   });
 }
 
-
-const db = admin.firestore();
-const regionalFunctions = functions.region("us-central1");
 
 // ============================================
 // HELPERS
