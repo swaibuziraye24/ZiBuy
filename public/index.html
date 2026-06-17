@@ -367,6 +367,57 @@
       font-size: 10px; font-weight: 700; color: #111827;
     }
 
+    /* ── ACTION ROW: Filters / Sort / Post a Job ── */
+    .zb-action-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: nowrap;
+    }
+    .zb-action-btn {
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .filters-bar .filter-toggle-btn {
+      padding: 8px 12px;
+      font-size: 12px;
+    }
+    .filters-bar .sort-select {
+      padding: 8px 10px;
+      font-size: 12px;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 8px;
+      font-family: inherit;
+      background: white;
+      max-width: 130px;
+    }
+    .zb-job-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #1e40af;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-weight: 800;
+      font-size: 12px;
+      text-decoration: none;
+      margin-left: auto;
+    }
+
+    @media (max-width: 600px) {
+      .zb-action-row { gap: 6px; }
+      .filters-bar .filter-toggle-btn { padding: 7px 9px; font-size: 11px; }
+      .filters-bar .sort-select { padding: 7px 7px; font-size: 11px; max-width: 105px; }
+      .zb-job-btn { padding: 7px 9px; font-size: 11px; }
+    }
+    @media (max-width: 380px) {
+      .filters-bar .filter-toggle-btn span,
+      .filters-bar .filter-toggle-btn { font-size: 10px; padding: 6px 8px; }
+      .filters-bar .sort-select { font-size: 10px; max-width: 88px; padding: 6px; }
+      .zb-job-btn { font-size: 10px; padding: 6px 8px; }
+    }
+
     /* ── CATEGORY SPONSOR STRIP ── */
     #sponsor-banner-strip {
       margin: 0 20px 16px;
@@ -537,16 +588,6 @@
   <div class="zb-topbar-right">
     
 
-    <!-- Notifications -->
-    <button class="zb-icon-btn" onclick="window.location.href='notifications.html'" id="notifications-btn" style="display:none">
-      <div style="position:relative">
-        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>
-        </svg>
-        <span class="zb-cart-badge" id="notif-count" style="display:none">0</span>
-      </div>
-      <span>Alerts</span>
-    </button>
 
     <button class="zb-login-btn" id="login-btn" onclick="openAuthModal()">
       <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -571,7 +612,7 @@
   <a href="business-plans.html">
     💼 Subscriptions
   </a>
-  
+
   <a href="post-ad.html">
     ⭐ Boost Ads
   </a>
@@ -757,28 +798,25 @@
   </div>
 </section>
 
-<select class="sort-select" onchange="applyFilters()">
+<!-- ══ FILTERS BAR (Filters + Sort + Post a Job — one line) ══ -->
+<div class="filters-bar zb-action-row" style="padding:8px 20px">
+  <button class="filter-toggle-btn zb-action-btn" onclick="toggleFilters()">
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+    </svg>
+    Filters
+  </button>
+
+  <select class="sort-select zb-action-btn" onchange="applyFilters()" id="quick-sort">
     <option value="newest">Newest First</option>
     <option value="price-low">Price: Low to High</option>
     <option value="price-high">Price: High to Low</option>
   </select>
 
-
-  <a href="hiring.html"
-    style="display:inline-flex;align-items:center;gap:6px;
-    background:#1e40af;color:white;padding:10px 18px;border-radius:10px;
-    font-weight:800;font-size:13px;text-decoration:none;white-space:nowrap">
+  <a href="hiring.html" class="zb-action-btn zb-job-btn">
     💼 Post a Job
   </a>
 
-<!-- ══ FILTERS BAR ══ -->
-<div class="filters-bar" style="padding:8px 20px">
-  <button class="filter-toggle-btn" onclick="toggleFilters()">
-    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-      <path d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
-    </svg>
-    Filters
-  </button>
   <div class="filters-panel" id="filters-panel">
     <div class="filter-group">
       <label class="filter-label">💰 Price Range</label>
