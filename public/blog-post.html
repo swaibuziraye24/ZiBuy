@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#ff6600">
+  <title>ZiBuy Blog</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .post-wrap { max-width: 760px; margin: 0 auto; padding: 32px 20px 80px; }
+    .post-back {
+      font-size: 13px; font-weight: 700; color: #ff6600; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 6px; margin-bottom: 20px;
+    }
+    .post-cat-badge {
+      display: inline-block; background: #fff4ee; color: #ff6600;
+      padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 800;
+      text-transform: uppercase; letter-spacing: .5px; margin-bottom: 16px;
+    }
+    .post-title { font-size: clamp(24px,4vw,36px); font-weight: 900; color: #111827; line-height: 1.25; margin: 0 0 16px; }
+    .post-meta { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; padding-bottom: 24px; border-bottom: 1px solid #f0f0f0; }
+    .post-author-avatar {
+      width: 44px; height: 44px; border-radius: 50%; background: #ff6600;
+      color: white; display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 16px; flex-shrink: 0;
+    }
+    .post-meta-info p { margin: 0; font-size: 14px; }
+    .post-meta-info p:first-child { font-weight: 800; color: #111827; }
+    .post-meta-info p:last-child { color: #9ca3af; font-size: 12px; margin-top: 2px; }
+    .post-cover {
+      width: 100%; max-height: 420px; object-fit: cover; border-radius: 18px; margin-bottom: 28px;
+      background: #f3f4f6;
+    }
+    .post-content {
+      font-size: 16px; line-height: 1.9; color: #374151;
+    }
+    .post-content p { margin: 0 0 20px; }
+    .post-content h2 { font-size: 22px; font-weight: 800; color: #111827; margin: 32px 0 14px; }
+    .post-content h3 { font-size: 18px; font-weight: 800; color: #111827; margin: 24px 0 12px; }
+    .post-content ul, .post-content ol { margin: 0 0 20px; padding-left: 22px; }
+    .post-content li { margin-bottom: 8px; }
+    .post-content img { width: 100%; border-radius: 12px; margin: 20px 0; }
+    .post-content strong { color: #111827; }
+    .post-content a { color: #ff6600; font-weight: 700; }
+
+    .post-cta {
+      background: linear-gradient(135deg, #fff4ee, #fffbeb);
+      border: 2px solid #ff6600;
+      border-radius: 16px;
+      padding: 28px;
+      text-align: center;
+      margin-top: 40px;
+    }
+    .post-cta h3 { font-size: 18px; font-weight: 800; color: #111827; margin: 0 0 8px; }
+    .post-cta p { font-size: 13px; color: #6b7280; margin: 0 0 18px; }
+    .post-cta a {
+      display: inline-block; background: #ff6600; color: white;
+      padding: 12px 28px; border-radius: 10px; font-weight: 800; font-size: 14px;
+      text-decoration: none;
+    }
+
+    .post-related { margin-top: 48px; }
+    .post-related h3 { font-size: 18px; font-weight: 800; color: #111827; margin: 0 0 18px; }
+    .post-related-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: 16px; }
+    .post-related-card {
+      background: white; border-radius: 12px; overflow: hidden;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06); cursor: pointer; transition: .2s;
+    }
+    .post-related-card:hover { transform: translateY(-3px); }
+    .post-related-card img { width: 100%; height: 110px; object-fit: cover; }
+    .post-related-card p { padding: 12px; margin: 0; font-size: 13px; font-weight: 700; color: #111827; line-height: 1.4; }
+  </style>
+</head>
+<body>
+
+<header class="topbar">
+  <a href="index.html"><h1 class="logo">Zi<span>Buy</span></h1></a>
+  <div class="topbar-actions" style="margin-left:auto">
+    <a href="blog.html" class="btn btn-dark">← All Posts</a>
+  </div>
+</header>
+
+<div class="post-wrap" id="post-wrap">
+  <div style="text-align:center;padding:80px 20px;color:#9ca3af">Loading article...</div>
+</div>
+
+<footer>
+  <div class="footer-bottom">© 2026 ZiBuy Uganda · All rights reserved</div>
+</footer>
+
+<script type="module" src="blog-post.js"></script>
+<script src="nav.js"></script>
+</body>
+</html>
