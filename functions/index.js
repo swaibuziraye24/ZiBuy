@@ -688,19 +688,18 @@ exports.logRevenueEvent = onDocumentCreated(
     const data = event.data.data();
 
     await db.collection("revenue_logs").add({
-
-      type: data.type, // boost | subscription
+      type: data.type,
       amount: data.amount || 0,
       productId: data.productId || null,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
-  }
-);
 
-await auditLog(
-  "PAYMENT_APPROVED",
-  "system",
-  `Revenue event: ${data.type} UGX ${data.amount || 0}`
+    await auditLog(
+      "PAYMENT_APPROVED",
+      "system",
+      `Revenue event: ${data.type} UGX ${data.amount || 0}`
+    );
+  }
 );
 
 
