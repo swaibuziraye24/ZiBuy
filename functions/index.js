@@ -4,8 +4,11 @@ const nodemailer = require("nodemailer");
 admin.initializeApp();
 const db = admin.firestore();
 
-const { setGlobalOptions, onRequest } =
+const { setGlobalOptions } =
   require("firebase-functions/v2");
+
+const { onRequest } =
+  require("firebase-functions/v2/https");
 const { onDocumentCreated } = require("firebase-functions/v2/firestore");
 const { onSchedule } = require("firebase-functions/v2/scheduler");
 
@@ -51,6 +54,66 @@ async function sendEmail(to, subject, html) {
   }
 }
 
+
+function emailTemplate(title, content, buttonText = "", buttonUrl = "") {
+  return `
+    <div style="
+      max-width:600px;
+      margin:auto;
+      font-family:Arial,sans-serif;
+      background:#ffffff;
+      border:1px solid #e5e7eb;
+      border-radius:12px;
+      overflow:hidden;
+    ">
+      <div style="
+        background:#ff6600;
+        color:white;
+        padding:20px;
+        text-align:center;
+      ">
+        <h1 style="margin:0;font-size:24px;">ZiBuy Uganda</h1>
+      </div>
+
+      <div style="padding:24px;">
+        <h2 style="color:#111827;">${title}</h2>
+
+        ${content}
+
+        ${
+          buttonText && buttonUrl
+            ? `
+          <div style="margin-top:24px;text-align:center;">
+            <a href="${buttonUrl}"
+              style="
+                background:#ff6600;
+                color:white;
+                text-decoration:none;
+                padding:12px 20px;
+                border-radius:8px;
+                display:inline-block;
+                font-weight:bold;
+              ">
+              ${buttonText}
+            </a>
+          </div>
+          `
+            : ""
+        }
+      </div>
+
+      <div style="
+        background:#f9fafb;
+        padding:16px;
+        text-align:center;
+        color:#6b7280;
+        font-size:12px;
+      ">
+        © ${new Date().getFullYear()} ZiBuy Uganda
+      </div>
+    </div>
+  `;
+}
 
 // ============================================
 // QUEUE-STYLE SAFE LOGGING (ANTI DUPLICATION AT SCALE)
