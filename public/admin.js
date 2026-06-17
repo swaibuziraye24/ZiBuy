@@ -4,7 +4,7 @@
 
 import {
   db, auth, collection, getDocs, doc,
-  getDoc, query, where, updateDoc, deleteDoc, addDoc
+  getDoc, query, where, updateDoc, deleteDoc, orderBy, limit, addDoc
 } from "./firebase.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 const PLAN_LIMITS = {
@@ -1772,3 +1772,53 @@ window.loadBlogAdmin = async function() {
     list.innerHTML = `<p style="color:red;text-align:center;padding:30px">Failed: ${err.message}</p>`;
   }
 };
+
+async function loadAdminLogs() {
+
+  const container =
+    document.getElementById("activity-log-list");
+
+  if (!container) return;
+
+  try {
+
+    const snap = await getDocs(
+      query(
+        collection(db, "function_logs"),
+        orderBy("createdAt", "desc"),
+        limit(100)
+      )
+    );
+
+    let html = "";
+
+    snap.forEach(doc => {
+
+      const data = doc.data();
+
+      const date =
+        data.createdAt?.toDate?.()
+          ?.toLocaleString() || "";
+
+      html += `
+        <div class="activity-item">
+          <strong>${data.type || "event"}</strong>
+          <div>${doc.id}</div>
+          <small>${date}</small>
+        </div>
+      `;
+    });
+
+    container.innerHTML =
+      html || "<p>No activity found</p>";
+
+  } catch (err) {
+
+    console.error(err);
+
+    container.innerHTML =
+      "<p>Failed to load logs</p>";
+  }
+}
+
+window.loadAdminLogs = loadAdminLogs;
