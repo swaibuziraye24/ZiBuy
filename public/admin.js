@@ -1780,7 +1780,6 @@ async function loadAdminLogs() {
 
 if (!tableBody) return;
 
-  if (!container) return;
 
   try {
 
