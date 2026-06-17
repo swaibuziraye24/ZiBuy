@@ -106,13 +106,13 @@ async function loadBannerAd() {
     // Build all banner slides + dots
     slot.innerHTML = `
       <div style="position:relative;border-radius:12px;overflow:hidden">
-        <div id="banner-slides" style="position:relative;height:100px">
+        <div id="banner-slides" style="position:relative;height:180px">
           ${banners.map((b, i) => `
             <a href="${b.url || '#'}" target="_blank" data-banner-idx="${i}"
               style="position:absolute;inset:0;display:block;opacity:${i === 0 ? 1 : 0};
-              transition:opacity .6s ease;border-radius:12px;overflow:hidden">
+              transition:opacity .6s ease;border-radius:14px;overflow:hidden">
               <img src="${b.imageUrl}" alt="${b.title || 'Ad'}"
-                style="width:100%;height:100px;object-fit:cover;border-radius:12px">
+                style="width:100%;height:180px;object-fit:cover;border-radius:14px">
             </a>
           `).join("")}
         </div>
@@ -614,6 +614,15 @@ window.renderProducts = function () {
   }
 
   // =========================
+  // 1.5 SUBCATEGORY FILTER
+  // =========================
+  if (currentSubcategory && currentSubcategory !== "all") {
+    products = products.filter(p =>
+      (p.subcategory || "").toLowerCase() === currentSubcategory.toLowerCase()
+    );
+  }
+
+  // =========================
   // 2. SEARCH FILTER
   // =========================
  if (searchQuery && searchQuery.length > 0) {
@@ -950,40 +959,90 @@ const topTrending = trending.slice(0, 10);
  
 
 // ============================================
-// CATEGORY SPONSORSHIP — shows sponsor badge
-// under sponsored category button
+// CATEGORY SPONSORS — auto-rotating carousel
+// Shows below the banner, cycles through all
+// active sponsors automatically (no click needed)
 // ============================================
 async function loadCategorySponsors() {
+  const slot = document.getElementById("sponsor-carousel-slot");
+  if (!slot) return;
+
   try {
     const snap = await getDocs(query(
       collection(db, "category_sponsors"),
       where("active", "==", true)
     ));
 
-    snap.forEach(d => {
-      const s   = d.data();
-      const cat = s.category; // e.g. "phones"
+    if (snap.empty) { slot.style.display = "none"; return; }
 
-      // Find the category button
-      const btn = document.querySelector(`.cat-btn[data-cat="${cat}"]`);
-      if (!btn) return;
+    const sponsors = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    slot.style.display = "block";
 
-      // Add sponsor label under button
-      btn.style.position   = "relative";
-      btn.style.paddingBottom = "20px";
+    slot.innerHTML = `
+      <div style="position:relative;border-radius:12px;overflow:hidden;
+        background:linear-gradient(135deg,#fff4ee,#fffbeb);
+        border:1.5px solid #fde68a;min-height:54px">
+        <div id="sponsor-slides" style="position:relative;min-height:54px">
+          ${sponsors.map((s, i) => {
+            let url = s.sponsorUrl || "#";
+            if (url !== "#" && !url.startsWith("http")) url = "https://" + url;
+            return `
+              <a href="${url}" target="_blank" rel="noopener noreferrer"
+                data-sponsor-idx="${i}"
+                style="position:absolute;inset:0;display:flex;align-items:center;gap:10px;
+                padding:12px 16px;opacity:${i === 0 ? 1 : 0};transition:opacity .6s ease;
+                text-decoration:none;color:#92400e">
+                <span style="font-weight:800;font-size:12px;white-space:nowrap">📣 Sponsored:</span>
+                <span style="font-size:13px;font-weight:700;flex:1;overflow:hidden;
+                  text-overflow:ellipsis;white-space:nowrap">
+                  ${capitalize(s.category)} — Brought to you by ${s.sponsorName}
+                </span>
+                <span style="background:#ff6600;color:white;padding:5px 12px;
+                  border-radius:6px;font-weight:800;font-size:11px;white-space:nowrap;flex-shrink:0">
+                  Visit →
+                </span>
+              </a>
+            `;
+          }).join("")}
+        </div>
+        ${sponsors.length > 1 ? `
+          <div style="position:absolute;bottom:5px;left:50%;transform:translateX(-50%);
+            display:flex;gap:5px;z-index:5">
+            ${sponsors.map((_, i) => `
+              <span class="sponsor-dot" data-sdot-idx="${i}"
+                style="width:6px;height:6px;border-radius:50%;
+                background:${i === 0 ? '#ff6600' : 'rgba(255,102,0,.3)'};
+                transition:.3s"></span>
+            `).join("")}
+          </div>` : ""}
+      </div>
+    `;
 
-      const badge = document.createElement("span");
-      badge.style.cssText = `
-        position:absolute;bottom:3px;left:50%;transform:translateX(-50%);
-        font-size:9px;font-weight:800;color:#ff6600;white-space:nowrap;
-        letter-spacing:.3px;text-transform:uppercase;
-      `;
-      badge.textContent = `Sponsored by ${s.sponsorName}`;
-      btn.appendChild(badge);
-    });
+    // Auto-rotate every 4.5 seconds
+    if (sponsors.length > 1) {
+      let current = 0;
+      setInterval(() => {
+        const slides = slot.querySelectorAll("[data-sponsor-idx]");
+        const dots   = slot.querySelectorAll(".sponsor-dot");
+
+        slides[current].style.opacity = "0";
+        dots[current].style.background = "rgba(255,102,0,.3)";
+
+        current = (current + 1) % sponsors.length;
+
+        slides[current].style.opacity = "1";
+        dots[current].style.background = "#ff6600";
+      }, 4500);
+    }
+
   } catch(e) {
     console.warn("loadCategorySponsors:", e.message);
+    slot.style.display = "none";
   }
+}
+
+function capitalize(str) {
+  return (str || "").charAt(0).toUpperCase() + (str || "").slice(1);
 }
 
  
@@ -1119,14 +1178,11 @@ async function loadJobAds() {
 // ============================================
 // CATEGORY FILTER
 // ============================================
-
 window.filterCategory = function(category, el) {
   sessionStorage.setItem("zibuy_last_category", category);
 
-  // Show sponsor banner if this category is sponsored
-  loadCategoryBanner(category);
-
 // Job ads use a different collection
+
   if (category === "seeking-work") {
     document.querySelectorAll(".cat-btn").forEach(b =>
       b.classList.toggle("active", b.dataset.cat === category)
@@ -1145,7 +1201,7 @@ window.filterCategory = function(category, el) {
 
   if (el) el.classList.add("active");
 
-  renderProducts();
+  window.renderProducts();
 };
 
 window.openSellerShop = function(userId) {
@@ -1154,7 +1210,7 @@ window.openSellerShop = function(userId) {
 
 window.filterSubcategory = function(subcat) {
   currentSubcategory = subcat;
-  renderProducts();
+  window.renderProducts();
 };
 
 
@@ -1202,45 +1258,6 @@ window.closeFilters = function() {
     panel.classList.remove("active");
   }
 };
-
-
-async function loadCategoryBanner(category) {
-  const strip = document.getElementById("sponsor-banner-strip");
-  const text  = document.getElementById("sponsor-strip-text");
-  const link  = document.getElementById("sponsor-strip-link");
-  if (!strip) return;
-
-  try {
-    const snap = await getDocs(query(
-      collection(db, "category_sponsors"),
-      where("category", "==", category),
-      where("active",   "==", true)
-    ));
-
-    if (snap.empty) {
-      strip.style.display = "none";
-      return;
-    }
-
-    const s = snap.docs[0].data();
-
-    // Ensure URL has protocol — fixes blank new window bug
-    let sponsorUrl = s.sponsorUrl || "#";
-    if (sponsorUrl !== "#" && !sponsorUrl.startsWith("http")) {
-      sponsorUrl = "https://" + sponsorUrl;
-    }
-
-    strip.style.display  = "flex";
-    text.textContent     = `${category.charAt(0).toUpperCase()+category.slice(1)} — Brought to you by ${s.sponsorName}`;
-    link.href            = sponsorUrl;
-    link.textContent     = `Visit ${s.sponsorName} →`;
-    link.target          = "_blank";
-    link.rel             = "noopener noreferrer";
-
-  } catch(e) {
-    strip.style.display = "none";
-  }
-}
 
 // ============================================
 // CART FUNCTIONS
@@ -1621,53 +1638,55 @@ function buildCategoryNav(products) {
   const nav = document.getElementById("category-nav");
   if (!nav) return;
 
-  const cats = ["all", ...new Set(products.map(p => p.category || "others"))];
+  // Only show subcategory chips when a specific category is selected
+  if (currentCategory === "all") {
+    nav.innerHTML = "";
+    return;
+  }
 
-  nav.innerHTML = "";
+  // Products within the currently selected category
+  const inCategory = products.filter(p => p.category === currentCategory);
 
-  cats.forEach(cat => {
-    const btn = document.createElement("button");
-    btn.innerText = cat.charAt(0).toUpperCase() + cat.slice(1);
-
-    btn.classList.toggle("active", currentCategory === cat);
-
-    btn.onclick = () => {
-      currentCategory = cat;
-      currentSubcategory = "all"; // RESET subcategory when category changes
-      renderProducts();
-    };
-
-    nav.appendChild(btn);
+  // Count products per subcategory
+  const counts = {};
+  inCategory.forEach(p => {
+    const sub = (p.subcategory || "").trim();
+    if (!sub) return;
+    counts[sub] = (counts[sub] || 0) + 1;
   });
 
-  // OPTIONAL: show subcategories for selected category
-  const subcats = [
-    "all",
-    ...new Set(
-      products
-        .filter(p => currentCategory === "all" || p.category === currentCategory)
-        .map(p => p.subcategory || "others")
-    )
-  ];
+  const subcats = Object.entries(counts).sort((a, b) => b[1] - a[1]);
 
-  const subNav = document.getElementById("subcategory-nav");
-  if (!subNav) return;
+  if (subcats.length === 0) {
+    nav.innerHTML = "";
+    return;
+  }
 
-  subNav.innerHTML = "";
-
-  subcats.forEach(sc => {
-    const btn = document.createElement("button");
-    btn.innerText = sc;
-
-    btn.classList.toggle("active", currentSubcategory === sc);
-
-    btn.onclick = () => {
-      currentSubcategory = sc;
-      renderProducts();
-    };
-
-    subNav.appendChild(btn);
-  });
+  nav.innerHTML = `
+    <div style="display:flex;gap:8px;overflow-x:auto;padding:10px 20px;
+      scrollbar-width:none;background:white;border-bottom:1px solid #f0f0f0">
+      <button class="subcat-chip ${currentSubcategory === 'all' ? 'active' : ''}"
+        onclick="filterSubcategory('all')"
+        style="flex-shrink:0;border:1.5px solid ${currentSubcategory === 'all' ? '#ff6600' : '#e5e7eb'};
+        background:${currentSubcategory === 'all' ? '#ff6600' : 'white'};
+        color:${currentSubcategory === 'all' ? 'white' : '#374151'};
+        padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;
+        cursor:pointer;font-family:inherit;white-space:nowrap">
+        All (${inCategory.length})
+      </button>
+      ${subcats.map(([sub, count]) => `
+        <button class="subcat-chip ${currentSubcategory === sub ? 'active' : ''}"
+          onclick="filterSubcategory('${sub.replace(/'/g, "\\'")}')"
+          style="flex-shrink:0;border:1.5px solid ${currentSubcategory === sub ? '#ff6600' : '#e5e7eb'};
+          background:${currentSubcategory === sub ? '#ff6600' : 'white'};
+          color:${currentSubcategory === sub ? 'white' : '#374151'};
+          padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;
+          cursor:pointer;font-family:inherit;white-space:nowrap">
+          ${sub} (${count})
+        </button>
+      `).join("")}
+    </div>
+  `;
 }
 
 
