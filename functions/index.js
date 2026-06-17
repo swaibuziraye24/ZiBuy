@@ -880,7 +880,4 @@ exports.boostExpiryReminders = regionalFunctions
     }
 
     return null;
-  });const { FieldValue, Timestamp } = require("@google-cloud/firestore");
-const admin = require("firebase-admin");
-const functions = require("firebase-functions");
-const nodemailer = require("nodemailer");
+  });
