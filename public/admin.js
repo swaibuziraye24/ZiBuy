@@ -1775,8 +1775,10 @@ window.loadBlogAdmin = async function() {
 
 async function loadAdminLogs() {
 
-  const container =
-    document.getElementById("activity-log-list");
+  const tableBody =
+  document.getElementById("activity-table-body");
+
+if (!tableBody) return;
 
   if (!container) return;
 
@@ -1790,7 +1792,7 @@ async function loadAdminLogs() {
       )
     );
 
-    let html = "";
+    let rows = "";
 
     snap.forEach(doc => {
 
@@ -1800,24 +1802,26 @@ async function loadAdminLogs() {
         data.createdAt?.toDate?.()
           ?.toLocaleString() || "";
 
-      html += `
-        <div class="activity-item">
-          <strong>${data.type || "event"}</strong>
-          <div>${doc.id}</div>
-          <small>${date}</small>
-        </div>
-      `;
+      rows += `
+<tr>
+  <td>${date}</td>
+  <td>${data.type || "event"}</td>
+  <td>${data.admin || "-"}</td>
+  <td>${doc.id}</td>
+</tr>
+`;
     });
 
-    container.innerHTML =
-      html || "<p>No activity found</p>";
+    tableBody.innerHTML = rows || "<p>No activity found</p>";
 
   } catch (err) {
 
     console.error(err);
 
-    container.innerHTML =
-      "<p>Failed to load logs</p>";
+    tableBody.innerHTML =
+  `<tr>
+     <td colspan="4">Failed to load logs</td>
+   </tr>`;
   }
 }
 
