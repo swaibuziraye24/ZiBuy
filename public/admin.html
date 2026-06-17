@@ -356,6 +356,12 @@
       onclick="window.showSection('blog', this);loadBlogAdmin()">
       <span class="nav-icon">📰</span> Blog
     </button>
+
+   <button class="admin-nav-item"
+  onclick="window.showSection('activity', this);loadAdminLogs()">
+  <span class="nav-icon">📜</span> Activity Log
+</button>
+
   </aside>
 
   <!-- ── MAIN ── -->
@@ -387,11 +393,48 @@
         </div>
       </div>
       <div class="admin-card">
-        <h2>🔔 Pending Actions</h2>
-        <div id="pending-actions">
-          <p style="color:var(--gray);font-size:14px">Loading…</p>
-        </div>
-      </div>
+  <h2>🔔 Pending Actions</h2>
+  <div id="pending-actions">
+    <p style="color:var(--gray);font-size:14px">Loading…</p>
+  </div>
+</div>
+
+<div class="kpi-row">
+
+  <div class="kpi-card" style="border-color:#22c55e">
+    <div class="kpi-label">Revenue</div>
+    <div class="kpi-value" id="kpi-revenue">UGX 0</div>
+  </div>
+
+  <div class="kpi-card" style="border-color:#3b82f6">
+    <div class="kpi-label">Verifications</div>
+    <div class="kpi-value" id="kpi-verifications">—</div>
+  </div>
+
+  <div class="kpi-card" style="border-color:#8b5cf6">
+    <div class="kpi-label">Job Ads</div>
+    <div class="kpi-value" id="kpi-jobads">—</div>
+  </div>
+
+</div>
+
+<div class="admin-card">
+  <h2>⚠️ Fraud Alerts</h2>
+  <div id="fraud-alerts">
+    <p style="color:var(--gray)">No alerts</p>
+  </div>
+</div>
+
+<div class="admin-card">
+  <h2>🖥️ System Health</h2>
+
+  <div id="system-health">
+    <p>Firestore: ✅ Online</p>
+    <p>Functions: ✅ Online</p>
+    <p>Storage: ✅ Online</p>
+  </div>
+</div>
+
     </div>
 
     <!-- ══ USERS ══ -->
@@ -488,6 +531,42 @@
         </table>
       </div>
     </div>
+
+
+    <div class="admin-section" id="section-activity">
+  <h2 style="font-size:20px;font-weight:800;margin-bottom:16px">
+    📜 Admin Activity Log
+  </h2>
+
+  <div class="admin-section" id="section-activity">
+
+  <h2 style="font-size:20px;font-weight:800;margin-bottom:16px">
+    📜 Activity Log
+  </h2>
+
+  <div class="admin-card">
+
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Action</th>
+          <th>Admin</th>
+          <th>Details</th>
+        </tr>
+      </thead>
+
+      <tbody id="activity-table-body">
+        <tr class="empty-row">
+          <td colspan="4">Loading...</td>
+        </tr>
+      </tbody>
+
+    </table>
+
+  </div>
+
+</div>
 
     <!-- ══ PREMIUM ADS ══ -->
     <div class="admin-section" id="section-premium">
