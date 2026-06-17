@@ -19,6 +19,7 @@ serverTimestamp,
   orderBy,
   deleteDoc,
   updateDoc,
+  limit,
   increment
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
@@ -47,7 +48,7 @@ export {
   doc, getDoc, query, where,
   orderBy, deleteDoc, updateDoc,
 setDoc,
-serverTimestamp,
+serverTimestamp, limit,
  increment
 };
 
