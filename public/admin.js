@@ -1568,3 +1568,207 @@ window.deleteSponsor = async function(id) {
     loadCategorySponsorsAdmin();
   } catch(e) { showToast("Failed", "error"); }
 };
+
+
+// ══════════════════════════════════════════════
+//  BLOG MANAGEMENT
+// ══════════════════════════════════════════════
+
+let _blogCoverFile = null;
+let _allBlogPosts   = [];
+
+window.handleBlogCoverPick = function(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  if (!file.type.startsWith("image/")) {
+    showToast("Please select an image file", "error");
+    return;
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    showToast("Image too large — max 5MB", "error");
+    return;
+  }
+
+  _blogCoverFile = file;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    document.getElementById("bp-cover-preview").innerHTML = `
+      <img src="${e.target.result}"
+        style="width:100%;height:140px;object-fit:cover;border-radius:10px;margin-top:8px;border:1.5px solid #e5e7eb">
+      <p style="font-size:11px;color:#10b981;font-weight:700;margin-top:4px">✅ ${file.name}</p>
+    `;
+  };
+  reader.readAsDataURL(file);
+};
+
+window.saveBlogPost = async function(status) {
+  const editId   = document.getElementById("bp-edit-id").value;
+  const title    = document.getElementById("bp-title").value.trim();
+  const category = document.getElementById("bp-category").value;
+  const author   = document.getElementById("bp-author").value.trim() || "ZiBuy Team";
+  const excerpt  = document.getElementById("bp-excerpt").value.trim();
+  const content  = document.getElementById("bp-content").value.trim();
+
+  if (!title) { showToast("Enter a post title", "error"); return; }
+  if (!content) { showToast("Write some content for the post", "error"); return; }
+
+  const btn = status === "published"
+    ? document.getElementById("bp-publish-btn")
+    : event.target;
+  const originalText = btn.textContent;
+  btn.textContent = "Saving...";
+  btn.disabled    = true;
+
+  try {
+    let coverImage = "";
+
+    // Keep existing cover if editing and no new image chosen
+    if (editId && !_blogCoverFile) {
+      const existing = _allBlogPosts.find(p => p.id === editId);
+      coverImage = existing?.coverImage || "";
+    }
+
+    if (_blogCoverFile) {
+      const { getStorage, ref, uploadBytes, getDownloadURL }
+        = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js");
+      const storage = getStorage();
+      const storageRef = ref(storage, `blog-covers/${Date.now()}-${_blogCoverFile.name}`);
+      await uploadBytes(storageRef, _blogCoverFile, { contentType: _blogCoverFile.type });
+      coverImage = await getDownloadURL(storageRef);
+    }
+
+    const postData = {
+      title, category, author, excerpt, content, coverImage,
+      status,
+      updatedAt: new Date()
+    };
+
+    if (editId) {
+      await updateDoc(doc(db, "blog_posts", editId), postData);
+      showToast(status === "published" ? "✅ Post published!" : "💾 Draft saved", "success");
+    } else {
+      await addDoc(collection(db, "blog_posts"), {
+        ...postData,
+        views: 0,
+        createdAt: new Date()
+      });
+      showToast(status === "published" ? "🚀 Post published!" : "💾 Draft saved", "success");
+    }
+
+    cancelBlogEdit();
+    loadBlogAdmin();
+
+  } catch (err) {
+    console.error("saveBlogPost error:", err);
+    showToast("Failed: " + err.message, "error");
+  } finally {
+    btn.textContent = originalText;
+    btn.disabled    = false;
+  }
+};
+
+window.cancelBlogEdit = function() {
+  document.getElementById("bp-edit-id").value     = "";
+  document.getElementById("bp-title").value       = "";
+  document.getElementById("bp-excerpt").value     = "";
+  document.getElementById("bp-content").value     = "";
+  document.getElementById("bp-author").value      = "ZiBuy Team";
+  document.getElementById("bp-category").value    = "selling-tips";
+  document.getElementById("bp-cover-preview").innerHTML = "";
+  document.getElementById("blog-form-title").textContent = "✍️ Write New Post";
+  document.getElementById("bp-cancel-edit").style.display = "none";
+  _blogCoverFile = null;
+};
+
+window.editBlogPost = function(postId) {
+  const post = _allBlogPosts.find(p => p.id === postId);
+  if (!post) return;
+
+  document.getElementById("bp-edit-id").value  = postId;
+  document.getElementById("bp-title").value    = post.title || "";
+  document.getElementById("bp-category").value = post.category || "selling-tips";
+  document.getElementById("bp-author").value   = post.author || "ZiBuy Team";
+  document.getElementById("bp-excerpt").value  = post.excerpt || "";
+  document.getElementById("bp-content").value  = post.content || "";
+
+  if (post.coverImage) {
+    document.getElementById("bp-cover-preview").innerHTML = `
+      <img src="${post.coverImage}"
+        style="width:100%;height:140px;object-fit:cover;border-radius:10px;margin-top:8px;border:1.5px solid #e5e7eb">
+      <p style="font-size:11px;color:#6b7280;margin-top:4px">Current cover image (upload new to replace)</p>
+    `;
+  }
+
+  document.getElementById("blog-form-title").textContent = "✏️ Edit Post";
+  document.getElementById("bp-cancel-edit").style.display = "block";
+
+  document.getElementById("section-blog").scrollIntoView({ behavior: "smooth" });
+};
+
+window.deleteBlogPost = async function(postId) {
+  if (!confirm("Delete this blog post permanently?")) return;
+  try {
+    await deleteDoc(doc(db, "blog_posts", postId));
+    showToast("Post deleted", "info");
+    loadBlogAdmin();
+  } catch (e) { showToast("Failed", "error"); }
+};
+
+window.toggleBlogStatus = async function(postId, newStatus) {
+  try {
+    await updateDoc(doc(db, "blog_posts", postId), { status: newStatus });
+    showToast(newStatus === "published" ? "Post published" : "Post unpublished", "success");
+    loadBlogAdmin();
+  } catch (e) { showToast("Failed", "error"); }
+};
+
+window.loadBlogAdmin = async function() {
+  const list = document.getElementById("blog-posts-list");
+  if (!list) return;
+  list.innerHTML = `<p style="text-align:center;color:#6b7280;padding:30px">Loading...</p>`;
+
+  try {
+    const snap = await getDocs(collection(db, "blog_posts"));
+    _allBlogPosts = snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
+
+    if (_allBlogPosts.length === 0) {
+      list.innerHTML = `<p style="text-align:center;color:#6b7280;padding:30px">No blog posts yet</p>`;
+      return;
+    }
+
+    list.innerHTML = _allBlogPosts.map(p => `
+      <div style="display:flex;gap:14px;align-items:flex-start;padding:14px;
+        border:1px solid #e5e7eb;border-radius:12px;margin-bottom:10px;flex-wrap:wrap">
+
+        <img src="${p.coverImage || ''}" alt=""
+          onerror="this.style.background='#f3f4f6';this.src=''"
+          style="width:80px;height:60px;object-fit:cover;border-radius:8px;background:#f3f4f6;flex-shrink:0">
+
+        <div style="flex:1;min-width:160px">
+          <p style="margin:0;font-weight:800;font-size:14px;color:#111827">${p.title}</p>
+          <p style="margin:4px 0;font-size:12px;color:#6b7280">
+            ${p.category || "—"} · by ${p.author || "ZiBuy Team"} · 👁️ ${p.views || 0} views
+          </p>
+          <span class="plan-chip ${p.status === 'published' ? 'chip-approved' : 'chip-pending'}">
+            ${p.status === 'published' ? '✅ Published' : '📝 Draft'}
+          </span>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
+          <button class="action-btn btn-approve" onclick="editBlogPost('${p.id}')">✏️ Edit</button>
+          ${p.status === 'published'
+            ? `<button class="action-btn btn-reject" onclick="toggleBlogStatus('${p.id}','draft')">📥 Unpublish</button>`
+            : `<button class="action-btn btn-approve" onclick="toggleBlogStatus('${p.id}','published')">🚀 Publish</button>`}
+          <button class="action-btn btn-reject" onclick="deleteBlogPost('${p.id}')">🗑️ Delete</button>
+        </div>
+      </div>
+    `).join("");
+
+  } catch (err) {
+    list.innerHTML = `<p style="color:red;text-align:center;padding:30px">Failed: ${err.message}</p>`;
+  }
+};
