@@ -352,6 +352,10 @@
       onclick="window.showSection('sponsors', this);loadCategorySponsorsAdmin()">
       <span class="nav-icon">🗂️</span> Cat. Sponsors
     </button>
+    <button class="admin-nav-item"
+      onclick="window.showSection('blog', this);loadBlogAdmin()">
+      <span class="nav-icon">📰</span> Blog
+    </button>
   </aside>
 
   <!-- ── MAIN ── -->
@@ -794,8 +798,101 @@
         </div>
       </div>
     </div>
+    <!-- ══ end section-sponsors ══ -->
+
+    <!-- ══ BLOG ══ -->
+    <div class="admin-section" id="section-blog">
+      <h2 style="font-size:20px;font-weight:800;margin-bottom:16px">📰 Blog Posts</h2>
+
+      <div class="admin-card" style="margin-bottom:16px">
+        <h2 id="blog-form-title">✍️ Write New Post</h2>
+
+        <input type="hidden" id="bp-edit-id">
+
+        <input id="bp-title" placeholder="Post title e.g. 5 Tips to Sell Faster on ZiBuy"
+          class="search-input">
+
+        <select id="bp-category" class="search-input">
+          <option value="selling-tips">Selling Tips</option>
+          <option value="buying-guide">Buying Guide</option>
+          <option value="safety">Safety</option>
+          <option value="news">ZiBuy News</option>
+          <option value="success-stories">Success Story</option>
+        </select>
+
+        <input id="bp-author" placeholder="Author name (e.g. ZiBuy Team)" class="search-input" value="ZiBuy Team">
+
+        <label style="display:flex;align-items:center;gap:12px;padding:14px;
+          border:2px dashed #e5e7eb;border-radius:10px;cursor:pointer;
+          background:#fafafa;margin-bottom:10px"
+          onmouseover="this.style.borderColor='#ff6600'"
+          onmouseout="this.style.borderColor='#e5e7eb'">
+          <span style="font-size:26px">🖼️</span>
+          <div>
+            <p style="margin:0;font-size:13px;font-weight:700;color:#374151">
+              Tap to choose cover image
+            </p>
+            <p style="margin:3px 0 0;font-size:11px;color:#9ca3af">
+              JPG / PNG · 1200×630px recommended · Max 5MB
+            </p>
+          </div>
+          <input type="file" id="bp-cover-input" accept="image/*"
+            style="display:none" onchange="handleBlogCoverPick(event)">
+        </label>
+        <div id="bp-cover-preview"></div>
+
+        <textarea id="bp-excerpt" rows="2" placeholder="Short excerpt / summary (shown on listing page)"
+          class="search-input" style="resize:vertical"></textarea>
+
+        <textarea id="bp-content" rows="14"
+          placeholder="Write your article here...
+
+Use ## for a heading
+Use ### for a subheading
+Use **bold text** for emphasis
+Use - item for bullet lists
+Use 1. item for numbered lists
+
+Separate paragraphs with a blank line."
+          class="search-input" style="resize:vertical;font-family:monospace;font-size:13px"></textarea>
+
+        <div style="display:flex;gap:10px">
+          <button onclick="saveBlogPost('draft')"
+            style="flex:1;background:#f3f4f6;color:#374151;border:none;padding:12px;
+            border-radius:10px;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit">
+            💾 Save as Draft
+          </button>
+          <button id="bp-publish-btn" onclick="saveBlogPost('published')"
+            style="flex:1;background:#ff6600;color:white;border:none;padding:12px;
+            border-radius:10px;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit">
+            🚀 Publish Post
+          </button>
+        </div>
+        <button id="bp-cancel-edit" onclick="cancelBlogEdit()" style="display:none;width:100%;
+          background:#fee2e2;color:#ef4444;border:none;padding:10px;border-radius:10px;
+          font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;margin-top:8px">
+          ✗ Cancel Editing
+        </button>
+      </div>
+
+      <div class="admin-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <h2 style="margin:0">All Posts</h2>
+          <button onclick="loadBlogAdmin()"
+            style="background:#f3f4f6;border:none;padding:6px 14px;border-radius:8px;
+            font-weight:700;font-size:12px;cursor:pointer;font-family:inherit">
+            🔄 Refresh
+          </button>
+        </div>
+        <div id="blog-posts-list">
+          <p style="color:var(--gray);font-size:13px">Click Refresh to load posts</p>
+        </div>
+      </div>
+    </div>
+    <!-- ══ end section-blog ══ -->
 
   </main>
+
 </div>
 
 <div id="toast-container" class="toast-container"></div>
