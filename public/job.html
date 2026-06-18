@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#1e40af">
+  <title>Job Details — ZiBuy</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .job-wrap { max-width: 760px; margin: 0 auto; padding: 28px 16px 80px; }
+    .job-back {
+      font-size: 13px; font-weight: 700; color: #ff6600; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 6px; margin-bottom: 18px;
+    }
+    .job-card {
+      background: white; border-radius: 18px; padding: 28px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.07); border-left: 5px solid #1e40af;
+    }
+    .job-badges { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+    .job-badge {
+      padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 800;
+    }
+    .job-badge.top      { background: #ff6600; color: white; }
+    .job-badge.hiring   { background: #dbeafe; color: #1e40af; }
+    .job-badge.type     { background: #f3f4f6; color: #374151; }
+
+    .job-title    { font-size: clamp(20px,3vw,28px); font-weight: 900; color: #111827; margin: 0 0 6px; }
+    .job-company  { font-size: 15px; font-weight: 700; color: #ff6600; margin: 0 0 18px; }
+
+    .job-meta-grid {
+      display: grid; grid-template-columns: repeat(auto-fit,minmax(150px,1fr)); gap: 14px;
+      background: #f9fafb; border-radius: 12px; padding: 16px; margin-bottom: 22px;
+    }
+    .job-meta-item p:first-child { margin: 0; font-size: 11px; color: #9ca3af; text-transform: uppercase; font-weight: 700; letter-spacing: .4px; }
+    .job-meta-item p:last-child  { margin: 4px 0 0; font-size: 14px; font-weight: 700; color: #111827; }
+
+    .job-section { margin-bottom: 22px; }
+    .job-section h3 { font-size: 15px; font-weight: 800; color: #111827; margin: 0 0 10px; }
+    .job-section p  { font-size: 14px; color: #374151; line-height: 1.8; margin: 0; white-space: pre-line; }
+
+    .job-apply-box {
+      background: linear-gradient(135deg,#dbeafe,#eff6ff); border: 2px solid #1e40af;
+      border-radius: 14px; padding: 20px; margin-top: 24px;
+    }
+    .job-apply-box h3 { font-size: 16px; font-weight: 800; color: #111827; margin: 0 0 10px; }
+    .job-apply-btns { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+    .job-apply-btn {
+      flex: 1; min-width: 140px; display: flex; align-items: center; justify-content: center;
+      gap: 8px; padding: 13px; border-radius: 10px; font-weight: 800; font-size: 14px;
+      text-decoration: none; cursor: pointer; border: none; font-family: inherit;
+    }
+    .job-apply-call { background: #1e40af; color: white; }
+    .job-apply-wa    { background: #25d366; color: white; }
+
+    .job-deadline-tag {
+      display: inline-flex; align-items: center; gap: 6px; font-size: 12px;
+      color: #92400e; background: #fef3c7; padding: 6px 12px; border-radius: 20px;
+      font-weight: 700; margin-top: 10px;
+    }
+
+    .job-loading, .job-error { text-align: center; padding: 80px 20px; color: #9ca3af; }
+  </style>
+</head>
+<body>
+
+<header class="topbar">
+  <a href="index.html"><h1 class="logo">Zi<span>Buy</span></h1></a>
+  <div class="topbar-actions" style="margin-left:auto">
+    <a href="index.html" class="btn btn-dark">← Back to ZiBuy</a>
+  </div>
+</header>
+
+<div class="job-wrap" id="job-wrap">
+  <div class="job-loading">Loading job details...</div>
+</div>
+
+<footer>
+  <div class="footer-bottom">© 2026 ZiBuy Uganda · All rights reserved</div>
+</footer>
+
+<script type="module" src="job.js"></script>
+<script src="nav.js"></script>
+</body>
+</html>
