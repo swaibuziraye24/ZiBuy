@@ -661,7 +661,7 @@ exports.planExpiryReminders = onSchedule(
         const user = userSnap.exists ? userSnap.data() : null;
 
         const email = user?.email || "";
-        const phone = (user?.phone || "").replace(/\D/g, "");
+        const phone = null;
 
         const endDate = sub.endDate?.toDate?.() || new Date(sub.endDate);
         const daysLeft = Math.ceil((endDate - now) / 86400000);
@@ -691,22 +691,33 @@ exports.planExpiryReminders = onSchedule(
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
         });
 
-        // 2. WhatsApp reminder (stored for admin/manual send OR API later)
-        if (phone) {
-          const msg =
-            `Hello from ZiBuy 👋\n\n` +
-            `Your *${planLabel}* expires in *${daysLeft} day(s)*.\n\n` +
-            `Renew for UGX ${price}/month.`;
+        // WhatsApp reminder (ADMIN CLICK-TO-SEND SYSTEM)
+const msg =
+  `Hello from ZiBuy 👋\n\n` +
+  `Your *${planLabel}* expires in *${daysLeft} day(s)*.\n\n` +
+  `Renew for UGX ${price}/month.`;
 
-          await db.collection("whatsapp_reminders").add({
-            userId,
-            phone,
-            type: "plan_expiry",
-            message: msg,
-            waLink: `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`,
-            createdAt: admin.firestore.FieldValue.serverTimestamp(),
-          });
-        }
+// fetch user phone (optional only)
+const userSnap2 = await db.collection("users").doc(userId).get();
+const userData2 = userSnap2.exists ? userSnap2.data() : null;
+
+const phone = userData2?.phone || null;
+
+// build WhatsApp link (only if phone exists)
+const waLink = phone
+  ? `https://wa.me/${phone.replace(/\D/g, "")}?text=${encodeURIComponent(msg)}`
+  : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+
+// store reminder ALWAYS
+await db.collection("whatsapp_reminders").add({
+  userId,
+  type: "plan_expiry",
+  message: msg,
+  phone: phone,
+  waLink,
+  status: "pending",
+  createdAt: admin.firestore.FieldValue.serverTimestamp(),
+});
 
         // 3. Email reminder
         if (email) {
@@ -761,8 +772,7 @@ exports.boostExpiryReminders = onSchedule(
         const user = userSnap.exists ? userSnap.data() : null;
 
         const email = user?.email || "";
-        const phone = (user?.phone || "").replace(/\D/g, "");
-
+        const phone = null;
         const expiresAt =
           boost.expiresAt?.toDate?.() || new Date(boost.expiresAt);
 
@@ -779,27 +789,35 @@ exports.boostExpiryReminders = onSchedule(
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
         });
 
-        // 2. WhatsApp reminder (stored for manual/API sending)
-        if (phone) {
-          const msg =
-            `Hello from ZiBuy 👋\n\n` +
-            `Your boost for *"${productName}"* expires in *${daysLeft} day(s)*.\n\n` +
-            `Re-boost to stay visible:\n` +
-            `• 7 Days — UGX 5,000\n` +
-            `• 14 Days — UGX 8,000\n` +
-            `• 30 Days — UGX 15,000`;
+         // WhatsApp reminder (ADMIN CLICK-TO-SEND SYSTEM)
+        const msg =
+  `Hello from ZiBuy 👋\n\n` +
+  `Your boost for "${productName}" expires in ${daysLeft} day(s).\n\n` +
+  `Re-boost to stay visible:\n` +
+  `• 7 Days — UGX 5,000\n` +
+  `• 14 Days — UGX 8,000\n` +
+  `• 30 Days — UGX 15,000`;
 
-          await db.collection("whatsapp_reminders").add({
-            userId,
-            phone,
-            type: "boost_expiry",
-            productId: boost.productId,
-            productName,
-            message: msg,
-            waLink: `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`,
-            createdAt: admin.firestore.FieldValue.serverTimestamp(),
-          });
-        }
+const userSnap2 = await db.collection("users").doc(userId).get();
+const userData2 = userSnap2.exists ? userSnap2.data() : null;
+
+const userPhone = userData2?.phone || null;
+
+const waLink = userPhone
+  ? `https://wa.me/${userPhone.replace(/\D/g, "")}?text=${encodeURIComponent(msg)}`
+  : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+
+await db.collection("whatsapp_reminders").add({
+  userId,
+  type: "boost_expiry",
+  productId: boost.productId,
+  productName,
+  message: msg,
+  phone: userPhone,
+  waLink,
+  status: "pending",
+  createdAt: admin.firestore.FieldValue.serverTimestamp(),
+});
 
         // 3. Email reminder (optional but clean fallback)
         if (email) {
