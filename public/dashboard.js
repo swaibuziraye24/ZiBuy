@@ -502,7 +502,7 @@ window.proceedToPayment = async function() {
       </div>
 
       <div style="display:flex;flex-direction:column;gap:10px">
-        <button onclick="submitDashboardBoost('${productId}', '${productName}', ${days}, ${price}, '${paymentRef}')"
+        <button id="dash-boost-submit-btn" onclick="submitDashboardBoost('${productId}', '${productName}', ${days}, ${price}, '${paymentRef}', this)"
           style="background:#ff6600;color:white;border:none;padding:14px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;width:100%">
           📲 Send Reference to Admin WhatsApp
         </button>
@@ -517,7 +517,7 @@ window.proceedToPayment = async function() {
   document.body.appendChild(payModal);
 };
 
-window.submitDashboardBoost = async function(productId, productName, days, price, paymentRef) {
+window.submitDashboardBoost = async function(productId, productName, days, price, paymentRef, btnEl) {
   const txnInput = document.getElementById("dash-boost-txn-ref");
   const txnRef   = txnInput ? txnInput.value.trim() : "";
 
@@ -538,9 +538,11 @@ window.submitDashboardBoost = async function(productId, productName, days, price
     return;
   }
 
-  const btn = event.target;
-  btn.textContent = "Saving...";
-  btn.disabled    = true;
+  const btn = btnEl || document.getElementById("dash-boost-submit-btn");
+  if (btn) {
+    btn.textContent = "Saving...";
+    btn.disabled    = true;
+  }
 
   try {
     const docRef = await addDoc(collection(db, "boost_requests"), {
