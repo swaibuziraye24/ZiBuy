@@ -335,7 +335,57 @@
     .zb-cat-header a {
       font-size: 13px; font-weight: 700; color: #ff6600; text-decoration: none;
     }
+    .zb-cat-layout {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+    .zb-subcat-sidebar {
+      width: 200px;
+      flex-shrink: 0;
+      background: white;
+      border-radius: 12px;
+      border: 1.5px solid #f0f0f0;
+      padding: 12px;
+      position: sticky;
+      top: 70px;
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+    .zb-subcat-sidebar h4 {
+      font-size: 12px; font-weight: 800; color: #ff6600;
+      text-transform: uppercase; letter-spacing: .5px;
+      margin: 0 0 10px; padding-bottom: 8px;
+      border-bottom: 1.5px solid #f0f0f0;
+    }
+    .zb-subcat-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      padding: 9px 10px;
+      border-radius: 8px;
+      background: none;
+      border: none;
+      font-size: 13px;
+      font-weight: 600;
+      color: #374151;
+      cursor: pointer;
+      font-family: inherit;
+      text-align: left;
+      margin-bottom: 2px;
+      transition: .15s;
+    }
+    .zb-subcat-item:hover { background: #f9fafb; }
+    .zb-subcat-item.active { background: #fff4ee; color: #ff6600; font-weight: 800; }
+    .zb-subcat-item .count {
+      font-size: 11px; color: #9ca3af; font-weight: 700;
+      background: #f3f4f6; padding: 1px 8px; border-radius: 10px;
+    }
+    .zb-subcat-item.active .count { background: #ff6600; color: white; }
+
     .zb-cat-grid {
+      flex: 1;
       display: grid;
       grid-template-columns: repeat(8, 1fr);
       gap: 8px;
@@ -443,7 +493,15 @@
       .zb-hero-img { display: none; }
       .zb-hero::before { display: none; }
     }
-   @media (max-width: 768px) {
+    @media (max-width: 768px) {
+      .zb-cat-layout { flex-direction: column; }
+      .zb-subcat-sidebar {
+        width: 100%;
+        position: static;
+        max-height: none;
+        order: -1;
+      }
+
       .zb-topbar {
         flex-wrap: nowrap;
         padding: 8px 10px;
@@ -693,7 +751,13 @@
     <a href="#" onclick="filterCategory('all');return false">View all categories →</a>
   </div>
 
+  <div class="zb-cat-layout">
+
+  <!-- Subcategory sidebar — only shows when a category is selected -->
+  <aside id="subcat-sidebar" class="zb-subcat-sidebar" style="display:none"></aside>
+
   <div class="zb-cat-grid">
+
     <div class="zb-cat-card active" onclick="filterCategory('all');setActiveCard(this)">
       <span style="font-size:26px">🏪</span>
       <span>All</span>
@@ -779,6 +843,8 @@
       <span>Accessories</span>
     </div>
   </div>
+
+  </div>
 </section>
 
 <!-- ══ FILTERS BAR (Filters + Sort + Post a Job — one line) ══ -->
@@ -862,9 +928,6 @@
   </div>
   <div class="active-filters" id="active-filters"></div>
 </div>
-
-     <!-- ============ CATEGORY & SUBCATEGORY NAV ============ -->
-<div id="category-nav" class="category-nav"></div>
 
 
 <!-- ============ SECTION HEADER ============ -->
