@@ -20,6 +20,25 @@ setGlobalOptions({
 });
 
 
+
+async function alertAdminOrder(orderId, amount) {
+  await pushAdminAlert(
+    "order",
+    "New Order Received",
+    `Order ${orderId} worth UGX ${amount}`,
+    { orderId, amount }
+  );
+}
+
+async function alertAdminPayment(type, amount) {
+  await pushAdminAlert(
+    "payment",
+    "Revenue Event",
+    `${type} payment UGX ${amount}`,
+    { type, amount }
+  );
+}
+
 // ============================================
 // EMAIL ENGINE (SCALE OPTIMIZED)
 // ============================================
@@ -179,6 +198,40 @@ async function getProduct(productId) {
 }
 
 
+async function sendUnifiedNotification({ userId, title, message, email, phone }) {
+  try {
+    // 1. In-app notification (always)
+    await db.collection("notifications").add({
+      userId,
+      title,
+      message,
+      read: false,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    // 2. Email fallback
+    if (email) {
+      await sendEmail(email, title, emailTemplate(title, `<p>${message}</p>`));
+    }
+
+    // 3. SMS fallback (ONLY if phone exists)
+    if (phone) {
+      await sendSMS(phone, `${title} - ${message}`);
+    }
+
+    // 4. Admin alert (real-time dashboard feed)
+    await pushAdminAlert("notification", title, message, { userId });
+
+  } catch (err) {
+    console.error("[UNIFIED NOTIF ERROR]", err.message);
+  }
+}
+
+async function enqueueNotificationJob(payload) {
+  await queueJob("notification", payload);
+}
+
+
 // ============================================
 // PUSH NOTIFICATIONS
 // ============================================
@@ -247,31 +300,24 @@ exports.onNewOrder = onDocumentCreated(
     }
 
     // SMS (SAFE + DEDUP SCALE LOCK)
-    if (seller?.plan === "gold" && seller.phone) {
+    // SMS handled by smsGoldSellers trigger (dedicated system)
+    if (seller?.phone) {
       const lock = await logOnce(
-  `order_${orderId}`,
-  {
-    type: "order",
-    orderId,
-    customer: order.customerName || "",
-    amount: order.total || 0
-  }
-);
+        `order_${orderId}`,
+        {
+          type: "order",
+          orderId,
+          customer: order.customerName || "",
+          amount: order.total || 0
+        }
+      );
       if (!lock) return;
 
       try {
-        const AfricasTalking = require("africastalking");
-        const at = AfricasTalking({
-          apiKey: process.env.AT_API_KEY,
-          username: process.env.AT_USERNAME || "sandbox",
-        });
-
-        await at.SMS.send({
-          to: [seller.phone],
-          message: `New order ${order.customerName} UGX ${order.total}`,
-          from: "ZiBuy",
-        });
-
+        await sendSMS(
+          seller.phone,
+          `New order ${order.customerName} UGX ${order.total}`
+        );
       } catch (err) {
         console.error("[SMS ERROR]", err.message);
       }
@@ -284,6 +330,8 @@ exports.onNewOrder = onDocumentCreated(
 );
 
 console.log(`[ORDER] ${orderId}`);
+
+await alertAdminOrder(orderId, order.total || 0);
   }
 );
 
@@ -454,60 +502,6 @@ exports.weeklyTopDeals = onSchedule(
 );
 
 
-// ============================================
-// BOOST EXPIRY
-// ============================================
-
-exports.expireBoosts = onSchedule(
-  { schedule: "every 24 hours" },
-  async () => {
-    const now = admin.firestore.Timestamp.now();
-
-    const snap = await db.collection("products")
-      .where("isPremium", "==", true)
-      .where("premiumExpiresAt", "<=", now)
-      .get();
-
-    const batch = db.batch();
-
-    snap.docs.forEach(d =>
-      batch.update(d.ref, { isPremium: false })
-    );
-
-    await batch.commit();
-
-    console.log(`[Boosts] Expired ${snap.size}`);
-  }
-);
-
-
-// ============================================
-// SUBSCRIPTIONS
-// ============================================
-
-exports.expireSubscriptions = onSchedule(
-  { schedule: "every 24 hours" },
-  async () => {
-    const now = new Date();
-
-    const snap = await db.collection("business_accounts")
-      .where("status", "==", "active")
-      .get();
-
-    const batch = db.batch();
-
-    snap.docs.forEach(d => {
-      const end = d.data().endDate?.toDate?.();
-      if (end && now > end) {
-        batch.update(d.ref, { status: "expired" });
-      }
-    });
-
-    await batch.commit();
-  }
-);
-
-
 exports.smsGoldSellers = onDocumentCreated(
   "orders/{orderId}",
   async (event) => {
@@ -536,19 +530,10 @@ await docRef.set({
       if (!seller || seller.plan !== "gold") return;
       if (!seller.phone) return;
 
-      const AfricasTalking = require("africastalking");
-      const at = AfricasTalking({
-        apiKey: process.env.AT_API_KEY,
-        username: process.env.AT_USERNAME || "sandbox",
-      });
-
-      await auditLog("SMS_SENT", "system", `SMS sent to gold seller: ${seller.phone}`);
-
-      await at.SMS.send({
-        to: [seller.phone],
-        message: `ZiBuy: New order from ${order.customerName}. Total UGX ${order.total}`,
-        from: "ZiBuy",
-      });
+      await sendSMS(
+  seller.phone,
+  `New order ${order.customerName} UGX ${order.total}`
+);
 
       console.log("[SMS] Sent to gold seller");
     } catch (err) {
@@ -646,8 +631,198 @@ exports.aiRecommendations = onSchedule(
   }
 );
 
+// ============================================
+// PLAN EXPIRY REMINDERS (CLEAN V2 MODULE)
+// ============================================
 
+exports.planExpiryReminders = onSchedule(
+  {
+    schedule: "0 8 * * *",
+    timeZone: "Africa/Kampala",
+  },
+  async () => {
+    const now = new Date();
+    const in48h = new Date(now.getTime() + 48 * 60 * 60 * 1000);
 
+    try {
+      const snap = await db
+        .collection("business_accounts")
+        .where("status", "==", "active")
+        .where("endDate", ">", now)
+        .where("endDate", "<=", in48h)
+        .get();
+
+      for (const docSnap of snap.docs) {
+        const sub = docSnap.data();
+        const userId = sub.userId;
+        const plan = sub.plan || "free";
+
+        const userSnap = await db.collection("users").doc(userId).get();
+        const user = userSnap.exists ? userSnap.data() : null;
+
+        const email = user?.email || "";
+        const phone = (user?.phone || "").replace(/\D/g, "");
+
+        const endDate = sub.endDate?.toDate?.() || new Date(sub.endDate);
+        const daysLeft = Math.ceil((endDate - now) / 86400000);
+
+        const planLabels = {
+          bronze: "🥉 Bronze",
+          silver: "🥈 Silver",
+          gold: "🥇 Gold",
+        };
+
+        const prices = {
+          bronze: "15,000",
+          silver: "35,000",
+          gold: "80,000",
+        };
+
+        const planLabel = planLabels[plan] || plan;
+        const price = prices[plan] || "15,000";
+
+        // 1. In-app notification
+        await db.collection("notifications").add({
+          userId,
+          type: "plan_expiry",
+          title: `⚠️ ${planLabel} expires in ${daysLeft} day(s)`,
+          message: `Renew to keep benefits active.`,
+          read: false,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        // 2. WhatsApp reminder (stored for admin/manual send OR API later)
+        if (phone) {
+          const msg =
+            `Hello from ZiBuy 👋\n\n` +
+            `Your *${planLabel}* expires in *${daysLeft} day(s)*.\n\n` +
+            `Renew for UGX ${price}/month.`;
+
+          await db.collection("whatsapp_reminders").add({
+            userId,
+            phone,
+            type: "plan_expiry",
+            message: msg,
+            waLink: `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+        }
+
+        // 3. Email reminder
+        if (email) {
+          await sendEmail(
+            email,
+            `⚠️ ${planLabel} Expiry Notice`,
+            emailTemplate(
+              "Plan Expiry Warning",
+              `<p>Your ${planLabel} plan expires in <b>${daysLeft} day(s)</b>.</p>
+               <p>Renew now to avoid losing benefits.</p>`,
+              "Renew Now",
+              "https://zibuy-5deae.web.app/business-plans.html"
+            )
+          );
+        }
+      }
+
+      console.log(`[PLAN EXPIRY] Processed ${snap.size}`);
+    } catch (err) {
+      console.error("[PLAN EXPIRY ERROR]", err.message);
+    }
+  }
+);
+
+// ============================================
+// BOOST EXPIRY REMINDERS (CLEAN V2 MODULE)
+// ============================================
+
+exports.boostExpiryReminders = onSchedule(
+  {
+    schedule: "0 9 * * *",
+    timeZone: "Africa/Kampala",
+  },
+  async () => {
+    const now = new Date();
+    const in48h = new Date(now.getTime() + 48 * 60 * 60 * 1000);
+
+    try {
+      const snap = await db
+        .collection("boost_requests")
+        .where("status", "==", "approved")
+        .where("expiresAt", ">", now)
+        .where("expiresAt", "<=", in48h)
+        .get();
+
+      for (const docSnap of snap.docs) {
+        const boost = docSnap.data();
+        const userId = boost.userId;
+        const productName = boost.productName || "Your ad";
+
+        const userSnap = await db.collection("users").doc(userId).get();
+        const user = userSnap.exists ? userSnap.data() : null;
+
+        const email = user?.email || "";
+        const phone = (user?.phone || "").replace(/\D/g, "");
+
+        const expiresAt =
+          boost.expiresAt?.toDate?.() || new Date(boost.expiresAt);
+
+        const daysLeft = Math.ceil((expiresAt - now) / 86400000);
+
+        // 1. In-app notification
+        await db.collection("notifications").add({
+          userId,
+          type: "boost_expiry",
+          title: `⭐ Boost expires in ${daysLeft} day(s)`,
+          message: `"${productName}" will lose featured placement soon.`,
+          relatedId: boost.productId || null,
+          read: false,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        // 2. WhatsApp reminder (stored for manual/API sending)
+        if (phone) {
+          const msg =
+            `Hello from ZiBuy 👋\n\n` +
+            `Your boost for *"${productName}"* expires in *${daysLeft} day(s)*.\n\n` +
+            `Re-boost to stay visible:\n` +
+            `• 7 Days — UGX 5,000\n` +
+            `• 14 Days — UGX 8,000\n` +
+            `• 30 Days — UGX 15,000`;
+
+          await db.collection("whatsapp_reminders").add({
+            userId,
+            phone,
+            type: "boost_expiry",
+            productId: boost.productId,
+            productName,
+            message: msg,
+            waLink: `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+        }
+
+        // 3. Email reminder (optional but clean fallback)
+        if (email) {
+          await sendEmail(
+            email,
+            `⭐ Boost Expiry Reminder - ${productName}`,
+            emailTemplate(
+              "Your Boost is Expiring",
+              `<p>Your boost for <b>${productName}</b> expires in <b>${daysLeft} day(s)</b>.</p>
+               <p>Boost again to stay at the top of search results.</p>`,
+              "Re-Boost Now",
+              "https://zibuy-5deae.web.app/boost.html"
+            )
+          );
+        }
+      }
+
+      console.log(`[BOOST EXPIRY] Processed ${snap.size}`);
+    } catch (err) {
+      console.error("[BOOST EXPIRY ERROR]", err.message);
+    }
+  }
+);
 
 
 // ============================================
@@ -676,32 +851,6 @@ exports.getAdminStats = onRequest(async (req, res) => {
     res.status(500).send(err.message);
   }
 });
-
-
-// ============================================
-// BOOST / SUBSCRIPTION REVENUE TRACKING (NEW LAYER)
-// ============================================
-
-exports.logRevenueEvent = onDocumentCreated(
-  "admin_approvals/{id}",
-  async (event) => {
-    const data = event.data.data();
-
-    await db.collection("revenue_logs").add({
-      type: data.type,
-      amount: data.amount || 0,
-      productId: data.productId || null,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-    });
-
-    await auditLog(
-      "PAYMENT_APPROVED",
-      "system",
-      `Revenue event: ${data.type} UGX ${data.amount || 0}`
-    );
-  }
-);
-
 
 // ============================================
 // MOBILE MONEY PAYMENTS (NO FLUTTERWAVE)
@@ -820,3 +969,256 @@ exports.adminAnalytics = onRequest(async (req, res) => {
     revenue: revenueSnap.exists ? revenueSnap.data() : null,
   });
 });
+
+// ============================================
+// AUTO EXPIRE BOOSTS (CLEAN V2 MODULE)
+// ============================================
+
+exports.expireBoosts = onSchedule(
+  {
+    schedule: "every 24 hours",
+    timeZone: "Africa/Kampala",
+  },
+  async () => {
+    try {
+      const now = admin.firestore.Timestamp.now();
+
+      const snap = await db
+        .collection("products")
+        .where("isPremium", "==", true)
+        .where("premiumExpiresAt", "<=", now)
+        .get();
+
+      if (snap.empty) {
+        console.log("[BOOST EXPIRE] Nothing to expire");
+        return;
+      }
+
+      const batch = db.batch();
+
+      for (const docSnap of snap.docs) {
+        batch.update(docSnap.ref, {
+          isPremium: false,
+        });
+
+        const product = docSnap.data();
+
+        // notify seller
+        if (product.userId) {
+          await db.collection("notifications").add({
+            userId: product.userId,
+            type: "boost_expired",
+            title: "⭐ Boost Expired",
+            message: `Your ad "${product.name}" is no longer boosted.`,
+            relatedId: docSnap.id,
+            read: false,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+        }
+      }
+
+      await batch.commit();
+
+      console.log(`[BOOST EXPIRE] Updated ${snap.size}`);
+    } catch (err) {
+      console.error("[BOOST EXPIRE ERROR]", err.message);
+    }
+  }
+);
+
+
+// ============================================
+// AUTO EXPIRE SUBSCRIPTIONS (CLEAN V2 MODULE)
+// ============================================
+
+exports.expireSubscriptions = onSchedule(
+  {
+    schedule: "every 24 hours",
+    timeZone: "Africa/Kampala",
+  },
+  async () => {
+    try {
+      const now = new Date();
+
+      const snap = await db
+        .collection("business_accounts")
+        .where("status", "==", "active")
+        .get();
+
+      if (snap.empty) {
+        console.log("[SUBS EXPIRE] Nothing to expire");
+        return;
+      }
+
+      const batch = db.batch();
+
+      for (const docSnap of snap.docs) {
+        const data = docSnap.data();
+
+        const end = data.endDate?.toDate?.();
+        if (!end || end > now) continue;
+
+        batch.update(docSnap.ref, {
+          status: "expired",
+        });
+
+        // downgrade user plan
+        if (data.userId) {
+          await db.collection("users").doc(data.userId).update({
+            plan: "free",
+          });
+
+          await db.collection("notifications").add({
+            userId: data.userId,
+            type: "subscription_expired",
+            title: "⚠️ Subscription Expired",
+            message: "Your seller plan has expired. Renew to restore benefits.",
+            read: false,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+        }
+      }
+
+      await batch.commit();
+
+      console.log(`[SUBS EXPIRE] Completed`);
+    } catch (err) {
+      console.error("[SUBS EXPIRE ERROR]", err.message);
+    }
+  }
+);
+
+
+// ============================================
+// LOG REVENUE EVENT (CLEAN V2 MODULE)
+// ============================================
+
+exports.logRevenueEvent = onDocumentCreated(
+  "admin_approvals/{id}",
+  async (event) => {
+    try {
+      const data = event.data.data();
+
+      await db.collection("revenue_logs").add({
+        type: data.type || "unknown",
+        amount: data.amount || 0,
+        productId: data.productId || null,
+        userId: data.userId || null,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      console.log(`[REVENUE] Logged ${data.type}`);
+    } catch (err) {
+      console.error("[REVENUE ERROR]", err.message);
+    }
+
+    await alertAdminPayment(data.type, data.amount || 0);
+  }
+);
+
+// ============================================
+// SMS FALLBACK SYSTEM (CLEAN UTILITY)
+// ============================================
+
+async function sendSMS(phone, message) {
+  try {
+    if (!phone || !message) return;
+
+    const AfricasTalking = require("africastalking");
+
+    const at = AfricasTalking({
+      apiKey: process.env.AT_API_KEY,
+      username: process.env.AT_USERNAME || "sandbox",
+    });
+
+    const result = await at.SMS.send({
+      to: [phone],
+      message,
+      from: "ZiBuy",
+    });
+
+    console.log("[SMS SENT]", phone);
+    return result;
+
+  } catch (err) {
+    console.error("[SMS ERROR]", err.message);
+  }
+}
+
+
+// ============================================
+// ADMIN REAL-TIME ALERT SYSTEM
+// ============================================
+
+async function pushAdminAlert(type, title, message, meta = {}) {
+  try {
+    await db.collection("admin_alerts").add({
+      type,
+      title,
+      message,
+      meta,
+      read: false,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+  } catch (err) {
+    console.error("[ADMIN ALERT ERROR]", err.message);
+  }
+}
+
+async function queueJob(type, payload) {
+  await db.collection("job_queue").add({
+    type,
+    payload,
+    status: "pending",
+    attempts: 0,
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+}
+
+exports.processQueue = onSchedule(
+  {
+    schedule: "every 5 minutes",
+    timeZone: "Africa/Kampala",
+  },
+  async () => {
+    const snap = await db
+      .collection("job_queue")
+      .where("status", "==", "pending")
+      .limit(20)
+      .get();
+
+    for (const docSnap of snap.docs) {
+      const job = docSnap.data();
+
+      try {
+        // MARK RUNNING
+        await docSnap.ref.update({ status: "running" });
+
+        // ========================
+        // JOB TYPES
+        // ========================
+        if (job.type === "email") {
+          await sendEmail(job.payload.to, job.payload.subject, job.payload.html);
+        }
+
+        if (job.type === "sms") {
+          await sendSMS(job.payload.phone, job.payload.message);
+        }
+
+        if (job.type === "notification") {
+          await db.collection("notifications").add(job.payload);
+        }
+
+        await docSnap.ref.update({ status: "done" });
+      } catch (err) {
+        await docSnap.ref.update({
+          status: "failed",
+          error: err.message,
+          attempts: (job.attempts || 0) + 1,
+        });
+      }
+    }
+
+    console.log(`[QUEUE] processed ${snap.size}`);
+  }
+);
