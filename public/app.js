@@ -1875,10 +1875,13 @@ window.customerRegister = async function() {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
     const user = cred.user;
 
+    const phone = document.getElementById("reg-phone")?.value.trim() || "";
+
     // ✅ Save to Firestore users collection
     await setDoc(doc(db, "users", user.uid), {
       email:          user.email,
       uid:            user.uid,
+      phone:          phone,
       plan:           "free",
       accountType:    "normal",
       isSellerVerified: false,
