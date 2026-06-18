@@ -23,6 +23,20 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
+onAuthStateChanged(auth, (user) => {
+  currentUser = user;
+  if (user) {
+    loadConversations().then(() => {
+      // If arrived via ?to=email (from a notification), open that chat directly
+      const params = new URLSearchParams(window.location.search);
+      const toEmail = params.get("to");
+      if (toEmail) {
+        openConversation(toEmail);
+      }
+    });
+  }
+});
+
 // ── Real-time conversations list ──────────────
 function listenConversations() {
   if (convoUnsubscribe) convoUnsubscribe();
