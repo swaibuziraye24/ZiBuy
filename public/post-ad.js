@@ -633,6 +633,11 @@ accessories: [
 
 
   vehicles: [
+    { id:"cf-vehicle-type", label:"Vehicle Type",        type:"select",
+      options:["Car","Motorcycle / Boda Boda","Bicycle","Truck / Lorry","Bus / Minibus","Tractor / Heavy Equipment","Trailer","Boat / Watercraft"] },
+  ],
+
+  "vehicles-Car": [
     { id:"cf-make",         label:"Make / Brand",        type:"select",
       options:["Toyota","Nissan","Honda","Suzuki","Mitsubishi","Mercedes-Benz","BMW","Land Rover","Isuzu","Tata","Volkswagen","Subaru","Mazda","Ford","Hyundai","Kia","Other"] },
     { id:"cf-model",        label:"Model",               type:"text",  placeholder:"e.g. Corolla, Premio, Ipsum, RAV4" },
@@ -649,12 +654,278 @@ accessories: [
     { id:"cf-mileage",      label:"Mileage (km)",        type:"text",  placeholder:"e.g. 45,000 km" },
     { id:"cf-color",        label:"Color",               type:"text",  placeholder:"e.g. Silver, Black, White" },
     { id:"cf-body",         label:"Body Type",           type:"select",
-      options:["Saloon / Sedan","SUV / 4x4","Station Wagon","Pick-Up Truck","Mini Van","Coupe","Convertible","Bus / Minibus","Lorry / Truck","Motorcycle / Boda","Tractor","Other"] },
+      options:["Saloon / Sedan","SUV / 4x4","Station Wagon","Coupe","Convertible","Other"] },
     { id:"cf-engine",       label:"Engine Size",         type:"select",
       options:["1000cc","1300cc","1500cc","1800cc","2000cc","2500cc","3000cc","3500cc","Above 4000cc","Other"] },
+    { id:"cf-logbook",      label:"Logbook / Ownership Document", type:"select",
+      options:["Available — Original Logbook","Available — Photocopy","Processing / Pending","Not Available"] },
     { id:"cf-negotiable",   label:"Price Negotiable?",   type:"select",
       options:["Yes, negotiable","No, fixed price"] },
   ],
+
+  "vehicles-Motorcycle / Boda Boda": [
+    { id:"cf-make",       label:"Make / Brand",          type:"select",
+      options:["Bajaj","TVS","Honda","Yamaha","Haojue","Kibo","Hero","Royal Enfield","Suzuki","Other"] },
+    { id:"cf-model",      label:"Model",                 type:"text",  placeholder:"e.g. Boxer, CT 125, Apsonic" },
+    { id:"cf-year",       label:"Year of Manufacture",   type:"select",
+      options:["2024","2023","2022","2021","2020","2019","2018","2017","Before 2017"] },
+    { id:"cf-condition",  label:"Condition",             type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
+    { id:"cf-engine",     label:"Engine Size (CC)",      type:"select",
+      options:["100cc","125cc","150cc","175cc","200cc","250cc","Above 250cc"] },
+    { id:"cf-mileage",    label:"Mileage (km)",          type:"text",  placeholder:"e.g. 15,000 km" },
+    { id:"cf-color",      label:"Color",                 type:"text",  placeholder:"e.g. Red, Black" },
+    { id:"cf-purpose",    label:"Purpose",               type:"select",
+      options:["Personal Use","Boda Boda / Commercial","Delivery / Courier","Sport / Racing"] },
+    { id:"cf-logbook",    label:"Ownership Document",    type:"select",
+      options:["Available — Number Plate Registered","Processing / Pending","Not Available (New, Pre-registration)"] },
+    { id:"cf-negotiable", label:"Price Negotiable?",     type:"select",
+      options:["Yes, negotiable","No, fixed price"] },
+  ],
+
+  "vehicles-Bicycle": [
+    { id:"cf-type",      label:"Bicycle Type",  type:"select",
+      options:["Mountain Bike","Road Bike","BMX","Kids Bicycle","Electric Bicycle","Cargo Bicycle","Cruiser","Other"] },
+    { id:"cf-brand",     label:"Brand",         type:"text",  placeholder:"e.g. Hero, Phoenix, Trek, No Brand" },
+    { id:"cf-condition", label:"Condition",     type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
+    { id:"cf-size",      label:"Frame / Wheel Size", type:"select",
+      options:["12 inch (Kids)","16 inch (Kids)","20 inch","24 inch","26 inch","27.5 inch","29 inch / Other"] },
+    { id:"cf-gears",     label:"Gears",         type:"select",
+      options:["Single Speed","6 Gears","18 Gears","21 Gears","27+ Gears"] },
+    { id:"cf-color",     label:"Color",         type:"text",  placeholder:"e.g. Black, Blue" },
+  ],
+
+  "vehicles-Truck / Lorry": [
+    { id:"cf-make",         label:"Make / Brand",         type:"select",
+      options:["Isuzu","Mitsubishi Fuso","Toyota","Mercedes-Benz","Tata","Howo / Sinotruk","Scania","Man","DAF","Other"] },
+    { id:"cf-model",        label:"Model",                type:"text",  placeholder:"e.g. NQR, Canter, Actros" },
+    { id:"cf-year",         label:"Year of Manufacture",  type:"select",
+      options:["2024","2023","2022","2021","2020","2019","2018","2017","2016","2015","Before 2015"] },
+    { id:"cf-condition",    label:"Condition",            type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
+    { id:"cf-capacity",     label:"Carrying Capacity",    type:"text",  placeholder:"e.g. 5 tonnes, 10 tonnes" },
+    { id:"cf-body",         label:"Body Type",            type:"select",
+      options:["Flatbed","Box Body","Tipper / Dump Truck","Tanker","Refrigerated","Curtain Side","Other"] },
+    { id:"cf-transmission", label:"Transmission",         type:"select",
+      options:["Manual","Automatic"] },
+    { id:"cf-mileage",      label:"Mileage (km)",         type:"text",  placeholder:"e.g. 120,000 km" },
+    { id:"cf-logbook",      label:"Logbook / Ownership Document", type:"select",
+      options:["Available — Original Logbook","Processing / Pending","Not Available"] },
+    { id:"cf-negotiable",   label:"Price Negotiable?",    type:"select",
+      options:["Yes, negotiable","No, fixed price"] },
+  ],
+
+  "vehicles-Bus / Minibus": [
+    { id:"cf-make",      label:"Make / Brand",          type:"select",
+      options:["Toyota","Isuzu","Nissan","Mitsubishi","Mercedes-Benz","Other"] },
+    { id:"cf-model",     label:"Model",                 type:"text",  placeholder:"e.g. Hiace, Coaster" },
+    { id:"cf-year",      label:"Year of Manufacture",   type:"select",
+      options:["2024","2023","2022","2021","2020","2019","2018","2017","2016","2015","Before 2015"] },
+    { id:"cf-condition", label:"Condition",             type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
+    { id:"cf-seats",     label:"Seating Capacity",      type:"select",
+      options:["7 Seater","11 Seater","14 Seater","18 Seater","25 Seater","30+ Seater"] },
+    { id:"cf-fuel",      label:"Fuel Type",             type:"select",
+      options:["Petrol","Diesel"] },
+    { id:"cf-mileage",   label:"Mileage (km)",          type:"text",  placeholder:"e.g. 80,000 km" },
+    { id:"cf-logbook",   label:"Logbook / Ownership Document", type:"select",
+      options:["Available — Original Logbook","Processing / Pending","Not Available"] },
+  ],
+
+  "vehicles-Tractor / Heavy Equipment": [
+    { id:"cf-type",      label:"Equipment Type",       type:"select",
+      options:["Farm Tractor","Excavator","Bulldozer","Wheel Loader","Grader","Backhoe","Forklift","Crane","Other"] },
+    { id:"cf-make",      label:"Make / Brand",         type:"text",  placeholder:"e.g. John Deere, Massey Ferguson, Komatsu" },
+    { id:"cf-year",      label:"Year of Manufacture",  type:"select",
+      options:["2024","2023","2022","2021","2020","Before 2020"] },
+    { id:"cf-condition", label:"Condition",            type:"select",
+      options:["Brand New","Foreign Used","Local Used","Needs Repair"] },
+    { id:"cf-hours",     label:"Working Hours (if known)", type:"text", placeholder:"e.g. 2,500 hours" },
+    { id:"cf-power",     label:"Horsepower / Capacity", type:"text", placeholder:"e.g. 75HP" },
+  ],
+
+  "vehicles-Trailer": [
+    { id:"cf-type",      label:"Trailer Type",  type:"select",
+      options:["Flatbed Trailer","Box Trailer","Tanker Trailer","Low Bed Trailer","Boat Trailer","Other"] },
+    { id:"cf-capacity",  label:"Capacity",      type:"text", placeholder:"e.g. 10 tonnes" },
+    { id:"cf-condition", label:"Condition",     type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
+  ],
+
+  "vehicles-Boat / Watercraft": [
+    { id:"cf-type",      label:"Watercraft Type", type:"select",
+      options:["Fishing Boat","Speed Boat","Canoe","Ferry / Passenger Boat","Jet Ski","Other"] },
+    { id:"cf-material",  label:"Material",        type:"select",
+      options:["Fiberglass","Wood","Aluminum","Steel","Other"] },
+    { id:"cf-condition", label:"Condition",       type:"select",
+      options:["Brand New","Used — Good","Used — Needs Repair"] },
+    { id:"cf-engine",    label:"Engine / Motor",  type:"text", placeholder:"e.g. 40HP Outboard, No Engine" },
+  ],
+
+  "repair-construction": [
+    { id:"cf-service-type",  label:"What Needs to Be Repaired / Built?", type:"select",
+      options:[
+        "Phone Repair","Computer / Laptop Repair","TV / Electronics Repair",
+        "Vehicle / Car Repair","Motorcycle Repair","Generator Repair",
+        "Fridge / AC Repair","Washing Machine Repair","Plumbing Repair",
+        "Electrical Wiring Repair","Roofing Repair","Building Construction",
+        "House Renovation","Painting & Finishing","Tiling & Flooring",
+        "Welding & Fabrication","Furniture Repair","Shoe Repair",
+        "Watch / Jewellery Repair","Solar System Installation/Repair",
+        "Borehole Repair","Other"
+      ]
+    },
+    { id:"cf-work-type",     label:"Type of Work",        type:"select",
+      options:["Repair / Fix Existing","New Construction / Installation","Maintenance / Servicing","Renovation / Upgrade"]
+    },
+    { id:"cf-experience",    label:"Years of Experience",  type:"select",
+      options:["Less than 1 year","1–2 years","3–5 years","5–10 years","10+ years"]
+    },
+    { id:"cf-pricing-type",  label:"Pricing Type",         type:"select",
+      options:["Fixed Price","Per Item / Job","Hourly Rate","Per Square Meter","Quote on Inspection"]
+    },
+    { id:"cf-service-mode",  label:"Service Location",     type:"select",
+      options:["I come to you (on-site)","Drop off at my workshop","Both options available"]
+    },
+    { id:"cf-warranty",      label:"Warranty on Work",     type:"select",
+      options:["No Warranty","7 Days Warranty","30 Days Warranty","90 Days Warranty","1 Year Warranty"]
+    },
+    { id:"cf-area-covered",  label:"Area Covered",         type:"select",
+      options:["Kampala only","Kampala & Wakiso","Greater Kampala","Central Uganda","All Uganda"]
+    },
+    { id:"cf-tools",         label:"Tools / Equipment Owned", type:"text",
+      placeholder:"e.g. Full toolkit, Welding machine, Diagnostic scanner"
+    },
+    { id:"cf-negotiable",    label:"Price Negotiable?",    type:"select",
+      options:["Yes, open to negotiation","No, fixed price"]
+    },
+  ],
+
+
+  property: [
+    { id:"cf-listing-type",  label:"Listing Type",          type:"select",
+      options:["For Sale","For Rent","For Lease","Land for Sale","Land for Lease"]
+    },
+    { id:"cf-property-type", label:"Property Type",         type:"select",
+      options:[
+        "Apartment / Flat","Bungalow","Maisonette","Single Room (Self-Contained)",
+        "Single Room (Shared)","Mansion / Villa","Office Space","Shop / Commercial Space",
+        "Warehouse","Land — Residential","Land — Commercial","Land — Agricultural",
+        "Hostel / Student Housing","Guest House","Other"
+      ]
+    },
+    { id:"cf-bedrooms",      label:"Bedrooms",              type:"select",
+      options:["Studio / Bedsitter","1 Bedroom","2 Bedrooms","3 Bedrooms","4 Bedrooms","5+ Bedrooms","Not Applicable"]
+    },
+    { id:"cf-bathrooms",     label:"Bathrooms",             type:"select",
+      options:["1","2","3","4+","Shared / Communal","Not Applicable"]
+    },
+    { id:"cf-size",          label:"Size",                  type:"text",
+      placeholder:"e.g. 100x100ft plot, 3 acres, 1200 sq.ft"
+    },
+    { id:"cf-furnishing",    label:"Furnishing",            type:"select",
+      options:["Fully Furnished","Semi Furnished","Unfurnished","Not Applicable"]
+    },
+    { id:"cf-condition",     label:"Condition",             type:"select",
+      options:["Brand New","Newly Renovated","Good Condition","Needs Renovation","Under Construction (Shell)"]
+    },
+    { id:"cf-title",         label:"Title / Ownership Document", type:"select",
+      options:["Freehold Title","Leasehold Title","Mailo Land","Kibanja","Agreement Only","Processing / Pending"]
+    },
+    { id:"cf-amenities",     label:"Amenities",             type:"text",
+      placeholder:"e.g. Borehole, Electricity, Tarmac Access, Security, Parking"
+    },
+    { id:"cf-payment-terms", label:"Payment Terms",         type:"select",
+      options:["Full Payment Only","Installments Accepted","Mortgage Friendly","Negotiable"]
+    },
+  ],
+
+    "leisure-activities": [
+    { id:"cf-subcategory", label:"Subcategory", type:"select",
+      options:["Personal Mobility","Sports Equipment","Massages","Musical Instruments & Gear","Books & Table Games","Arts, Crafts & Awards","Outdoor Gear","Smoking Accessories","Music & Video","Fitness & Personal Training Services"]
+    },
+  ],
+
+  "leisure-Personal Mobility": [
+    { id:"cf-type",      label:"Item Type",    type:"select",
+      options:["Skateboard","Scooter (Kick)","Electric Scooter","Rollerblades / Skates","Hoverboard","Wheelchair","Walking Frame","Other"] },
+    { id:"cf-condition", label:"Condition",    type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
+    { id:"cf-brand",     label:"Brand",        type:"text", placeholder:"e.g. Xiaomi, No Brand" },
+  ],
+
+  "leisure-Sports Equipment": [
+    { id:"cf-sport",     label:"Sport",        type:"select",
+      options:["Football","Basketball","Volleyball","Tennis","Badminton","Boxing","Gym Equipment","Swimming","Cycling","Cricket","Rugby","Athletics","Other"] },
+    { id:"cf-type",      label:"Item Type",    type:"text", placeholder:"e.g. Ball, Net, Gloves, Jersey" },
+    { id:"cf-condition", label:"Condition",    type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
+  ],
+
+  "leisure-Massages": [
+    { id:"cf-service-type", label:"Massage Type", type:"select",
+      options:["Full Body Massage","Deep Tissue","Sports Massage","Swedish Massage","Hot Stone","Reflexology","Spa Package","Home Service Massage","Other"] },
+    { id:"cf-gender",       label:"For",           type:"select",
+      options:["Men","Women","Unisex"] },
+    { id:"cf-service-mode", label:"Service Location", type:"select",
+      options:["At my spa/salon","I come to client","Both options available"] },
+    { id:"cf-pricing-type", label:"Pricing",       type:"select",
+      options:["Per Session","Per Hour","Package Deal"] },
+  ],
+
+  "leisure-Musical Instruments & Gear": [
+    { id:"cf-type",      label:"Instrument Type", type:"select",
+      options:["Guitar","Keyboard / Piano","Drum Set","Microphone","Speaker / PA System","DJ Mixer","Violin","Saxophone","Other"] },
+    { id:"cf-condition", label:"Condition",       type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
+    { id:"cf-brand",     label:"Brand",           type:"text", placeholder:"e.g. Yamaha, Casio" },
+  ],
+
+  "leisure-Books & Table Games": [
+    { id:"cf-type",      label:"Item Type",    type:"select",
+      options:["Novel / Fiction Book","Textbook","Religious Book","Chess Set","Ludo / Board Game","Card Games (e.g. Cards, UNO)","Puzzle","Other"] },
+    { id:"cf-condition", label:"Condition",    type:"select",
+      options:["Brand New","Used — Good","Used — Fair"] },
+  ],
+
+  "leisure-Arts, Crafts & Awards": [
+    { id:"cf-type",      label:"Item Type",    type:"select",
+      options:["Painting","Handmade Craft","Sculpture","Trophy / Award","Certificate Frame","Craft Materials","Other"] },
+    { id:"cf-condition", label:"Condition",    type:"select",
+      options:["Brand New","Used"] },
+  ],
+
+  "leisure-Outdoor Gear": [
+    { id:"cf-type",      label:"Item Type",    type:"select",
+      options:["Tent","Camping Chair","Sleeping Bag","Hiking Backpack","Cooler Box","Fishing Gear","BBQ / Grill","Other"] },
+    { id:"cf-condition", label:"Condition",    type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
+  ],
+
+  "leisure-Smoking Accessories": [
+    { id:"cf-type",      label:"Item Type",    type:"select",
+      options:["Lighter","Ashtray","Pipe","Rolling Accessories","Other"] },
+    { id:"cf-condition", label:"Condition",    type:"select",
+      options:["Brand New","Used"] },
+  ],
+
+  "leisure-Music & Video": [
+    { id:"cf-type",      label:"Item Type",    type:"select",
+      options:["CD / DVD Collection","Vinyl Records","Projector","Home Theatre System","Camera Equipment","Other"] },
+    { id:"cf-condition", label:"Condition",    type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
+  ],
+
+  "leisure-Fitness & Personal Training Services": [
+    { id:"cf-service-type", label:"Service Type", type:"select",
+      options:["Personal Trainer","Group Fitness Class","Yoga Instructor","Nutrition Coaching","Gym Membership","Home Workout Sessions","Other"] },
+    { id:"cf-experience",   label:"Experience",    type:"select",
+      options:["Less than 1 year","1–2 years","3–5 years","5+ years"] },
+    { id:"cf-service-mode", label:"Service Location", type:"select",
+      options:["At my gym/studio","I come to client","Online sessions","Both options available"] },
+  ],
+
 
   animals: [
     { id:"cf-type",       label:"Animal Type",      type:"select",
@@ -750,6 +1021,17 @@ function renderCategoryFields(category) {
   const container = document.getElementById("category-fields");
   if (!container) return;
 
+  // Vehicles needs special handling — pick type first, then show specific fields
+  if (category === "vehicles") {
+    renderVehicleFields();
+    return;
+  }
+  
+   if (category === "leisure-activities") {
+    renderLeisureFields();
+    return;
+  }
+
   const fields = CATEGORY_FIELDS[category] || [];
   if (fields.length === 0) { container.innerHTML = ""; return; }
 
@@ -782,17 +1064,101 @@ function renderCategoryFields(category) {
   `;
 }
 
+// ── Vehicles: two-stage field reveal ──────────
+function renderVehicleFields() {
+  const container = document.getElementById("category-fields");
+
+  container.innerHTML = `
+    <div style="border-top:1.5px solid #f0f0f0;margin:16px 0"></div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+      <span style="font-size:18px">🚗</span>
+      <p style="font-size:13px;font-weight:800;color:#ff6600;text-transform:uppercase;letter-spacing:.5px;margin:0">
+        Vehicle Details
+      </p>
+    </div>
+    <div style="margin-bottom:14px">
+      <label style="display:block;font-size:12px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">
+        Vehicle Type
+      </label>
+      <select id="cf-vehicle-type" onchange="onVehicleTypeChange(this.value)"
+        style="width:100%;padding:13px 14px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:14px;font-family:var(--font);outline:none;background:white;box-sizing:border-box">
+        <option value="">Select Vehicle Type</option>
+        <option value="Car">🚗 Car</option>
+        <option value="Motorcycle / Boda Boda">🏍️ Motorcycle / Boda Boda</option>
+        <option value="Bicycle">🚲 Bicycle</option>
+        <option value="Truck / Lorry">🚚 Truck / Lorry</option>
+        <option value="Bus / Minibus">🚌 Bus / Minibus</option>
+        <option value="Tractor / Heavy Equipment">🚜 Tractor / Heavy Equipment</option>
+        <option value="Trailer">🚛 Trailer</option>
+        <option value="Boat / Watercraft">🚤 Boat / Watercraft</option>
+      </select>
+    </div>
+    <div id="vehicle-type-fields"></div>
+  `;
+}
+
+window.onVehicleTypeChange = function(vehicleType) {
+  const sub = document.getElementById("vehicle-type-fields");
+  if (!vehicleType) { sub.innerHTML = ""; return; }
+
+  const fields = CATEGORY_FIELDS[`vehicles-${vehicleType}`] || [];
+
+  sub.innerHTML = fields.map(f => `
+    <div style="margin-bottom:14px">
+      <label style="display:block;font-size:12px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">
+        ${f.label}
+      </label>
+      ${f.type === "select" ? `
+        <select id="${f.id}" style="width:100%;padding:13px 14px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:14px;font-family:var(--font);outline:none;background:white;box-sizing:border-box">
+          <option value="">Select ${f.label}</option>
+          ${f.options.map(o => `<option value="${o}">${o}</option>`).join("")}
+        </select>
+      ` : `
+        <input type="text" id="${f.id}" placeholder="${f.placeholder || ""}"
+          style="width:100%;padding:13px 14px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:14px;font-family:var(--font);outline:none;background:white;box-sizing:border-box">
+      `}
+    </div>
+  `).join("");
+};
+
+
+
+function renderLeisureFields() {
+  const container = document.getElementById("category-fields");
+  container.innerHTML = `
+    <div style="border-top:1.5px solid #f0f0f0;margin:16px 0"></div>
+    <div style="margin-bottom:14px">
+      <label style="display:block;font-size:12px;font-weight:800;color:#374151;text-transform:uppercase;margin-bottom:6px">Subcategory</label>
+      <select id="cf-leisure-sub" onchange="onLeisureSubChange(this.value)"
+        style="width:100%;padding:13px 14px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:14px;background:white;box-sizing:border-box">
+        <option value="">Select Subcategory</option>
+        ${CATEGORY_FIELDS["leisure-activities"][0].options.map(o => `<option value="${o}">${o}</option>`).join("")}
+      </select>
+    </div>
+    <div id="leisure-sub-fields"></div>
+  `;
+}
+window.onLeisureSubChange = function(sub) {
+  const box = document.getElementById("leisure-sub-fields");
+  if (!sub) { box.innerHTML = ""; return; }
+  const fields = CATEGORY_FIELDS[`leisure-${sub}`] || [];
+  box.innerHTML = fields.map(f => `
+    <div style="margin-bottom:14px">
+      <label style="display:block;font-size:12px;font-weight:800;color:#374151;text-transform:uppercase;margin-bottom:6px">${f.label}</label>
+      ${f.type === "select" ? `<select id="${f.id}" style="width:100%;padding:13px 14px;border:1.5px solid #e5e7eb;border-radius:12px;background:white;box-sizing:border-box"><option value="">Select ${f.label}</option>${f.options.map(o=>`<option value="${o}">${o}</option>`).join("")}</select>` : `<input type="text" id="${f.id}" placeholder="${f.placeholder||""}" style="width:100%;padding:13px 14px;border:1.5px solid #e5e7eb;border-radius:12px;background:white;box-sizing:border-box">`}
+    </div>`).join("");
+};
+
 function categoryEmoji(cat) {
   const map = {
     phones:"📱", electronics:"💻", fashion:"👗", shoes:"👟", beauty:"💄",
     bags:"👜", groceries:"🛒", watches:"⌚", computers:"🖥️", gaming:"🎮",
     home:"🏠", accessories:"💎", vehicles:"🚗", animals:"🐾", babies:"👶",
-    agriculture:"🌾", commercial:"🏗️", tours:"✈️", "seeking-work":"💼"
+    agriculture:"🌾", commercial:"🏗️", tours:"✈️", "seeking-work":"💼",
+    services:"🔧", "repair-construction":"🔨", property:"🏘️"
   };
   return map[cat] || "📋";
 }
-
-
 
 const titleInput    = document.getElementById("ad-title");
 
@@ -804,11 +1170,27 @@ const locationInput = document.getElementById("ad-location");
 
 // ── Collect all field values to save with the ad ─
 function collectCategoryFields(category) {
-  const fields = CATEGORY_FIELDS[category] || [];
-  const data   = {};
+  let fields = CATEGORY_FIELDS[category] || [];
+
+  // Vehicles: combine base field + the selected vehicle-type's specific fields
+  if (category === "vehicles") {
+    const vType = document.getElementById("cf-vehicle-type")?.value || "";
+    fields = [
+      { id: "cf-vehicle-type" },
+      ...(CATEGORY_FIELDS[`vehicles-${vType}`] || [])
+    ];
+  }
+
+
+  if (category === "leisure-activities") {
+    const sub = document.getElementById("cf-leisure-sub")?.value || "";
+    fields = [{ id: "cf-leisure-sub" }, ...(CATEGORY_FIELDS[`leisure-${sub}`] || [])];
+  }
+
+  const data = {};
   fields.forEach(f => {
     const el = document.getElementById(f.id);
-    if (el && el.value) data[f.id.replace("cf-","")] = el.value;
+    if (el && el.value) data[f.id.replace("cf-", "")] = el.value;
   });
   return data;
 }
