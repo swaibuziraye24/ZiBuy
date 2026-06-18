@@ -374,6 +374,17 @@ window.activateSub = async function(subId, userId, plan) {
       planUpdatedAt:    new Date()
     }).catch(() => {});
 
+    // Notify user that subscription was approved
+await addDoc(collection(db, "notifications"), {
+  userId,
+  type: "subscription",
+  title: `🎉 ${plan.toUpperCase()} Plan Activated`,
+  message: `Your ${plan} subscription has been approved and is now active.`,
+  read: false,
+  createdAt: new Date()
+});
+
+
     showToast("Subscription activated ✅", "success");
     loadSubscriptions();
     renderOverview();
@@ -384,11 +395,45 @@ window.activateSub = async function(subId, userId, plan) {
 
 window.rejectSub = async function(subId) {
   if (!confirm("Reject this subscription request?")) return;
+
   try {
-    await updateDoc(doc(db, "business_accounts", subId), { status: "rejected" });
+
+    const subDoc = await getDoc(
+      doc(db, "business_accounts", subId)
+    );
+
+    if (!subDoc.exists()) return;
+
+    const sub = subDoc.data();
+
+    await updateDoc(
+      doc(db, "business_accounts", subId),
+      {
+        status: "rejected"
+      }
+    );
+
+    if (sub.userId) {
+      await addDoc(
+        collection(db, "notifications"),
+        {
+          userId: sub.userId,
+          type: "subscription_rejected",
+          title: "❌ Subscription Rejected",
+          message: "Your subscription request was not approved.",
+          read: false,
+          createdAt: new Date()
+        }
+      );
+    }
+
     showToast("Rejected", "info");
     loadSubscriptions();
-  } catch (e) { showToast("Failed", "error"); }
+
+  } catch (e) {
+    console.error(e);
+    showToast("Failed", "error");
+  }
 };
 
 window.expireSub = async function(subId, userId) {
@@ -538,6 +583,16 @@ window.approveBoost = async function(boostId, productId, days) {
         read:      false,
         createdAt: new Date()
       });
+
+        await addDoc(collection(db, "admin_approvals"), {
+  type: "boost",
+  userId: boostData.userId,
+  productId,
+  productName: boostData.productName || "Ad",
+  days,
+  approvedAt: new Date()
+});
+
     }
 
     showToast("Boost activated ✅", "success");
