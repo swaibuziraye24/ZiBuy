@@ -1024,6 +1024,44 @@ exports.expireBoosts = onSchedule(
             read: false,
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
           });
+
+          const seller = product.userId
+  ? await getUser(product.userId)
+  : null;
+
+          if (seller?.email) {
+            
+  await sendEmail(
+    seller.email,
+    "⭐ Boost Expired",
+    emailTemplate(
+      "Boost Expired",
+      `<p>Your boost for <b>${product.name}</b> has ended.</p>
+       <p>You can re-boost anytime.</p>`
+    )
+  );
+
+  if (seller.phone) {
+
+  const msg =
+    `⭐ Your boost for "${product.name}" has expired.\n\n` +
+    `Re-boost to regain top placement.`;
+
+  await db.collection("whatsapp_reminders").add({
+    userId: product.userId,
+    phone: seller.phone,
+    type: "boost_expired",
+    productId: docSnap.id,
+    productName: product.name,
+    message: msg,
+    waLink:
+      `https://wa.me/${seller.phone.replace(/\D/g,"")}?text=${encodeURIComponent(msg)}`,
+    status: "pending",
+    createdAt:
+      admin.firestore.FieldValue.serverTimestamp()
+  });
+}
+}
         }
       }
 
@@ -1086,6 +1124,49 @@ exports.expireSubscriptions = onSchedule(
             read: false,
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
           });
+
+
+          const userSnap =
+  await db.collection("users")
+    .doc(data.userId)
+    .get();
+
+if (userSnap.exists) {
+
+  const user = userSnap.data();
+
+  if (user.phone) {
+
+  const msg =
+    `⚠️ Your ZiBuy subscription has expired.\n\n` +
+    `Renew now to restore your seller benefits.`;
+
+  await db.collection("whatsapp_reminders").add({
+    userId: data.userId,
+    phone: user.phone,
+    type: "subscription_expired",
+    message: msg,
+    waLink:
+      `https://wa.me/${user.phone.replace(/\D/g,"")}?text=${encodeURIComponent(msg)}`,
+    status: "pending",
+    createdAt:
+      admin.firestore.FieldValue.serverTimestamp()
+  });
+}
+
+  if (user.email) {
+
+    await sendEmail(
+      user.email,
+      "⚠️ Subscription Expired",
+      emailTemplate(
+        "Subscription Expired",
+        `<p>Your seller subscription has expired.</p>
+         <p>Renew to restore premium benefits.</p>`
+      )
+    );
+  }
+}
         }
       }
 
@@ -1117,12 +1198,14 @@ exports.logRevenueEvent = onDocumentCreated(
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
       });
 
+      await alertAdminPayment(data.type, data.amount || 0);
+
       console.log(`[REVENUE] Logged ${data.type}`);
     } catch (err) {
       console.error("[REVENUE ERROR]", err.message);
     }
 
-    await alertAdminPayment(data.type, data.amount || 0);
+    
   }
 );
 
@@ -1155,6 +1238,83 @@ async function sendSMS(phone, message) {
   }
 }
 
+
+// ============================================
+// BOOST APPROVAL NOTIFICATIONS
+// ============================================
+
+exports.boostApprovalNotification = onDocumentCreated(
+  "admin_approvals/{id}",
+  async (event) => {
+    try {
+
+  const approval = event.data.data();
+
+  if (approval.type !== "boost") return;
+
+  const userSnap =
+    await db.collection("users")
+      .doc(approval.userId)
+      .get();
+
+  if (!userSnap.exists) return;
+
+  const user = userSnap.data();
+
+  const productName =
+    approval.productName || "your product";
+
+
+    // IN-APP
+      await db.collection("notifications").add({
+        userId: approval.userId,
+        type: "boost_approved",
+        title: "⭐ Boost Approved",
+        message: `${productName} is now boosted.`,
+        read: false,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+  // EMAIL
+  if (user.email) {
+
+    await sendEmail(
+      user.email,
+      "⭐ Boost Approved",
+      emailTemplate(
+        "Boost Approved",
+        `<p>Your product <b>${productName}</b> is now boosted.</p>`
+      )
+    );
+  }
+
+  // WHATSAPP RECORD
+
+  if (user.phone) {
+
+    const msg =
+      `⭐ Your product "${productName}" has been boosted successfully on ZiBuy.`;
+
+    await db.collection("whatsapp_reminders").add({
+      userId: approval.userId,
+      phone: user.phone,
+      type: "boost_approved",
+      productId: approval.productId,
+      productName,
+      message: msg,
+      waLink:
+        `https://wa.me/${user.phone.replace(/\D/g,"")}?text=${encodeURIComponent(msg)}`,
+      status: "pending",
+      createdAt:
+        admin.firestore.FieldValue.serverTimestamp()
+    });
+  }
+
+} catch (err) {
+  console.error(err);
+}
+  }
+);
 
 // ============================================
 // ADMIN REAL-TIME ALERT SYSTEM
@@ -1230,5 +1390,86 @@ exports.processQueue = onSchedule(
     }
 
     console.log(`[QUEUE] processed ${snap.size}`);
+  }
+);
+
+const { onDocumentUpdated } = require("firebase-functions/v2/firestore");
+
+exports.subscriptionApprovalNotifications = onDocumentUpdated(
+  "business_accounts/{id}",
+  async (event) => {
+
+    const before = event.data.before.data();
+    const after = event.data.after.data();
+
+    // Only run when subscription becomes active
+    if (
+      before.status === "active" ||
+      after.status !== "active"
+    ) {
+      return;
+    }
+
+    try {
+
+      const userSnap = await db
+        .collection("users")
+        .doc(after.userId)
+        .get();
+
+      if (!userSnap.exists) return;
+
+      const user = userSnap.data();
+
+      await db.collection("notifications").add({
+  userId: after.userId,
+  type: "subscription_approved",
+  title: "🎉 Subscription Activated",
+  message: `Your ${after.plan} plan is now active.`,
+  read: false,
+  createdAt: admin.firestore.FieldValue.serverTimestamp()
+});
+
+      // EMAIL
+      if (user.email) {
+        await sendEmail(
+          user.email,
+          `🎉 ${after.plan.toUpperCase()} Plan Activated`,
+          emailTemplate(
+            "Subscription Approved",
+            `<p>Your ${after.plan} subscription has been approved and activated.</p>`
+          )
+        );
+      }
+
+      // WHATSAPP REMINDER RECORD
+      if (user.phone) {
+
+        const msg =
+          `🎉 Your ${after.plan} subscription has been activated on ZiBuy.\n\n` +
+          `Thank you for upgrading your account.`;
+
+        await db.collection("whatsapp_reminders").add({
+          userId: after.userId,
+          phone: user.phone,
+          type: "subscription_approved",
+          message: msg,
+          waLink:
+            `https://wa.me/${user.phone.replace(/\D/g,"")}?text=${encodeURIComponent(msg)}`,
+          status: "pending",
+          createdAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+      }
+
+      console.log(
+        `[SUB APPROVED] ${after.userId}`
+      );
+
+    } catch (err) {
+      console.error(
+        "[SUB APPROVED ERROR]",
+        err.message
+      );
+    }
   }
 );
