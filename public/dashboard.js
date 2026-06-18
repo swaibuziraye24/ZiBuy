@@ -682,7 +682,7 @@ window.boostCV = function(productId, productName) {
           onfocus="this.style.borderColor='#1e40af'" onblur="this.style.borderColor='#e5e7eb'">
       </div>
 
-      <button onclick="submitCVBoost('${productId}','${productName}','${payRef}')"
+      <button onclick="submitCVBoost('${productId}','${productName}','${payRef}',this)"
         style="width:100%;background:#1e40af;color:white;border:none;padding:14px;
         border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit">
         📌 Boost My CV
@@ -705,7 +705,7 @@ window.selectCVPlan = function(el, days, price) {
   document.getElementById("cv-pay-details").style.display = "block";
 };
 
-window.submitCVBoost = async function(productId, productName, payRef) {
+    window.submitCVBoost = async function(productId, productName, payRef, btnEl) {
   if (!window._cvPlan) { alert("Please select a plan first"); return; }
 
   const txnRef = document.getElementById("cv-txn-ref").value.trim();
@@ -716,9 +716,11 @@ window.submitCVBoost = async function(productId, productName, payRef) {
   }
 
   const { days, price } = window._cvPlan;
-  const btn = event.target;
-  btn.textContent = "Submitting...";
-  btn.disabled    = true;
+  const btn = btnEl || document.querySelector("#cv-boost-modal button[onclick^='submitCVBoost']");
+  if (btn) {
+    btn.textContent = "Submitting...";
+    btn.disabled    = true;
+  }
 
   try {
     await addDoc(collection(db, "cv_boosts"), {
@@ -788,12 +790,12 @@ window.editProduct = function(productId) {
   modal.style.display = "flex";
 
   const preview = document.getElementById("edit-image-preview");
-
-preview.innerHTML = product.images.map(img => `
-  <img src="${img}"
-       style="width:80px;height:80px;object-fit:cover;border-radius:8px;margin:4px">
-`).join("");
-
+  if (preview) {
+    preview.innerHTML = (product.images || []).map(img => `
+      <img src="${img}"
+           style="width:80px;height:80px;object-fit:cover;border-radius:8px;margin:4px">
+    `).join("");
+  }
 };
 
 window.closeEditModal = function() {
@@ -855,14 +857,20 @@ if (imageFiles.length > 0) {
   }
 }
 
-    await updateDoc(doc(db, "products", editingProductId), {
+    const updateData = {
       name,
       price,
       description: desc,
       location,
       "seller.phone": phone,
       updatedAt: new Date()
-    });
+    };
+
+    if (imageUrls.length > 0) {
+      updateData.images = imageUrls;
+    }
+
+    await updateDoc(doc(db, "products", editingProductId), updateData);
 
     closeEditModal();
     alert("✅ Ad updated!");
