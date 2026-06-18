@@ -6,9 +6,8 @@
 import { db, auth, collection, getDocs, addDoc, query, where, updateDoc, deleteDoc, doc, getDoc, serverTimestamp  } from "./firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-import { runSubscriptionExpiryCheck } from "./subscription-check.js";
-
-runSubscriptionExpiryCheck();
+// Subscription expiry is now handled server-side by the
+// expireSubscriptions Cloud Function (runs daily automatically)
 
 console.log("📊 Dashboard.js loaded");
 
