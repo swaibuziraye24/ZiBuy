@@ -661,7 +661,6 @@ exports.planExpiryReminders = onSchedule(
         const user = userSnap.exists ? userSnap.data() : null;
 
         const email = user?.email || "";
-        const phone = null;
 
         const endDate = sub.endDate?.toDate?.() || new Date(sub.endDate);
         const daysLeft = Math.ceil((endDate - now) / 86400000);
@@ -697,11 +696,7 @@ const msg =
   `Your *${planLabel}* expires in *${daysLeft} day(s)*.\n\n` +
   `Renew for UGX ${price}/month.`;
 
-// fetch user phone (optional only)
-const userSnap2 = await db.collection("users").doc(userId).get();
-const userData2 = userSnap2.exists ? userSnap2.data() : null;
-
-const planPhone = userData?.phone || null;
+const planPhone = user?.phone || null;
 
 // build WhatsApp link (only if phone exists)
 const waLink = planPhone
@@ -713,7 +708,7 @@ await db.collection("whatsapp_reminders").add({
   userId,
   type: "plan_expiry",
   message: msg,
-  phone: phone,
+  phone: planPhone,
   waLink,
   status: "pending",
   createdAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -772,7 +767,7 @@ exports.boostExpiryReminders = onSchedule(
         const user = userSnap.exists ? userSnap.data() : null;
 
         const email = user?.email || "";
-        const phone = null;
+
         const expiresAt =
           boost.expiresAt?.toDate?.() || new Date(boost.expiresAt);
 
@@ -789,7 +784,7 @@ exports.boostExpiryReminders = onSchedule(
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
         });
 
-         // WhatsApp reminder (ADMIN CLICK-TO-SEND SYSTEM)
+            // WhatsApp reminder (ADMIN CLICK-TO-SEND SYSTEM)
         const msg =
   `Hello from ZiBuy 👋\n\n` +
   `Your boost for "${productName}" expires in ${daysLeft} day(s).\n\n` +
@@ -798,10 +793,7 @@ exports.boostExpiryReminders = onSchedule(
   `• 14 Days — UGX 8,000\n` +
   `• 30 Days — UGX 15,000`;
 
-const userSnap2 = await db.collection("users").doc(userId).get();
-const userData2 = userSnap2.exists ? userSnap2.data() : null;
-
-const boostPhone = userData2?.phone || null;
+const boostPhone = user?.phone || null;
 
 const waLink = boostPhone
   ? `https://wa.me/${boostPhone.replace(/\D/g, "")}?text=${encodeURIComponent(msg)}`
@@ -813,7 +805,7 @@ await db.collection("whatsapp_reminders").add({
   productId: boost.productId,
   productName,
   message: msg,
-  phone: userPhone,
+  phone: boostPhone,
   waLink,
   status: "pending",
   createdAt: admin.firestore.FieldValue.serverTimestamp(),
