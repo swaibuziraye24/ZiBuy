@@ -1635,12 +1635,13 @@ window.allProducts = allProducts;
 // BUILD CATEGORY NAV BAR
 // ============================================
 function buildCategoryNav(products) {
-  const nav = document.getElementById("category-nav");
-  if (!nav) return;
+  const sidebar = document.getElementById("subcat-sidebar");
+  if (!sidebar) return;
 
-  // Only show subcategory chips when a specific category is selected
+  // Hide sidebar entirely when "All" is selected
   if (currentCategory === "all") {
-    nav.innerHTML = "";
+    sidebar.style.display = "none";
+    sidebar.innerHTML = "";
     return;
   }
 
@@ -1658,34 +1659,29 @@ function buildCategoryNav(products) {
   const subcats = Object.entries(counts).sort((a, b) => b[1] - a[1]);
 
   if (subcats.length === 0) {
-    nav.innerHTML = "";
+    sidebar.style.display = "none";
+    sidebar.innerHTML = "";
     return;
   }
 
-  nav.innerHTML = `
-    <div style="display:flex;gap:8px;overflow-x:auto;padding:10px 20px;
-      scrollbar-width:none;background:white;border-bottom:1px solid #f0f0f0">
-      <button class="subcat-chip ${currentSubcategory === 'all' ? 'active' : ''}"
-        onclick="filterSubcategory('all')"
-        style="flex-shrink:0;border:1.5px solid ${currentSubcategory === 'all' ? '#ff6600' : '#e5e7eb'};
-        background:${currentSubcategory === 'all' ? '#ff6600' : 'white'};
-        color:${currentSubcategory === 'all' ? 'white' : '#374151'};
-        padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;
-        cursor:pointer;font-family:inherit;white-space:nowrap">
-        All (${inCategory.length})
+  sidebar.style.display = "block";
+
+  sidebar.innerHTML = `
+    <h4>${currentCategory.charAt(0).toUpperCase() + currentCategory.slice(1).replace("-", " ")}</h4>
+
+    <button class="zb-subcat-item ${currentSubcategory === 'all' ? 'active' : ''}"
+      onclick="filterSubcategory('all')">
+      <span>All</span>
+      <span class="count">${inCategory.length}</span>
+    </button>
+
+    ${subcats.map(([sub, count]) => `
+      <button class="zb-subcat-item ${currentSubcategory === sub ? 'active' : ''}"
+        onclick="filterSubcategory('${sub.replace(/'/g, "\\'")}')">
+        <span>${sub}</span>
+        <span class="count">${count}</span>
       </button>
-      ${subcats.map(([sub, count]) => `
-        <button class="subcat-chip ${currentSubcategory === sub ? 'active' : ''}"
-          onclick="filterSubcategory('${sub.replace(/'/g, "\\'")}')"
-          style="flex-shrink:0;border:1.5px solid ${currentSubcategory === sub ? '#ff6600' : '#e5e7eb'};
-          background:${currentSubcategory === sub ? '#ff6600' : 'white'};
-          color:${currentSubcategory === sub ? 'white' : '#374151'};
-          padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;
-          cursor:pointer;font-family:inherit;white-space:nowrap">
-          ${sub} (${count})
-        </button>
-      `).join("")}
-    </div>
+    `).join("")}
   `;
 }
 
