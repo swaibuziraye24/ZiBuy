@@ -701,11 +701,11 @@ const msg =
 const userSnap2 = await db.collection("users").doc(userId).get();
 const userData2 = userSnap2.exists ? userSnap2.data() : null;
 
-const phone = userData2?.phone || null;
+const planPhone = userData?.phone || null;
 
 // build WhatsApp link (only if phone exists)
-const waLink = phone
-  ? `https://wa.me/${phone.replace(/\D/g, "")}?text=${encodeURIComponent(msg)}`
+const waLink = planPhone
+  ? `https://wa.me/${planPhone.replace(/\D/g, "")}?text=${encodeURIComponent(msg)}`
   : `https://wa.me/?text=${encodeURIComponent(msg)}`;
 
 // store reminder ALWAYS
@@ -801,10 +801,10 @@ exports.boostExpiryReminders = onSchedule(
 const userSnap2 = await db.collection("users").doc(userId).get();
 const userData2 = userSnap2.exists ? userSnap2.data() : null;
 
-const userPhone = userData2?.phone || null;
+const boostPhone = userData2?.phone || null;
 
-const waLink = userPhone
-  ? `https://wa.me/${userPhone.replace(/\D/g, "")}?text=${encodeURIComponent(msg)}`
+const waLink = boostPhone
+  ? `https://wa.me/${boostPhone.replace(/\D/g, "")}?text=${encodeURIComponent(msg)}`
   : `https://wa.me/?text=${encodeURIComponent(msg)}`;
 
 await db.collection("whatsapp_reminders").add({
