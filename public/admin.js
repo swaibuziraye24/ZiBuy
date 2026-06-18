@@ -1310,6 +1310,17 @@ window.deleteReminder = async function(reminderId) {
   } catch(e) { showToast("Failed", "error"); }
 };
 
+
+function openWhatsApp(reminder) {
+  if (!reminder.phone) {
+    alert("No phone number available for this user");
+    return;
+  }
+
+  const url = reminder.waLink;
+  window.open(url, "_blank");
+}
+
 // ══════════════════════════════════════════════
 //  JOB ADS ADMIN
 // ══════════════════════════════════════════════
