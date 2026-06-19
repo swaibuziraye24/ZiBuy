@@ -2532,13 +2532,14 @@ footer {
   display: none;
   position: absolute;
   top: 100%;
-  left: 24px;
+  left: 20px;
   background: white;
   border-radius: 14px;
   box-shadow: var(--shadow-lg);
   padding: 20px;
   width: 320px;
-  z-index: 100;
+  max-width: calc(100vw - 40px);
+  z-index: 9500;
   margin-top: 8px;
 }
 
