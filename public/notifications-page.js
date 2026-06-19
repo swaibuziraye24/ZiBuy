@@ -53,7 +53,7 @@ function renderNotifications() {
   }
 
  container.innerHTML = filtered.map(notif => `
-    <div class="notification-item ${notif.read ? "read" : "unread"}" onclick="handleNotificationClick('${notif.id}', '${notif.type || ""}', '${notif.relatedId || ""}')">
+  <div class="notification-item ${notif.read ? "read" : "unread"}" onclick="handleNotificationClick('${notif.id}', '${notif.type || ""}', '${notif.relatedId || ""}')">
       <div class="notification-icon">
         ${getIcon(notif.type)}
       </div>
@@ -103,6 +103,39 @@ window.markRead = async function(notificationId) {
   } catch (err) {
     console.error(err);
   }
+};
+
+
+window.handleNotificationClick = async function(notificationId, type, relatedId) {
+  await markRead(notificationId);
+
+  if (type === "message" && relatedId) {
+    // relatedId holds the sender's email — jump straight into that chat
+    window.location.href = `messages.html?to=${encodeURIComponent(relatedId)}`;
+    return;
+  }
+
+  if (type === "order") {
+    window.location.href = `dashboard.html?tab=orders`;
+    return;
+  }
+
+  if (type === "review") {
+    window.location.href = `dashboard.html?tab=myprofile`;
+    return;
+  }
+
+  if ((type === "plan_expiry" || type === "boost_expiry") && relatedId) {
+    window.location.href = relatedId;
+    return;
+  }
+
+  if (type === "broadcast" && relatedId) {
+    window.location.href = relatedId === "/" ? "index.html" : relatedId;
+    return;
+  }
+
+  // Default: stay on notifications page (already marked read)
 };
 
 // ── Route notification clicks to the right page ──
