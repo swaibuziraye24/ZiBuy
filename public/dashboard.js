@@ -845,10 +845,10 @@ if (imageFiles.length > 0) {
 
     const storageRef = ref(
       storage,
-      `products/${Date.now()}-${file.name}`
+      `products/${currentUser.uid}/${Date.now()}-${file.name}`
     );
 
-    await uploadBytes(storageRef, file);
+    await uploadBytes(storageRef, file, { contentType: file.type });
 
     const url =
       await getDownloadURL(storageRef);
