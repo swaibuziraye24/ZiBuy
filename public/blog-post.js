@@ -16,6 +16,15 @@ const CAT_LABELS = {
 const params = new URLSearchParams(window.location.search);
 const postId = params.get("id");
 
+function createSlug(text) {
+  return (text || "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+}
+
 loadPost();
 
 async function loadPost() {
@@ -177,7 +186,7 @@ async function loadRelated(category) {
       <h3>📚 Related Articles</h3>
       <div class="post-related-grid">
         ${related.map(p => `
-          <div class="post-related-card" onclick="window.location.href='blog-post.html?id=${p.id}'">
+          <div class="post-related-card" onclick="window.location.href='blog-post.html?id=${p.id}&slug=${createSlug(p.title)}'">
             <img src="${p.coverImage || ''}" alt="${p.title}"
               onerror="this.src='https://via.placeholder.com/300x150?text=ZiBuy'">
             <p>${p.title}</p>
