@@ -80,7 +80,7 @@ export async function notifyNewMessage(senderId, recipientId, senderEmail) {
     recipientId,
     `New message from ${senderEmail.split("@")[0]}`,
     "You have a new message. Check your inbox.",
-    senderId
+    senderEmail   // ← now saves the email, which messages.html?to= needs
   );
 }
 
