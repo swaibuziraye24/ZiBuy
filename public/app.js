@@ -1648,6 +1648,36 @@ window.allProducts = allProducts;
   }
 };
 
+
+function categoryEmoji(cat) {
+  const map = {
+    phones: "📱",
+    electronics: "💻",
+    fashion: "👗",
+    shoes: "👟",
+    beauty: "💄",
+    bags: "👜",
+    groceries: "🛒",
+    watches: "⌚",
+    computers: "🖥️",
+    gaming: "🎮",
+    home: "🏠",
+    accessories: "💎",
+    vehicles: "🚗",
+    animals: "🐾",
+    babies: "👶",
+    agriculture: "🌾",
+    commercial: "🏗️",
+    tours: "✈️",
+    "seeking-work": "💼",
+    services: "🔧",
+    "repair-construction": "🔨",
+    property: "🏘️"
+  };
+
+  return map[cat] || "📋";
+}
+
 // ============================================
 // BUILD CATEGORY NAV BAR
 // ============================================
