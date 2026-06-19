@@ -65,7 +65,7 @@ function renderBlog() {
     gridPosts = posts.slice(1);
 
     featSlot.innerHTML = `
-      <div class="blog-featured" onclick="window.location.href='blog-post.html?id=${featured.id}'">
+      <div class="blog-featured" onclick="window.location.href='blog-post.html?id=${featured.id}&slug=${createSlug(featured.title)}'">
         <div class="blog-featured-img">
           <img src="${featured.coverImage || ''}" alt="${featured.title}"
             onerror="this.src='https://via.placeholder.com/600x400?text=ZiBuy+Blog'">
@@ -93,7 +93,7 @@ function renderBlog() {
   }
 
   grid.innerHTML = gridPosts.map(p => `
-    <div class="blog-card" onclick="window.location.href='blog-post.html?id=${p.id}'">
+    <div class="blog-card" onclick="window.location.href='blog-post.html?id=${p.id}&slug=${createSlug(p.title)}'">
       <div class="blog-card-img">
         <img src="${p.coverImage || ''}" alt="${p.title}"
           onerror="this.src='https://via.placeholder.com/400x300?text=ZiBuy+Blog'">
@@ -119,6 +119,16 @@ window.filterBlog = function(cat, btn) {
   btn.classList.add("active");
   renderBlog();
 };
+
+
+function createSlug(text) {
+  return (text || "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+}
 
 function timeAgo(ts) {
   const date = ts?.toDate?.() || (ts ? new Date(ts) : null);
