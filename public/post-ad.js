@@ -497,17 +497,83 @@ const CATEGORY_FIELDS = {
   ],
 
   fashion: [
-    { id:"cf-type",      label:"Clothing Type", type:"select",
-      options:["T-Shirt","Shirt","Dress","Trousers / Jeans","Skirt","Suit","Jacket / Coat","Hoodie / Sweater","Underwear","Sportswear","Traditional Wear","Kids Clothing","Other"] },
-    { id:"cf-condition", label:"Condition",     type:"select",
+    { id:"cf-fashion-type", label:"Clothing Category", type:"select",
+      options:["Tops & Shirts","Dresses & Skirts","Trousers, Jeans & Shorts","Suits, Jackets & Coats","Sportswear & Activewear","Underwear & Sleepwear","Traditional & Cultural Wear","Mitumba / Thrift Bundles"]
+    },
+  ],
+
+  "fashion-Tops & Shirts": [
+    { id:"cf-type",      label:"Item Type",   type:"select",
+      options:["T-Shirt","Shirt","Blouse","Hoodie / Sweater","Tank Top"] },
+    { id:"cf-condition", label:"Condition",   type:"select",
       options:["Brand New","Foreign Used","Local Used","Thrift (Mitumba)"] },
-    { id:"cf-gender",    label:"For",           type:"select",
-      options:["Men","Women","Unisex","Boys","Girls","Babies"] },
-    { id:"cf-size",      label:"Size",          type:"select",
-      options:["XS (Extra Small)","S (Small)","M (Medium)","L (Large)","XL (Extra Large)","XXL","3XL","Free Size","Other"] },
-    { id:"cf-material",  label:"Material",      type:"text",  placeholder:"e.g. Cotton, Polyester, Silk" },
-    { id:"cf-color",     label:"Color",         type:"text",  placeholder:"e.g. Red, Navy Blue, Multi-color" },
-    { id:"cf-brand",     label:"Brand (optional)", type:"text", placeholder:"e.g. Nike, H&M, Local Brand" },
+    { id:"cf-gender",    label:"For",         type:"select",
+      options:["Men","Women","Unisex"] },
+    { id:"cf-size",      label:"Size",        type:"select",
+      options:["XS","S","M","L","XL","XXL","3XL","Free Size"] },
+    { id:"cf-color",     label:"Color",       type:"text", placeholder:"e.g. Red, Navy Blue" },
+  ],
+
+  "fashion-Dresses & Skirts": [
+    { id:"cf-type",      label:"Item Type",   type:"select",
+      options:["Casual Dress","Evening / Gown","Office Dress","Skirt","Maxi Dress"] },
+    { id:"cf-condition", label:"Condition",   type:"select",
+      options:["Brand New","Foreign Used","Local Used","Thrift (Mitumba)"] },
+    { id:"cf-size",      label:"Size",        type:"select",
+      options:["XS","S","M","L","XL","XXL","Free Size"] },
+    { id:"cf-color",     label:"Color",       type:"text", placeholder:"e.g. Black, Floral Print" },
+  ],
+
+  "fashion-Trousers, Jeans & Shorts": [
+    { id:"cf-type",      label:"Item Type",   type:"select",
+      options:["Jeans","Trousers / Pants","Shorts","Leggings"] },
+    { id:"cf-condition", label:"Condition",   type:"select",
+      options:["Brand New","Foreign Used","Local Used","Thrift (Mitumba)"] },
+    { id:"cf-gender",    label:"For",         type:"select",
+      options:["Men","Women","Unisex"] },
+    { id:"cf-size",      label:"Size",        type:"select",
+      options:["28","30","32","34","36","38","40","XS","S","M","L","XL"] },
+  ],
+
+  "fashion-Suits, Jackets & Coats": [
+    { id:"cf-type",      label:"Item Type",   type:"select",
+      options:["Suit (Full Set)","Blazer","Jacket","Coat","Vest / Waistcoat"] },
+    { id:"cf-condition", label:"Condition",   type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
+    { id:"cf-size",      label:"Size",        type:"select",
+      options:["S","M","L","XL","XXL","Custom Tailored"] },
+  ],
+
+  "fashion-Sportswear & Activewear": [
+    { id:"cf-type",      label:"Item Type",   type:"select",
+      options:["Tracksuit","Jersey","Gym Wear","Swimwear","Sports Bra"] },
+    { id:"cf-condition", label:"Condition",   type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
+    { id:"cf-brand",     label:"Brand",       type:"text", placeholder:"e.g. Nike, Adidas, Puma" },
+  ],
+
+  "fashion-Underwear & Sleepwear": [
+    { id:"cf-type",      label:"Item Type",   type:"select",
+      options:["Underwear","Pyjamas / Sleepwear","Nightgown","Bra / Lingerie"] },
+    { id:"cf-condition", label:"Condition",   type:"select",
+      options:["Brand New (Sealed)"] },
+    { id:"cf-gender",    label:"For",         type:"select",
+      options:["Men","Women"] },
+  ],
+
+  "fashion-Traditional & Cultural Wear": [
+    { id:"cf-type",      label:"Item Type",   type:"select",
+      options:["Gomesi","Kanzu","Kitenge / African Print Outfit","Wedding Traditional Wear","Other"] },
+    { id:"cf-condition", label:"Condition",   type:"select",
+      options:["Brand New","Custom Tailored","Used"] },
+  ],
+
+  "fashion-Mitumba / Thrift Bundles": [
+    { id:"cf-type",      label:"Bundle Type", type:"select",
+      options:["Mixed Clothes Bundle","Shirts Bundle","Dresses Bundle","Kids Clothes Bundle"] },
+    { id:"cf-quantity",  label:"Quantity",    type:"text", placeholder:"e.g. 20 pieces, 1 bale" },
+    { id:"cf-gender",    label:"For",         type:"select",
+      options:["Men","Women","Unisex","Kids"] },
   ],
 
   shoes: [
@@ -584,24 +650,78 @@ const CATEGORY_FIELDS = {
   ],
 
   computers: [
-    { id:"cf-type",      label:"Type",         type:"select",
-      options:["Laptop","Desktop PC","MacBook","iMac","Tablet","Monitor","Printer","Keyboard & Mouse","UPS / Battery Backup","Other"] },
+    { id:"cf-comp-type", label:"Item Category", type:"select",
+      options:["Laptops","Desktop PCs","Tablets","Monitors","Printers & Scanners","Computer Accessories (Keyboard, Mouse, UPS)"]
+    },
+  ],
+
+  "computers-Laptops": [
     { id:"cf-brand",     label:"Brand",        type:"select",
-      options:["HP","Dell","Lenovo","Apple","Asus","Acer","Samsung","Toshiba","MSI","Microsoft Surface","Other"] },
+      options:["HP","Dell","Lenovo","Apple MacBook","Asus","Acer","Toshiba","MSI","Microsoft Surface","Other"] },
     { id:"cf-condition", label:"Condition",    type:"select",
       options:["Brand New","Foreign Used","Local Used"] },
     { id:"cf-processor", label:"Processor",    type:"select",
-      options:["Intel Core i3","Intel Core i5","Intel Core i7","Intel Core i9","AMD Ryzen 3","AMD Ryzen 5","AMD Ryzen 7","Apple M1","Apple M2","Apple M3","Celeron / Pentium","Other"] },
+      options:["Intel Core i3","Intel Core i5","Intel Core i7","Intel Core i9","AMD Ryzen 3","AMD Ryzen 5","AMD Ryzen 7","Apple M1","Apple M2","Apple M3","Celeron / Pentium"] },
     { id:"cf-ram",       label:"RAM",          type:"select",
-      options:["2GB","4GB","8GB","16GB","32GB","64GB","Other"] },
+      options:["4GB","8GB","16GB","32GB","64GB"] },
     { id:"cf-storage",   label:"Storage",      type:"select",
-      options:["128GB SSD","256GB SSD","512GB SSD","1TB SSD","1TB HDD","2TB HDD","Other"] },
+      options:["128GB SSD","256GB SSD","512GB SSD","1TB SSD","1TB HDD"] },
     { id:"cf-screen",    label:"Screen Size",  type:"select",
-      options:["11 inch","13 inch","14 inch","15 inch","15.6 inch","17 inch","Not Applicable"] },
+      options:["11 inch","13 inch","14 inch","15 inch","15.6 inch","17 inch"] },
     { id:"cf-os",        label:"Operating System", type:"select",
-      options:["Windows 11","Windows 10","Windows 7","macOS","Chrome OS","No OS (Freedos)","Other"] },
+      options:["Windows 11","Windows 10","macOS","Chrome OS","No OS"] },
     { id:"cf-warranty",  label:"Warranty",     type:"select",
       options:["No Warranty","Shop Warranty","Manufacturer Warranty"] },
+  ],
+
+  "computers-Desktop PCs": [
+    { id:"cf-brand",     label:"Brand",        type:"select",
+      options:["HP","Dell","Lenovo","Apple iMac","Custom Built","Other"] },
+    { id:"cf-condition", label:"Condition",    type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
+    { id:"cf-processor", label:"Processor",    type:"select",
+      options:["Intel Core i3","Intel Core i5","Intel Core i7","Intel Core i9","AMD Ryzen 5","AMD Ryzen 7","Other"] },
+    { id:"cf-ram",       label:"RAM",          type:"select",
+      options:["4GB","8GB","16GB","32GB","64GB"] },
+    { id:"cf-storage",   label:"Storage",      type:"select",
+      options:["256GB SSD","512GB SSD","1TB SSD","1TB HDD","2TB HDD"] },
+    { id:"cf-includes",  label:"Includes",     type:"text", placeholder:"e.g. Monitor, Keyboard, Mouse" },
+  ],
+
+  "computers-Tablets": [
+    { id:"cf-brand",     label:"Brand",        type:"select",
+      options:["Apple iPad","Samsung Galaxy Tab","Lenovo Tab","Huawei MatePad","Other"] },
+    { id:"cf-condition", label:"Condition",    type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
+    { id:"cf-storage",   label:"Storage",      type:"select",
+      options:["32GB","64GB","128GB","256GB","512GB"] },
+    { id:"cf-network",   label:"Connectivity", type:"select",
+      options:["WiFi Only","WiFi + Cellular (SIM)"] },
+  ],
+
+  "computers-Monitors": [
+    { id:"cf-brand",     label:"Brand",        type:"text", placeholder:"e.g. Dell, HP, Samsung, LG" },
+    { id:"cf-size",       label:"Screen Size",  type:"select",
+      options:["19 inch","21 inch","22 inch","24 inch","27 inch","32 inch","Other"] },
+    { id:"cf-condition", label:"Condition",    type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
+    { id:"cf-refresh",   label:"Refresh Rate", type:"select",
+      options:["60Hz","75Hz","120Hz","144Hz+"] },
+  ],
+
+  "computers-Printers & Scanners": [
+    { id:"cf-type",      label:"Item Type",    type:"select",
+      options:["Printer (Inkjet)","Printer (Laser)","All-in-One (Print/Scan/Copy)","Scanner Only","Photocopier"] },
+    { id:"cf-brand",     label:"Brand",        type:"text", placeholder:"e.g. HP, Canon, Epson" },
+    { id:"cf-condition", label:"Condition",    type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
+  ],
+
+  "computers-Computer Accessories (Keyboard, Mouse, UPS)": [
+    { id:"cf-type",      label:"Item Type",    type:"select",
+      options:["Keyboard","Mouse","UPS / Battery Backup","Webcam","Computer Bag","External Hard Drive","Flash Disk","RAM / Internal Parts","Other"] },
+    { id:"cf-condition", label:"Condition",    type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
   ],
 
   gaming: [
@@ -749,16 +869,56 @@ const CATEGORY_FIELDS = {
   ],
 
 accessories: [
-    { id:"cf-type",      label:"Accessory Type", type:"select",
-      options:["Necklace","Earrings","Bracelet / Bangle","Ring","Anklet","Brooch","Chain","Sunglasses","Belt","Hat / Cap","Scarf / Shawl","Tie","Hair Accessories","Phone Case","Wallet","Other"] },
-    { id:"cf-condition", label:"Condition",      type:"select",
-      options:["Brand New","Foreign Used","Local Used"] },
-    { id:"cf-gender",    label:"For",            type:"select",
+    { id:"cf-acc-type", label:"Accessory Category", type:"select",
+      options:["Jewellery (Necklace, Rings, Earrings)","Sunglasses & Eyewear","Belts & Hats","Scarves & Hair Accessories","Phone Cases & Wallets"]
+    },
+  ],
+
+  "accessories-Jewellery (Necklace, Rings, Earrings)": [
+    { id:"cf-type",      label:"Item Type",   type:"select",
+      options:["Necklace","Earrings","Bracelet / Bangle","Ring","Anklet","Chain","Brooch"] },
+    { id:"cf-material",  label:"Material",    type:"select",
+      options:["Gold (14k/18k)","Gold Plated","Silver","Stainless Steel","Beads","Crystal","Other"] },
+    { id:"cf-gender",    label:"For",         type:"select",
       options:["Women","Men","Unisex","Kids"] },
-    { id:"cf-material",  label:"Material",       type:"select",
-      options:["Gold (14k/18k)","Gold Plated","Silver","Stainless Steel","Beads","Plastic","Fabric","Crystal","Other"] },
-    { id:"cf-color",     label:"Color / Finish", type:"text",  placeholder:"e.g. Rose Gold, Silver, Black" },
+    { id:"cf-condition", label:"Condition",   type:"select",
+      options:["Brand New","Used"] },
     { id:"cf-brand",     label:"Brand (optional)", type:"text", placeholder:"e.g. Pandora, Local Artisan" },
+  ],
+
+  "accessories-Sunglasses & Eyewear": [
+    { id:"cf-type",      label:"Item Type",   type:"select",
+      options:["Sunglasses","Reading Glasses","Eyeglass Frames"] },
+    { id:"cf-brand",     label:"Brand",       type:"text", placeholder:"e.g. Ray-Ban, Local Brand" },
+    { id:"cf-condition", label:"Condition",   type:"select",
+      options:["Brand New","Used"] },
+  ],
+
+  "accessories-Belts & Hats": [
+    { id:"cf-type",      label:"Item Type",   type:"select",
+      options:["Belt","Hat / Cap","Beanie"] },
+    { id:"cf-material",  label:"Material",    type:"select",
+      options:["Leather","Fabric","Synthetic"] },
+    { id:"cf-gender",    label:"For",         type:"select",
+      options:["Men","Women","Unisex"] },
+    { id:"cf-condition", label:"Condition",   type:"select",
+      options:["Brand New","Used"] },
+  ],
+
+  "accessories-Scarves & Hair Accessories": [
+    { id:"cf-type",      label:"Item Type",   type:"select",
+      options:["Scarf / Shawl","Hair Accessories","Wig","Hair Extensions","Hairband / Clips"] },
+    { id:"cf-condition", label:"Condition",   type:"select",
+      options:["Brand New","Used"] },
+  ],
+
+  "accessories-Phone Cases & Wallets": [
+    { id:"cf-type",      label:"Item Type",   type:"select",
+      options:["Phone Case","Wallet","Card Holder","Tie"] },
+    { id:"cf-material",  label:"Material",    type:"select",
+      options:["Leather","Silicone","Plastic","Fabric"] },
+    { id:"cf-condition", label:"Condition",   type:"select",
+      options:["Brand New","Used"] },
   ],
 
   services: [
@@ -964,79 +1124,77 @@ accessories: [
   ],
 
   "repair-construction": [
-    { id:"cf-repair-type", label:"What Needs Repair / Construction?", type:"select",
-      options:["Electronics & Gadget Repair","Vehicle & Engine Repair","Home Appliance Repair","Building & Construction Work","Plumbing & Electrical Work","Furniture & Small Item Repair"]
+    { id:"cf-rc-type", label:"Equipment / Material Category", type:"select",
+      options:["Building Materials","Hand Tools & Power Tools","Welding & Fabrication Equipment","Plumbing Materials & Fittings","Electrical Materials & Wiring","Paint & Finishing Materials","Roofing Materials","Vehicle Repair Tools & Spare Parts"]
     },
   ],
 
-  "repair-Electronics & Gadget Repair": [
-    { id:"cf-item",        label:"Item to Repair", type:"select",
-      options:["Phone Repair","Computer / Laptop Repair","TV / Screen Repair","Camera Repair","Other Electronics"] },
-    { id:"cf-experience",  label:"Years of Experience", type:"select",
-      options:["Less than 1 year","1–2 years","3–5 years","5–10 years","10+ years"] },
-    { id:"cf-pricing-type",label:"Pricing Type",  type:"select",
-      options:["Fixed Price","Per Item / Job","Quote on Inspection"] },
-    { id:"cf-warranty",    label:"Warranty on Work", type:"select",
-      options:["No Warranty","7 Days","30 Days","90 Days"] },
-    { id:"cf-service-mode",label:"Service Location", type:"select",
-      options:["Drop off at my shop","I come to you","Both options available"] },
+  "repair-Building Materials": [
+    { id:"cf-type",      label:"Material Type", type:"select",
+      options:["Cement","Sand","Bricks / Blocks","Iron Bars / Rebar","Timber / Wood","Tiles","Glass","Ballast / Aggregate","Other"] },
+    { id:"cf-quantity",  label:"Quantity",      type:"text", placeholder:"e.g. 100 bags, 500 bricks, 50 pieces" },
+    { id:"cf-condition", label:"Condition",     type:"select",
+      options:["Brand New","Surplus / Leftover (Good Condition)"] },
+    { id:"cf-delivery",  label:"Delivery Available?", type:"select",
+      options:["Yes – I can deliver","No – Buyer collects"] },
   ],
 
-  "repair-Vehicle & Engine Repair": [
-    { id:"cf-item",        label:"Vehicle Type Serviced", type:"select",
-      options:["Cars","Motorcycles / Boda Boda","Trucks / Heavy Vehicles","All Vehicle Types"] },
-    { id:"cf-specialty",   label:"Specialty",     type:"select",
-      options:["General Mechanic","Engine Specialist","Auto Electrician","Panel Beating & Spray","Tyre & Wheel Alignment","Car Wash & Detailing"] },
-    { id:"cf-experience",  label:"Years of Experience", type:"select",
-      options:["Less than 1 year","1–2 years","3–5 years","5–10 years","10+ years"] },
-    { id:"cf-pricing-type",label:"Pricing Type",  type:"select",
-      options:["Fixed Price","Quote on Inspection","Hourly Rate"] },
-    { id:"cf-area-covered",label:"Area Covered",  type:"select",
-      options:["Kampala only","Kampala & Wakiso","Greater Kampala","All Uganda"] },
+  "repair-Hand Tools & Power Tools": [
+    { id:"cf-type",      label:"Tool Type",     type:"select",
+      options:["Drill / Driver","Angle Grinder","Circular Saw","Hammer / Mallet","Spanner / Wrench Set","Toolbox / Tool Kit","Measuring Tools","Other"] },
+    { id:"cf-brand",     label:"Brand",         type:"text", placeholder:"e.g. Bosch, DeWalt, Makita" },
+    { id:"cf-condition", label:"Condition",     type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
+    { id:"cf-power-source",label:"Power Source", type:"select",
+      options:["Electric (Corded)","Battery / Cordless","Manual","Not Applicable"] },
   ],
 
-  "repair-Home Appliance Repair": [
-    { id:"cf-item",        label:"Appliance Type", type:"select",
-      options:["Fridge / Freezer Repair","Washing Machine Repair","AC Repair","Generator Repair","Gas Cooker Repair","Microwave / Small Appliance Repair"] },
-    { id:"cf-experience",  label:"Years of Experience", type:"select",
-      options:["Less than 1 year","1–2 years","3–5 years","5+ years"] },
-    { id:"cf-pricing-type",label:"Pricing Type",  type:"select",
-      options:["Fixed Price","Quote on Inspection"] },
-    { id:"cf-warranty",    label:"Warranty on Work", type:"select",
-      options:["No Warranty","30 Days","90 Days"] },
+  "repair-Welding & Fabrication Equipment": [
+    { id:"cf-type",      label:"Equipment Type", type:"select",
+      options:["Welding Machine","Welding Rods / Electrodes","Cutting Torch / Gas Set","Grinding Disc / Accessories","Safety Gear (Helmet, Gloves)"] },
+    { id:"cf-condition", label:"Condition",     type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
+    { id:"cf-power",     label:"Power Rating",  type:"text", placeholder:"e.g. 200A, 250A" },
   ],
 
-  "repair-Building & Construction Work": [
-    { id:"cf-item",        label:"Type of Work",  type:"select",
-      options:["New Building Construction","House Renovation","Roofing","Tiling & Flooring","Painting & Finishing","Welding & Fabrication","Borehole Drilling"] },
-    { id:"cf-experience",  label:"Years of Experience", type:"select",
-      options:["Less than 1 year","1–2 years","3–5 years","5–10 years","10+ years"] },
-    { id:"cf-pricing-type",label:"Pricing Type",  type:"select",
-      options:["Per Square Meter","Fixed Price","Quote on Inspection"] },
-    { id:"cf-team-size",   label:"Working As",    type:"select",
-      options:["Individual / Solo","Small Team (2–5)","Construction Company"] },
-    { id:"cf-area-covered",label:"Area Covered",  type:"select",
-      options:["Kampala only","Greater Kampala","All Uganda"] },
+  "repair-Plumbing Materials & Fittings": [
+    { id:"cf-type",      label:"Material Type", type:"select",
+      options:["Pipes (PVC/Galvanized)","Fittings / Connectors","Taps & Valves","Water Tank","Sanitary Ware (Toilet/Sink)","Plumbing Tools"] },
+    { id:"cf-quantity",  label:"Quantity",      type:"text", placeholder:"e.g. 20 pipes, 1 tank (1000L)" },
+    { id:"cf-condition", label:"Condition",     type:"select",
+      options:["Brand New","Used – Good Condition"] },
   ],
 
-  "repair-Plumbing & Electrical Work": [
-    { id:"cf-item",        label:"Type of Work",  type:"select",
-      options:["Plumbing Repair / Installation","Electrical Wiring","Solar Installation/Repair","CCTV Installation"] },
-    { id:"cf-experience",  label:"Years of Experience", type:"select",
-      options:["Less than 1 year","1–2 years","3–5 years","5+ years"] },
-    { id:"cf-pricing-type",label:"Pricing Type",  type:"select",
-      options:["Fixed Price","Quote on Inspection","Hourly Rate"] },
-    { id:"cf-warranty",    label:"Warranty on Work", type:"select",
-      options:["No Warranty","30 Days","90 Days","1 Year"] },
+  "repair-Electrical Materials & Wiring": [
+    { id:"cf-type",      label:"Material Type", type:"select",
+      options:["Electrical Wire / Cable","Switches & Sockets","Circuit Breakers / Distribution Board","Conduit Pipes","Light Fittings","Electrical Tools"] },
+    { id:"cf-quantity",  label:"Quantity",      type:"text", placeholder:"e.g. 100m cable, 20 switches" },
+    { id:"cf-condition", label:"Condition",     type:"select",
+      options:["Brand New","Used – Good Condition"] },
   ],
 
-  "repair-Furniture & Small Item Repair": [
-    { id:"cf-item",        label:"Item Type",     type:"select",
-      options:["Furniture Repair","Shoe Repair / Cobbling","Watch / Jewellery Repair","Bag Repair","Other"] },
-    { id:"cf-pricing-type",label:"Pricing Type",  type:"select",
-      options:["Fixed Price","Quote on Inspection"] },
-    { id:"cf-service-mode",label:"Service Location", type:"select",
-      options:["Drop off at my shop","I come to you","Both options available"] },
+  "repair-Paint & Finishing Materials": [
+    { id:"cf-type",      label:"Material Type", type:"select",
+      options:["Paint (Interior/Exterior)","Primer","Brushes & Rollers","Sandpaper / Filler","Spray Gun Equipment"] },
+    { id:"cf-quantity",  label:"Quantity",      type:"text", placeholder:"e.g. 5 gallons, 2 rolls" },
+    { id:"cf-condition", label:"Condition",     type:"select",
+      options:["Brand New (Sealed)","Used / Surplus"] },
+  ],
+
+  "repair-Roofing Materials": [
+    { id:"cf-type",      label:"Material Type", type:"select",
+      options:["Roofing Sheets (Iron/Aluminum)","Roofing Tiles","Timber for Roofing","Gutters / Downpipes","Insulation Material","Roofing Nails / Fasteners"] },
+    { id:"cf-quantity",  label:"Quantity",      type:"text", placeholder:"e.g. 50 sheets, 200 tiles" },
+    { id:"cf-condition", label:"Condition",     type:"select",
+      options:["Brand New","Surplus / Leftover (Good Condition)"] },
+  ],
+
+  "repair-Vehicle Repair Tools & Spare Parts": [
+    { id:"cf-type",      label:"Item Type",     type:"select",
+      options:["Vehicle Spare Parts","Mechanic Tool Set","Car Jack / Lifting Equipment","Diagnostic Scanner","Tyre Repair Equipment","Battery / Charging Equipment"] },
+    { id:"cf-vehicle-make",label:"Compatible Vehicle Make", type:"text", placeholder:"e.g. Toyota, Universal Fit" },
+    { id:"cf-condition", label:"Condition",     type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
   ],
 
 
@@ -1588,7 +1746,8 @@ accessories: [
 const TWO_STEP_CATEGORIES = [
   "vehicles", "leisure-activities", "electronics", "home", "gaming", "property",
   "repair-construction", "commercial", "animals", "babies",
-  "agriculture", "tours", "seeking-work"
+  "agriculture", "tours", "seeking-work",
+  "fashion", "computers", "accessories"
 ];
 
 function renderCategoryFields(category) {
