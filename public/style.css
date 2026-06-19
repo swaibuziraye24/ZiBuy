@@ -2530,17 +2530,22 @@ footer {
 
 .filters-panel {
   display: none;
-  position: absolute;
-  top: 100%;
+  position: fixed;
+  top: 140px;
   left: 20px;
   background: white;
   border-radius: 14px;
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.25);
   padding: 20px;
   width: 320px;
   max-width: calc(100vw - 40px);
-  z-index: 9500;
-  margin-top: 8px;
+  max-height: calc(100vh - 160px);
+  overflow-y: auto;
+  z-index: 99999;
+  margin-top: 0;
+}
+.filters-panel.active {
+  display: block;
 }
 
 .filters-panel.active {
