@@ -365,9 +365,11 @@ exports.onNewMessage = onDocumentCreated(
 
     await db.collection("notifications").add({
       userId: userDoc.id,
-      title: "New Message",
+      title: `New message from ${msg.senderEmail?.split("@")[0] || "someone"}`,
       message: msg.text?.slice(0, 80),
       type: "message",
+      relatedId: msg.senderEmail || null,
+      read: false,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
