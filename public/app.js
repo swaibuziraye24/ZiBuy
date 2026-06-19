@@ -17,6 +17,36 @@ import {
   PLAN_SCORE
 } from "./ranking-service.js";
 
+
+function categoryEmoji(cat) {
+  const map = {
+    phones: "📱",
+    electronics: "💻",
+    fashion: "👗",
+    shoes: "👟",
+    beauty: "💄",
+    bags: "👜",
+    groceries: "🛒",
+    watches: "⌚",
+    computers: "🖥️",
+    gaming: "🎮",
+    home: "🏠",
+    accessories: "💎",
+    vehicles: "🚗",
+    animals: "🐾",
+    babies: "👶",
+    agriculture: "🌾",
+    commercial: "🏗️",
+    tours: "✈️",
+    "seeking-work": "💼",
+    services: "🔧",
+    "repair-construction": "🔨",
+    property: "🏘️"
+  };
+
+  return map[cat] || "📋";
+}
+
 // ── Save scroll position before leaving page ──
 window.addEventListener("beforeunload", () => {
   sessionStorage.setItem("zibuy_scroll", window.scrollY);
@@ -86,37 +116,6 @@ function initApp() {
       sessionStorage.removeItem("zibuy_scroll");
     }, 600);
   }
-
-
-
-  function categoryEmoji(cat) {
-  const map = {
-    phones: "📱",
-    electronics: "💻",
-    fashion: "👗",
-    shoes: "👟",
-    beauty: "💄",
-    bags: "👜",
-    groceries: "🛒",
-    watches: "⌚",
-    computers: "🖥️",
-    gaming: "🎮",
-    home: "🏠",
-    accessories: "💎",
-    vehicles: "🚗",
-    animals: "🐾",
-    babies: "👶",
-    agriculture: "🌾",
-    commercial: "🏗️",
-    tours: "✈️",
-    "seeking-work": "💼",
-    services: "🔧",
-    "repair-construction": "🔨",
-    property: "🏘️"
-  };
-
-  return map[cat] || "📋";
-}
 
 
 // Load banner ads from Firestore — rotates if multiple
