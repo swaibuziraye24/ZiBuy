@@ -335,61 +335,80 @@
     .zb-cat-header a {
       font-size: 13px; font-weight: 700; color: #ff6600; text-decoration: none;
     }
-    .zb-cat-layout {
-      display: flex;
-      gap: 16px;
-      align-items: flex-start;
+    
+     .zb-cat-layout {
+      position: relative;
     }
-    .zb-subcat-sidebar {
-      width: 200px;
-      flex-shrink: 0;
+
+    /* ── Subcategory overlay — replaces category grid view ── */
+    .zb-subcat-overlay {
       background: white;
-      border-radius: 12px;
+      border-radius: 14px;
       border: 1.5px solid #f0f0f0;
-      padding: 12px;
-      position: sticky;
-      top: 70px;
-      max-height: 70vh;
-      overflow-y: auto;
+      padding: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      animation: subcatSlideIn .25s ease;
     }
-    .zb-subcat-sidebar h4 {
-      font-size: 12px; font-weight: 800; color: #ff6600;
-      text-transform: uppercase; letter-spacing: .5px;
-      margin: 0 0 10px; padding-bottom: 8px;
+    @keyframes subcatSlideIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .zb-subcat-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
       border-bottom: 1.5px solid #f0f0f0;
+    }
+    .zb-subcat-header h4 {
+      font-size: 14px; font-weight: 800; color: #ff6600;
+      margin: 0; text-transform: uppercase; letter-spacing: .5px;
+    }
+    .zb-subcat-back {
+      display: flex; align-items: center; gap: 6px;
+      background: #f3f4f6; border: none; padding: 7px 14px;
+      border-radius: 8px; font-size: 12px; font-weight: 700;
+      color: #374151; cursor: pointer; font-family: inherit;
+    }
+    .zb-subcat-back:hover { background: #e5e7eb; }
+
+    .zb-subcat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 8px;
     }
     .zb-subcat-item {
       display: flex;
       justify-content: space-between;
       align-items: center;
       width: 100%;
-      padding: 9px 10px;
-      border-radius: 8px;
-      background: none;
-      border: none;
+      padding: 11px 14px;
+      border-radius: 10px;
+      background: #f9fafb;
+      border: 1.5px solid transparent;
       font-size: 13px;
       font-weight: 600;
       color: #374151;
       cursor: pointer;
       font-family: inherit;
       text-align: left;
-      margin-bottom: 2px;
       transition: .15s;
     }
-    .zb-subcat-item:hover { background: #f9fafb; }
-    .zb-subcat-item.active { background: #fff4ee; color: #ff6600; font-weight: 800; }
+    .zb-subcat-item:hover { background: #fff4ee; border-color: #ffd9bf; }
+    .zb-subcat-item.active { background: #ff6600; color: white; border-color: #ff6600; font-weight: 800; }
     .zb-subcat-item .count {
       font-size: 11px; color: #9ca3af; font-weight: 700;
-      background: #f3f4f6; padding: 1px 8px; border-radius: 10px;
+      background: white; padding: 1px 8px; border-radius: 10px; flex-shrink: 0; margin-left: 8px;
     }
-    .zb-subcat-item.active .count { background: #ff6600; color: white; }
+    .zb-subcat-item.active .count { background: rgba(255,255,255,.25); color: white; }
 
     .zb-cat-grid {
-      flex: 1;
       display: grid;
       grid-template-columns: repeat(8, 1fr);
       gap: 8px;
     }
+
     .zb-cat-card {
       background: white;
       border-radius: 10px;
@@ -494,13 +513,7 @@
       .zb-hero::before { display: none; }
     }
     @media (max-width: 768px) {
-      .zb-cat-layout { flex-direction: column; }
-      .zb-subcat-sidebar {
-        width: 100%;
-        position: static;
-        max-height: none;
-        order: -1;
-      }
+      .zb-subcat-grid { grid-template-columns: repeat(2, 1fr); }
 
       .zb-topbar {
         flex-wrap: nowrap;
@@ -744,7 +757,7 @@
   <div id="featured-shops" class="featured-shops-row"></div>
 </section>
 
-<!-- ══ SHOP BY CATEGORY ══ -->
+   <!-- ══ SHOP BY CATEGORY ══ -->
 <section class="zb-cat-section">
   <div class="zb-cat-header">
     <h2>Shop by Category</h2>
@@ -753,10 +766,10 @@
 
   <div class="zb-cat-layout">
 
-  <!-- Subcategory sidebar — only shows when a category is selected -->
-  <aside id="subcat-sidebar" class="zb-subcat-sidebar" style="display:none"></aside>
+  <!-- Subcategory overlay — replaces grid when a category is selected -->
+  <div id="subcat-sidebar" class="zb-subcat-overlay" style="display:none"></div>
 
-  <div class="zb-cat-grid">
+  <div class="zb-cat-grid" id="zb-cat-grid">
 
     <div class="zb-cat-card active" onclick="filterCategory('all');setActiveCard(this)">
       <span style="font-size:26px">🏪</span>
