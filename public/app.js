@@ -1210,6 +1210,13 @@ window.openSellerShop = function(userId) {
 
 window.filterSubcategory = function(subcat) {
   currentSubcategory = subcat;
+
+  // Resume normal category view — hide subcategory overlay, show grid
+  const overlay = document.getElementById("subcat-sidebar");
+  const catGrid  = document.getElementById("zb-cat-grid");
+  if (overlay) { overlay.style.display = "none"; overlay.innerHTML = ""; }
+  if (catGrid)  { catGrid.style.display = "grid"; }
+
   window.renderProducts();
 };
 
@@ -1217,16 +1224,26 @@ window.filterSubcategory = function(subcat) {
 // ============================================
 // APPLY FILTERS
 // ============================================
-
 window.applyFilters = function() {
   filterState.priceMin = Number(document.getElementById("price-min")?.value || 0);
   filterState.priceMax = Number(document.getElementById("price-max")?.value || 99999999);
   filterState.location = document.getElementById("filter-location")?.value || "";
-  filterState.sortBy = document.getElementById("filter-sort")?.value || "newest";
 
-  renderProducts();
+  // Read from whichever sort control triggered this (quick-sort or panel sort)
+  const quickSort = document.getElementById("quick-sort")?.value;
+  const panelSort  = document.getElementById("filter-sort")?.value;
+  filterState.sortBy = quickSort || panelSort || "newest";
+
+  // Keep both dropdowns in sync visually
+  const qsEl = document.getElementById("quick-sort");
+  const psEl = document.getElementById("filter-sort");
+  if (qsEl) qsEl.value = filterState.sortBy;
+  if (psEl) psEl.value = filterState.sortBy;
+
+  window.renderProducts();
   closeFilters();
 };
+
 
 window.resetFilters = function() {
   filterState = {
@@ -1635,13 +1652,15 @@ window.allProducts = allProducts;
 // BUILD CATEGORY NAV BAR
 // ============================================
 function buildCategoryNav(products) {
-  const sidebar = document.getElementById("subcat-sidebar");
-  if (!sidebar) return;
+  const overlay = document.getElementById("subcat-sidebar");
+  const catGrid  = document.getElementById("zb-cat-grid");
+  if (!overlay) return;
 
-  // Hide sidebar entirely when "All" is selected
+  // "All" selected → show normal category grid, hide overlay
   if (currentCategory === "all") {
-    sidebar.style.display = "none";
-    sidebar.innerHTML = "";
+    overlay.style.display = "none";
+    overlay.innerHTML = "";
+    if (catGrid) catGrid.style.display = "grid";
     return;
   }
 
@@ -1658,30 +1677,41 @@ function buildCategoryNav(products) {
 
   const subcats = Object.entries(counts).sort((a, b) => b[1] - a[1]);
 
+  // No subcategories found → fall back to normal grid view
   if (subcats.length === 0) {
-    sidebar.style.display = "none";
-    sidebar.innerHTML = "";
+    overlay.style.display = "none";
+    overlay.innerHTML = "";
+    if (catGrid) catGrid.style.display = "grid";
     return;
   }
 
-  sidebar.style.display = "block";
+  // Show overlay ON TOP, hide the category grid underneath
+  if (catGrid) catGrid.style.display = "none";
+  overlay.style.display = "block";
 
-  sidebar.innerHTML = `
-    <h4>${currentCategory.charAt(0).toUpperCase() + currentCategory.slice(1).replace("-", " ")}</h4>
-
-    <button class="zb-subcat-item ${currentSubcategory === 'all' ? 'active' : ''}"
-      onclick="filterSubcategory('all')">
-      <span>All</span>
-      <span class="count">${inCategory.length}</span>
-    </button>
-
-    ${subcats.map(([sub, count]) => `
-      <button class="zb-subcat-item ${currentSubcategory === sub ? 'active' : ''}"
-        onclick="filterSubcategory('${sub.replace(/'/g, "\\'")}')">
-        <span>${sub}</span>
-        <span class="count">${count}</span>
+  overlay.innerHTML = `
+    <div class="zb-subcat-header">
+      <h4>${categoryEmoji(currentCategory)} ${currentCategory.charAt(0).toUpperCase() + currentCategory.slice(1).replace("-", " ")}</h4>
+      <button class="zb-subcat-back" onclick="filterCategory('all')">
+        ← All Categories
       </button>
-    `).join("")}
+    </div>
+
+    <div class="zb-subcat-grid">
+      <button class="zb-subcat-item ${currentSubcategory === 'all' ? 'active' : ''}"
+        onclick="filterSubcategory('all')">
+        <span>All</span>
+        <span class="count">${inCategory.length}</span>
+      </button>
+
+      ${subcats.map(([sub, count]) => `
+        <button class="zb-subcat-item ${currentSubcategory === sub ? 'active' : ''}"
+          onclick="filterSubcategory('${sub.replace(/'/g, "\\'")}')">
+          <span>${sub}</span>
+          <span class="count">${count}</span>
+        </button>
+      `).join("")}
+    </div>
   `;
 }
 
