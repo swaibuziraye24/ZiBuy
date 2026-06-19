@@ -39,7 +39,44 @@ async function loadPost() {
     }
 
     const post = snap.data();
-    document.title = `${post.title} — ZiBuy Blog`;
+    document.title = `${post.title} | ZiBuy Uganda`;
+
+// SEO description
+const description =
+  post.excerpt ||
+  (post.content || "").replace(/\n/g, " ").slice(0, 160);
+
+// Update meta description
+const metaDesc = document.querySelector('meta[name="description"]');
+if (metaDesc) metaDesc.setAttribute("content", description);
+
+// Open Graph tags
+const ogTitle = document.querySelector('meta[property="og:title"]');
+const ogDesc  = document.querySelector('meta[property="og:description"]');
+const ogImg   = document.querySelector('meta[property="og:image"]');
+const ogUrl   = document.querySelector('meta[property="og:url"]');
+
+if (ogTitle) ogTitle.setAttribute("content", post.title);
+if (ogDesc) ogDesc.setAttribute("content", description);
+if (ogImg && post.coverImage)
+  ogImg.setAttribute("content", post.coverImage);
+
+if (ogUrl)
+  ogUrl.setAttribute(
+    "content",
+    window.location.href
+  );
+
+// Twitter tags
+const twTitle = document.querySelector('meta[name="twitter:title"]');
+const twDesc  = document.querySelector('meta[name="twitter:description"]');
+const twImg   = document.querySelector('meta[name="twitter:image"]');
+
+if (twTitle) twTitle.setAttribute("content", post.title);
+if (twDesc) twDesc.setAttribute("content", description);
+
+if (twImg && post.coverImage)
+  twImg.setAttribute("content", post.coverImage);
 
     // Track view count
     updateDoc(doc(db, "blog_posts", postId), { views: increment(1) }).catch(() => {});
