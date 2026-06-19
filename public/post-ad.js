@@ -401,16 +401,99 @@ const CATEGORY_FIELDS = {
   ],
 
   electronics: [
-    { id:"cf-type",      label:"Type",         type:"select",
-      options:["TV","Flat Screen","Speaker / Sound System","Camera","Decoder / DSTV","DVD Player","Radio","Generator","Solar Panel","Air Conditioner","Fan","Iron Box","Other"] },
+    { id:"cf-electronics-type", label:"Electronics Type", type:"select",
+      options:["TV / Flat Screen","Speaker / Sound System","Camera","Decoder / DSTV","DVD Player / Radio","Generator","Solar Equipment","Air Conditioner","Fan","Iron Box / Kitchen Appliance"] },
+  ],
+
+  "electronics-TV / Flat Screen": [
     { id:"cf-brand",     label:"Brand",        type:"select",
-      options:["Samsung","LG","Sony","Hisense","TCL","Panasonic","Canon","Nikon","Sayona","Bruhm","Ramtons","Other"] },
+      options:["Samsung","LG","Sony","Hisense","TCL","Skyworth","Other"] },
     { id:"cf-condition", label:"Condition",    type:"select",
       options:["Brand New","Foreign Used","Local Used"] },
-    { id:"cf-screen",    label:"Screen Size (TVs)", type:"select",
-      options:["Not Applicable","24 inch","32 inch","40 inch","43 inch","50 inch","55 inch","65 inch","75 inch","Other"] },
+    { id:"cf-screen",    label:"Screen Size",  type:"select",
+      options:["24 inch","32 inch","40 inch","43 inch","50 inch","55 inch","65 inch","75 inch","Other"] },
+    { id:"cf-display",   label:"Display Type", type:"select",
+      options:["LED","OLED","QLED","Smart TV","Plasma"] },
     { id:"cf-warranty",  label:"Warranty",     type:"select",
       options:["No Warranty","Shop Warranty","Manufacturer Warranty"] },
+  ],
+
+  "electronics-Speaker / Sound System": [
+    { id:"cf-type",      label:"Type",         type:"select",
+      options:["Bluetooth Speaker","Home Theatre","Woofer / Subwoofer","Sound Bar","PA / DJ System","Car Speaker"] },
+    { id:"cf-brand",     label:"Brand",        type:"text", placeholder:"e.g. JBL, Sony, LG" },
+    { id:"cf-condition", label:"Condition",    type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
+    { id:"cf-power",     label:"Power Output (Watts)", type:"text", placeholder:"e.g. 500W" },
+  ],
+
+  "electronics-Camera": [
+    { id:"cf-type",      label:"Camera Type",  type:"select",
+      options:["DSLR","Mirrorless","Point & Shoot","Action Camera","CCTV / Security Camera","Drone Camera"] },
+    { id:"cf-brand",     label:"Brand",        type:"select",
+      options:["Canon","Nikon","Sony","GoPro","Fujifilm","Other"] },
+    { id:"cf-condition", label:"Condition",    type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
+    { id:"cf-accessories",label:"Accessories Included", type:"text", placeholder:"e.g. Tripod, extra lens, bag" },
+  ],
+
+  "electronics-Decoder / DSTV": [
+    { id:"cf-provider",  label:"Provider",     type:"select",
+      options:["DSTV","GOtv","StarTimes","Zuku","Other"] },
+    { id:"cf-condition", label:"Condition",    type:"select",
+      options:["Brand New","Used — Working"] },
+    { id:"cf-dish",      label:"Dish Included?", type:"select",
+      options:["Yes","No"] },
+  ],
+
+  "electronics-DVD Player / Radio": [
+    { id:"cf-type",      label:"Type",         type:"select",
+      options:["DVD Player","Radio / Boombox","Home Stereo System"] },
+    { id:"cf-condition", label:"Condition",    type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
+  ],
+
+  "electronics-Generator": [
+    { id:"cf-power",     label:"Power Output", type:"select",
+      options:["1KVA","2KVA","3KVA","5KVA","7.5KVA","10KVA","Above 10KVA"] },
+    { id:"cf-fuel",      label:"Fuel Type",    type:"select",
+      options:["Petrol","Diesel"] },
+    { id:"cf-brand",     label:"Brand",        type:"text", placeholder:"e.g. Kipor, Honda, Cummins" },
+    { id:"cf-condition", label:"Condition",    type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
+  ],
+
+  "electronics-Solar Equipment": [
+    { id:"cf-type",      label:"Item Type",    type:"select",
+      options:["Solar Panel","Solar Battery","Solar Inverter","Complete Solar Kit","Solar Charge Controller"] },
+    { id:"cf-capacity",  label:"Capacity",     type:"text", placeholder:"e.g. 200W panel, 200Ah battery" },
+    { id:"cf-condition", label:"Condition",    type:"select",
+      options:["Brand New","Used — Working"] },
+  ],
+
+  "electronics-Air Conditioner": [
+    { id:"cf-capacity",  label:"Capacity (BTU/HP)", type:"select",
+      options:["1HP","1.5HP","2HP","2.5HP","3HP","Above 3HP"] },
+    { id:"cf-brand",     label:"Brand",        type:"text", placeholder:"e.g. LG, Samsung, Hisense" },
+    { id:"cf-condition", label:"Condition",    type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
+    { id:"cf-installation", label:"Installation Included?", type:"select",
+      options:["Yes","No"] },
+  ],
+
+  "electronics-Fan": [
+    { id:"cf-type",      label:"Fan Type",     type:"select",
+      options:["Standing Fan","Ceiling Fan","Table Fan","Wall Fan","Rechargeable Fan"] },
+    { id:"cf-condition", label:"Condition",    type:"select",
+      options:["Brand New","Used"] },
+  ],
+
+  "electronics-Iron Box / Kitchen Appliance": [
+    { id:"cf-type",      label:"Item Type",    type:"select",
+      options:["Iron Box","Blender","Kettle","Toaster","Microwave","Rice Cooker","Other"] },
+    { id:"cf-brand",     label:"Brand",        type:"text", placeholder:"e.g. Saachi, Ramtons" },
+    { id:"cf-condition", label:"Condition",    type:"select",
+      options:["Brand New","Used"] },
   ],
 
   fashion: [
@@ -522,30 +605,147 @@ const CATEGORY_FIELDS = {
   ],
 
   gaming: [
-    { id:"cf-platform",  label:"Platform",     type:"select",
-      options:["PlayStation 5 (PS5)","PlayStation 4 (PS4)","PlayStation 3 (PS3)","Xbox Series X/S","Xbox One","Nintendo Switch","PC Gaming","Mobile Gaming","Retro Console","Other"] },
-    { id:"cf-type",      label:"Item Type",    type:"select",
-      options:["Console (Full Set)","Console Only","Controller / Gamepad","Game CD / Cartridge","Gaming Chair","Gaming Headset","Gaming Monitor","Gaming Keyboard & Mouse","VR Headset","Other"] },
-    { id:"cf-condition", label:"Condition",    type:"select",
+    { id:"cf-gaming-type", label:"Item Category", type:"select",
+      options:["Console (Full Set or Console Only)","Games (CD / Cartridge / Digital)","Controllers & Accessories","Gaming Chair","Gaming Monitor & Headset","VR Headset"] },
+  ],
+
+  "gaming-Console (Full Set or Console Only)": [
+    { id:"cf-platform",    label:"Platform",      type:"select",
+      options:["PlayStation 5 (PS5)","PlayStation 4 (PS4)","PlayStation 3 (PS3)","Xbox Series X/S","Xbox One","Nintendo Switch","Retro Console","Other"] },
+    { id:"cf-condition",   label:"Condition",     type:"select",
       options:["Brand New","Foreign Used","Local Used"] },
-    { id:"cf-storage",   label:"Console Storage", type:"select",
-      options:["Not Applicable","256GB","512GB","1TB","2TB","Other"] },
+    { id:"cf-storage",     label:"Storage",       type:"select",
+      options:["256GB","500GB","512GB","1TB","2TB","Other"] },
     { id:"cf-controllers", label:"Controllers Included", type:"select",
-      options:["Not Applicable","1 Controller","2 Controllers","No Controller"] },
-    { id:"cf-warranty",  label:"Warranty",     type:"select",
+      options:["No Controller","1 Controller","2 Controllers","3+ Controllers"] },
+    { id:"cf-warranty",    label:"Warranty",      type:"select",
       options:["No Warranty","Shop Warranty","Manufacturer Warranty"] },
   ],
 
-  home: [
-    { id:"cf-type",      label:"Item Type",    type:"select",
-      options:["Sofa / Couch","Bed Frame","Mattress","Dining Table & Chairs","Wardrobe / Closet","Fridge / Refrigerator","Freezer","Washing Machine","Microwave","Gas Cooker / Stove","Water Dispenser","Curtains","Carpet / Rug","Wall Decor","Lighting / Lamps","Kitchenware","Bedding / Linen","Baby Furniture","Office Desk & Chair","Other"] },
+  "gaming-Games (CD / Cartridge / Digital)": [
+    { id:"cf-platform",  label:"Platform",     type:"select",
+      options:["PlayStation 5","PlayStation 4","Xbox Series X/S","Xbox One","Nintendo Switch","PC Gaming"] },
+    { id:"cf-title",     label:"Game Title",   type:"text", placeholder:"e.g. FIFA 26, GTA V, Call of Duty" },
     { id:"cf-condition", label:"Condition",    type:"select",
-      options:["Brand New","Foreign Used","Local Used","Refurbished"] },
-    { id:"cf-brand",     label:"Brand (optional)", type:"text", placeholder:"e.g. Mika, Ramtons, Ariston, IKEA" },
-    { id:"cf-material",  label:"Material",     type:"select",
-      options:["Wood","Metal","Plastic","Glass","Fabric / Upholstery","Foam","Mixed","Other"] },
-    { id:"cf-color",     label:"Color",        type:"text",  placeholder:"e.g. Brown, White, Grey" },
-    { id:"cf-dimensions",label:"Size / Dimensions", type:"text", placeholder:"e.g. 6x6 bed, 3-seater, 50 litres" },
+      options:["Brand New (Sealed)","Used — Good Condition"] },
+    { id:"cf-format",    label:"Format",       type:"select",
+      options:["Physical Disc / Cartridge","Digital Code"] },
+  ],
+
+  "gaming-Controllers & Accessories": [
+    { id:"cf-type",      label:"Item Type",    type:"select",
+      options:["Controller / Gamepad","Charging Dock","Gaming Mouse","Gaming Keyboard","Steering Wheel","Memory Card / Storage"] },
+    { id:"cf-platform",  label:"Compatible Platform", type:"select",
+      options:["PlayStation","Xbox","Nintendo Switch","PC","Universal / Multi-Platform"] },
+    { id:"cf-condition", label:"Condition",    type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
+  ],
+
+  "gaming-Gaming Chair": [
+    { id:"cf-brand",     label:"Brand",        type:"text", placeholder:"e.g. Secretlab, No Brand" },
+    { id:"cf-condition", label:"Condition",    type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
+    { id:"cf-color",     label:"Color",        type:"text", placeholder:"e.g. Black/Red" },
+  ],
+
+  "gaming-Gaming Monitor & Headset": [
+    { id:"cf-type",      label:"Item Type",    type:"select",
+      options:["Gaming Monitor","Gaming Headset","Both"] },
+    { id:"cf-size",      label:"Monitor Size (if applicable)", type:"select",
+      options:["Not Applicable","22 inch","24 inch","27 inch","32 inch","Other"] },
+    { id:"cf-refresh",   label:"Refresh Rate (if monitor)", type:"select",
+      options:["Not Applicable","60Hz","75Hz","120Hz","144Hz","240Hz+"] },
+    { id:"cf-condition", label:"Condition",    type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
+  ],
+
+  "gaming-VR Headset": [
+    { id:"cf-brand",     label:"Brand",        type:"select",
+      options:["Meta Quest","PlayStation VR","HTC Vive","Other"] },
+    { id:"cf-condition", label:"Condition",    type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
+    { id:"cf-accessories",label:"Accessories Included", type:"text", placeholder:"e.g. Controllers, charging cable" },
+  ],
+
+  home: [
+    { id:"cf-home-type", label:"Item Category", type:"select",
+      options:["Sofa / Living Room Furniture","Bed / Bedroom Furniture","Dining & Kitchen Furniture","Fridge / Freezer","Washing Machine","Curtains & Carpets","Wall Decor & Lighting","Kitchenware & Utensils","Office Furniture"] },
+  ],
+
+  "home-Sofa / Living Room Furniture": [
+    { id:"cf-type",      label:"Item Type",   type:"select",
+      options:["Sofa Set","Single Sofa Chair","Coffee Table","TV Stand","Bookshelf","Other"] },
+    { id:"cf-material",  label:"Material",    type:"select",
+      options:["Fabric","Leather","Wood","Mixed"] },
+    { id:"cf-seats",     label:"Seater",      type:"select",
+      options:["1 Seater","2 Seater","3 Seater","5+ Seater Set"] },
+    { id:"cf-condition", label:"Condition",   type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
+  ],
+
+  "home-Bed / Bedroom Furniture": [
+    { id:"cf-type",      label:"Item Type",   type:"select",
+      options:["Bed Frame","Mattress","Wardrobe","Dressing Table","Bedside Table"] },
+    { id:"cf-size",      label:"Size",        type:"select",
+      options:["3x6","4x6","5x6","6x6","Queen","King","Not Applicable"] },
+    { id:"cf-condition", label:"Condition",   type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
+  ],
+
+  "home-Dining & Kitchen Furniture": [
+    { id:"cf-type",      label:"Item Type",   type:"select",
+      options:["Dining Table & Chairs","Kitchen Cabinet","Kitchen Trolley","Bar Stool"] },
+    { id:"cf-seats",     label:"Seats (if dining set)", type:"select",
+      options:["4 Seater","6 Seater","8 Seater","Not Applicable"] },
+    { id:"cf-condition", label:"Condition",   type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
+  ],
+
+  "home-Fridge / Freezer": [
+    { id:"cf-type",      label:"Type",        type:"select",
+      options:["Single Door Fridge","Double Door Fridge","Chest Freezer","Upright Freezer","Mini Fridge"] },
+    { id:"cf-capacity",  label:"Capacity (Litres)", type:"text", placeholder:"e.g. 200L" },
+    { id:"cf-brand",     label:"Brand",       type:"text", placeholder:"e.g. Hisense, Samsung" },
+    { id:"cf-condition", label:"Condition",   type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
+  ],
+
+  "home-Washing Machine": [
+    { id:"cf-type",      label:"Type",        type:"select",
+      options:["Front Load","Top Load","Semi-Automatic","Manual"] },
+    { id:"cf-capacity",  label:"Capacity (kg)", type:"select",
+      options:["5kg","6kg","7kg","8kg","Above 8kg"] },
+    { id:"cf-condition", label:"Condition",   type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
+  ],
+
+  "home-Curtains & Carpets": [
+    { id:"cf-type",      label:"Item Type",   type:"select",
+      options:["Curtains","Carpet / Rug","Door Mat","Blinds"] },
+    { id:"cf-size",      label:"Size",        type:"text", placeholder:"e.g. 6x9ft, Window size" },
+    { id:"cf-condition", label:"Condition",   type:"select",
+      options:["Brand New","Used"] },
+  ],
+
+  "home-Wall Decor & Lighting": [
+    { id:"cf-type",      label:"Item Type",   type:"select",
+      options:["Wall Art / Frames","Mirror","Chandelier","Lamp","LED Lights","Clock"] },
+    { id:"cf-condition", label:"Condition",   type:"select",
+      options:["Brand New","Used"] },
+  ],
+
+  "home-Kitchenware & Utensils": [
+    { id:"cf-type",      label:"Item Type",   type:"select",
+      options:["Cookware Set","Cutlery Set","Plates & Dishes","Storage Containers","Gas Cooker","Other"] },
+    { id:"cf-condition", label:"Condition",   type:"select",
+      options:["Brand New","Used"] },
+  ],
+
+  "home-Office Furniture": [
+    { id:"cf-type",      label:"Item Type",   type:"select",
+      options:["Office Desk","Office Chair","Filing Cabinet","Bookshelf","Conference Table"] },
+    { id:"cf-condition", label:"Condition",   type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
   ],
 
 accessories: [
@@ -764,81 +964,165 @@ accessories: [
   ],
 
   "repair-construction": [
-    { id:"cf-service-type",  label:"What Needs to Be Repaired / Built?", type:"select",
-      options:[
-        "Phone Repair","Computer / Laptop Repair","TV / Electronics Repair",
-        "Vehicle / Car Repair","Motorcycle Repair","Generator Repair",
-        "Fridge / AC Repair","Washing Machine Repair","Plumbing Repair",
-        "Electrical Wiring Repair","Roofing Repair","Building Construction",
-        "House Renovation","Painting & Finishing","Tiling & Flooring",
-        "Welding & Fabrication","Furniture Repair","Shoe Repair",
-        "Watch / Jewellery Repair","Solar System Installation/Repair",
-        "Borehole Repair","Other"
-      ]
-    },
-    { id:"cf-work-type",     label:"Type of Work",        type:"select",
-      options:["Repair / Fix Existing","New Construction / Installation","Maintenance / Servicing","Renovation / Upgrade"]
-    },
-    { id:"cf-experience",    label:"Years of Experience",  type:"select",
-      options:["Less than 1 year","1–2 years","3–5 years","5–10 years","10+ years"]
-    },
-    { id:"cf-pricing-type",  label:"Pricing Type",         type:"select",
-      options:["Fixed Price","Per Item / Job","Hourly Rate","Per Square Meter","Quote on Inspection"]
-    },
-    { id:"cf-service-mode",  label:"Service Location",     type:"select",
-      options:["I come to you (on-site)","Drop off at my workshop","Both options available"]
-    },
-    { id:"cf-warranty",      label:"Warranty on Work",     type:"select",
-      options:["No Warranty","7 Days Warranty","30 Days Warranty","90 Days Warranty","1 Year Warranty"]
-    },
-    { id:"cf-area-covered",  label:"Area Covered",         type:"select",
-      options:["Kampala only","Kampala & Wakiso","Greater Kampala","Central Uganda","All Uganda"]
-    },
-    { id:"cf-tools",         label:"Tools / Equipment Owned", type:"text",
-      placeholder:"e.g. Full toolkit, Welding machine, Diagnostic scanner"
-    },
-    { id:"cf-negotiable",    label:"Price Negotiable?",    type:"select",
-      options:["Yes, open to negotiation","No, fixed price"]
+    { id:"cf-repair-type", label:"What Needs Repair / Construction?", type:"select",
+      options:["Electronics & Gadget Repair","Vehicle & Engine Repair","Home Appliance Repair","Building & Construction Work","Plumbing & Electrical Work","Furniture & Small Item Repair"]
     },
   ],
 
+  "repair-Electronics & Gadget Repair": [
+    { id:"cf-item",        label:"Item to Repair", type:"select",
+      options:["Phone Repair","Computer / Laptop Repair","TV / Screen Repair","Camera Repair","Other Electronics"] },
+    { id:"cf-experience",  label:"Years of Experience", type:"select",
+      options:["Less than 1 year","1–2 years","3–5 years","5–10 years","10+ years"] },
+    { id:"cf-pricing-type",label:"Pricing Type",  type:"select",
+      options:["Fixed Price","Per Item / Job","Quote on Inspection"] },
+    { id:"cf-warranty",    label:"Warranty on Work", type:"select",
+      options:["No Warranty","7 Days","30 Days","90 Days"] },
+    { id:"cf-service-mode",label:"Service Location", type:"select",
+      options:["Drop off at my shop","I come to you","Both options available"] },
+  ],
 
-  property: [
-    { id:"cf-listing-type",  label:"Listing Type",          type:"select",
-      options:["For Sale","For Rent","For Lease","Land for Sale","Land for Lease"]
+  "repair-Vehicle & Engine Repair": [
+    { id:"cf-item",        label:"Vehicle Type Serviced", type:"select",
+      options:["Cars","Motorcycles / Boda Boda","Trucks / Heavy Vehicles","All Vehicle Types"] },
+    { id:"cf-specialty",   label:"Specialty",     type:"select",
+      options:["General Mechanic","Engine Specialist","Auto Electrician","Panel Beating & Spray","Tyre & Wheel Alignment","Car Wash & Detailing"] },
+    { id:"cf-experience",  label:"Years of Experience", type:"select",
+      options:["Less than 1 year","1–2 years","3–5 years","5–10 years","10+ years"] },
+    { id:"cf-pricing-type",label:"Pricing Type",  type:"select",
+      options:["Fixed Price","Quote on Inspection","Hourly Rate"] },
+    { id:"cf-area-covered",label:"Area Covered",  type:"select",
+      options:["Kampala only","Kampala & Wakiso","Greater Kampala","All Uganda"] },
+  ],
+
+  "repair-Home Appliance Repair": [
+    { id:"cf-item",        label:"Appliance Type", type:"select",
+      options:["Fridge / Freezer Repair","Washing Machine Repair","AC Repair","Generator Repair","Gas Cooker Repair","Microwave / Small Appliance Repair"] },
+    { id:"cf-experience",  label:"Years of Experience", type:"select",
+      options:["Less than 1 year","1–2 years","3–5 years","5+ years"] },
+    { id:"cf-pricing-type",label:"Pricing Type",  type:"select",
+      options:["Fixed Price","Quote on Inspection"] },
+    { id:"cf-warranty",    label:"Warranty on Work", type:"select",
+      options:["No Warranty","30 Days","90 Days"] },
+  ],
+
+  "repair-Building & Construction Work": [
+    { id:"cf-item",        label:"Type of Work",  type:"select",
+      options:["New Building Construction","House Renovation","Roofing","Tiling & Flooring","Painting & Finishing","Welding & Fabrication","Borehole Drilling"] },
+    { id:"cf-experience",  label:"Years of Experience", type:"select",
+      options:["Less than 1 year","1–2 years","3–5 years","5–10 years","10+ years"] },
+    { id:"cf-pricing-type",label:"Pricing Type",  type:"select",
+      options:["Per Square Meter","Fixed Price","Quote on Inspection"] },
+    { id:"cf-team-size",   label:"Working As",    type:"select",
+      options:["Individual / Solo","Small Team (2–5)","Construction Company"] },
+    { id:"cf-area-covered",label:"Area Covered",  type:"select",
+      options:["Kampala only","Greater Kampala","All Uganda"] },
+  ],
+
+  "repair-Plumbing & Electrical Work": [
+    { id:"cf-item",        label:"Type of Work",  type:"select",
+      options:["Plumbing Repair / Installation","Electrical Wiring","Solar Installation/Repair","CCTV Installation"] },
+    { id:"cf-experience",  label:"Years of Experience", type:"select",
+      options:["Less than 1 year","1–2 years","3–5 years","5+ years"] },
+    { id:"cf-pricing-type",label:"Pricing Type",  type:"select",
+      options:["Fixed Price","Quote on Inspection","Hourly Rate"] },
+    { id:"cf-warranty",    label:"Warranty on Work", type:"select",
+      options:["No Warranty","30 Days","90 Days","1 Year"] },
+  ],
+
+  "repair-Furniture & Small Item Repair": [
+    { id:"cf-item",        label:"Item Type",     type:"select",
+      options:["Furniture Repair","Shoe Repair / Cobbling","Watch / Jewellery Repair","Bag Repair","Other"] },
+    { id:"cf-pricing-type",label:"Pricing Type",  type:"select",
+      options:["Fixed Price","Quote on Inspection"] },
+    { id:"cf-service-mode",label:"Service Location", type:"select",
+      options:["Drop off at my shop","I come to you","Both options available"] },
+  ],
+
+
+   property: [
+    { id:"cf-property-type", label:"Property Type", type:"select",
+      options:["Houses & Apartments for Rent","Houses & Apartments for Sale","Land for Sale","Land for Rent / Lease","Office & Commercial Space","Hostel / Student Housing","Guest House / Short-Stay"]
     },
-    { id:"cf-property-type", label:"Property Type",         type:"select",
-      options:[
-        "Apartment / Flat","Bungalow","Maisonette","Single Room (Self-Contained)",
-        "Single Room (Shared)","Mansion / Villa","Office Space","Shop / Commercial Space",
-        "Warehouse","Land — Residential","Land — Commercial","Land — Agricultural",
-        "Hostel / Student Housing","Guest House","Other"
-      ]
-    },
-    { id:"cf-bedrooms",      label:"Bedrooms",              type:"select",
-      options:["Studio / Bedsitter","1 Bedroom","2 Bedrooms","3 Bedrooms","4 Bedrooms","5+ Bedrooms","Not Applicable"]
-    },
-    { id:"cf-bathrooms",     label:"Bathrooms",             type:"select",
-      options:["1","2","3","4+","Shared / Communal","Not Applicable"]
-    },
-    { id:"cf-size",          label:"Size",                  type:"text",
-      placeholder:"e.g. 100x100ft plot, 3 acres, 1200 sq.ft"
-    },
-    { id:"cf-furnishing",    label:"Furnishing",            type:"select",
-      options:["Fully Furnished","Semi Furnished","Unfurnished","Not Applicable"]
-    },
-    { id:"cf-condition",     label:"Condition",             type:"select",
-      options:["Brand New","Newly Renovated","Good Condition","Needs Renovation","Under Construction (Shell)"]
-    },
-    { id:"cf-title",         label:"Title / Ownership Document", type:"select",
-      options:["Freehold Title","Leasehold Title","Mailo Land","Kibanja","Agreement Only","Processing / Pending"]
-    },
-    { id:"cf-amenities",     label:"Amenities",             type:"text",
-      placeholder:"e.g. Borehole, Electricity, Tarmac Access, Security, Parking"
-    },
-    { id:"cf-payment-terms", label:"Payment Terms",         type:"select",
-      options:["Full Payment Only","Installments Accepted","Mortgage Friendly","Negotiable"]
-    },
+  ],
+
+  "property-Houses & Apartments for Rent": [
+    { id:"cf-house-type",  label:"House Type",   type:"select",
+      options:["Apartment / Flat","Bungalow","Maisonette","Single Room (Self-Contained)","Single Room (Shared)","Mansion / Villa"] },
+    { id:"cf-bedrooms",    label:"Bedrooms",     type:"select",
+      options:["Studio / Bedsitter","1 Bedroom","2 Bedrooms","3 Bedrooms","4 Bedrooms","5+ Bedrooms"] },
+    { id:"cf-bathrooms",   label:"Bathrooms",    type:"select",
+      options:["1","2","3","4+","Shared / Communal"] },
+    { id:"cf-furnishing",  label:"Furnishing",   type:"select",
+      options:["Fully Furnished","Semi Furnished","Unfurnished"] },
+    { id:"cf-rent-period",label:"Rent Period",   type:"select",
+      options:["Monthly","Quarterly","Yearly"] },
+    { id:"cf-amenities",   label:"Amenities",    type:"text", placeholder:"e.g. Borehole, Electricity, Security, Parking" },
+  ],
+
+  "property-Houses & Apartments for Sale": [
+    { id:"cf-house-type",  label:"House Type",   type:"select",
+      options:["Bungalow","Maisonette","Apartment / Flat","Mansion / Villa","Townhouse"] },
+    { id:"cf-bedrooms",    label:"Bedrooms",     type:"select",
+      options:["1 Bedroom","2 Bedrooms","3 Bedrooms","4 Bedrooms","5+ Bedrooms"] },
+    { id:"cf-bathrooms",   label:"Bathrooms",    type:"select",
+      options:["1","2","3","4+"] },
+    { id:"cf-size",        label:"Plot Size",    type:"text", placeholder:"e.g. 50x100ft, 0.25 acres" },
+    { id:"cf-condition",   label:"Condition",    type:"select",
+      options:["Brand New","Newly Renovated","Good Condition","Needs Renovation","Under Construction (Shell)"] },
+    { id:"cf-title",       label:"Title / Ownership Document", type:"select",
+      options:["Freehold Title","Leasehold Title","Mailo Land","Kibanja","Agreement Only","Processing / Pending"] },
+    { id:"cf-payment-terms",label:"Payment Terms", type:"select",
+      options:["Full Payment Only","Installments Accepted","Mortgage Friendly","Negotiable"] },
+  ],
+
+  "property-Land for Sale": [
+    { id:"cf-land-type",   label:"Land Type",    type:"select",
+      options:["Residential Plot","Commercial Plot","Agricultural Land","Industrial Land"] },
+    { id:"cf-size",        label:"Size",         type:"text", placeholder:"e.g. 50x100ft, 5 acres" },
+    { id:"cf-title",       label:"Title / Ownership Document", type:"select",
+      options:["Freehold Title","Leasehold Title","Mailo Land","Kibanja","Agreement Only","Processing / Pending"] },
+    { id:"cf-access",      label:"Road Access",  type:"select",
+      options:["Tarmac Access","Murram Road Access","No Direct Road Access"] },
+    { id:"cf-amenities",   label:"Nearby Amenities", type:"text", placeholder:"e.g. Near school, market, water source" },
+    { id:"cf-payment-terms",label:"Payment Terms", type:"select",
+      options:["Full Payment Only","Installments Accepted","Negotiable"] },
+  ],
+
+  "property-Land for Rent / Lease": [
+    { id:"cf-land-type",   label:"Land Type",    type:"select",
+      options:["Residential Plot","Commercial Plot","Agricultural Land","Event Grounds"] },
+    { id:"cf-size",        label:"Size",         type:"text", placeholder:"e.g. 1 acre, 100x100ft" },
+    { id:"cf-lease-period",label:"Lease Period",  type:"select",
+      options:["Monthly","Yearly","5 Years","10+ Years","Negotiable"] },
+  ],
+
+  "property-Office & Commercial Space": [
+    { id:"cf-space-type",  label:"Space Type",   type:"select",
+      options:["Office Space","Shop / Retail Space","Warehouse","Showroom","Co-working Space"] },
+    { id:"cf-size",        label:"Size (sq.ft)", type:"text", placeholder:"e.g. 1200 sq.ft" },
+    { id:"cf-furnishing",  label:"Furnishing",   type:"select",
+      options:["Fully Furnished","Semi Furnished","Unfurnished / Shell"] },
+    { id:"cf-rent-period", label:"Rent Period",  type:"select",
+      options:["Monthly","Yearly"] },
+    { id:"cf-amenities",   label:"Amenities",    type:"text", placeholder:"e.g. Parking, Security, Generator backup" },
+  ],
+
+  "property-Hostel / Student Housing": [
+    { id:"cf-room-type",   label:"Room Type",    type:"select",
+      options:["Single Room","Double Sharing","Triple Sharing","Self-Contained"] },
+    { id:"cf-nearby",      label:"Nearby Institution", type:"text", placeholder:"e.g. Makerere University, MUBS" },
+    { id:"cf-rent-period", label:"Rent Period",  type:"select",
+      options:["Per Semester","Per Year","Monthly"] },
+    { id:"cf-amenities",   label:"Amenities",    type:"text", placeholder:"e.g. WiFi, Water, Security, Reading room" },
+  ],
+
+  "property-Guest House / Short-Stay": [
+    { id:"cf-room-type",   label:"Room Type",    type:"select",
+      options:["Single Room","Double Room","Self-Contained Suite","Whole House / Apartment"] },
+    { id:"cf-pricing-type",label:"Pricing",      type:"select",
+      options:["Per Night","Per Week","Per Month"] },
+    { id:"cf-amenities",   label:"Amenities",    type:"text", placeholder:"e.g. WiFi, AC, Breakfast, Parking" },
   ],
 
     "leisure-activities": [
@@ -928,107 +1212,391 @@ accessories: [
 
 
   animals: [
-    { id:"cf-type",       label:"Animal Type",      type:"select",
-      options:["Dog","Cat","Cow / Bull","Goat","Sheep","Pig","Rabbit","Chicken / Poultry","Duck","Turkey","Parrot / Bird","Fish (Aquarium)","Horse","Donkey","Other"] },
-    { id:"cf-breed",      label:"Breed / Variety",  type:"text",  placeholder:"e.g. German Shepherd, Friesian Cow, Boer Goat" },
-    { id:"cf-age",        label:"Age",              type:"select",
-      options:["Newborn / Chick","1–3 months","3–6 months","6–12 months","1–2 years","2–5 years","5+ years"] },
-    { id:"cf-gender",     label:"Gender",           type:"select",
-      options:["Male","Female","Pair (Male & Female)","Mixed Group"] },
-    { id:"cf-vaccinated", label:"Vaccinated?",      type:"select",
-      options:["Yes – fully vaccinated","Partially vaccinated","Not vaccinated","Not applicable"] },
-    { id:"cf-purpose",    label:"Purpose",          type:"select",
-      options:["Pet / Companion","Breeding","Dairy (Milk)","Meat","Work / Farm","Show / Exhibition","Other"] },
-    { id:"cf-quantity",   label:"Quantity",         type:"text",  placeholder:"e.g. 1 animal, 10 chicks, 1 pair" },
+    { id:"cf-animal-type", label:"Animal Category", type:"select",
+      options:["Dogs & Cats (Pets)","Livestock (Cattle, Goats, Sheep, Pigs)","Poultry (Chicken, Duck, Turkey)","Birds (Parrots, Pigeons)","Fish & Aquarium","Horses & Donkeys"]
+    },
+  ],
+
+  "animals-Dogs & Cats (Pets)": [
+    { id:"cf-type",      label:"Animal",         type:"select",
+      options:["Dog","Cat"] },
+    { id:"cf-breed",     label:"Breed",          type:"text", placeholder:"e.g. German Shepherd, Poodle, Persian" },
+    { id:"cf-age",       label:"Age",            type:"select",
+      options:["Puppy/Kitten (0–6 months)","6–12 months","1–2 years","2–5 years","5+ years"] },
+    { id:"cf-gender",    label:"Gender",         type:"select",
+      options:["Male","Female"] },
+    { id:"cf-vaccinated",label:"Vaccinated?",    type:"select",
+      options:["Yes – fully vaccinated","Partially vaccinated","Not vaccinated"] },
+    { id:"cf-purpose",   label:"Purpose",        type:"select",
+      options:["Pet / Companion","Breeding","Guard Dog","Show / Exhibition"] },
+  ],
+
+  "animals-Livestock (Cattle, Goats, Sheep, Pigs)": [
+    { id:"cf-type",      label:"Animal",         type:"select",
+      options:["Cow / Bull","Goat","Sheep","Pig"] },
+    { id:"cf-breed",     label:"Breed",          type:"text", placeholder:"e.g. Friesian, Boer Goat" },
+    { id:"cf-age",       label:"Age",            type:"select",
+      options:["Newborn","3–6 months","6–12 months","1–2 years","2+ years"] },
+    { id:"cf-gender",    label:"Gender",         type:"select",
+      options:["Male","Female","Pair","Mixed Group / Herd"] },
+    { id:"cf-purpose",   label:"Purpose",        type:"select",
+      options:["Dairy (Milk)","Meat","Breeding","Work / Farm"] },
+    { id:"cf-quantity",  label:"Quantity",       type:"text", placeholder:"e.g. 1 animal, 5 head of cattle" },
+  ],
+
+  "animals-Poultry (Chicken, Duck, Turkey)": [
+    { id:"cf-type",      label:"Bird Type",      type:"select",
+      options:["Chicken (Layers)","Chicken (Broilers)","Local / Kuroiler Chicken","Duck","Turkey"] },
+    { id:"cf-age",       label:"Age",            type:"select",
+      options:["Day-Old Chicks","1–4 weeks","1–3 months","Mature / Laying"] },
+    { id:"cf-vaccinated",label:"Vaccinated?",    type:"select",
+      options:["Yes","No","Not Applicable"] },
+    { id:"cf-quantity",  label:"Quantity",       type:"text", placeholder:"e.g. 50 chicks, 10 layers" },
+  ],
+
+  "animals-Birds (Parrots, Pigeons)": [
+    { id:"cf-type",      label:"Bird Type",      type:"select",
+      options:["Parrot","Pigeon","Lovebird","Canary","Other"] },
+    { id:"cf-age",       label:"Age",            type:"select",
+      options:["Young","Adult"] },
+    { id:"cf-quantity",  label:"Quantity",       type:"text", placeholder:"e.g. 1 bird, pair" },
+  ],
+
+  "animals-Fish & Aquarium": [
+    { id:"cf-type",      label:"Type",           type:"select",
+      options:["Aquarium Fish (Ornamental)","Tilapia / Farm Fish","Catfish","Complete Aquarium Set-up"] },
+    { id:"cf-quantity",  label:"Quantity",       type:"text", placeholder:"e.g. 10 fish, 1 tank" },
+  ],
+
+  "animals-Horses & Donkeys": [
+    { id:"cf-type",      label:"Animal",         type:"select",
+      options:["Horse","Donkey"] },
+    { id:"cf-age",       label:"Age",            type:"select",
+      options:["Young (Under 2 years)","2–5 years","5+ years"] },
+    { id:"cf-purpose",   label:"Purpose",        type:"select",
+      options:["Riding","Work / Farm","Breeding"] },
   ],
 
   babies: [
-    { id:"cf-type",       label:"Item Type",        type:"select",
-      options:["Baby Clothes","Baby Shoes","Diapers / Nappies","Baby Food / Formula","Pram / Stroller","Baby Cot / Crib","Car Seat","Baby Monitor","Baby Carrier","Breast Pump","Feeding Bottles","Baby Toys","Kids Books","Kids Bicycle","Kids Clothes (2–12 yrs)","Kids Shoes (2–12 yrs)","School Bag","Kids Furniture","Other"] },
-    { id:"cf-condition",  label:"Condition",        type:"select",
-      options:["Brand New","Slightly Used","Used – Good Condition","Used – Fair Condition"] },
-    { id:"cf-age-group",  label:"Suitable Age",     type:"select",
-      options:["0–3 months","3–6 months","6–12 months","1–2 years","2–3 years","3–5 years","5–8 years","8–12 years","All ages"] },
-    { id:"cf-gender",     label:"For",              type:"select",
+    { id:"cf-baby-type", label:"Item Category", type:"select",
+      options:["Baby Clothing & Shoes","Baby Gear (Pram, Cot, Car Seat)","Feeding & Nursing","Diapers & Baby Care","Baby Toys & Books","Kids Clothing & Shoes (2-12yrs)","Kids Furniture & School Items"]
+    },
+  ],
+
+  "babies-Baby Clothing & Shoes": [
+    { id:"cf-type",      label:"Item Type",    type:"select",
+      options:["Baby Clothes","Baby Shoes","Baby Hats / Accessories"] },
+    { id:"cf-condition", label:"Condition",    type:"select",
+      options:["Brand New","Slightly Used","Used – Good Condition"] },
+    { id:"cf-gender",    label:"For",          type:"select",
       options:["Boys","Girls","Unisex"] },
-    { id:"cf-brand",      label:"Brand (optional)", type:"text",  placeholder:"e.g. Chicco, Graco, Pampers, Local Brand" },
-    { id:"cf-size",       label:"Size / Clothing Size", type:"select",
-      options:["Newborn","0–3M","3–6M","6–9M","9–12M","12–18M","18–24M","2T","3T","4T","5T","6","8","10","12","14","Other"] },
+    { id:"cf-size",      label:"Size",         type:"select",
+      options:["Newborn","0–3M","3–6M","6–9M","9–12M","12–18M","18–24M","2T","3T"] },
+  ],
+
+  "babies-Baby Gear (Pram, Cot, Car Seat)": [
+    { id:"cf-type",      label:"Item Type",    type:"select",
+      options:["Pram / Stroller","Baby Cot / Crib","Car Seat","Baby Carrier / Sling","Baby Bath Tub","Baby Monitor"] },
+    { id:"cf-condition", label:"Condition",    type:"select",
+      options:["Brand New","Slightly Used","Used – Good Condition"] },
+    { id:"cf-brand",     label:"Brand",        type:"text", placeholder:"e.g. Chicco, Graco" },
+  ],
+
+  "babies-Feeding & Nursing": [
+    { id:"cf-type",      label:"Item Type",    type:"select",
+      options:["Feeding Bottles","Breast Pump","High Chair","Baby Food / Formula","Sterilizer","Bibs"] },
+    { id:"cf-condition", label:"Condition",    type:"select",
+      options:["Brand New (Sealed)","Used – Sanitized"] },
+  ],
+
+  "babies-Diapers & Baby Care": [
+    { id:"cf-type",      label:"Item Type",    type:"select",
+      options:["Diapers / Nappies","Baby Wipes","Baby Lotion / Powder","Baby Bathing Products"] },
+    { id:"cf-size",      label:"Diaper Size (if applicable)", type:"select",
+      options:["Newborn","Size 1","Size 2","Size 3","Size 4","Size 5","Size 6","Not Applicable"] },
+    { id:"cf-quantity",  label:"Quantity",     type:"text", placeholder:"e.g. 1 pack, 50 pieces" },
+  ],
+
+  "babies-Baby Toys & Books": [
+    { id:"cf-type",      label:"Item Type",    type:"select",
+      options:["Baby Toys","Kids Books","Educational Toys","Soft Toys / Stuffed Animals"] },
+    { id:"cf-age-group", label:"Suitable Age", type:"select",
+      options:["0–1 years","1–3 years","3–5 years","5–8 years","8–12 years"] },
+    { id:"cf-condition", label:"Condition",    type:"select",
+      options:["Brand New","Used – Good Condition"] },
+  ],
+
+  "babies-Kids Clothing & Shoes (2-12yrs)": [
+    { id:"cf-type",      label:"Item Type",    type:"select",
+      options:["Kids Clothes","Kids Shoes","Kids Uniform"] },
+    { id:"cf-gender",    label:"For",          type:"select",
+      options:["Boys","Girls","Unisex"] },
+    { id:"cf-size",      label:"Size",         type:"select",
+      options:["2T","3T","4T","5T","6","8","10","12","14"] },
+    { id:"cf-condition", label:"Condition",    type:"select",
+      options:["Brand New","Used – Good Condition"] },
+  ],
+
+  "babies-Kids Furniture & School Items": [
+    { id:"cf-type",      label:"Item Type",    type:"select",
+      options:["Kids Bed / Furniture","Kids Bicycle","School Bag","School Books / Stationery","Study Desk"] },
+    { id:"cf-condition", label:"Condition",    type:"select",
+      options:["Brand New","Used – Good Condition"] },
   ],
 
   agriculture: [
-    { id:"cf-type",       label:"Product / Service Type", type:"select",
-      options:["Maize / Corn","Beans","Rice","Cassava","Sweet Potatoes","Matooke / Bananas","Coffee","Tea","Cotton","Groundnuts","Soybeans","Sunflower","Vegetables","Fruits","Fish (Farmed)","Cattle","Goats","Pigs","Poultry","Seeds","Fertilizer / Manure","Pesticides / Herbicides","Irrigation Equipment","Farm Tools","Tractor / Ploughing Service","Land for Farming","Other"] },
-    { id:"cf-condition",  label:"Condition / State",     type:"select",
-      options:["Fresh Harvest","Dried / Processed","Ready for Market","Seedlings / Young Plants","Brand New (Equipment)","Used (Equipment)"] },
-    { id:"cf-quantity",   label:"Quantity / Volume",     type:"text",  placeholder:"e.g. 2 tonnes, 50 bags (100kg each), 1 acre" },
-    { id:"cf-origin",     label:"Farm Location",         type:"select",
-      options:["Kampala Region","Eastern Uganda","Northern Uganda","Western Uganda","Central Uganda","Other"] },
-    { id:"cf-organic",    label:"Farming Method",        type:"select",
-      options:["Conventional","Organic / No Chemicals","Mixed","Not Applicable"] },
-    { id:"cf-delivery",   label:"Delivery Available?",   type:"select",
+    { id:"cf-agri-type", label:"Category", type:"select",
+      options:["Crops & Produce","Livestock & Poultry","Seeds, Fertilizer & Farm Inputs","Farm Equipment & Machinery","Land for Farming","Agricultural Services"]
+    },
+  ],
+
+  "agriculture-Crops & Produce": [
+    { id:"cf-type",      label:"Crop Type",      type:"select",
+      options:["Maize / Corn","Beans","Rice","Cassava","Sweet Potatoes","Matooke / Bananas","Coffee","Tea","Cotton","Groundnuts","Soybeans","Sunflower","Vegetables","Fruits","Other"] },
+    { id:"cf-condition", label:"State",          type:"select",
+      options:["Fresh Harvest","Dried / Processed","Ready for Market","Seedlings / Young Plants"] },
+    { id:"cf-quantity",  label:"Quantity",       type:"text", placeholder:"e.g. 2 tonnes, 50 bags (100kg each)" },
+    { id:"cf-organic",   label:"Farming Method", type:"select",
+      options:["Conventional","Organic / No Chemicals","Mixed"] },
+    { id:"cf-delivery",  label:"Delivery Available?", type:"select",
       options:["Yes – I can deliver","No – Buyer collects","Both options"] },
   ],
 
+  "agriculture-Livestock & Poultry": [
+    { id:"cf-type",      label:"Animal Type",    type:"select",
+      options:["Cattle","Goats","Pigs","Poultry / Chicken","Fish (Farmed)","Other"] },
+    { id:"cf-quantity",  label:"Quantity",       type:"text", placeholder:"e.g. 5 cows, 100 chicks" },
+    { id:"cf-purpose",   label:"Purpose",        type:"select",
+      options:["Dairy / Milk","Meat","Breeding","Eggs"] },
+    { id:"cf-delivery",  label:"Delivery Available?", type:"select",
+      options:["Yes – I can deliver","No – Buyer collects"] },
+  ],
+
+  "agriculture-Seeds, Fertilizer & Farm Inputs": [
+    { id:"cf-type",      label:"Input Type",     type:"select",
+      options:["Seeds / Seedlings","Fertilizer","Manure","Pesticides / Herbicides","Animal Feed"] },
+    { id:"cf-crop",      label:"For Crop / Use",  type:"text", placeholder:"e.g. Maize seeds, Coffee fertilizer" },
+    { id:"cf-quantity",  label:"Quantity",       type:"text", placeholder:"e.g. 1 bag (50kg), 1 kg" },
+  ],
+
+  "agriculture-Farm Equipment & Machinery": [
+    { id:"cf-type",      label:"Equipment Type", type:"select",
+      options:["Tractor","Irrigation Equipment","Farm Tools (Hand)","Milking Machine","Sprayer","Harvester","Other"] },
+    { id:"cf-condition", label:"Condition",      type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
+    { id:"cf-negotiable",label:"Price Negotiable?", type:"select",
+      options:["Yes, negotiable","No, fixed price"] },
+  ],
+
+  "agriculture-Land for Farming": [
+    { id:"cf-size",      label:"Size",           type:"text", placeholder:"e.g. 5 acres, 2 hectares" },
+    { id:"cf-soil-type", label:"Soil / Land Type", type:"select",
+      options:["Fertile / Loam Soil","Sandy Soil","Clay Soil","Swampy / Wetland","Mixed"] },
+    { id:"cf-listing-type", label:"Listing Type", type:"select",
+      options:["For Sale","For Lease / Rent"] },
+    { id:"cf-water-source", label:"Water Source", type:"select",
+      options:["Borehole","River / Stream Nearby","Rain-fed Only","Irrigation System"] },
+  ],
+
+  "agriculture-Agricultural Services": [
+    { id:"cf-service-type", label:"Service Type", type:"select",
+      options:["Tractor / Ploughing Service","Crop Spraying Service","Land Clearing","Farm Consultancy","Veterinary Service","Harvesting Service"] },
+    { id:"cf-pricing-type", label:"Pricing",       type:"select",
+      options:["Per Acre","Per Hour","Per Job","Negotiable"] },
+    { id:"cf-area-covered", label:"Area Covered",  type:"select",
+      options:["Central Uganda","Eastern Uganda","Northern Uganda","Western Uganda","All Uganda"] },
+  ],
+
   commercial: [
+    { id:"cf-commercial-type", label:"Equipment Category", type:"select",
+      options:["Power & Construction Equipment","Industrial Machinery","Security & Office Equipment","Catering & Cold Storage Equipment","Salon, Gym & Medical Equipment"]
+    },
+  ],
+
+  "commercial-Power & Construction Equipment": [
     { id:"cf-type",       label:"Equipment Type",    type:"select",
-      options:["Generator","Compressor","Welding Machine","Printing Machine","Cutting Machine","Lathe / CNC Machine","Borehole / Water Pump","Scaffolding","Forklift / Crane","Concrete Mixer","Solar Panels (Commercial)","CCTV / Security System","POS / Cash Register","Refrigeration / Cold Room","Industrial Oven / Bakery","Sewing Machine (Industrial)","Salon Equipment","Gym Equipment","Medical Equipment","Office Furniture (Bulk)","Other"] },
+      options:["Generator","Compressor","Borehole / Water Pump","Scaffolding","Forklift / Crane","Concrete Mixer","Solar System (Commercial)"] },
     { id:"cf-condition",  label:"Condition",         type:"select",
-      options:["Brand New","Foreign Used","Local Used","Refurbished / Serviced"] },
-    { id:"cf-brand",      label:"Brand",             type:"text",  placeholder:"e.g. Cummins, Kipor, Honda, Local Brand" },
-    { id:"cf-power",      label:"Power / Capacity",  type:"text",  placeholder:"e.g. 5KVA, 10 tonnes, 500 litres/hr" },
-    { id:"cf-warranty",   label:"Warranty",          type:"select",
-      options:["No Warranty","Shop Warranty (1 month)","Shop Warranty (3 months)","Manufacturer Warranty"] },
+      options:["Brand New","Foreign Used","Local Used","Refurbished"] },
+    { id:"cf-power",      label:"Power / Capacity",  type:"text", placeholder:"e.g. 5KVA, 10 tonnes" },
     { id:"cf-negotiable", label:"Price Negotiable?", type:"select",
       options:["Yes, negotiable","No, fixed price"] },
   ],
 
+  "commercial-Industrial Machinery": [
+    { id:"cf-type",       label:"Machine Type",      type:"select",
+      options:["Welding Machine","Printing Machine","Cutting Machine","Lathe / CNC Machine","Sewing Machine (Industrial)","Other"] },
+    { id:"cf-condition",  label:"Condition",         type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
+    { id:"cf-brand",      label:"Brand",             type:"text", placeholder:"e.g. Juki, Bosch" },
+    { id:"cf-warranty",   label:"Warranty",          type:"select",
+      options:["No Warranty","Shop Warranty","Manufacturer Warranty"] },
+  ],
+
+  "commercial-Security & Office Equipment": [
+    { id:"cf-type",       label:"Item Type",         type:"select",
+      options:["CCTV / Security System","POS / Cash Register","Office Furniture (Bulk)","Safe / Vault","Biometric System"] },
+    { id:"cf-condition",  label:"Condition",         type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
+    { id:"cf-quantity",   label:"Quantity",          type:"text", placeholder:"e.g. 4 cameras, 10 desks" },
+  ],
+
+  "commercial-Catering & Cold Storage Equipment": [
+    { id:"cf-type",       label:"Item Type",         type:"select",
+      options:["Refrigeration / Cold Room","Industrial Oven / Bakery Equipment","Commercial Fridge / Freezer","Food Warmer","Other"] },
+    { id:"cf-condition",  label:"Condition",         type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
+    { id:"cf-capacity",   label:"Capacity",          type:"text", placeholder:"e.g. 500L cold room" },
+  ],
+
+  "commercial-Salon, Gym & Medical Equipment": [
+    { id:"cf-type",       label:"Item Type",         type:"select",
+      options:["Salon Equipment","Gym Equipment","Medical Equipment","Spa Equipment"] },
+    { id:"cf-condition",  label:"Condition",         type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
+    { id:"cf-warranty",   label:"Warranty",          type:"select",
+      options:["No Warranty","Shop Warranty","Manufacturer Warranty"] },
+  ],
+
   tours: [
-    { id:"cf-type",       label:"Tour / Experience Type", type:"select",
-      options:["Safari (Wildlife)","Gorilla Trekking","Chimpanzee Trekking","Mountain Hiking","Boat Cruise","Beach / Resort","City Tour","Cultural / Heritage Tour","Birdwatching","White Water Rafting","Camping","Honeymoon Package","Family Holiday","School Trip","Corporate Retreat","International Travel Package","Other"] },
-    { id:"cf-destination",label:"Destination",            type:"text",  placeholder:"e.g. Bwindi, Queen Elizabeth, Lake Victoria, Zanzibar" },
-    { id:"cf-duration",   label:"Duration",               type:"select",
-      options:["Half Day (4–6 hours)","Full Day","Weekend (2 days)","3 Days","4 Days","5 Days","1 Week","2 Weeks","Custom / Flexible"] },
-    { id:"cf-group-size", label:"Group Size",             type:"select",
-      options:["1 Person (Solo)","2 People (Couple)","Small Group (3–6)","Medium Group (7–15)","Large Group (15+)","Any Size"] },
-    { id:"cf-includes",   label:"Includes",               type:"text",  placeholder:"e.g. Transport, Accommodation, Meals, Park Fees" },
-    { id:"cf-availability",label:"Availability",          type:"select",
-      options:["Any time","Weekends only","School holidays","Seasonal","Specific dates – contact me"] },
-    { id:"cf-negotiable", label:"Price Negotiable?",      type:"select",
-      options:["Yes, negotiable","No, fixed price"] },
+    { id:"cf-tour-type", label:"Category", type:"select",
+      options:["Wildlife & Nature Tours","Adventure & Outdoor Activities","Cultural & City Tours","Beach, Resort & Cruise","Holiday Packages & Group Trips"]
+    },
+  ],
+
+  "tours-Wildlife & Nature Tours": [
+    { id:"cf-type",        label:"Tour Type",    type:"select",
+      options:["Safari (Wildlife)","Gorilla Trekking","Chimpanzee Trekking","Birdwatching"] },
+    { id:"cf-destination", label:"Destination",  type:"text", placeholder:"e.g. Bwindi, Queen Elizabeth, Murchison Falls" },
+    { id:"cf-duration",    label:"Duration",     type:"select",
+      options:["Half Day","Full Day","2 Days","3 Days","4+ Days"] },
+    { id:"cf-includes",    label:"Includes",     type:"text", placeholder:"e.g. Transport, Park Fees, Meals" },
+  ],
+
+  "tours-Adventure & Outdoor Activities": [
+    { id:"cf-type",        label:"Activity Type", type:"select",
+      options:["Mountain Hiking","White Water Rafting","Camping","Quad Biking","Bungee Jumping","Zip-lining"] },
+    { id:"cf-destination", label:"Location",     type:"text", placeholder:"e.g. Jinja, Sipi Falls, Mt. Elgon" },
+    { id:"cf-duration",    label:"Duration",     type:"select",
+      options:["Few Hours","Half Day","Full Day","Weekend (2 days)","Multi-day"] },
+    { id:"cf-group-size",  label:"Group Size",   type:"select",
+      options:["Solo","Couple","Small Group (3–6)","Large Group (7+)"] },
+  ],
+
+  "tours-Cultural & City Tours": [
+    { id:"cf-type",        label:"Tour Type",    type:"select",
+      options:["City Tour","Cultural / Heritage Tour","Local Village Experience","Market Tour"] },
+    { id:"cf-destination", label:"Destination",  type:"text", placeholder:"e.g. Kampala, Jinja, Fort Portal" },
+    { id:"cf-duration",    label:"Duration",     type:"select",
+      options:["Half Day","Full Day"] },
+  ],
+
+  "tours-Beach, Resort & Cruise": [
+    { id:"cf-type",        label:"Type",         type:"select",
+      options:["Beach / Resort Stay","Boat Cruise","Lake Trip","Island Getaway"] },
+    { id:"cf-destination", label:"Destination",  type:"text", placeholder:"e.g. Lake Victoria, Lake Bunyonyi, Zanzibar" },
+    { id:"cf-duration",    label:"Duration",     type:"select",
+      options:["Half Day","Full Day","Weekend","3+ Days"] },
+  ],
+
+  "tours-Holiday Packages & Group Trips": [
+    { id:"cf-type",        label:"Package Type", type:"select",
+      options:["Honeymoon Package","Family Holiday","School Trip","Corporate Retreat","International Travel Package"] },
+    { id:"cf-duration",    label:"Duration",     type:"select",
+      options:["Weekend (2 days)","3 Days","5 Days","1 Week","2 Weeks","Custom / Flexible"] },
+    { id:"cf-group-size",  label:"Group Size",   type:"select",
+      options:["1 Person","Couple","Small Group (3–10)","Large Group (10+)"] },
+    { id:"cf-includes",    label:"Includes",     type:"text", placeholder:"e.g. Transport, Accommodation, Meals" },
   ],
 
   "seeking-work": [
-    { id:"cf-type",       label:"Job / Service Type",   type:"select",
-      options:["Driver / Chauffeur","Security Guard","Cleaner / Housekeeper","Cook / Chef","Gardener","Nanny / Babysitter","Nurse / Caregiver","Teacher / Tutor","Accountant","IT / Developer","Designer","Electrician","Plumber","Mason / Builder","Mechanic","Carpenter","Tailor / Seamstress","Sales Person","Receptionist / Admin","Data Entry","Social Media Manager","Event Planner","Photographer / Videographer","Other"] },
-    { id:"cf-experience", label:"Years of Experience",  type:"select",
-      options:["No experience (fresh graduate)","Less than 1 year","1–2 years","3–5 years","5–10 years","10+ years"] },
-    { id:"cf-education",  label:"Highest Education",    type:"select",
-      options:["Primary Level","O-Level (UCE)","A-Level (UACE)","Certificate","Diploma","Bachelor's Degree","Master's Degree","PhD","Professional Certification","Other"] },
-    { id:"cf-availability",label:"Availability",        type:"select",
-      options:["Immediately available","Available in 2 weeks","Available in 1 month","Part-time only","Weekends only","Remote / Online only","Flexible"] },
-    { id:"cf-location-pref",label:"Preferred Work Location", type:"select",
-      options:["Kampala only","Any location in Uganda","Open to relocation","Remote / Work from Home","Flexible"] },
-    { id:"cf-salary",     label:"Expected Salary",      type:"text",  placeholder:"e.g. UGX 500,000/month or Negotiable" },
-    { id:"cf-gender",     label:"Gender",               type:"select",
+    { id:"cf-job-category", label:"Job Category", type:"select",
+      options:["Domestic & Care Work","Technical & Skilled Trades","Office & Professional Jobs","Sales, Marketing & Customer Service","Creative & IT Services","Transport & Logistics"]
+    },
+  ],
+
+  "seeking-Domestic & Care Work": [
+    { id:"cf-type",        label:"Job Type",     type:"select",
+      options:["Cleaner / Housekeeper","Cook / Chef","Nanny / Babysitter","Nurse / Caregiver","Gardener"] },
+    { id:"cf-experience",  label:"Years of Experience", type:"select",
+      options:["No experience","Less than 1 year","1–2 years","3–5 years","5+ years"] },
+    { id:"cf-availability",label:"Availability", type:"select",
+      options:["Immediately available","Live-in (Stay at employer's home)","Live-out (Daily/Part-time)","Weekends only"] },
+    { id:"cf-salary",      label:"Expected Salary", type:"text", placeholder:"e.g. UGX 300,000/month or Negotiable" },
+    { id:"cf-gender",      label:"Gender",       type:"select",
       options:["Male","Female","Prefer not to say"] },
+  ],
+
+  "seeking-Technical & Skilled Trades": [
+    { id:"cf-type",        label:"Job Type",     type:"select",
+      options:["Electrician","Plumber","Mason / Builder","Mechanic","Carpenter","Tailor / Seamstress","Welder","Driver / Chauffeur","Security Guard"] },
+    { id:"cf-experience",  label:"Years of Experience", type:"select",
+      options:["No experience","Less than 1 year","1–2 years","3–5 years","5–10 years","10+ years"] },
+    { id:"cf-certification",label:"Certification / License", type:"text", placeholder:"e.g. Driving Permit Class B, Trade Test Cert" },
+    { id:"cf-availability",label:"Availability", type:"select",
+      options:["Immediately available","Available in 2 weeks","Part-time only","Flexible"] },
+    { id:"cf-salary",      label:"Expected Salary", type:"text", placeholder:"e.g. UGX 500,000/month or Negotiable" },
+  ],
+
+  "seeking-Office & Professional Jobs": [
+    { id:"cf-type",        label:"Job Type",     type:"select",
+      options:["Accountant","Teacher / Tutor","Receptionist / Admin","Data Entry","HR Officer","Legal / Paralegal","Other Professional"] },
+    { id:"cf-education",   label:"Highest Education", type:"select",
+      options:["Certificate","Diploma","Bachelor's Degree","Master's Degree","PhD","Professional Certification"] },
+    { id:"cf-experience",  label:"Years of Experience", type:"select",
+      options:["No experience (fresh graduate)","1–2 years","3–5 years","5–10 years","10+ years"] },
+    { id:"cf-location-pref",label:"Preferred Work Location", type:"select",
+      options:["Kampala only","Any location in Uganda","Open to relocation","Remote"] },
+    { id:"cf-salary",      label:"Expected Salary", type:"text", placeholder:"e.g. UGX 800,000/month or Negotiable" },
+  ],
+
+  "seeking-Sales, Marketing & Customer Service": [
+    { id:"cf-type",        label:"Job Type",     type:"select",
+      options:["Sales Person","Marketing Officer","Customer Service Agent","Social Media Manager","Telemarketer"] },
+    { id:"cf-experience",  label:"Years of Experience", type:"select",
+      options:["No experience","1–2 years","3–5 years","5+ years"] },
+    { id:"cf-availability",label:"Availability", type:"select",
+      options:["Full Time","Part Time","Commission-Based Work"] },
+    { id:"cf-salary",      label:"Expected Salary", type:"text", placeholder:"e.g. UGX 400,000/month + commission" },
+  ],
+
+  "seeking-Creative & IT Services": [
+    { id:"cf-type",        label:"Job Type",     type:"select",
+      options:["IT / Developer","Graphic Designer","Photographer / Videographer","Event Planner","Web Designer"] },
+    { id:"cf-experience",  label:"Years of Experience", type:"select",
+      options:["No experience","1–2 years","3–5 years","5+ years"] },
+    { id:"cf-portfolio",   label:"Portfolio / Sample Work Link", type:"text", placeholder:"e.g. Instagram page, website link" },
+    { id:"cf-availability",label:"Availability", type:"select",
+      options:["Remote / Online only","On-site","Both / Flexible"] },
+    { id:"cf-salary",      label:"Expected Rate", type:"text", placeholder:"e.g. Per project, UGX 500,000/month" },
+  ],
+
+  "seeking-Transport & Logistics": [
+    { id:"cf-type",        label:"Job Type",     type:"select",
+      options:["Driver (Private)","Driver (Commercial/Truck)","Boda Boda Rider","Delivery Rider","Logistics Coordinator"] },
+    { id:"cf-license",     label:"License Class", type:"select",
+      options:["Class A (Motorcycle)","Class B (Light Vehicle)","Class C (Truck)","Class D (PSV)","No License"] },
+    { id:"cf-experience",  label:"Years of Experience", type:"select",
+      options:["Less than 1 year","1–2 years","3–5 years","5+ years"] },
+    { id:"cf-salary",      label:"Expected Salary", type:"text", placeholder:"e.g. UGX 350,000/month" },
   ],
 
 };
 
 // ── Render dynamic fields into Step 2 ────────
+// Categories that use the two-step (pick subtype → different fields) pattern
+const TWO_STEP_CATEGORIES = [
+  "vehicles", "leisure-activities", "electronics", "home", "gaming", "property",
+  "repair-construction", "commercial", "animals", "babies",
+  "agriculture", "tours", "seeking-work"
+];
+
 function renderCategoryFields(category) {
   const container = document.getElementById("category-fields");
   if (!container) return;
 
-  // Vehicles needs special handling — pick type first, then show specific fields
-  if (category === "vehicles") {
-    renderVehicleFields();
-    return;
-  }
-  
-   if (category === "leisure-activities") {
-    renderLeisureFields();
+  if (TWO_STEP_CATEGORIES.includes(category)) {
+    renderTwoStepFields(category);
     return;
   }
 
@@ -1063,6 +1631,63 @@ function renderCategoryFields(category) {
     `).join("")}
   `;
 }
+
+// ── Generic two-step renderer for Electronics, Home, etc. ──
+function renderTwoStepFields(category) {
+  const container = document.getElementById("category-fields");
+
+  // Vehicles and Leisure keep their existing custom renderers
+  if (category === "vehicles") { renderVehicleFields(); return; }
+  if (category === "leisure-activities") { renderLeisureFields(); return; }
+
+  const baseField = CATEGORY_FIELDS[category]?.[0];
+  if (!baseField) { container.innerHTML = ""; return; }
+
+  container.innerHTML = `
+    <div style="border-top:1.5px solid #f0f0f0;margin:16px 0"></div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+      <span style="font-size:18px">${categoryEmoji(category)}</span>
+      <p style="font-size:13px;font-weight:800;color:#ff6600;text-transform:uppercase;letter-spacing:.5px;margin:0">
+        ${category.charAt(0).toUpperCase() + category.slice(1)} Details
+      </p>
+    </div>
+    <div style="margin-bottom:14px">
+      <label style="display:block;font-size:12px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">
+        ${baseField.label}
+      </label>
+      <select id="${baseField.id}" onchange="onTwoStepChange('${category}', this.value)"
+        style="width:100%;padding:13px 14px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:14px;font-family:var(--font);outline:none;background:white;box-sizing:border-box">
+        <option value="">Select ${baseField.label}</option>
+        ${baseField.options.map(o => `<option value="${o}">${o}</option>`).join("")}
+      </select>
+    </div>
+    <div id="two-step-sub-fields"></div>
+  `;
+}
+
+window.onTwoStepChange = function(category, subValue) {
+  const box = document.getElementById("two-step-sub-fields");
+  if (!subValue) { box.innerHTML = ""; return; }
+
+  const fields = CATEGORY_FIELDS[`${category}-${subValue}`] || [];
+
+  box.innerHTML = fields.map(f => `
+    <div style="margin-bottom:14px">
+      <label style="display:block;font-size:12px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">
+        ${f.label}
+      </label>
+      ${f.type === "select" ? `
+        <select id="${f.id}" style="width:100%;padding:13px 14px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:14px;font-family:var(--font);outline:none;background:white;box-sizing:border-box">
+          <option value="">Select ${f.label}</option>
+          ${f.options.map(o => `<option value="${o}">${o}</option>`).join("")}
+        </select>
+      ` : `
+        <input type="text" id="${f.id}" placeholder="${f.placeholder || ""}"
+          style="width:100%;padding:13px 14px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:14px;font-family:var(--font);outline:none;background:white;box-sizing:border-box">
+      `}
+    </div>
+  `).join("");
+};
 
 // ── Vehicles: two-stage field reveal ──────────
 function renderVehicleFields() {
@@ -1172,19 +1797,20 @@ const locationInput = document.getElementById("ad-location");
 function collectCategoryFields(category) {
   let fields = CATEGORY_FIELDS[category] || [];
 
-  // Vehicles: combine base field + the selected vehicle-type's specific fields
   if (category === "vehicles") {
     const vType = document.getElementById("cf-vehicle-type")?.value || "";
-    fields = [
-      { id: "cf-vehicle-type" },
-      ...(CATEGORY_FIELDS[`vehicles-${vType}`] || [])
-    ];
+    fields = [{ id: "cf-vehicle-type" }, ...(CATEGORY_FIELDS[`vehicles-${vType}`] || [])];
   }
-
-
-  if (category === "leisure-activities") {
+  else if (category === "leisure-activities") {
     const sub = document.getElementById("cf-leisure-sub")?.value || "";
     fields = [{ id: "cf-leisure-sub" }, ...(CATEGORY_FIELDS[`leisure-${sub}`] || [])];
+  }
+  else if (TWO_STEP_CATEGORIES.includes(category)) {
+    const baseField = CATEGORY_FIELDS[category]?.[0];
+    if (baseField) {
+      const subValue = document.getElementById(baseField.id)?.value || "";
+      fields = [baseField, ...(CATEGORY_FIELDS[`${category}-${subValue}`] || [])];
+    }
   }
 
   const data = {};
