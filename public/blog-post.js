@@ -48,7 +48,42 @@ async function loadPost() {
     }
 
     const post = snap.data();
-    document.title = `${post.title} | ZiBuy Uganda`;
+    document.title = `${post.title} — ZiBuy Blog`;
+
+document
+  .getElementById("seo-description")
+  ?.setAttribute(
+    "content",
+    post.excerpt || ""
+  );
+
+document
+  .getElementById("og-title")
+  ?.setAttribute(
+    "content",
+    post.title
+  );
+
+document
+  .getElementById("og-description")
+  ?.setAttribute(
+    "content",
+    post.excerpt || ""
+  );
+
+document
+  .getElementById("og-image")
+  ?.setAttribute(
+    "content",
+    post.coverImage || ""
+  );
+
+document
+  .getElementById("og-url")
+  ?.setAttribute(
+    "content",
+    window.location.href
+  );
 
 // SEO description
 const description =
