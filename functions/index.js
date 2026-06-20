@@ -1475,3 +1475,100 @@ exports.subscriptionApprovalNotifications = onDocumentUpdated(
     }
   }
 );
+
+
+// ============================================
+// BLOG SEO FUNCTION
+// ============================================
+
+exports.blogSeo = onRequest(async (req, res) => {
+  try {
+
+    const slug = req.path.replace("/blog/", "");
+
+    const posts = await db.collection("blog_posts")
+      .where("status", "==", "published")
+      .get();
+
+    let matchedPost = null;
+
+    posts.forEach(doc => {
+      const data = doc.data();
+
+      const generatedSlug =
+        (data.slug ||
+        data.title
+          ?.toLowerCase()
+          .replace(/[^\w\s-]/g, "")
+          .replace(/\s+/g, "-"));
+
+      if (generatedSlug === slug) {
+        matchedPost = {
+          id: doc.id,
+          ...data
+        };
+      }
+    });
+
+    if (!matchedPost) {
+      return res.redirect(
+        "https://zibuy-5deae.web.app/blog.html"
+      );
+    }
+
+    const title =
+      matchedPost.title || "ZiBuy Blog";
+
+    const description =
+      matchedPost.excerpt ||
+      (matchedPost.content || "")
+        .replace(/\n/g, " ")
+        .slice(0, 160);
+
+    const image =
+      matchedPost.coverImage ||
+      "https://zibuy-5deae.web.app/icons/icon-512.png";
+
+    const url =
+      `https://zibuy-5deae.web.app/blog/${slug}`;
+
+    res.status(200).send(`
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<title>${title}</title>
+
+<meta name="description" content="${description}" />
+
+<meta property="og:type" content="article" />
+<meta property="og:title" content="${title}" />
+<meta property="og:description" content="${description}" />
+<meta property="og:image" content="${image}" />
+<meta property="og:url" content="${url}" />
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="${title}" />
+<meta name="twitter:description" content="${description}" />
+<meta name="twitter:image" content="${image}" />
+
+<meta http-equiv="refresh"
+content="0; url=https://zibuy-5deae.web.app/blog-post.html?id=${matchedPost.id}" />
+
+</head>
+
+<body>
+Redirecting...
+</body>
+</html>
+`);
+
+  } catch (err) {
+
+    console.error(err);
+
+    res.redirect(
+      "https://zibuy-5deae.web.app/blog.html"
+    );
+  }
+});
