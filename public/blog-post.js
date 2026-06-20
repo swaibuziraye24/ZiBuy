@@ -100,7 +100,11 @@ if (twImg && post.coverImage)
         <div class="post-author-avatar">${(post.author || "Z")[0].toUpperCase()}</div>
         <div class="post-meta-info">
           <p>${post.author || "ZiBuy Team"}</p>
-          <p>${fmtDate(post.createdAt)} · ${post.views || 0} views</p>
+<p>
+  ${fmtDate(post.createdAt)}
+  · ${getReadingTime(post.content)}
+  · ${post.views || 0} views
+</p>
         </div>
       </div>
 
@@ -195,6 +199,12 @@ async function loadRelated(category) {
       </div>
     `;
   } catch (e) { console.warn("loadRelated:", e.message); }
+}
+
+function getReadingTime(text) {
+  const words = (text || "").trim().split(/\s+/).length;
+  const minutes = Math.max(1, Math.ceil(words / 200));
+  return `${minutes} min read`;
 }
 
 function fmtDate(ts) {
