@@ -50,6 +50,9 @@ async function loadPost() {
     const post = snap.data();
     document.title = `${post.title} — ZiBuy Blog`;
 
+    document.getElementById("seo-title").textContent =
+  `${post.title} — ZiBuy Blog`;
+
 document
   .getElementById("seo-description")
   ?.setAttribute(
@@ -88,7 +91,11 @@ document
 // SEO description
 const description =
   post.excerpt ||
-  (post.content || "").replace(/\n/g, " ").slice(0, 160);
+  (post.content || "")
+    .replace(/\n/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 200);
 
 // Update meta description
 const metaDesc = document.querySelector('meta[name="description"]');
@@ -102,8 +109,13 @@ const ogUrl   = document.querySelector('meta[property="og:url"]');
 
 if (ogTitle) ogTitle.setAttribute("content", post.title);
 if (ogDesc) ogDesc.setAttribute("content", description);
-if (ogImg && post.coverImage)
-  ogImg.setAttribute("content", post.coverImage);
+if (ogImg) {
+  ogImg.setAttribute(
+    "content",
+    post.coverImage ||
+    "https://zibuy-5deae.web.app/icons/icon-512.png"
+  );
+}
 
 if (ogUrl)
   ogUrl.setAttribute(
@@ -119,8 +131,13 @@ const twImg   = document.querySelector('meta[name="twitter:image"]');
 if (twTitle) twTitle.setAttribute("content", post.title);
 if (twDesc) twDesc.setAttribute("content", description);
 
-if (twImg && post.coverImage)
-  twImg.setAttribute("content", post.coverImage);
+if (twImg) {
+  twImg.setAttribute(
+    "content",
+    post.coverImage ||
+    "https://zibuy-5deae.web.app/icons/icon-512.png"
+  );
+}
 
     // Track view count
     updateDoc(doc(db, "blog_posts", postId), { views: increment(1) }).catch(() => {});
