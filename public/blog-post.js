@@ -117,11 +117,35 @@ if (twImg && post.coverImage)
         ${formatContent(post.content || "")}
       </div>
 
-      <div class="post-cta">
-        <h3>🛍️ Ready to Buy or Sell?</h3>
-        <p>Join thousands of Ugandans trading safely on ZiBuy</p>
-        <a href="index.html">Visit ZiBuy →</a>
-      </div>
+        <div class="post-share">
+  <h3>📢 Share This Article</h3>
+
+  <div class="share-buttons">
+
+    <button onclick="shareWhatsApp()">
+      WhatsApp
+    </button>
+
+    <button onclick="shareFacebook()">
+      Facebook
+    </button>
+
+    <button onclick="shareTwitter()">
+      X
+    </button>
+
+    <button onclick="copyArticleLink()">
+      Copy Link
+    </button>
+
+  </div>
+</div>
+
+<div class="post-cta">
+  <h3>🛍️ Ready to Buy or Sell?</h3>
+  <p>Join thousands of Ugandans trading safely on ZiBuy</p>
+  <a href="index.html">Visit ZiBuy →</a>
+</div>
 
       <div class="post-related" id="related-posts"></div>
     `;
@@ -212,3 +236,41 @@ function fmtDate(ts) {
   if (!d) return "";
   return d.toLocaleDateString("en-UG", { day: "numeric", month: "long", year: "numeric" });
 }
+
+window.shareWhatsApp = function () {
+  const url = encodeURIComponent(window.location.href);
+  const text = encodeURIComponent(document.title);
+
+  window.open(
+    `https://wa.me/?text=${text}%20${url}`,
+    "_blank"
+  );
+};
+
+window.shareFacebook = function () {
+  const url = encodeURIComponent(window.location.href);
+
+  window.open(
+    `https://www.facebook.com/sharer/sharer.php?u=${url}`,
+    "_blank"
+  );
+};
+
+window.shareTwitter = function () {
+  const url = encodeURIComponent(window.location.href);
+  const text = encodeURIComponent(document.title);
+
+  window.open(
+    `https://twitter.com/intent/tweet?text=${text}&url=${url}`,
+    "_blank"
+  );
+};
+
+window.copyArticleLink = async function () {
+  try {
+    await navigator.clipboard.writeText(window.location.href);
+    alert("✅ Link copied");
+  } catch {
+    alert("❌ Failed to copy link");
+  }
+};
