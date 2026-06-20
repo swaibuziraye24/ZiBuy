@@ -1705,11 +1705,23 @@ window.saveBlogPost = async function(status) {
       coverImage = await getDownloadURL(storageRef);
     }
 
-    const postData = {
-      title, category, author, excerpt, content, coverImage,
-      status,
-      updatedAt: new Date()
-    };
+       const slug = title
+  .toLowerCase()
+  .trim()
+  .replace(/[^\w\s-]/g, "")
+  .replace(/\s+/g, "-");
+
+const postData = {
+  title,
+  slug,
+  category,
+  author,
+  excerpt,
+  content,
+  coverImage,
+  status,
+  updatedAt: new Date()
+};
 
     if (editId) {
       await updateDoc(doc(db, "blog_posts", editId), postData);
