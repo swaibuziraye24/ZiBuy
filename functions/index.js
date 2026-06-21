@@ -899,7 +899,7 @@ exports.momoPaymentVerify = onDocumentCreated(
 
     if (data.type === "subscription") {
       await userRef.update({
-        plan: "gold",
+        plan: data.plan || "gold",
         subscriptionActive: true,
         subscriptionStart: admin.firestore.FieldValue.serverTimestamp(),
       });
