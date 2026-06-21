@@ -1739,6 +1739,82 @@ accessories: [
     { id:"cf-salary",      label:"Expected Salary", type:"text", placeholder:"e.g. UGX 350,000/month" },
   ],
 
+  "phone-accessories": [
+    { id:"cf-phoneacc-type", label:"Item Category", type:"select",
+      options:["Phone Cases & Covers","Screen Protectors / Tempered Glass","Chargers & Cables","Batteries & Power Banks","Phone Spare Parts (Screens, Buttons, etc.)","Earphones & Headsets","Memory Cards & Storage","SIM Trays & Small Accessories"]
+    },
+  ],
+
+  "phone-Phone Cases & Covers": [
+    { id:"cf-phone-model", label:"Compatible Phone Model", type:"text", placeholder:"e.g. iPhone 13, Samsung A14, Tecno Spark" },
+    { id:"cf-type",        label:"Case Type",     type:"select",
+      options:["Silicone Case","Leather Case","Hard Plastic Case","Flip Cover","Wallet Case","Shockproof Case"] },
+    { id:"cf-condition",   label:"Condition",     type:"select",
+      options:["Brand New"] },
+    { id:"cf-color",       label:"Color",         type:"text", placeholder:"e.g. Black, Clear, Red" },
+  ],
+
+  "phone-Screen Protectors / Tempered Glass": [
+    { id:"cf-phone-model", label:"Compatible Phone Model", type:"text", placeholder:"e.g. iPhone 13, Samsung A14" },
+    { id:"cf-type",        label:"Protector Type", type:"select",
+      options:["Tempered Glass","Privacy Glass","Plastic Film","Camera Lens Protector"] },
+    { id:"cf-quantity",    label:"Quantity",      type:"text", placeholder:"e.g. 1 piece, pack of 3" },
+  ],
+
+  "phone-Chargers & Cables": [
+    { id:"cf-type",        label:"Item Type",     type:"select",
+      options:["Wall Charger / Adapter","USB Cable","Wireless Charger","Car Charger","Fast Charger"] },
+    { id:"cf-port-type",   label:"Port Type",     type:"select",
+      options:["Type-C","Lightning (iPhone)","Micro USB","Multiple / Universal"] },
+    { id:"cf-condition",   label:"Condition",     type:"select",
+      options:["Brand New","Used – Working"] },
+    { id:"cf-brand",       label:"Brand (optional)", type:"text", placeholder:"e.g. Samsung, Anker, Original" },
+  ],
+
+  "phone-Batteries & Power Banks": [
+    { id:"cf-type",        label:"Item Type",     type:"select",
+      options:["Phone Battery (Internal Replacement)","Power Bank / Portable Charger"] },
+    { id:"cf-phone-model", label:"Compatible Phone Model (if battery)", type:"text", placeholder:"e.g. iPhone 11, Samsung A10" },
+    { id:"cf-capacity",    label:"Capacity (mAh)", type:"text", placeholder:"e.g. 3000mAh, 10000mAh" },
+    { id:"cf-condition",   label:"Condition",     type:"select",
+      options:["Brand New","Used – Working"] },
+  ],
+
+  "phone-Phone Spare Parts (Screens, Buttons, etc.)": [
+    { id:"cf-type",        label:"Part Type",     type:"select",
+      options:["Screen / Display","Back Glass / Cover","Battery (Internal)","Camera Module","Charging Port Flex","Power/Volume Buttons","Speaker / Earpiece","Motherboard","Other"] },
+    { id:"cf-phone-model", label:"Compatible Phone Model", type:"text", placeholder:"e.g. iPhone X, Samsung S20" },
+    { id:"cf-condition",   label:"Condition",     type:"select",
+      options:["Brand New","Used – Working","Refurbished"] },
+    { id:"cf-quality",     label:"Quality Grade",  type:"select",
+      options:["Original / OEM","Copy / Aftermarket","Not Sure"] },
+  ],
+
+  "phone-Earphones & Headsets": [
+    { id:"cf-type",        label:"Item Type",     type:"select",
+      options:["Wired Earphones","Bluetooth Earbuds","Over-Ear Headphones","Gaming Headset"] },
+    { id:"cf-brand",       label:"Brand",         type:"text", placeholder:"e.g. Samsung, JBL, Apple AirPods" },
+    { id:"cf-condition",   label:"Condition",     type:"select",
+      options:["Brand New","Foreign Used","Local Used"] },
+  ],
+
+  "phone-Memory Cards & Storage": [
+    { id:"cf-type",        label:"Item Type",     type:"select",
+      options:["Memory Card (SD/MicroSD)","USB Flash Drive","Phone Storage Adapter"] },
+    { id:"cf-capacity",    label:"Capacity",      type:"select",
+      options:["8GB","16GB","32GB","64GB","128GB","256GB","512GB"] },
+    { id:"cf-condition",   label:"Condition",     type:"select",
+      options:["Brand New","Used – Working"] },
+  ],
+
+  "phone-SIM Trays & Small Accessories": [
+    { id:"cf-type",        label:"Item Type",     type:"select",
+      options:["SIM Tray / Ejector Pin","Phone Stand / Holder","Pop Socket","Phone Ring Holder","Cleaning Kit","Other"] },
+    { id:"cf-phone-model", label:"Compatible Phone Model (if applicable)", type:"text", placeholder:"e.g. Universal, iPhone 12" },
+    { id:"cf-condition",   label:"Condition",     type:"select",
+      options:["Brand New"] },
+  ],
+
 };
 
 // ── Render dynamic fields into Step 2 ────────
@@ -1747,7 +1823,7 @@ const TWO_STEP_CATEGORIES = [
   "vehicles", "leisure-activities", "electronics", "home", "gaming", "property",
   "repair-construction", "commercial", "animals", "babies",
   "agriculture", "tours", "seeking-work",
-  "fashion", "computers", "accessories"
+  "fashion", "computers", "accessories", "phone-accessories"
 ];
 
 function renderCategoryFields(category) {
