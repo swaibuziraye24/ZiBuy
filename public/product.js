@@ -178,6 +178,36 @@ async function loadProduct() {
 
     document.title = `${p.name} — ZiBuy Uganda`;
 
+    // ============================================
+// PRODUCT SCHEMA (GOOGLE SEO)
+// ============================================
+
+const oldSchema = document.getElementById("product-schema");
+
+if (oldSchema) oldSchema.remove();
+
+const schema = document.createElement("script");
+
+schema.id = "product-schema";
+schema.type = "application/ld+json";
+
+schema.textContent = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": p.name,
+  "image": images,
+  "description": description,
+  "offers": {
+    "@type": "Offer",
+    "priceCurrency": "UGX",
+    "price": Number(p.price || 0),
+    "availability": "https://schema.org/InStock",
+    "url": window.location.href
+  }
+});
+
+document.head.appendChild(schema);
+
     document
   .getElementById("canonical-url")
   ?.setAttribute("href", window.location.href);
