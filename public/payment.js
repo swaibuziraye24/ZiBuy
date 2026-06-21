@@ -69,7 +69,7 @@ function showPaymentDetails() {
 
 
 // ── ZiBuy Admin WhatsApp ─────────────────────
-const ZIBUY_WHATSAPP = "256790548910"; // ← replace with your number
+const ZIBUY_WHATSAPP = "256705816160"; // ← replace with your number
 
 window.placeOrder = async function() {
   const name     = document.getElementById("delivery-name").value.trim();
