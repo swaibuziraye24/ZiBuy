@@ -88,6 +88,11 @@ document
     window.location.href
   );
 
+  document
+  .getElementById("canonical-url")
+  ?.setAttribute("href", window.location.href)
+  ;
+
 // SEO description
 const description =
   post.excerpt ||
