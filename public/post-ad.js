@@ -2673,7 +2673,7 @@ window.requestBoost = async function (productId) {
       `Please verify and activate my boost. Thank you! 🙏`
     );
 
-    window.open(`https://wa.me/256790548910?text=${waMsg}`, "_blank");
+    window.open(`https://wa.me/256705816160?text=${waMsg}`, "_blank");
 
     // Show confirmation screen
     showBoostConfirmation(paymentRef, txnRef);
