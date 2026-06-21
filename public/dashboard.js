@@ -573,7 +573,7 @@ window.submitDashboardBoost = async function(productId, productName, days, price
       `Please verify and activate my boost. Thank you! 🙏`
     );
 
-    window.open(`https://wa.me/256790548910?text=${waMsg}`, "_blank");
+    window.open(`https://wa.me/256705816160?text=${waMsg}`, "_blank");
 
     // Success screen
     const successModal = document.createElement("div");
@@ -751,7 +751,7 @@ window.selectCVPlan = function(el, days, price) {
       `📧 *Email:* ${currentUser.email}\n\n` +
       `Please verify and pin this CV to the top. Thank you!`
     );
-    window.open(`https://wa.me/256790548910?text=${waMsg}`, "_blank");
+    window.open(`https://wa.me/256705816160?text=${waMsg}`, "_blank");
 
     // Success toast
     const toast = document.createElement("div");
@@ -1179,7 +1179,7 @@ window.upgradeToBusiness = async function() {
     });
 
     // Open your WhatsApp
-    const phone = "256790548910"; // YOUR NUMBER
+    const phone = "256705816160"; // YOUR NUMBER
     const msg = encodeURIComponent(
       `Hello Admin, I want to upgrade to a ZiBuy Business Account.\n\nEmail: ${currentUser.email}`
     );
