@@ -492,6 +492,20 @@ window.loadProductReviews = async function (productId) {
 
     const avgRating = (totalRating / count).toFixed(1);
 
+    const productSchemaTag = document.getElementById("product-schema");
+
+if (productSchemaTag) {
+  const currentSchema = JSON.parse(productSchemaTag.textContent);
+
+  currentSchema.aggregateRating = {
+    "@type": "AggregateRating",
+    "ratingValue": avgRating,
+    "reviewCount": count
+  };
+
+  productSchemaTag.textContent = JSON.stringify(currentSchema);
+}
+
     // ============================================
 // REVIEW SCHEMA FOR GOOGLE
 // ============================================
@@ -511,11 +525,7 @@ const reviewSchema = {
   }
 };
 
-schema.aggregateRating = {
-  "@type": "AggregateRating",
-  ratingValue: avgRating,
-  reviewCount: count
-};
+
 
 const reviewScript = document.createElement("script");
 reviewScript.type = "application/ld+json";
