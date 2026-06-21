@@ -267,24 +267,6 @@ document
   .querySelectorAll('script[type="application/ld+json"]')
   .forEach(el => el.remove());
 
-const schema = {
-  "@context": "https://schema.org",
-  "@type": "Product",
-  "name": p.name,
-  "image": images,
-  "description": p.description || "",
-  "brand": {
-    "@type": "Brand",
-    "name": p.details?.brand || "ZiBuy"
-  },
-  "offers": {
-    "@type": "Offer",
-    "priceCurrency": "UGX",
-    "price": p.price,
-    "availability": "https://schema.org/InStock",
-    "url": window.location.href
-  }
-};
 
 const script = document.createElement("script");
 script.type = "application/ld+json";
