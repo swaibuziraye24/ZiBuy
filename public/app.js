@@ -42,7 +42,7 @@ function categoryEmoji(cat) {
     services: "🔧",
     "repair-construction": "🔨",
     property: "🏘️",
-    "phone-accessories":"🔌"
+    "phone-accessories": "🔌"
   };
 
   return map[cat] || "📋";
