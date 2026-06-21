@@ -178,6 +178,10 @@ async function loadProduct() {
 
     document.title = `${p.name} — ZiBuy Uganda`;
 
+    document
+  .getElementById("canonical-url")
+  ?.setAttribute("href", window.location.href);
+
 const description =
   p.description ||
   `${p.name} available on ZiBuy Uganda for UGX ${Number(p.price).toLocaleString()}`;
@@ -226,6 +230,37 @@ setMeta("twitter:card", "summary_large_image", true);
 setMeta("twitter:title", p.name, true);
 setMeta("twitter:description", description, true);
 setMeta("twitter:image", images[0] || "", true);
+
+
+// Remove old schema if it exists
+document
+  .querySelectorAll('script[type="application/ld+json"]')
+  .forEach(el => el.remove());
+
+const schema = {
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": p.name,
+  "image": images,
+  "description": p.description || "",
+  "brand": {
+    "@type": "Brand",
+    "name": p.details?.brand || "ZiBuy"
+  },
+  "offers": {
+    "@type": "Offer",
+    "priceCurrency": "UGX",
+    "price": p.price,
+    "availability": "https://schema.org/InStock",
+    "url": window.location.href
+  }
+};
+
+const script = document.createElement("script");
+script.type = "application/ld+json";
+script.textContent = JSON.stringify(schema);
+
+document.head.appendChild(script);
 
  
     const phone = (seller.phone || "").replace(/\D/g, "");
