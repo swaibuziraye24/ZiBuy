@@ -264,11 +264,11 @@ const schema = {
   }
 }
 
-const script = document.createElement("script");
-script.type = "application/ld+json";
-script.textContent = JSON.stringify(schema);
+const schemaTag = document.getElementById("product-schema");
 
-document.head.appendChild(script);
+if (schemaTag) {
+  schemaTag.textContent = JSON.stringify(schema);
+}
 
  
     const phone = (seller.phone || "").replace(/\D/g, "");
@@ -508,6 +508,12 @@ const reviewSchema = {
     "ratingValue": avgRating,
     "reviewCount": count
   }
+};
+
+schema.aggregateRating = {
+  "@type": "AggregateRating",
+  ratingValue: avgRating,
+  reviewCount: count
 };
 
 const reviewScript = document.createElement("script");
