@@ -41,7 +41,8 @@ function categoryEmoji(cat) {
     "seeking-work": "💼",
     services: "🔧",
     "repair-construction": "🔨",
-    property: "🏘️"
+    property: "🏘️",
+    "phone-accessories":"🔌"
   };
 
   return map[cat] || "📋";
