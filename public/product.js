@@ -264,11 +264,12 @@ const schema = {
   }
 }
 
-const schemaTag = document.getElementById("product-schema");
+const schemaTag = document.createElement("script");
+schemaTag.type = "application/ld+json";
+schemaTag.id = "product-schema";
+schemaTag.textContent = JSON.stringify(schema);
 
-if (schemaTag) {
-  schemaTag.textContent = JSON.stringify(schema);
-}
+document.head.appendChild(schemaTag);
 
  
     const phone = (seller.phone || "").replace(/\D/g, "");
