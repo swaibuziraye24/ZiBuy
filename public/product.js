@@ -254,6 +254,7 @@ const schema = {
     "@type": "Offer",
     "priceCurrency": "UGX",
     "price": p.price,
+    "itemCondition": "https://schema.org/UsedCondition",
     "availability": "https://schema.org/InStock",
     "url": window.location.href,
     "seller": {
