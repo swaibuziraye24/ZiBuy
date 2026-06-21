@@ -227,71 +227,7 @@ setMeta("twitter:title", p.name, true);
 setMeta("twitter:description", description, true);
 setMeta("twitter:image", images[0] || "", true);
 
-    // ============================================
-// SEO
-// ============================================
-
-const description =
-  p.description ||
-  `Buy ${p.name} on ZiBuy Uganda`;
-
-document.title = `${p.name} — ZiBuy`;
-
-document
-  .getElementById("seo-description")
-  ?.setAttribute("content", description);
-
-document
-  .getElementById("og-title")
-  ?.setAttribute("content", p.name);
-
-document
-  .getElementById("og-description")
-  ?.setAttribute("content", description);
-
-document
-  .getElementById("og-image")
-  ?.setAttribute("content", images[0] || "");
-
-document
-  .getElementById("og-url")
-  ?.setAttribute("content", window.location.href);
-
-// Twitter
-
-const twitterTitle =
-  document.querySelector(
-    'meta[name="twitter:title"]'
-  );
-
-const twitterDesc =
-  document.querySelector(
-    'meta[name="twitter:description"]'
-  );
-
-const twitterImage =
-  document.querySelector(
-    'meta[name="twitter:image"]'
-  );
-
-if (twitterTitle)
-  twitterTitle.setAttribute(
-    "content",
-    p.name
-  );
-
-if (twitterDesc)
-  twitterDesc.setAttribute(
-    "content",
-    description
-  );
-
-if (twitterImage)
-  twitterImage.setAttribute(
-    "content",
-    images[0] || ""
-  );
-
+ 
     const phone = (seller.phone || "").replace(/\D/g, "");
     const waMsg = encodeURIComponent(
       `Hi, I saw *${p.name}* on ZiBuy for UGX ${Number(p.price).toLocaleString()}`
