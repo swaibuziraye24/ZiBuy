@@ -242,6 +242,7 @@ document
 const schema = {
   "@context": "https://schema.org",
   "@type": "Product",
+  "category": p.category || "",
   "name": p.name,
   "image": images,
   "description": p.description || "",
@@ -254,9 +255,13 @@ const schema = {
     "priceCurrency": "UGX",
     "price": p.price,
     "availability": "https://schema.org/InStock",
-    "url": window.location.href
+    "url": window.location.href,
+    "seller": {
+      "@type": "Organization",
+      "name": seller.name || "ZiBuy Seller"
+    }
   }
-};
+}
 
 const script = document.createElement("script");
 script.type = "application/ld+json";
@@ -484,6 +489,32 @@ window.loadProductReviews = async function (productId) {
     container.innerHTML = html;
 
     const avgRating = (totalRating / count).toFixed(1);
+
+    // ============================================
+// REVIEW SCHEMA FOR GOOGLE
+// ============================================
+
+document
+  .querySelectorAll(".review-schema")
+  .forEach(el => el.remove());
+
+const reviewSchema = {
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": document.title.replace(" — ZiBuy Uganda", ""),
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": avgRating,
+    "reviewCount": count
+  }
+};
+
+const reviewScript = document.createElement("script");
+reviewScript.type = "application/ld+json";
+reviewScript.className = "review-schema";
+reviewScript.textContent = JSON.stringify(reviewSchema);
+
+document.head.appendChild(reviewScript);
     const badge = document.getElementById("avg-rating-badge");
     if (badge) badge.textContent = `⭐ ${avgRating} · ${count} review${count !== 1 ? "s" : ""}`;
 
