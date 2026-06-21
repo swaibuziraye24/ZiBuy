@@ -176,7 +176,121 @@ async function loadProduct() {
     const seller = p.seller || {};
     let active = 0;
 
-    document.title = `${p.name} — ZiBuy`;
+    document.title = `${p.name} — ZiBuy Uganda`;
+
+const description =
+  p.description ||
+  `${p.name} available on ZiBuy Uganda for UGX ${Number(p.price).toLocaleString()}`;
+
+let metaDesc = document.querySelector('meta[name="description"]');
+
+if (!metaDesc) {
+  metaDesc = document.createElement("meta");
+  metaDesc.name = "description";
+  document.head.appendChild(metaDesc);
+}
+
+metaDesc.setAttribute("content", description);
+
+// Open Graph
+function setMeta(property, content, isName = false) {
+  let tag = document.querySelector(
+    isName
+      ? `meta[name="${property}"]`
+      : `meta[property="${property}"]`
+  );
+
+  if (!tag) {
+    tag = document.createElement("meta");
+
+    if (isName) {
+      tag.setAttribute("name", property);
+    } else {
+      tag.setAttribute("property", property);
+    }
+
+    document.head.appendChild(tag);
+  }
+
+  tag.setAttribute("content", content);
+}
+
+setMeta("og:title", p.name);
+setMeta("og:description", description);
+setMeta("og:image", images[0] || "");
+setMeta("og:url", window.location.href);
+setMeta("og:type", "product");
+
+// Twitter
+setMeta("twitter:card", "summary_large_image", true);
+setMeta("twitter:title", p.name, true);
+setMeta("twitter:description", description, true);
+setMeta("twitter:image", images[0] || "", true);
+
+    // ============================================
+// SEO
+// ============================================
+
+const description =
+  p.description ||
+  `Buy ${p.name} on ZiBuy Uganda`;
+
+document.title = `${p.name} — ZiBuy`;
+
+document
+  .getElementById("seo-description")
+  ?.setAttribute("content", description);
+
+document
+  .getElementById("og-title")
+  ?.setAttribute("content", p.name);
+
+document
+  .getElementById("og-description")
+  ?.setAttribute("content", description);
+
+document
+  .getElementById("og-image")
+  ?.setAttribute("content", images[0] || "");
+
+document
+  .getElementById("og-url")
+  ?.setAttribute("content", window.location.href);
+
+// Twitter
+
+const twitterTitle =
+  document.querySelector(
+    'meta[name="twitter:title"]'
+  );
+
+const twitterDesc =
+  document.querySelector(
+    'meta[name="twitter:description"]'
+  );
+
+const twitterImage =
+  document.querySelector(
+    'meta[name="twitter:image"]'
+  );
+
+if (twitterTitle)
+  twitterTitle.setAttribute(
+    "content",
+    p.name
+  );
+
+if (twitterDesc)
+  twitterDesc.setAttribute(
+    "content",
+    description
+  );
+
+if (twitterImage)
+  twitterImage.setAttribute(
+    "content",
+    images[0] || ""
+  );
 
     const phone = (seller.phone || "").replace(/\D/g, "");
     const waMsg = encodeURIComponent(
