@@ -996,9 +996,31 @@
     <h2>Latest Listings</h2>
     <p id="product-count"></p>
   </div>
-  
 
 </div>
+
+
+<!-- ══ BUY POWER — BEST SECONDHAND DEALS ══ -->
+<section id="buy-power-section" style="display:none;padding:0 20px 28px">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+    <div>
+      <h2 style="font-size:20px;font-weight:900;margin:0;font-family:'Syne',sans-serif">
+        ⚡ Beeyi Powa — Best Secondhand Deals
+      </h2>
+      <p style="font-size:13px;color:#6b7280;margin:4px 0 0">
+        Top quality used phones, electronics & more at great prices
+      </p>
+    </div>
+    <button onclick="filterCategory('phones');setActiveCard(document.querySelector('.zb-cat-card'))"
+      style="background:#fff4ee;color:#ff6600;border:1.5px solid #ff6600;
+      padding:8px 14px;border-radius:8px;font-weight:800;font-size:12px;
+      cursor:pointer;font-family:inherit;white-space:nowrap">
+      View All →
+    </button>
+  </div>
+  <div id="buy-power-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px"></div>
+</section>
+
 
 
 <!-- ══ PRODUCTS ══ -->
