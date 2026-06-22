@@ -1,7 +1,7 @@
 const admin = require("firebase-admin");
 const nodemailer = require("nodemailer");
 const express = require("express");
-const seoApp = express();
+
 
 admin.initializeApp();
 const db = admin.firestore();
