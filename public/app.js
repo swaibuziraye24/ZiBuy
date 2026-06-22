@@ -69,6 +69,11 @@ let displayedCount = 0;
 const PAGE_SIZE = 20;
 let isLoadingMore = false;
 
+// Infinite scroll grid state
+let _pagedProducts = [];
+let _pageIndex = 0;
+let _isLoadingMore = false;
+
 // Filter state
 let filterState = {
   priceMin: 0,
@@ -1128,7 +1133,7 @@ const topTrending = trending.slice(0, 10);
   _pageIndex     = 0;
 
   // Load first page
-  _appendPage();
+   _appendPage();
 };
 
 
