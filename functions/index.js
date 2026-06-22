@@ -1,5 +1,7 @@
 const admin = require("firebase-admin");
 const nodemailer = require("nodemailer");
+const express = require("express");
+const seoApp = express();
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -11,6 +13,13 @@ const { onRequest } =
   require("firebase-functions/v2/https");
 const { onDocumentCreated } = require("firebase-functions/v2/firestore");
 const { onSchedule } = require("firebase-functions/v2/scheduler");
+
+
+// ============================================
+// PRODUCT SEO APP
+// ============================================
+
+const seoApp = express();
 
 setGlobalOptions({
   region: "us-central1",
@@ -1572,3 +1581,127 @@ Redirecting...
     );
   }
 });
+
+
+// ============================================
+// PRODUCT SEO PAGE
+// ============================================
+
+seoApp.get("/product/:id", async (req, res) => {
+  try {
+
+    const productId = req.params.id;
+
+    const snap = await db
+      .collection("products")
+      .doc(productId)
+      .get();
+
+    if (!snap.exists) {
+      return res.redirect(
+        "https://zibuy-5deae.web.app"
+      );
+    }
+
+    const p = snap.data();
+
+    const title =
+      p.name || "ZiBuy Product";
+
+    const description =
+      p.description ||
+      "Buy and sell safely on ZiBuy Uganda";
+
+    const image =
+      (p.images && p.images[0])
+        ? p.images[0]
+        : "https://zibuy-5deae.web.app/icons/icon-512.png";
+
+    const url =
+      `https://zibuy-5deae.web.app/product/${productId}`;
+
+    const seller =
+      p.seller?.name ||
+      "ZiBuy Seller";
+
+    const schema = {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: title,
+      image: [image],
+      description,
+      brand: {
+        "@type": "Brand",
+        name: p.details?.brand || "ZiBuy"
+      },
+      offers: {
+        "@type": "Offer",
+        priceCurrency: "UGX",
+        price: p.price || 0,
+        availability:
+          "https://schema.org/InStock",
+        seller: {
+          "@type": "Organization",
+          name: seller
+        }
+      }
+    };
+
+    if (
+      p.aggregateRating &&
+      p.aggregateRating.reviewCount > 0
+    ) {
+      schema.aggregateRating = {
+        "@type": "AggregateRating",
+        ratingValue:
+          p.aggregateRating.ratingValue,
+        reviewCount:
+          p.aggregateRating.reviewCount
+      };
+    }
+
+    res.status(200).send(`
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<title>${title}</title>
+
+<meta name="description" content="${description}" />
+
+<meta property="og:type" content="product" />
+<meta property="og:title" content="${title}" />
+<meta property="og:description" content="${description}" />
+<meta property="og:image" content="${image}" />
+<meta property="og:url" content="${url}" />
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="${title}" />
+<meta name="twitter:description" content="${description}" />
+<meta name="twitter:image" content="${image}" />
+
+<script type="application/ld+json">
+${JSON.stringify(schema)}
+</script>
+
+<meta http-equiv="refresh"
+content="0; url=https://zibuy-5deae.web.app/product.html?id=${productId}" />
+
+</head>
+<body>
+Redirecting...
+</body>
+</html>
+`);
+  }
+  catch (err) {
+
+    console.error(err);
+
+    res.redirect(
+      "https://zibuy-5deae.web.app"
+    );
+  }
+});
+
+exports.productSeo = onRequest(seoApp);
