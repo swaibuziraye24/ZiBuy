@@ -64,6 +64,10 @@ let searchQuery = "";
 let currentCategory = "all";
 let currentSubcategory = "all";
 
+// ── Infinite scroll ──
+let displayedCount = 0;
+const PAGE_SIZE = 20;
+let isLoadingMore = false;
 
 // Filter state
 let filterState = {
@@ -435,6 +439,7 @@ filteredProducts = [...allProducts];
 
 // loadFeaturedProducts();
 window.renderProducts();
+loadBuyPowerSection(allProducts);
 
 } catch (err) {
   console.error(err);
@@ -488,6 +493,119 @@ async function loadFeaturedShops() {
   }
 }
 
+
+// ============================================
+// BUY POWER — Best Secondhand Deals Section
+// ============================================
+async function loadBuyPowerSection(allProducts) {
+  const section = document.getElementById("buy-power-section");
+  const grid    = document.getElementById("buy-power-grid");
+  if (!section || !grid) return;
+
+  // Priority categories — phones and electronics first, then everything else
+  const priorityCats = ["phones", "electronics", "computers", "gaming", "accessories"];
+
+  // Filter: only secondhand/used products
+  const usedKeywords = ["used", "foreign used", "local used", "refurbished", "secondhand", "second hand"];
+
+  const usedProducts = allProducts.filter(p => {
+    if (!p || p.status !== "active") return false;
+
+    // Check condition field in details
+    const condition = (
+      p.condition ||
+      p.details?.condition ||
+      p.details?.["cf-condition"] ||
+      ""
+    ).toLowerCase();
+
+    const isUsed = usedKeywords.some(kw => condition.includes(kw));
+
+    // Also catch products where the description or title mentions "used"
+    const titleDesc = `${p.name || ""} ${p.description || ""}`.toLowerCase();
+    const mentionsUsed = titleDesc.includes("used") ||
+                         titleDesc.includes("foreign used") ||
+                         titleDesc.includes("secondhand");
+
+    return isUsed || mentionsUsed;
+  });
+
+  if (usedProducts.length === 0) {
+    section.style.display = "none";
+    return;
+  }
+
+  // Sort: priority categories first, then by views descending
+  usedProducts.sort((a, b) => {
+    const aPriority = priorityCats.includes(a.category) ? 0 : 1;
+    const bPriority = priorityCats.includes(b.category) ? 0 : 1;
+    if (aPriority !== bPriority) return aPriority - bPriority;
+    return (b.views || 0) - (a.views || 0);
+  });
+
+  // Show max 12 products
+  const toShow = usedProducts.slice(0, 12);
+
+  section.style.display = "block";
+
+  grid.innerHTML = toShow.map(p => {
+    const img   = p.images?.[0] || "";
+    const price = Number(p.price || 0).toLocaleString();
+    const condition = (
+      p.condition ||
+      p.details?.condition ||
+      p.details?.["cf-condition"] ||
+      "Used"
+    );
+
+    return `
+      <div onclick="window.location.href='product.html?id=${p.id}'"
+        style="background:white;border-radius:12px;overflow:hidden;
+        box-shadow:0 2px 10px rgba(0,0,0,0.06);cursor:pointer;
+        transition:transform .2s,box-shadow .2s;position:relative"
+        onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,0.12)'"
+        onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 2px 10px rgba(0,0,0,0.06)'">
+
+        <!-- Used badge -->
+        <div style="position:absolute;top:8px;left:8px;z-index:2;
+          background:linear-gradient(135deg,#ff6600,#ff9900);color:white;
+          padding:3px 8px;border-radius:6px;font-size:10px;font-weight:800">
+          ⚡ USED
+        </div>
+
+        <!-- Save/wishlist btn -->
+        <button onclick="event.stopPropagation();toggleLike('${p.id}',this)"
+          style="position:absolute;top:8px;right:8px;z-index:2;
+          background:white;border:none;width:30px;height:30px;border-radius:50%;
+          font-size:16px;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,0.12);
+          display:flex;align-items:center;justify-content:center">
+          🤍
+        </button>
+
+        <img src="${img}" alt="${p.name}"
+          onerror="this.src='https://via.placeholder.com/200?text=No+Image'"
+          style="width:100%;height:150px;object-fit:cover">
+
+        <div style="padding:10px">
+          <p style="margin:0 0 4px;font-size:11px;color:#ff6600;
+            font-weight:800;text-transform:uppercase;letter-spacing:.4px">
+            ${p.category || ""}
+          </p>
+          <p style="margin:0 0 6px;font-weight:700;font-size:13px;color:#111827;
+            overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+            ${p.name}
+          </p>
+          <p style="margin:0 0 4px;color:#ff6600;font-weight:900;font-size:15px">
+            UGX ${price}
+          </p>
+          <p style="margin:0;font-size:11px;color:#9ca3af">
+            📍 ${p.seller?.location || p.location || "Uganda"} · ${condition}
+          </p>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
 
 // ============================================
 // LOAD FEATURED PRODUCTS
@@ -983,10 +1101,120 @@ const topTrending = trending.slice(0, 10);
   renderRow("🔥 Trending", topTrending);
   renderRow("🆕 New Arrivals", newArrivals);
 
-  Object.keys(grouped).forEach(cat => {
-    renderRow(cat.charAt(0).toUpperCase() + cat.slice(1), grouped[cat]);
-  });
+  // ── Infinite scroll grid (below Trending & New Arrivals) ──
+  const allSection = document.createElement("div");
+  allSection.id = "all-products-section";
+  allSection.innerHTML = `
+    <h2 style="margin:10px 10px 6px">
+      🏪 All Listings
+      <span id="all-products-count"
+        style="font-size:13px;font-weight:600;color:#9ca3af;margin-left:8px">
+        (${products.length})
+      </span>
+    </h2>
+    <div id="all-products-grid"
+      style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+      gap:12px;padding:10px">
+    </div>
+    <div id="scroll-sentinel"
+      style="height:60px;display:flex;align-items:center;justify-content:center;
+      padding:20px;color:#9ca3af;font-size:13px">
+    </div>
+  `;
+  container.appendChild(allSection);
+
+  // Store for paging
+  _pagedProducts = products;
+  _pageIndex     = 0;
+
+  // Load first page
+  _appendPage();
 };
+
+
+
+// ── Append next page of products to the grid ──
+function _appendPage() {
+  const grid = document.getElementById("all-products-grid");
+  const sentinel = document.getElementById("scroll-sentinel");
+  if (!grid) return;
+
+  const slice = _pagedProducts.slice(_pageIndex, _pageIndex + PAGE_SIZE);
+  _pageIndex += slice.length;
+
+  slice.forEach(p => {
+    const isTrending = (p.score || 0) > 500;
+    const card = document.createElement("div");
+    card.className = "product-card";
+    card.style.cssText = "background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.10);cursor:pointer";
+    card.onclick = () => window.location.href = `product.html?id=${p.id}`;
+
+    card.innerHTML = `
+      <div style="position:relative;background:#f7f7f7">
+        <img src="${p.images?.[0] || 'placeholder.jpg'}"
+          style="width:100%;aspect-ratio:1/1;object-fit:cover"
+          onerror="this.src='placeholder.jpg'">
+        ${p.isZiBuyOfficial ? `
+          <div style="position:absolute;top:5px;left:5px;background:linear-gradient(135deg,#111827,#374151);color:white;font-size:10px;padding:3px 8px;border-radius:5px;font-weight:800;display:flex;align-items:center;gap:3px">
+            <img src="my_logo.png" style="width:12px;height:12px;object-fit:contain;border-radius:2px"> ZiBuy
+          </div>
+        ` : isTrending ? `
+          <div style="position:absolute;top:5px;left:5px;background:#ff6600;color:white;font-size:10px;padding:3px 6px;border-radius:5px;font-weight:800">
+            🔥 TRENDING
+          </div>
+        ` : ""}
+        ${p.isPremium && !p.isZiBuyOfficial ? `
+          <div style="position:absolute;top:5px;right:5px;background:linear-gradient(135deg,#ff6600,#ff9900);color:white;font-size:10px;padding:3px 6px;border-radius:5px;font-weight:800">
+            ⭐ Featured
+          </div>
+        ` : ""}
+        <button onclick="event.stopPropagation();toggleLike('${p.id}',this)"
+          style="position:absolute;bottom:5px;right:5px;background:white;border:none;
+          width:28px;height:28px;border-radius:50%;font-size:14px;cursor:pointer;
+          box-shadow:0 2px 6px rgba(0,0,0,0.12);display:flex;align-items:center;justify-content:center">
+          🤍
+        </button>
+      </div>
+      <div style="padding:8px">
+        <p style="font-size:11px;color:#ff6600;font-weight:700;margin:0 0 3px;
+          text-transform:uppercase;letter-spacing:.3px">${p.category || ""}</p>
+        <h3 style="font-size:12px;margin:0 0 4px;color:#111827;overflow:hidden;
+          text-overflow:ellipsis;white-space:nowrap">${p.name || "No name"}</h3>
+        <p style="color:#ff6600;font-weight:800;font-size:14px;margin:0 0 6px">
+          UGX ${Number(p.price || 0).toLocaleString()}
+        </p>
+        <button onclick="event.stopPropagation();window.location.href='product.html?id=${p.id}'"
+          style="width:100%;padding:7px;font-size:11px;background:#ff6600;color:white;
+          border:none;border-radius:7px;font-weight:700;cursor:pointer;font-family:inherit">
+          View →
+        </button>
+        <p style="color:#9ca3af;font-size:11px;margin:4px 0 0">
+          📍 ${p.location || p.seller?.location || "Uganda"}
+          ${p.sellerIsVerified ? ' · <span style="color:#10b981;font-weight:700">✅ Verified</span>' : ""}
+        </p>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+
+  // Update sentinel
+  if (sentinel) {
+    if (_pageIndex >= _pagedProducts.length) {
+      sentinel.innerHTML = `
+        <span style="color:#9ca3af;font-size:12px">
+          ✅ You've seen all ${_pagedProducts.length} listing${_pagedProducts.length !== 1 ? "s" : ""}
+        </span>`;
+    } else {
+      sentinel.innerHTML = `
+        <span style="display:flex;align-items:center;gap:8px;color:#9ca3af">
+          <span style="width:18px;height:18px;border:2px solid #ff6600;
+            border-top-color:transparent;border-radius:50%;
+            animation:spin 1s linear infinite;display:inline-block"></span>
+          Loading more...
+        </span>`;
+    }
+  }
+}
  
 
 // ============================================
@@ -1958,5 +2186,74 @@ window.customerRegister = async function() {
     alert("❌ " + err.message);
   }
 };
+
+// ============================================
+// LIKE / WISHLIST TOGGLE
+// ============================================
+window.toggleLike = async function(productId, btnEl) {
+  if (!auth.currentUser) {
+    showToast("Login to save to wishlist", "info");
+    return;
+  }
+
+  const uid = auth.currentUser.uid;
+
+  try {
+    // Check if already liked
+    const existing = await getDocs(query(
+      collection(db, "likes"),
+      where("userId", "==", uid),
+      where("productId", "==", productId)
+    ));
+
+    if (!existing.empty) {
+      // Unlike — remove from Firestore
+      for (const d of existing.docs) {
+        await deleteDoc(doc(db, "likes", d.id));
+      }
+      if (btnEl) btnEl.textContent = "🤍";
+      showToast("Removed from wishlist", "info");
+    } else {
+      // Like — save to Firestore
+      await addDoc(collection(db, "likes"), {
+        userId: uid,
+        productId,
+        createdAt: new Date()
+      });
+      if (btnEl) btnEl.textContent = "❤️";
+      showToast("Saved to wishlist!", "success");
+    }
+  } catch (err) {
+    console.error("toggleLike error:", err);
+    showToast("Failed to save", "error");
+  }
+};
+
+// ── Infinite scroll observer (fires once on load) ──
+(function () {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      if (_isLoadingMore) return;
+      if (_pageIndex >= _pagedProducts.length) return;
+
+      _isLoadingMore = true;
+      setTimeout(() => {
+        _appendPage();
+        _isLoadingMore = false;
+      }, 350);
+    });
+  }, { rootMargin: "200px" });
+
+  // Watch for sentinel being added to DOM
+  const mo = new MutationObserver(() => {
+    const sentinel = document.getElementById("scroll-sentinel");
+    if (sentinel) {
+      observer.observe(sentinel);
+    }
+  });
+
+  mo.observe(document.body, { childList: true, subtree: true });
+})();
 
 
