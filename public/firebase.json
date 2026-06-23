@@ -2,19 +2,23 @@
   "hosting": {
     "public": "public",
     "rewrites": [
-  {
-    "source": "/blog/**",
-    "function": "blogSeo"
-  },
-  {
-    "source": "/product/**",
-    "function": "productSeo"
-  },
-  {
-    "source": "**",
-    "destination": "/index.html"
-  }
-],
+      {
+        "source": "/blog/**",
+        "function": "blogSeo"
+      },
+      {
+        "source": "/product/**",
+        "function": "productSeo"
+      },
+      {
+        "source": "/sitemap.xml",
+        "destination": "/sitemap.xml"
+      },
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ],
     "ignore": [
       "firebase.json",
       "**/.*",
