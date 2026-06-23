@@ -358,7 +358,6 @@ function isTrending(p) {
   return getTrendScore(p) > 50;
 }
 
-
 // ============================================
 // LOAD PRODUCTS FROM FIRESTORE
 // ============================================
