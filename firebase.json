@@ -7,6 +7,10 @@
     "function": "blogSeo"
   },
   {
+    "source": "/product/**",
+    "function": "productSeo"
+  },
+  {
     "source": "**",
     "destination": "/index.html"
   }
