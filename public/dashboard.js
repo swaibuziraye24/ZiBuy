@@ -92,7 +92,8 @@ window.switchTab = async function(tabName) {
     "profile":   "profile-tab",
     "analytics": "analytics-tab",
     "myprofile": "myprofile-tab",
-    "wishlist":  "wishlist-tab"
+    "wishlist":  "wishlist-tab",
+    "referral":  "referral-tab"
   };
 
   const tabId = tabMap[tabName] || "";
@@ -130,6 +131,8 @@ window.switchTab = async function(tabName) {
       await loadMyProfile();
     } else if (tabName === "wishlist") {
       await loadWishlist();
+    } else if (tabName === "referral") {
+      await loadReferralTab();
     }
   
   } catch (err) {
@@ -1803,3 +1806,254 @@ window.saveMyProfile = async function() {
   }
 };
 
+// ============================================
+// REFERRAL TAB
+// ============================================
+async function loadReferralTab() {
+  const container = document.getElementById("referral-container");
+  if (!container || !currentUser) return;
+
+  container.innerHTML = `<div style="text-align:center;padding:40px;color:#6b7280">Loading...</div>`;
+
+  const { loadReferralStats, getReferralLink, applyBoostCredit }
+    = await import("./referral.js");
+
+  const userSnap = await getDoc(doc(db, "users", currentUser.uid));
+  const userData = userSnap.exists() ? userSnap.data() : {};
+  const refCode  = userData.referralCode || ("ZB" + currentUser.uid.slice(0, 6).toUpperCase());
+  const refLink  = getReferralLink(refCode);
+
+  const stats = await loadReferralStats(currentUser.uid);
+
+  container.innerHTML = `
+
+    <!-- How it works -->
+    <div style="background:linear-gradient(135deg,#ff6600,#ff9900);
+      border-radius:16px;padding:24px;color:white;margin-bottom:20px;text-align:center">
+      <p style="font-size:28px;margin:0 0 8px">🎁</p>
+      <h2 style="margin:0 0 8px;font-size:20px;font-weight:900">Earn Free Boosts by Referring Friends!</h2>
+      <p style="margin:0;font-size:14px;opacity:.92">
+        Share your link. When a friend signs up and posts their first ad,
+        you get a <strong>FREE 7-day boost</strong> to use on any of your ads.
+      </p>
+    </div>
+
+    <!-- Your link -->
+    <div style="background:white;border-radius:14px;padding:20px;
+      box-shadow:0 2px 12px rgba(0,0,0,0.07);margin-bottom:16px">
+      <h3 style="font-size:15px;font-weight:800;margin:0 0 14px">🔗 Your Referral Link</h3>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="ref-link-input" readonly value="${refLink}"
+          style="flex:1;padding:11px 14px;border:1.5px solid #e5e7eb;
+          border-radius:10px;font-size:12px;font-family:inherit;
+          background:#f9fafb;color:#374151;outline:none">
+        <button onclick="
+          navigator.clipboard.writeText('${refLink}');
+          this.textContent='✅ Copied!';
+          setTimeout(()=>this.textContent='📋 Copy',2000)"
+          style="background:#ff6600;color:white;border:none;
+          padding:11px 16px;border-radius:10px;font-weight:800;
+          font-size:13px;cursor:pointer;white-space:nowrap;font-family:inherit">
+          📋 Copy
+        </button>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <a href="https://wa.me/?text=${encodeURIComponent('Join ZiBuy Uganda — Buy & Sell anything! Use my referral link: ' + refLink)}"
+          target="_blank"
+          style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;
+          background:#25d366;color:white;border-radius:10px;padding:10px;
+          font-weight:800;font-size:13px;text-decoration:none">
+          💬 Share on WhatsApp
+        </a>
+        <button onclick="
+          if(navigator.share){
+            navigator.share({title:'Join ZiBuy',text:'Join ZiBuy Uganda!',url:'${refLink}'})
+          }"
+          style="flex:1;background:#f3f4f6;color:#374151;border:none;
+          padding:10px;border-radius:10px;font-weight:700;font-size:13px;
+          cursor:pointer;font-family:inherit">
+          📤 Share
+        </button>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px">
+      <div style="background:white;border-radius:12px;padding:16px;
+        box-shadow:0 2px 8px rgba(0,0,0,0.06);text-align:center;
+        border-top:3px solid #ff6600">
+        <p style="font-size:28px;font-weight:900;color:#ff6600;margin:0">
+          ${stats.referrals.length}
+        </p>
+        <p style="font-size:11px;color:#6b7280;font-weight:700;
+          text-transform:uppercase;letter-spacing:.5px;margin:4px 0 0">
+          Total Referred
+        </p>
+      </div>
+      <div style="background:white;border-radius:12px;padding:16px;
+        box-shadow:0 2px 8px rgba(0,0,0,0.06);text-align:center;
+        border-top:3px solid #10b981">
+        <p style="font-size:28px;font-weight:900;color:#10b981;margin:0">
+          ${stats.rewarded}
+        </p>
+        <p style="font-size:11px;color:#6b7280;font-weight:700;
+          text-transform:uppercase;letter-spacing:.5px;margin:4px 0 0">
+          Rewards Earned
+        </p>
+      </div>
+      <div style="background:white;border-radius:12px;padding:16px;
+        box-shadow:0 2px 8px rgba(0,0,0,0.06);text-align:center;
+        border-top:3px solid #8b5cf6">
+        <p style="font-size:28px;font-weight:900;color:#8b5cf6;margin:0">
+          ${stats.totalDays}
+        </p>
+        <p style="font-size:11px;color:#6b7280;font-weight:700;
+          text-transform:uppercase;letter-spacing:.5px;margin:4px 0 0">
+          Boost Days Available
+        </p>
+      </div>
+    </div>
+
+    <!-- Available boost credits -->
+    ${stats.credits.length > 0 ? `
+      <div style="background:white;border-radius:14px;padding:20px;
+        box-shadow:0 2px 12px rgba(0,0,0,0.07);margin-bottom:16px">
+        <h3 style="font-size:15px;font-weight:800;margin:0 0 14px;color:#111827">
+          ⭐ Your Boost Credits
+        </h3>
+        ${stats.credits.map(c => `
+          <div style="display:flex;justify-content:space-between;align-items:center;
+            padding:12px;background:#fff4ee;border-radius:10px;margin-bottom:8px;
+            border:1.5px solid #ffd9bf">
+            <div>
+              <p style="margin:0;font-weight:800;color:#ff6600">
+                🎁 ${c.days}-Day Free Boost
+              </p>
+              <p style="margin:3px 0 0;font-size:12px;color:#6b7280">
+                Expires: ${new Date(c.expiresAt?.toDate?.() || c.expiresAt).toLocaleDateString("en-UG",{day:"numeric",month:"short",year:"numeric"})}
+              </p>
+            </div>
+            <button onclick="openApplyCreditModal('${c.id}', ${c.days})"
+              style="background:#ff6600;color:white;border:none;
+              padding:9px 16px;border-radius:8px;font-weight:800;
+              font-size:12px;cursor:pointer;font-family:inherit">
+              Apply to Ad →
+            </button>
+          </div>
+        `).join("")}
+      </div>
+    ` : ""}
+
+    <!-- Pending referrals -->
+    ${stats.pending > 0 ? `
+      <div style="background:#fffbeb;border:1.5px solid #fde68a;
+        border-radius:12px;padding:16px;margin-bottom:16px">
+        <p style="margin:0;font-size:14px;color:#92400e;font-weight:700">
+          ⏳ ${stats.pending} friend${stats.pending > 1 ? "s have" : " has"} signed up
+          but not yet posted an ad. Once they post, you earn your boost!
+        </p>
+      </div>
+    ` : ""}
+
+    <!-- How it works steps -->
+    <div style="background:white;border-radius:14px;padding:20px;
+      box-shadow:0 2px 12px rgba(0,0,0,0.07)">
+      <h3 style="font-size:15px;font-weight:800;margin:0 0 16px">
+        📖 How It Works
+      </h3>
+      ${[
+        ["1️⃣", "Share your referral link", "Send it to friends via WhatsApp or any platform"],
+        ["2️⃣", "Friend signs up", "They create a ZiBuy account using your link"],
+        ["3️⃣", "Friend posts first ad", "When they post their first product or service"],
+        ["4️⃣", "You get rewarded", "A FREE 7-day boost is added to your account automatically"]
+      ].map(([icon, title, desc]) => `
+        <div style="display:flex;gap:14px;margin-bottom:14px;align-items:flex-start">
+          <span style="font-size:22px;flex-shrink:0">${icon}</span>
+          <div>
+            <p style="margin:0;font-weight:800;color:#111827;font-size:14px">${title}</p>
+            <p style="margin:3px 0 0;font-size:13px;color:#6b7280">${desc}</p>
+          </div>
+        </div>
+      `).join("")}
+    </div>
+  `;
+
+  // Store applyBoostCredit for modal use
+  window._applyBoostCredit = applyBoostCredit;
+}
+
+window.openApplyCreditModal = async function(creditId, days) {
+  // Load user's active ads
+  const adsSnap = await getDocs(query(
+    collection(db, "products"),
+    where("userId", "==", currentUser.uid),
+    where("status", "==", "active")
+  ));
+  const ads = adsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  const modal = document.createElement("div");
+  modal.className = "modal open";
+  modal.innerHTML = `
+    <div class="modal-box" style="max-width:460px">
+      <div class="modal-header">
+        <h2>⭐ Apply ${days}-Day Free Boost</h2>
+        <button class="modal-close" onclick="this.closest('.modal').remove()">×</button>
+      </div>
+      <p style="color:#6b7280;font-size:14px;margin-bottom:16px">
+        Choose which ad you want to boost for free:
+      </p>
+      ${ads.length === 0
+        ? `<p style="text-align:center;color:#6b7280;padding:20px">
+            No active ads. <a href="post-ad.html" style="color:#ff6600;font-weight:700">Post an ad first →</a>
+           </p>`
+        : ads.map(a => `
+            <div style="display:flex;justify-content:space-between;align-items:center;
+              padding:12px;background:#f9fafb;border-radius:10px;margin-bottom:8px">
+              <div style="display:flex;gap:10px;align-items:center">
+                <img src="${a.images?.[0] || ''}" onerror="this.style.display='none'"
+                  style="width:44px;height:44px;object-fit:cover;border-radius:8px;background:#e5e7eb">
+                <div>
+                  <p style="margin:0;font-weight:700;font-size:13px;color:#111827">${a.name}</p>
+                  <p style="margin:0;font-size:12px;color:#ff6600;font-weight:700">
+                    UGX ${Number(a.price).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+              <button onclick="applyCredit('${creditId}','${a.id}','${a.name.replace(/'/g,"\\'")}',this)"
+                style="background:#ff6600;color:white;border:none;padding:8px 14px;
+                border-radius:8px;font-weight:800;font-size:12px;cursor:pointer;
+                font-family:inherit;white-space:nowrap">
+                Boost This →
+              </button>
+            </div>
+          `).join("")
+      }
+    </div>
+  `;
+  document.body.appendChild(modal);
+};
+
+window.applyCredit = async function(creditId, productId, productName, btnEl) {
+  btnEl.textContent = "Applying...";
+  btnEl.disabled    = true;
+
+  const result = await window._applyBoostCredit(creditId, productId, productName);
+
+  if (result.success) {
+    btnEl.closest(".modal").remove();
+    const toast = document.createElement("div");
+    toast.className   = "toast success";
+    toast.textContent = `✅ ${result.days}-day boost applied to "${productName}"!`;
+    document.getElementById("toast-container")?.appendChild(toast);
+    setTimeout(() => toast.remove(), 4000);
+    loadReferralTab(); // refresh stats
+  } else {
+    btnEl.textContent = "Failed";
+    btnEl.style.background = "#ef4444";
+    setTimeout(() => {
+      btnEl.textContent = "Boost This →";
+      btnEl.style.background = "#ff6600";
+      btnEl.disabled = false;
+    }, 2000);
+  }
+};
