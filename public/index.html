@@ -12,6 +12,7 @@
   <link rel="manifest" href="/manifest.json">
 
   
+
     <style>
     /* ── NEW TOPBAR ── */
     .zb-topbar {
@@ -656,19 +657,35 @@
 
 <script type="application/ld+json">
 {
- "@context": "https://schema.org",
- "@type": "WebSite",
- "name": "ZiBuy Uganda",
- "url": "https://zibuy-5deae.web.app/",
- "description": "Uganda's trusted marketplace for buying and selling phones, electronics, vehicles, property, jobs and services.",
- "potentialAction": {
-   "@type": "SearchAction",
-   "target": "https://zibuy-5deae.web.app/?search={search_term_string}",
-   "query-input": "required name=search_term_string"
- }
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "name": "ZiBuy Uganda",
+      "url": "https://zibuy-5deae.web.app/",
+      "description": "Uganda's trusted marketplace for buying and selling phones, electronics, vehicles, property, jobs and services.",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://zibuy-5deae.web.app/?search={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    },
+    {
+      "@type": "Organization",
+      "name": "ZiBuy Uganda",
+      "url": "https://zibuy-5deae.web.app/",
+      "logo": "https://zibuy-5deae.web.app/logo.png",
+      "sameAs": [
+        "https://facebook.com/zibuyuganda",
+        "https://instagram.com/zibuyuganda",
+        "https://tiktok.com/@zibuyuganda",
+        "https://youtube.com/@zibuyuganda",
+        "https://x.com/ZiBuyUganda"
+      ]
+    }
+  ]
 }
 </script>
-</head>
 <body>
 
 <!-- ══ NEW TOPBAR ══ -->
@@ -1110,6 +1127,14 @@ sellers directly.
       <a href="support.html">Support</a>
     </div>
   </div>
+
+  <div class="social-links">
+  <a href="https://facebook.com/zibuyuganda" target="_blank">Facebook</a>
+  <a href="https://tiktok.com/@zibuyuganda" target="_blank">TikTok</a>
+  <a href="https://instagram.com/zibuyuganda" target="_blank">Instagram</a>
+  <a href="https://youtube.com/@zibuyuganda" target="_blank">YouTube</a>
+  <a href="https://x.com/@ZiBuyUganda" target="_blank">X</a>
+</div>
   <div class="footer-bottom">
     © 2026 ZiBuy Uganda · All rights reserved
   </div>
