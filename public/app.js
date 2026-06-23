@@ -201,7 +201,7 @@ async function loadBannerAd() {
         dots[current].style.background = "white";
 
         trackBannerImpression(banners[current].id);
-      }, 4000); // changes every 20 seconds
+      }, 4000); // changes every 4 seconds
     }
 
   } catch (e) { console.warn("loadBannerAd:", e.message); }
