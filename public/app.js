@@ -195,7 +195,7 @@ async function loadBannerAd() {
         slides[current].style.opacity = "0";
         dots[current].style.background = "rgba(255,255,255,.4)";
 
-        current = (current + 1) % sponsors.length;
+        current = (current + 1) % banners.length;
 
         slides[current].style.opacity = "1";
         dots[current].style.background = "white";
