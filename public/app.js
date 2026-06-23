@@ -516,23 +516,31 @@ async function loadBuyPowerSection(allProducts) {
   const usedProducts = allProducts.filter(p => {
     if (!p || p.status !== "active") return false;
 
-    // Check condition field in details
+    // ONLY products where the seller explicitly selected a used condition
+    // when posting their ad — no guessing from title/description
     const condition = (
       p.condition ||
       p.details?.condition ||
       p.details?.["cf-condition"] ||
+      p.details?.["cf-phone-condition"] ||
       ""
-    ).toLowerCase();
+    ).toLowerCase().trim();
 
-    const isUsed = usedKeywords.some(kw => condition.includes(kw));
+    const explicitUsedValues = [
+      "foreign used",
+      "local used",
+      "used",
+      "used – good condition",
+      "used – fair condition",
+      "used — good condition",
+      "used — fair condition",
+      "slightly used",
+      "refurbished",
+      "used – working",
+      "used – sanitized"
+    ];
 
-    // Also catch products where the description or title mentions "used"
-    const titleDesc = `${p.name || ""} ${p.description || ""}`.toLowerCase();
-    const mentionsUsed = titleDesc.includes("used") ||
-                         titleDesc.includes("foreign used") ||
-                         titleDesc.includes("secondhand");
-
-    return isUsed || mentionsUsed;
+    return explicitUsedValues.includes(condition);
   });
 
   if (usedProducts.length === 0) {
@@ -1118,8 +1126,8 @@ const topTrending = trending.slice(0, 10);
       </span>
     </h2>
     <div id="all-products-grid"
-      style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
-      gap:12px;padding:10px">
+      style="display:grid;grid-template-columns:repeat(2,1fr);
+      gap:10px;padding:10px">
     </div>
     <div id="scroll-sentinel"
       style="height:60px;display:flex;align-items:center;justify-content:center;
