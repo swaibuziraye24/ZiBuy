@@ -149,13 +149,23 @@ async function loadBannerAd() {
     // Build all banner slides + dots
     slot.innerHTML = `
       <div style="position:relative;border-radius:12px;overflow:hidden">
-        <div id="banner-slides" style="position:relative;height:180px">
+        <div id="banner-slides" style="position:relative;height:220px">
           ${banners.map((b, i) => `
             <a href="${b.url || '#'}" target="_blank" data-banner-idx="${i}"
               style="position:absolute;inset:0;display:block;opacity:${i === 0 ? 1 : 0};
-              transition:opacity .6s ease;border-radius:14px;overflow:hidden">
+              transition:opacity .6s ease;border-radius:16px;overflow:hidden;
+              box-shadow:0 4px 20px rgba(0,0,0,0.15)">
               <img src="${b.imageUrl}" alt="${b.title || 'Ad'}"
-                style="width:100%;height:180px;object-fit:cover;border-radius:14px">
+                style="width:100%;height:220px;object-fit:cover;border-radius:16px">
+              ${b.title ? `
+                <div style="position:absolute;bottom:0;left:0;right:0;
+                  background:linear-gradient(transparent,rgba(0,0,0,0.6));
+                  padding:20px 16px 14px;border-radius:0 0 16px 16px">
+                  <p style="margin:0;color:white;font-weight:800;font-size:15px">
+                    ${b.title}
+                  </p>
+                  ${b.subtitle ? `<p style="margin:3px 0 0;color:rgba(255,255,255,.8);font-size:12px">${b.subtitle}</p>` : ""}
+                </div>` : ""}
             </a>
           `).join("")}
         </div>
@@ -183,15 +193,15 @@ async function loadBannerAd() {
         const dots   = slot.querySelectorAll(".banner-dot");
 
         slides[current].style.opacity = "0";
-        dots[current].style.background = "rgba(255,255,255,.6)";
+        dots[current].style.background = "rgba(255,255,255,.4)";
 
-        current = (current + 1) % banners.length;
+        current = (current + 1) % sponsors.length;
 
         slides[current].style.opacity = "1";
-        dots[current].style.background = "#ff6600";
+        dots[current].style.background = "white";
 
         trackBannerImpression(banners[current].id);
-      }, 4000); // changes every 4 seconds
+      }, 4000); // changes every 20 seconds
     }
 
   } catch (e) { console.warn("loadBannerAd:", e.message); }
@@ -1257,39 +1267,50 @@ async function loadCategorySponsors() {
     slot.style.display = "block";
 
     slot.innerHTML = `
-      <div style="position:relative;border-radius:12px;overflow:hidden;
-        background:linear-gradient(135deg,#fff4ee,#fffbeb);
-        border:1.5px solid #fde68a;min-height:54px">
-        <div id="sponsor-slides" style="position:relative;min-height:54px">
+      <div style="position:relative;border-radius:14px;overflow:hidden;
+        background:linear-gradient(135deg,#ff6600,#ff8c00);
+        box-shadow:0 4px 16px rgba(255,102,0,0.25);min-height:70px">
+        <div id="sponsor-slides" style="position:relative;min-height:70px">
           ${sponsors.map((s, i) => {
             let url = s.sponsorUrl || "#";
             if (url !== "#" && !url.startsWith("http")) url = "https://" + url;
             return `
               <a href="${url}" target="_blank" rel="noopener noreferrer"
                 data-sponsor-idx="${i}"
-                style="position:absolute;inset:0;display:flex;align-items:center;gap:10px;
-                padding:12px 16px;opacity:${i === 0 ? 1 : 0};transition:opacity .6s ease;
-                text-decoration:none;color:#92400e">
-                <span style="font-weight:800;font-size:12px;white-space:nowrap">📣 Sponsored:</span>
-                <span style="font-size:13px;font-weight:700;flex:1;overflow:hidden;
-                  text-overflow:ellipsis;white-space:nowrap">
-                  ${capitalize(s.category)} — Brought to you by ${s.sponsorName}
-                </span>
-                <span style="background:#ff6600;color:white;padding:5px 12px;
-                  border-radius:6px;font-weight:800;font-size:11px;white-space:nowrap;flex-shrink:0">
+                style="position:absolute;inset:0;display:flex;align-items:center;gap:12px;
+                padding:14px 18px;opacity:${i === 0 ? 1 : 0};transition:opacity .6s ease;
+                text-decoration:none;color:white">
+                <div style="width:36px;height:36px;background:rgba(255,255,255,0.2);
+                  border-radius:8px;display:flex;align-items:center;justify-content:center;
+                  font-size:18px;flex-shrink:0">
+                  📣
+                </div>
+                <div style="flex:1;min-width:0">
+                  <p style="margin:0;font-size:10px;font-weight:700;
+                    text-transform:uppercase;letter-spacing:.8px;opacity:.85">
+                    Sponsored Category
+                  </p>
+                  <p style="margin:2px 0 0;font-size:14px;font-weight:800;
+                    overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+                    ${capitalize(s.category)} — ${s.sponsorName}
+                  </p>
+                </div>
+                <div style="background:white;color:#ff6600;padding:8px 16px;
+                  border-radius:8px;font-weight:900;font-size:12px;
+                  white-space:nowrap;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,0.1)">
                   Visit →
-                </span>
+                </div>
               </a>
             `;
           }).join("")}
         </div>
         ${sponsors.length > 1 ? `
-          <div style="position:absolute;bottom:5px;left:50%;transform:translateX(-50%);
+          <div style="position:absolute;bottom:6px;left:50%;transform:translateX(-50%);
             display:flex;gap:5px;z-index:5">
             ${sponsors.map((_, i) => `
               <span class="sponsor-dot" data-sdot-idx="${i}"
                 style="width:6px;height:6px;border-radius:50%;
-                background:${i === 0 ? '#ff6600' : 'rgba(255,102,0,.3)'};
+                background:${i === 0 ? 'white' : 'rgba(255,255,255,.4)'};
                 transition:.3s"></span>
             `).join("")}
           </div>` : ""}
