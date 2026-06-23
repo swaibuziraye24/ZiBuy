@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Loading product...</title>
+
+  <!-- SEO META (will be filled by JS) -->
+  <meta id="seo-description" name="description" content="">
+  <meta id="og-title" property="og:title" content="">
+  <meta id="og-description" property="og:description" content="">
+  <meta id="og-image" property="og:image" content="">
+  <meta id="og-url" property="og:url" content="">
+  <meta property="og:type" content="product">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta id="twitter-title" name="twitter:title" content="">
+  <meta id="twitter-description" name="twitter:description" content="">
+  <meta id="twitter-image" name="twitter:image" content="">
+
+  <link rel="canonical" id="canonical-url" href="">
+
+  <!-- Schema -->
+  <script id="product-schema" type="application/ld+json"></script>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<!-- LOADING SCREEN -->
+<div id="loading" style="text-align:center;padding:80px;font-family:sans-serif">
+  <h2>Loading product...</h2>
+</div>
+
+<!-- PRODUCT CONTAINER -->
+<div id="product-container" style="display:none"></div>
+
+<script type="module">
+import { db, doc, getDoc } from "./firebase.js";
+
+/* =========================
+   GET PRODUCT ID FROM URL
+========================= */
+const params = new URLSearchParams(window.location.search);
+const id = params.get("id");
+
+/* =========================
+   LOAD PRODUCT
+========================= */
+async function loadProduct() {
+  if (!id) {
+    document.body.innerHTML = "<h1>Product not found</h1>";
+    return;
+  }
+
+  const snap = await getDoc(doc(db, "products", id));
+
+  if (!snap.exists()) {
+    document.body.innerHTML = "<h1>Product not found</h1>";
+    return;
+  }
+
+  const p = snap.data();
+
+  const images = p.images || [];
+
+  const description =
+    p.description ||
+    `${p.name} available on ZiBuy Uganda for UGX ${Number(p.price).toLocaleString()}`;
+
+  /* =========================
+     SET SEO META TAGS
+  ========================= */
+  document.title = `${p.name} — ZiBuy Uganda`;
+
+  document.getElementById("seo-description").setAttribute("content", description);
+
+  document.getElementById("og-title").setAttribute("content", p.name);
+  document.getElementById("og-description").setAttribute("content", description);
+  document.getElementById("og-image").setAttribute("content", images[0] || "");
+  document.getElementById("og-url").setAttribute("content", window.location.href);
+
+  document.getElementById("twitter-title").setAttribute("content", p.name);
+  document.getElementById("twitter-description").setAttribute("content", description);
+  document.getElementById("twitter-image").setAttribute("content", images[0] || "");
+
+  document.getElementById("canonical-url").setAttribute("href", window.location.href);
+
+  /* =========================
+     STRUCTURED DATA (SEO)
+  ========================= */
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": p.name,
+    "image": images,
+    "description": description,
+    "offers": {
+      "@type": "Offer",
+      "price": p.price,
+      "priceCurrency": "UGX",
+      "availability": "https://schema.org/InStock"
+    }
+  };
+
+  document.getElementById("product-schema").textContent =
+    JSON.stringify(schema);
+
+  /* =========================
+     RENDER PAGE
+  ========================= */
+  document.getElementById("loading").style.display = "none";
+
+  document.getElementById("product-container").style.display = "block";
+
+  document.getElementById("product-container").innerHTML = `
+    <div style="max-width:900px;margin:auto;padding:20px;font-family:sans-serif">
+
+      <a href="index.html">← Back</a>
+
+      <h1>${p.name}</h1>
+
+      <img src="${images[0] || ''}" style="width:100%;max-height:400px;object-fit:cover;border-radius:12px">
+
+      <h2 style="color:#ff6600">UGX ${Number(p.price).toLocaleString()}</h2>
+
+      <p>${p.description || "No description"}</p>
+
+    </div>
+  `;
+}
+
+loadProduct();
+</script>
+
+</body>
+</html>
