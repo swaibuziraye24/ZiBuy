@@ -18,6 +18,9 @@ import {
 } from "./ranking-service.js";
 
 
+import { captureReferralCode, ensureReferralCode } from "./referral.js";
+captureReferralCode(); // runs immediately on every page load
+
 function categoryEmoji(cat) {
   const map = {
     phones: "📱",
@@ -126,7 +129,7 @@ function initApp() {
       sessionStorage.removeItem("zibuy_scroll");
     }, 600);
   }
-
+} // ← closes initApp
 
 // Load banner ads from Firestore — rotates if multiple
 async function loadBannerAd() {
@@ -204,7 +207,7 @@ function trackBannerImpression(bannerId) {
 }
 
 
-}
+
 
 // ============================================
 // ============================================
@@ -217,6 +220,9 @@ function setupAuthStateListener() {
 
 // Auto-create user doc if missing (fixes old accounts)
     if (user) {
+      // Ensure referral code exists for every logged-in user
+      ensureReferralCode(user.uid);
+
       import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js")
         .then(({ setDoc, doc, getDoc }) => {
           const ref = doc(db, "users", user.uid);
@@ -1580,15 +1586,9 @@ window.addToCart = function(name, price, image) {
   }
 };
 
-
-// Save cart session to Firestore for abandoned cart emails
-window.updateCartUI = function () {
-
-}
-
-
 window.updateCartUI = function () {
   const cart = JSON.parse(localStorage.getItem("zibuy-cart")) || [];
+
   const count = cart.reduce((sum, item) => sum + item.qty, 0);
 
   const el = document.getElementById("cart-count");
@@ -1831,26 +1831,32 @@ window.messageCall = function(phone) {
 // TOAST
 // ============================================
 
-export function showToast(message) {
+export function showToast(message, type = "success") {
   const container = document.getElementById("toast-container");
   if (!container) return;
 
+  const colors = {
+    success: "#10b981",
+    error:   "#ef4444",
+    info:    "#ff6600"
+  };
+
   const toast = document.createElement("div");
-  toast.className = "toast success";
+  toast.className = `toast ${type}`;
   toast.textContent = message;
   toast.style.cssText = `
-    background: #10b981;
+    background: ${colors[type] || colors.success};
     color: white;
     padding: 12px 20px;
     border-radius: 10px;
     margin-bottom: 10px;
     font-weight: 700;
     box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    animation: toastIn .3s ease;
   `;
 
   container.appendChild(toast);
-
-  setTimeout(() => toast.remove(), 2000);
+  setTimeout(() => toast.remove(), 3000);
 }
 
 // ============================================
@@ -1997,9 +2003,10 @@ window.addEventListener("beforeinstallprompt", (e) => {
   e.preventDefault();
   deferredPrompt = e;
 
-  // show install UI
-  document.getElementById("installBtn").style.display = "block";
-  document.getElementById("installBanner").style.display = "flex";
+  const btn    = document.getElementById("installBtn");
+  const banner = document.getElementById("installBanner");
+  if (btn)    btn.style.display    = "block";
+  if (banner) banner.style.display = "flex";
 });
 
 // Install button click
@@ -2019,8 +2026,10 @@ function installZiBuy() {
 
 window.addEventListener("appinstalled", () => {
   console.log("ZiBuy installed successfully");
-  document.getElementById("installBtn").style.display = "none";
-  document.getElementById("installBanner").style.display = "none";
+  const btn    = document.getElementById("installBtn");
+  const banner = document.getElementById("installBanner");
+  if (btn)    btn.style.display    = "none";
+  if (banner) banner.style.display = "none";
 });
 
 
@@ -2142,6 +2151,46 @@ window.sendPasswordReset = async function() {
   }
 };
 
+
+// ============================================
+// LOGIN
+// ============================================
+window.customerLogin = async function() {
+  const { signInWithEmailAndPassword } =
+    await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js");
+
+  const email    = document.getElementById("auth-email")?.value.trim();
+  const password = document.getElementById("auth-password")?.value.trim();
+
+  if (!email || !password) { alert("Enter email and password"); return; }
+
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+    closeAuthModal();
+    showToast("✅ Logged in successfully!");
+  } catch (err) {
+    const msgs = {
+      "auth/user-not-found":  "No account with that email",
+      "auth/wrong-password":  "Incorrect password",
+      "auth/invalid-credential": "Invalid email or password",
+      "auth/too-many-requests": "Too many attempts. Try again later."
+    };
+    alert("❌ " + (msgs[err.code] || err.message));
+  }
+};
+
+
+window.openAuthModal = function() {
+  const modal = document.getElementById("auth-modal");
+  if (modal) modal.classList.add("open");
+};
+
+window.closeAuthModal = function() {
+  const modal = document.getElementById("auth-modal");
+  if (modal) modal.classList.remove("open");
+};
+
+
 // ============================================
 // UPDATE customerRegister to use new fields
 // ============================================
@@ -2192,6 +2241,11 @@ window.customerRegister = async function() {
       banned:         false,
       createdAt:      new Date()
     });
+
+    // Wire referral if this user came via a referral link
+    const { attachReferral, ensureReferralCode } = await import("./referral.js");
+    await attachReferral(user.uid);
+    await ensureReferralCode(user.uid);
 
     alert("✅ Account created! You're now logged in.");
     closeAuthModal();
