@@ -2486,6 +2486,12 @@ try {
 
     console.log("Product saved:", docRef.id);
 
+    // Check if this triggers a referral reward for whoever referred this user
+    const { checkReferralReward } = await import("./referral.js");
+    await checkReferralReward(auth.currentUser?.uid);
+
+    alert("Ad submitted successfully!");
+
     // ── 7. Reset form ───────────────────────────
     titleInput.value    = "";
     descInput.value     = "";
