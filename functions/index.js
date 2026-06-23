@@ -1635,16 +1635,17 @@ seoApp.get("/product/:id", async (req, res) => {
         name: p.details?.brand || "ZiBuy"
       },
       offers: {
-        "@type": "Offer",
-        priceCurrency: "UGX",
-        price: p.price || 0,
-        availability:
-          "https://schema.org/InStock",
-        seller: {
-          "@type": "Organization",
-          name: seller
-        }
-      }
+  "@type": "Offer",
+  url: `https://zibuy-5deae.web.app/product.html?id=${productId}`,
+  priceCurrency: "UGX",
+  price: p.price || 0,
+  availability: "https://schema.org/InStock",
+  itemCondition: "https://schema.org/NewCondition",
+  seller: {
+    "@type": "Organization",
+    name: seller
+  }
+}
     };
 
     if (
