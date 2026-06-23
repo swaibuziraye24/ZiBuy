@@ -110,6 +110,10 @@ table {
   <span>❤️</span> Wishlist
 </button>
 
+<button class="nav-item" data-tab="referral" onclick="switchTab('referral',this)">
+  <span>🎁</span> Referrals
+</button>
+
       <button class="nav-item" data-tab="analytics" onclick="switchTab('analytics', this)">
         <span>📊</span>
         <span>Analytics</span>
@@ -139,6 +143,14 @@ table {
         <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
       </div>
     </div>
+
+
+    <div class="dashboard-tab" id="referral-tab">
+  <div class="tab-header">
+    <h2>🎁 Referral Program</h2>
+  </div>
+  <div id="referral-container"></div>
+</div>
 
    <div class="dashboard-tab" id="wishlist-tab">
   <div class="tab-header">
