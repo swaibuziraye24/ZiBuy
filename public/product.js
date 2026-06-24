@@ -9,7 +9,10 @@ import {
   collection,
   updateDoc,
   increment,
-  addDoc
+  addDoc,
+  getDocs,
+  query,
+  where
 } from "./firebase.js";
 
 import { auth } from "./firebase.js";
@@ -664,6 +667,38 @@ window.submitProductReview = async function () {
       rating,
       createdAt: new Date()
     });
+
+    // Update product aggregate rating
+
+const reviewsSnap = await getDocs(
+  query(
+    collection(db, "reviews"),
+    where("productId", "==", productId)
+  )
+);
+
+let total = 0;
+let count = 0;
+
+reviewsSnap.forEach(docSnap => {
+  const r = docSnap.data();
+  total += Number(r.rating || 0);
+  count++;
+});
+
+const average = count > 0
+  ? Number((total / count).toFixed(1))
+  : 0;
+
+await updateDoc(
+  doc(db, "products", productId),
+  {
+    aggregateRating: {
+      ratingValue: average,
+      reviewCount: count
+    }
+  }
+);
 
     reviewTextEl.value = "";
     if (ratingEl) document.querySelector("input[name='star'][value='5']").checked = true;
