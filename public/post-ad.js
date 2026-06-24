@@ -13,6 +13,8 @@ import {
   doc
 } from "./firebase.js";
 
+import { UGANDA_LOCATIONS } from "./uganda-locations.js";
+
 import {
   canUserPost
 } from "./subscription-check.js";
@@ -2429,13 +2431,20 @@ const adDays = plan.adDays || 30;
 const expiresAt = new Date();
 expiresAt.setDate(expiresAt.getDate() + adDays);
 
+const areaInput =
+  document.getElementById("ad-sub-location");
+
     const productData = {
       name:        titleInput.value.trim(),
       price:       Number(priceInput.value),
       category:    selectedCategory,
       subcategory: selectedSubcategory || "",
       description: descInput.value.trim(),
-      location:    locationInput.value,
+      
+
+      location: locationInput.value,
+      area: areaInput?.value || "",
+
       images:      imageUrls,
       userId:      currentUser.uid,
       userEmail:   currentUser.email,
@@ -2497,6 +2506,7 @@ try {
     descInput.value     = "";
     priceInput.value    = "";
     locationInput.value = "";
+    if (areaInput) areaInput.value = "";
     uploadedImages      = [];
     selectedCategory    = "";
     currentStep         = 1;
@@ -2814,3 +2824,46 @@ window.skipBoost = function () {
   document.getElementById("boost-prompt-modal")?.remove();
   window.location.href = `dashboard.html?tab=my-ads`;
 };
+
+function initializeLocationSelectors() {
+
+  const districtSelect =
+    document.getElementById("ad-location");
+
+  const areaSelect =
+    document.getElementById("ad-sub-location");
+
+  if (!districtSelect || !areaSelect) return;
+
+  Object.keys(UGANDA_LOCATIONS)
+    .sort()
+    .forEach(district => {
+
+      districtSelect.innerHTML += `
+        <option value="${district}">
+          ${district}
+        </option>
+      `;
+    });
+
+  districtSelect.addEventListener("change", () => {
+
+    const district = districtSelect.value;
+
+    areaSelect.innerHTML =
+      `<option value="">Select Area</option>`;
+
+    if (!district) return;
+
+    UGANDA_LOCATIONS[district]
+      .forEach(area => {
+
+        areaSelect.innerHTML += `
+          <option value="${area}">
+            ${area}
+          </option>
+        `;
+      });
+  });
+
+}
