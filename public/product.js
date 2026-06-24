@@ -667,9 +667,9 @@ window.submitProductReview = async function () {
       rating,
       createdAt: new Date()
     });
-
+console.log("REVIEW SAVED");
     // Update product aggregate rating
-
+console.log("STARTING AGGREGATE UPDATE");
 const reviewsSnap = await getDocs(
   query(
     collection(db, "reviews"),
@@ -697,6 +697,7 @@ const average = count > 0
   count
 });
 
+console.log("ABOUT TO UPDATE PRODUCT", productId);
 try {
   await updateDoc(
     doc(db, "products", productId),
@@ -707,7 +708,7 @@ try {
       }
     }
   );
-
+console.log("PRODUCT UPDATED");
   console.log("Aggregate rating updated successfully");
 
 } catch (err) {
