@@ -722,14 +722,23 @@ try {
 
     if (btn) { btn.textContent = "Post Review"; btn.disabled = false; }
     alert("✅ Review posted!");
-
   } catch (err) {
-    console.error("Review submit error:", err);
-    alert("Failed to post review. Try again.");
-    if (btn) { btn.textContent = "Post Review"; btn.disabled = false; }
-  }
-};
+    console.error("Review submit error FULL:", err);
+    console.error("Error code:", err?.code);
+    console.error("Error message:", err?.message);
 
+    alert(
+      "Failed to post review:\n" +
+      (err?.message || "Unknown error")
+    );
+
+    if (btn) {
+      btn.textContent = "Post Review";
+      btn.disabled = false;
+    }
+}
+
+}
 
 // ============================================
 // BUY NOW — Mobile Money payment flow
