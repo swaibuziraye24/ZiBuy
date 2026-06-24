@@ -690,15 +690,29 @@ const average = count > 0
   ? Number((total / count).toFixed(1))
   : 0;
 
-await updateDoc(
-  doc(db, "products", productId),
-  {
-    aggregateRating: {
-      ratingValue: average,
-      reviewCount: count
+
+  console.log("Updating aggregate rating", {
+  productId,
+  average,
+  count
+});
+
+try {
+  await updateDoc(
+    doc(db, "products", productId),
+    {
+      aggregateRating: {
+        ratingValue: average,
+        reviewCount: count
+      }
     }
-  }
-);
+  );
+
+  console.log("Aggregate rating updated successfully");
+
+} catch (err) {
+  console.error("Aggregate update failed:", err);
+}
 
     reviewTextEl.value = "";
     if (ratingEl) document.querySelector("input[name='star'][value='5']").checked = true;
