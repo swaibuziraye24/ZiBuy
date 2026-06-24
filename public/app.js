@@ -11,6 +11,8 @@ import {
   doc
 } from "./firebase.js";
 
+import { UGANDA_LOCATIONS } from "./uganda-locations.js";
+
 import {
   getRankedProducts,
   getUserPlan,
@@ -107,7 +109,9 @@ function initApp() {
   loadBannerAd();
   loadFeaturedShops();
   loadCategorySponsors();
+  initializeLocationFilters();
 
+  
   // ── Restore scroll position and category after back navigation ──
   const savedScroll   = sessionStorage.getItem("zibuy_scroll");
   const savedCategory = sessionStorage.getItem("zibuy_last_category");
@@ -2343,4 +2347,46 @@ window.toggleLike = async function(productId, btnEl) {
   mo.observe(document.body, { childList: true, subtree: true });
 })();
 
+function initializeLocationFilters() {
 
+  const districtSelect =
+    document.getElementById("filter-location");
+
+  const areaSelect =
+    document.getElementById("filter-sub-location");
+
+  if (!districtSelect || !areaSelect) return;
+
+  // Load districts
+  Object.keys(UGANDA_LOCATIONS)
+    .sort()
+    .forEach(district => {
+
+      districtSelect.innerHTML += `
+        <option value="${district}">
+          ${district}
+        </option>
+      `;
+    });
+
+  districtSelect.addEventListener("change", () => {
+
+    const district = districtSelect.value;
+
+    areaSelect.innerHTML =
+      `<option value="">All Areas</option>`;
+
+    if (!district) return;
+
+    UGANDA_LOCATIONS[district]
+      .forEach(area => {
+
+        areaSelect.innerHTML += `
+          <option value="${area}">
+            ${area}
+          </option>
+        `;
+      });
+  });
+
+}
