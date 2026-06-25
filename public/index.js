@@ -785,7 +785,7 @@ exports.planExpiryReminders = regionalFunctions
                   <p style="font-weight:700;color:#111827;margin:16px 0 8px">Renew for UGX ${price}/month:</p>
                   <p style="color:#6b7280;margin:4px 0">📱 <strong>MTN:</strong> Dial *165# → Pay With Momo → Merchant Code: <strong>27868095</strong></p>
                   <p style="color:#6b7280;margin:4px 0">📱 <strong>Airtel:</strong> Send to <strong>+256575996624</strong></p>
-                  <p style="color:#6b7280;margin:12px 0">After paying, WhatsApp your transaction ID to <strong>+256705816160</strong></p>
+                  <p style="color:#6b7280;margin:12px 0">After paying, WhatsApp your transaction ID to <strong>+256789157512</strong></p>
 
                   <p style="color:#9ca3af;font-size:12px;margin-top:24px">ZiBuy Uganda · Buy & Sell Safely 🇺🇬</p>
                 </div>
