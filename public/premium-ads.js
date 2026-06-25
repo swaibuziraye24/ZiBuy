@@ -222,7 +222,7 @@ window.processBoost = async function() {
     return;
   }
 
-  const ZIBUY_WHATSAPP = "256705816160";
+  const ZIBUY_WHATSAPP = "256789157512";
 
   try {
 
