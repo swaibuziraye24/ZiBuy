@@ -982,36 +982,20 @@
         <input type="number" id="price-max" placeholder="Max UGX" value="99999999" onchange="applyFilters()">
       </div>
     </div>
-    <div class="filter-group">
-      <h3>📍 Location</h3>
-      <select id="filter-location">
+    
+   <div class="filter-group">
+      <label class="filter-label">📍 District</label>
+      <select id="filter-location" onchange="applyFilters();updateFilterSubLocations()">
         <option value="">All Uganda</option>
-        <option value="Kampala">Kampala</option>
-        <option value="Wakiso">Wakiso</option>
-        <option value="Mukono">Mukono</option>
-        <option value="Jinja">Jinja</option>
-        <option value="Mbarara">Mbarara</option>
-        <option value="Entebbe">Entebbe</option>
-        <option value="Gulu">Gulu</option>
-        <option value="Mbale">Mbale</option>
-        <option value="Masaka">Masaka</option>
-        <option value="Fort Portal">Fort Portal</option>
-        <option value="Hoima">Hoima</option>
-        <option value="Kiboga">Kiboga</option>
-        <option value="Mubende">Mubende</option>
-        <option value="Mityana">Mityana</option>
-        <option value="Kyankwanzi">Kyankwanzi</option>
-        <option value="Kasese">Kasese</option>
-        <option value="Lugazi">Lugazi</option>
-        <option value="Mpigi">Mpigi</option>
-        <option value="Arua">Arua</option>
-        <option value="Masindi">Masindi</option>
-        <option value="Bushenyi">Bushenyi</option>
-        <option value="Isingiro">Isingiro</option>
-        <option value="Kamuli">Kamuli</option>
-        <option value="Other">Other</option>
       </select>
+      <div id="filter-sublocation-wrap" style="display:none;margin-top:8px">
+        <label class="filter-label">🏘️ Town / Area</label>
+        <select id="filter-sublocation" onchange="applyFilters()">
+          <option value="">All Areas</option>
+        </select>
+      </div>
     </div>
+
     <div class="filter-group">
       <label class="filter-label">📅 Posted</label>
       <div class="filter-radios">
