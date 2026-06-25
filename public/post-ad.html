@@ -115,33 +115,31 @@
       <div id="category-fields"></div>
 
     
-      <select id="ad-location">
-        <option value="">Select your location</option>
-        <option value="Kampala">📍 Kampala</option>
-        <option value="Wakiso">📍 Wakiso</option>
-        <option value="Mukono">📍 Mukono</option>
-        <option value="Jinja">📍 Jinja</option>
-        <option value="Mbarara">📍 Mbarara</option>
-        <option value="Entebbe">📍 Entebbe</option>
-        <option value="Gulu">📍 Gulu</option>
-        <option value="Mbale">📍 Mbale</option>
-        <option value="Masaka">📍 Masaka</option>
-        <option value="Fort Portal">📍 Fort Portal</option>
-        <option value="Hoima">📍 Hoima</option>
-        <option value="Kiboga">📍 Kiboga</option>
-        <option value="Mubende">📍 Mubende</option>
-        <option value="Mityana">📍 Mityana</option>
-        <option value="Kyankwanzi">📍 Kyankwanzi</option>
-        <option value="Kaseese">📍 Kaseese</option>
-        <option value="Lugazi">📍 Lugazi</option>
-        <option value="Mpigi">📍 Mpigi</option>
-        <option value="Arua">📍 Arua</option>
-        <option value="Masindi">📍 Masindi</option>
-        <option value="Bushenyi">📍 Bushenyi</option>
-        <option value="Isingiro">📍 Isingiro</option>
-        <option value="Kamuli">📍 Kamuli</option>
-        <option value="Other">📍 Other</option>
-      </select>
+      <div id="location-wrap">
+        <label style="display:block;font-size:12px;font-weight:800;
+          color:#374151;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">
+          📍 District / City
+        </label>
+        <select id="ad-district"
+          onchange="updateSubLocations('ad-district','ad-sublocation');validateStep2()"
+          style="width:100%;padding:14px;margin-bottom:12px;border:1.5px solid #e5e7eb;
+          border-radius:12px;font-size:15px;font-family:inherit;outline:none;background:white">
+          <option value="">Select District / City</option>
+        </select>
+
+        <div id="ad-sublocation-wrap" style="display:none">
+          <label style="display:block;font-size:12px;font-weight:800;
+            color:#374151;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">
+            🏘️ Town / Village / Area
+          </label>
+          <select id="ad-sublocation"
+            onchange="validateStep2()"
+            style="width:100%;padding:14px;border:1.5px solid #e5e7eb;
+            border-radius:12px;font-size:15px;font-family:inherit;outline:none;background:white">
+            <option value="">Select Town / Village / Area</option>
+          </select>
+        </div>
+      </div>
 
 <div class="admin-form-group">
   <label>Your Phone / WhatsApp</label>
