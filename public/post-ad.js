@@ -20,6 +20,21 @@ import {
 
 import { updateDoc } from "./firebase.js";
 
+import { getDistricts, getSubLocations } from "./uganda-locations.js";
+
+// Populate district dropdown on load
+document.addEventListener("DOMContentLoaded", () => {
+  const districtEl = document.getElementById("ad-district");
+  if (districtEl) {
+    getDistricts().forEach(d => {
+      const opt = document.createElement("option");
+      opt.value = d;
+      opt.textContent = d;
+      districtEl.appendChild(opt);
+    });
+  }
+});
+
 let currentStep = 1;
 let selectedCategory = "";
 let uploadedImages = [];
@@ -2027,7 +2042,7 @@ const descInput     = document.getElementById("ad-description");
 
 const priceInput    = document.getElementById("ad-price");
 
-const locationInput = document.getElementById("ad-location");
+const locationInput = document.getElementById("ad-district");
 
 // ── Collect all field values to save with the ad ─
 function collectCategoryFields(category) {
@@ -2058,19 +2073,20 @@ function collectCategoryFields(category) {
 }
 
 function validateStep2() {
-  const title = titleInput.value.trim();
-  const desc = descInput.value.trim();
-  const price = priceInput.value.trim();
-  const location = locationInput.value;
+  const title    = titleInput.value.trim();
+  const desc     = descInput.value.trim();
+  const price    = priceInput.value.trim();
+  const district = document.getElementById("ad-district")?.value || "";
 
-  const valid = title !== "" && desc !== "" && price !== "" && location !== "";
+  const valid = title !== "" && desc !== "" && price !== "" && district !== "";
   document.getElementById("step2-next").disabled = !valid;
 }
 
 titleInput.addEventListener("input", validateStep2);
 descInput.addEventListener("input", validateStep2);
 priceInput.addEventListener("input", validateStep2);
-locationInput.addEventListener("change", validateStep2);
+document.getElementById("ad-district")?.addEventListener("change", validateStep2);
+document.getElementById("ad-sublocation")?.addEventListener("change", validateStep2);
 
 // ============================================
 // CHARACTER COUNTERS
@@ -2244,8 +2260,12 @@ function updateReview() {
   );
   setText("review-title",    titleInput.value);
   setText("review-price",    "UGX " + Number(priceInput.value).toLocaleString());
-  setText("review-location", locationInput.value);
   setText("review-desc",     descInput.value);
+
+  const district = document.getElementById("ad-district")?.value || "";
+  const subLoc   = document.getElementById("ad-sublocation")?.value || "";
+  document.getElementById("review-location").textContent =
+    subLoc ? `${subLoc}, ${district}` : district;
 
   // Category details summary
   const details  = typeof collectCategoryFields === "function"
@@ -2438,7 +2458,11 @@ expiresAt.setDate(expiresAt.getDate() + adDays);
       subcategory: selectedSubcategory || "",
       description: descInput.value.trim(),
     
-      location: locationInput.value,
+      location: (() => {
+      const d = document.getElementById("ad-district")?.value || "";
+      const s = document.getElementById("ad-sublocation")?.value || "";
+      return s ? `${s}, ${d}` : d;
+    })(),
       
       images:      imageUrls,
       userId:      currentUser.uid,
