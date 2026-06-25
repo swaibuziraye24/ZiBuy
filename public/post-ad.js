@@ -2072,15 +2072,20 @@ function collectCategoryFields(category) {
   return data;
 }
 
-function validateStep2() {
+window.validateStep2 = function() {
   const title    = titleInput.value.trim();
   const desc     = descInput.value.trim();
   const price    = priceInput.value.trim();
   const district = document.getElementById("ad-district")?.value || "";
 
-  const valid = title !== "" && desc !== "" && price !== "" && district !== "";
+  const valid =
+    title !== "" &&
+    desc !== "" &&
+    price !== "" &&
+    district !== "";
+
   document.getElementById("step2-next").disabled = !valid;
-}
+};
 
 titleInput.addEventListener("input", validateStep2);
 descInput.addEventListener("input", validateStep2);
