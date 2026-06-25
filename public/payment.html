@@ -57,30 +57,19 @@
           <input type="text" id="delivery-name" placeholder="Full Name" required>
           <input type="tel" id="delivery-phone" placeholder="Phone Number" required>
           <input type="text" id="delivery-address" placeholder="Street Address" required>
-          <select id="delivery-location" required>
-            <option value="">Select Location</option>
-            <option value="Kampala">Kampala</option>
-            <option value="Wakiso">Wakiso</option>
-            <option value="Mukono">Mukono</option>
-            <option value="Jinja">Jinja</option>
-            <option value="Mbarara">Mbarara</option>
-            <option value="Entebbe">Entebbe</option>
-        <option value="Hoima">📍 Hoima</option>
-        <option value="Kiboga">📍 Kiboga</option>
-        <option value="Mubende">📍 Mubende</option>
-        <option value="Mityana">📍 Mityana</option>
-        <option value="Kyankwanzi">📍 Kyankwanzi</option>
-        <option value="Kaseese">📍 Kaseese</option>
-        <option value="Lugazi">📍 Lugazi</option>
-        <option value="Mpigi">📍 Mpigi</option>
-        <option value="Arua">📍 Arua</option>
-        <option value="Masindi">📍 Masindi</option>
-        <option value="Bushenyi">📍 Bushenyi</option>
-        <option value="Isingiro">📍 Isingiro</option>
-        <option value="Kamuli">📍 Kamuli</option>
-        <option value="Others">📍 Others</option>
+          <select id="delivery-district" required
+            onchange="updateSubLocations('delivery-district','delivery-sublocation')"
+            style="width:100%;padding:12px;margin-bottom:10px;border:1.5px solid #e5e7eb;
+            border-radius:10px;font-family:inherit;font-size:14px;outline:none">
+            <option value="">Select District / City</option>
           </select>
-        </div>
+          <div id="delivery-sublocation-wrap" style="display:none">
+            <select id="delivery-sublocation"
+              style="width:100%;padding:12px;border:1.5px solid #e5e7eb;
+              border-radius:10px;font-family:inherit;font-size:14px;outline:none">
+              <option value="">Select Town / Village / Area</option>
+            </select>
+          </div>
 
         <div class="form-section">
           <h3>Payment Method</h3>
