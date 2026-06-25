@@ -11,8 +11,6 @@ import {
   doc
 } from "./firebase.js";
 
-import { UGANDA_LOCATIONS } from "./uganda-locations.js";
-
 import {
   getRankedProducts,
   getUserPlan,
