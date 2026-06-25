@@ -73,7 +73,7 @@ async function checkExistingVerification() {
                ${data.rejectionReason || "Your request was not approved."}
              </p>
              <p style="color:${s.color};font-size:13px;margin:0">
-               Contact admin on WhatsApp: <strong>+256705816160</strong>
+               Contact admin on WhatsApp: <strong>+256789157512</strong>
              </p>`
           : ""}
         <button onclick="window.location.href='dashboard.html'"
@@ -192,7 +192,7 @@ window.submitVerification = async function() {
       `🆔 Verification ID: ${docRef.id}`;
 
     // Open admin WhatsApp
-    window.open(`https://wa.me/256705816160?text=${encodeURIComponent(waMsg)}`, "_blank");
+    window.open(`https://wa.me/256789157512?text=${encodeURIComponent(waMsg)}`, "_blank");
 
     // Show success screen
     document.getElementById("verify-form-wrap").style.display = "none";
