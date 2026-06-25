@@ -1,6 +1,21 @@
 import { db, auth, collection, addDoc } from "./firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+
+import { getDistricts } from "./uganda-locations.js";
+
+document.addEventListener("DOMContentLoaded", () => {
+  const el = document.getElementById("delivery-district");
+  if (el) {
+    getDistricts().forEach(d => {
+      const opt = document.createElement("option");
+      opt.value = d;
+      opt.textContent = d;
+      el.appendChild(opt);
+    });
+  }
+});
+
 let currentUser = null;
 let cart = JSON.parse(localStorage.getItem("zibuy-cart")) || [];
 
@@ -75,7 +90,9 @@ window.placeOrder = async function() {
   const name     = document.getElementById("delivery-name").value.trim();
   const phone    = document.getElementById("delivery-phone").value.trim();
   const address  = document.getElementById("delivery-address").value.trim();
-  const location = document.getElementById("delivery-location").value;
+  const district  = document.getElementById("delivery-district")?.value || "";
+  const subLoc    = document.getElementById("delivery-sublocation")?.value || "";
+  const location  = subLoc ? `${subLoc}, ${district}` : district;
 
   if (!name || !phone || !address || !location) {
     alert("Please fill all delivery details");
