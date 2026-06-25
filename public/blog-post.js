@@ -273,7 +273,7 @@ async function loadRelated(category) {
         ${related.map(p => `
           <div class="post-related-card" onclick="window.location.href='blog-post.html?id=${p.id}&slug=${createSlug(p.title)}'">
             <img src="${p.coverImage || ''}" alt="${p.title}"
-              onerror="this.src='https://via.placeholder.com/300x150?text=ZiBuy'">
+              onerror="this.src='https://zibuy-5deae.web.app/icons/icon-512.png/300x150?text=ZiBuy'">
             <p>${p.title}</p>
           </div>
         `).join("")}
