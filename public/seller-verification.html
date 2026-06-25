@@ -117,15 +117,21 @@
         style="width:100%;padding:12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;box-sizing:border-box;outline:none;margin-bottom:14px">
 
       <label style="display:block;font-weight:700;font-size:13px;margin-bottom:6px">Location *</label>
-      <select id="location"
-        style="width:100%;padding:12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;box-sizing:border-box;outline:none;background:white;margin-bottom:14px">
-        <option value="">Select location</option>
-        <option>Kampala</option><option>Wakiso</option><option>Mukono</option>
-        <option>Jinja</option><option>Mbarara</option><option>Entebbe</option>
-        <option>Gulu</option><option>Mbale</option><option>Masaka</option>
-        <option>Fort Portal</option><option>Hoima</option><option>Arua</option>
-        <option>Masindi</option><option>Bushenyi</option><option>Others</option>
-      </select>
+      
+
+      <select id="location-district"
+          onchange="updateSubLocations('location-district','location-sublocation')"
+          style="width:100%;padding:12px;border:1.5px solid #e5e7eb;
+          border-radius:10px;font-family:inherit;font-size:14px;outline:none;margin-bottom:10px">
+          <option value="">Select District / City</option>
+        </select>
+        <div id="location-sublocation-wrap" style="display:none">
+          <select id="location-sublocation"
+            style="width:100%;padding:12px;border:1.5px solid #e5e7eb;
+            border-radius:10px;font-family:inherit;font-size:14px;outline:none">
+            <option value="">Select Town / Village / Area</option>
+          </select>
+        </div>
 
       <label style="display:block;font-weight:700;font-size:13px;margin-bottom:6px">About Your Business</label>
       <textarea id="bio" placeholder="Tell buyers about your business..." rows="3"
