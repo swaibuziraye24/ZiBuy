@@ -21,6 +21,8 @@ import {
 import { captureReferralCode, ensureReferralCode } from "./referral.js";
 captureReferralCode(); // runs immediately on every page load
 
+import { getDistricts, getSubLocations } from "./uganda-locations.js";
+
 function categoryEmoji(cat) {
   const map = {
     phones: "📱",
@@ -105,6 +107,7 @@ function initApp() {
   setupAuthStateListener();
   loadProducts();
   loadBannerAd();
+  populateFilterDistricts();
   loadFeaturedShops();
   loadCategorySponsors();
   
@@ -218,7 +221,40 @@ function trackBannerImpression(bannerId) {
     }).catch(() => {});
 }
 
+// ── Populate filter district dropdown ──────────
+async function populateFilterDistricts() {
+  const { getDistricts, getSubLocations } = await import("./uganda-locations.js");
 
+  // Store for use by updateFilterSubLocations
+  window._getSubLocations = getSubLocations;
+
+  const el = document.getElementById("filter-location");
+  if (!el) return;
+
+  getDistricts().forEach(d => {
+    const opt = document.createElement("option");
+    opt.value = d;
+    opt.textContent = d;
+    el.appendChild(opt);
+  });
+}
+
+window.updateFilterSubLocations = function() {
+  const district = document.getElementById("filter-location")?.value;
+  const wrap     = document.getElementById("filter-sublocation-wrap");
+  const subEl    = document.getElementById("filter-sublocation");
+  if (!wrap || !subEl) return;
+
+  if (!district || !window._getSubLocations) {
+    wrap.style.display = "none";
+    return;
+  }
+
+  const subs = window._getSubLocations(district);
+  subEl.innerHTML = `<option value="">All Areas in ${district}</option>` +
+    subs.map(s => `<option value="${s}">${s}</option>`).join("");
+  wrap.style.display = "block";
+};
 
 
 // ============================================
@@ -1527,7 +1563,9 @@ window.filterSubcategory = function(subcat) {
 window.applyFilters = function() {
   filterState.priceMin = Number(document.getElementById("price-min")?.value || 0);
   filterState.priceMax = Number(document.getElementById("price-max")?.value || 99999999);
-  filterState.location = document.getElementById("filter-location")?.value || "";
+  const districtFilter  = document.getElementById("filter-location")?.value || "";
+  const subFilter       = document.getElementById("filter-sublocation")?.value || "";
+  filterState.location  = subFilter || districtFilter;
 
   // Read from whichever sort control triggered this (quick-sort or panel sort)
   const quickSort = document.getElementById("quick-sort")?.value;
