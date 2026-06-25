@@ -68,7 +68,7 @@ function renderBlog() {
       <div class="blog-featured" onclick="window.location.href='blog-post.html?id=${featured.id}&slug=${createSlug(featured.title)}'">
         <div class="blog-featured-img">
           <img src="${featured.coverImage || ''}" alt="${featured.title}"
-            onerror="this.src='https://via.placeholder.com/600x400?text=ZiBuy+Blog'">
+            onerror="this.src='https://zibuy-5deae.web.app/icons/icon-512.png/600x400?text=ZiBuy+Blog'">
         </div>
         <div class="blog-featured-body">
           <span class="blog-cat-badge">${CAT_LABELS[featured.category] || "Article"}</span>
@@ -96,7 +96,7 @@ function renderBlog() {
     <div class="blog-card" onclick="window.location.href='blog-post.html?id=${p.id}&slug=${createSlug(p.title)}'">
       <div class="blog-card-img">
         <img src="${p.coverImage || ''}" alt="${p.title}"
-          onerror="this.src='https://via.placeholder.com/400x300?text=ZiBuy+Blog'">
+          onerror="this.src='https://zibuy-5deae.web.app/icons/icon-512.png/400x300?text=ZiBuy+Blog'">
       </div>
       <div class="blog-card-body">
         <span class="blog-cat-badge">${CAT_LABELS[p.category] || "Article"}</span>
