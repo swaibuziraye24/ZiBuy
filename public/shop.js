@@ -111,7 +111,7 @@ async function loadShop() {
   src="${
     p.images?.length
       ? p.images[0]
-      : 'https://via.placeholder.com/400x300?text=ZiBuy'
+      : 'https://zibuy-5deae.web.app/icons/icon-512.png/400x300?text=ZiBuy'
   }"
   alt="${p.name || ''}"
   loading="lazy"
