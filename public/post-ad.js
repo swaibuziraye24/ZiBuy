@@ -2430,8 +2430,6 @@ const adDays = plan.adDays || 30;
 const expiresAt = new Date();
 expiresAt.setDate(expiresAt.getDate() + adDays);
 
-const areaInput =
-  document.getElementById("ad-sub-location");
 
     const productData = {
       name:        titleInput.value.trim(),
