@@ -750,7 +750,7 @@ window.openBuyNow = function(productId, productName, price, sellerPhone, sellerN
   if (existing) existing.remove();
 
   const orderRef  = `ORDER-${productId.slice(0,8).toUpperCase()}-${Date.now().toString().slice(-4)}`;
-  const adminPhone = "256705816160";
+  const adminPhone = "256789157512";
   const payPhone   = sellerPhone || adminPhone; // pay seller directly or admin
 
   const modal = document.createElement("div");
@@ -886,7 +886,7 @@ window.confirmBuyNow = async function(productId, productName, price, sellerPhone
     document.getElementById("buy-now-modal")?.remove();
 
     // Build WhatsApp message to seller (or admin if no seller phone)
-    const waPhone = sellerPhone || "256705816160";
+    const waPhone = sellerPhone || "256789157512";
     const waMsg   = encodeURIComponent(
       `Hello ${sellerName} 👋\n\n` +
       `I have paid for your product on *ZiBuy*.\n\n` +
