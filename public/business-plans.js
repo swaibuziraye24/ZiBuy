@@ -628,7 +628,7 @@ window.confirmPlanPayment = async function(subDocId, paymentRef, planId, planNam
     );
 
     // Open admin WhatsApp
-    window.open(`https://wa.me/256705816160?text=${waMsg}`, "_blank");
+    window.open(`https://wa.me/256789157512?text=${waMsg}`, "_blank");
 
     // Show success screen
     const successModal = document.createElement("div");
