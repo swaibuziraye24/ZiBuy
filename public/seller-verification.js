@@ -6,6 +6,22 @@ import { db, auth, storage, collection, addDoc, getDocs, query, where, doc, upda
 import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+
+import { getDistricts } from "./uganda-locations.js";
+import "./uganda-locations.js"; // registers updateSubLocations on window
+
+document.addEventListener("DOMContentLoaded", () => {
+  const el = document.getElementById("location-district");
+  if (el) {
+    getDistricts().forEach(d => {
+      const opt = document.createElement("option");
+      opt.value = d;
+      opt.textContent = d;
+      el.appendChild(opt);
+    });
+  }
+});
+
 let currentUser = null;
 
 // ── Auth check ────────────────────────────────
@@ -92,7 +108,9 @@ window.submitVerification = async function() {
   const fullName     = document.getElementById("full-name").value.trim();
   const businessName = document.getElementById("business-name").value.trim();
   const phone        = document.getElementById("phone-number").value.trim();
-  const location     = document.getElementById("location").value;
+  const district = document.getElementById("location-district")?.value || "";
+  const subLoc   = document.getElementById("location-sublocation")?.value || "";
+  const location = subLoc ? `${subLoc}, ${district}` : district;
   const bio          = document.getElementById("bio").value.trim();
   const idDoc        = document.getElementById("id-document").files[0];
   const txnRef       = document.getElementById("verif-txn-ref").value.trim();
