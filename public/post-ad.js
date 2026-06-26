@@ -398,9 +398,9 @@ const CATEGORY_FIELDS = {
 
   phones: [
     { id:"cf-brand",     label:"Brand",       type:"select",
-      options:["Samsung","iPhone/Apple","Tecno","Itel","Infinix","Huawei","Nokia","Oppo","Xiaomi","Vivo","Other"] },
+      options:["Samsung","iPhone/Apple","Tecno","Itel","Infinix","Huawei","Nokia","Oppo","Xiaomi","Vivo", "Google Pixel", "OnePlus", "Nothing Phone", "Realme", "Alcatel", "Motorola", "Honor", "Lenovo", "Aquas", "Other"] },
     { id:"cf-condition", label:"Condition",    type:"select",
-      options:["Brand New","Foreign Used (UK)","Foreign Used (Dubai)","Local Used"] },
+      options:["Brand New","Foreign Used (UK)","Foreign Used (Dubai)","Local Used", "Refurbished" ] },
     { id:"cf-storage",   label:"Storage",      type:"select",
       options:["16GB","32GB","64GB","128GB","256GB","512GB","1TB"] },
     { id:"cf-ram",       label:"RAM",          type:"select",
@@ -425,7 +425,7 @@ const CATEGORY_FIELDS = {
     { id:"cf-brand",     label:"Brand",        type:"select",
       options:["Samsung","LG","Sony","Hisense","TCL","Skyworth","Other"] },
     { id:"cf-condition", label:"Condition",    type:"select",
-      options:["Brand New","Foreign Used","Local Used"] },
+      options:["Brand New","Foreign Used (UK)","Foreign Used (Dubai)","Local Used", "Refurbished" ] },
     { id:"cf-screen",    label:"Screen Size",  type:"select",
       options:["24 inch","32 inch","40 inch","43 inch","50 inch","55 inch","65 inch","75 inch","Other"] },
     { id:"cf-display",   label:"Display Type", type:"select",
@@ -439,7 +439,7 @@ const CATEGORY_FIELDS = {
       options:["Bluetooth Speaker","Home Theatre","Woofer / Subwoofer","Sound Bar","PA / DJ System","Car Speaker"] },
     { id:"cf-brand",     label:"Brand",        type:"text", placeholder:"e.g. JBL, Sony, LG" },
     { id:"cf-condition", label:"Condition",    type:"select",
-      options:["Brand New","Foreign Used","Local Used"] },
+      options:["Brand New","Foreign Used (UK)","Foreign Used (Dubai)","Local Used", "Refurbished" ] },
     { id:"cf-power",     label:"Power Output (Watts)", type:"text", placeholder:"e.g. 500W" },
   ],
 
@@ -449,7 +449,7 @@ const CATEGORY_FIELDS = {
     { id:"cf-brand",     label:"Brand",        type:"select",
       options:["Canon","Nikon","Sony","GoPro","Fujifilm","Other"] },
     { id:"cf-condition", label:"Condition",    type:"select",
-      options:["Brand New","Foreign Used","Local Used"] },
+      options:["Brand New","Foreign Used (UK)","Foreign Used (Dubai)","Local Used", "Refurbished" ] },
     { id:"cf-accessories",label:"Accessories Included", type:"text", placeholder:"e.g. Tripod, extra lens, bag" },
   ],
 
@@ -466,7 +466,7 @@ const CATEGORY_FIELDS = {
     { id:"cf-type",      label:"Type",         type:"select",
       options:["DVD Player","Radio / Boombox","Home Stereo System"] },
     { id:"cf-condition", label:"Condition",    type:"select",
-      options:["Brand New","Foreign Used","Local Used"] },
+      options:["Brand New","Foreign Used (UK)","Foreign Used (Dubai)","Local Used", "Refurbished" ] },
   ],
 
   "electronics-Generator": [
@@ -476,7 +476,7 @@ const CATEGORY_FIELDS = {
       options:["Petrol","Diesel"] },
     { id:"cf-brand",     label:"Brand",        type:"text", placeholder:"e.g. Kipor, Honda, Cummins" },
     { id:"cf-condition", label:"Condition",    type:"select",
-      options:["Brand New","Foreign Used","Local Used"] },
+      options:["Brand New","Foreign Used (UK)","Foreign Used (Dubai)","Local Used", "Refurbished" ] },
   ],
 
   "electronics-Solar Equipment": [
@@ -492,7 +492,7 @@ const CATEGORY_FIELDS = {
       options:["1HP","1.5HP","2HP","2.5HP","3HP","Above 3HP"] },
     { id:"cf-brand",     label:"Brand",        type:"text", placeholder:"e.g. LG, Samsung, Hisense" },
     { id:"cf-condition", label:"Condition",    type:"select",
-      options:["Brand New","Foreign Used","Local Used"] },
+      options:["Brand New","Foreign Used (UK)","Foreign Used (Dubai)","Local Used", "Refurbished" ] },
     { id:"cf-installation", label:"Installation Included?", type:"select",
       options:["Yes","No"] },
   ],
@@ -501,7 +501,7 @@ const CATEGORY_FIELDS = {
     { id:"cf-type",      label:"Fan Type",     type:"select",
       options:["Standing Fan","Ceiling Fan","Table Fan","Wall Fan","Rechargeable Fan"] },
     { id:"cf-condition", label:"Condition",    type:"select",
-      options:["Brand New","Used"] },
+      options:["Brand New","Foreign Used (UK)","Foreign Used (Dubai)","Local Used", "Refurbished" ] },
   ],
 
   "electronics-Iron Box / Kitchen Appliance": [
@@ -509,7 +509,7 @@ const CATEGORY_FIELDS = {
       options:["Iron Box","Blender","Kettle","Toaster","Microwave","Rice Cooker","Other"] },
     { id:"cf-brand",     label:"Brand",        type:"text", placeholder:"e.g. Saachi, Ramtons" },
     { id:"cf-condition", label:"Condition",    type:"select",
-      options:["Brand New","Used"] },
+      options:["Brand New","Foreign Used (UK)","Foreign Used (Dubai)","Local Used", "Refurbished" ] },
   ],
 
   fashion: [
@@ -522,7 +522,7 @@ const CATEGORY_FIELDS = {
     { id:"cf-type",      label:"Item Type",   type:"select",
       options:["T-Shirt","Shirt","Blouse","Hoodie / Sweater","Tank Top"] },
     { id:"cf-condition", label:"Condition",   type:"select",
-      options:["Brand New","Foreign Used","Local Used","Thrift (Mitumba)"] },
+      options:["Brand New","Foreign Used","Local Used","Thrift (Mivumba)"] },
     { id:"cf-gender",    label:"For",         type:"select",
       options:["Men","Women","Unisex"] },
     { id:"cf-size",      label:"Size",        type:"select",
@@ -534,7 +534,7 @@ const CATEGORY_FIELDS = {
     { id:"cf-type",      label:"Item Type",   type:"select",
       options:["Casual Dress","Evening / Gown","Office Dress","Skirt","Maxi Dress"] },
     { id:"cf-condition", label:"Condition",   type:"select",
-      options:["Brand New","Foreign Used","Local Used","Thrift (Mitumba)"] },
+      options:["Brand New","Foreign Used","Local Used","Thrift (Mivumba)"] },
     { id:"cf-size",      label:"Size",        type:"select",
       options:["XS","S","M","L","XL","XXL","Free Size"] },
     { id:"cf-color",     label:"Color",       type:"text", placeholder:"e.g. Black, Floral Print" },
@@ -544,7 +544,7 @@ const CATEGORY_FIELDS = {
     { id:"cf-type",      label:"Item Type",   type:"select",
       options:["Jeans","Trousers / Pants","Shorts","Leggings"] },
     { id:"cf-condition", label:"Condition",   type:"select",
-      options:["Brand New","Foreign Used","Local Used","Thrift (Mitumba)"] },
+      options:["Brand New","Foreign Used","Local Used","Thrift (Mivumba)"] },
     { id:"cf-gender",    label:"For",         type:"select",
       options:["Men","Women","Unisex"] },
     { id:"cf-size",      label:"Size",        type:"select",
@@ -675,17 +675,17 @@ const CATEGORY_FIELDS = {
     { id:"cf-brand",     label:"Brand",        type:"select",
       options:["HP","Dell","Lenovo","Apple MacBook","Asus","Acer","Toshiba","MSI","Microsoft Surface","Other"] },
     { id:"cf-condition", label:"Condition",    type:"select",
-      options:["Brand New","Foreign Used","Local Used"] },
+      options:["Brand New","Foreign Used (UK)","Foreign Used (Dubai)","Local Used", "Refurbished" ] },
     { id:"cf-processor", label:"Processor",    type:"select",
       options:["Intel Core i3","Intel Core i5","Intel Core i7","Intel Core i9","AMD Ryzen 3","AMD Ryzen 5","AMD Ryzen 7","Apple M1","Apple M2","Apple M3","Celeron / Pentium"] },
     { id:"cf-ram",       label:"RAM",          type:"select",
       options:["4GB","8GB","16GB","32GB","64GB"] },
     { id:"cf-storage",   label:"Storage",      type:"select",
-      options:["128GB SSD","256GB SSD","512GB SSD","1TB SSD","1TB HDD"] },
+      options:["128GB SSD","256GB SSD","512GB SSD","1TB SSD", "128GB HDD","256GB HDD","512GB HDD","1TB HDD","320GB HDD"] },
     { id:"cf-screen",    label:"Screen Size",  type:"select",
       options:["11 inch","13 inch","14 inch","15 inch","15.6 inch","17 inch"] },
     { id:"cf-os",        label:"Operating System", type:"select",
-      options:["Windows 11","Windows 10","macOS","Chrome OS","No OS"] },
+      options:["Windows 11","Windows 10","macOS","Chrome OS", "Windows 8", "Windows 7","Windows xp", "No OS"] },
     { id:"cf-warranty",  label:"Warranty",     type:"select",
       options:["No Warranty","Shop Warranty","Manufacturer Warranty"] },
   ],
@@ -694,13 +694,13 @@ const CATEGORY_FIELDS = {
     { id:"cf-brand",     label:"Brand",        type:"select",
       options:["HP","Dell","Lenovo","Apple iMac","Custom Built","Other"] },
     { id:"cf-condition", label:"Condition",    type:"select",
-      options:["Brand New","Foreign Used","Local Used"] },
+      options:["Brand New","Foreign Used (UK)","Foreign Used (Dubai)","Local Used", "Refurbished" ] },
     { id:"cf-processor", label:"Processor",    type:"select",
       options:["Intel Core i3","Intel Core i5","Intel Core i7","Intel Core i9","AMD Ryzen 5","AMD Ryzen 7","Other"] },
     { id:"cf-ram",       label:"RAM",          type:"select",
       options:["4GB","8GB","16GB","32GB","64GB"] },
     { id:"cf-storage",   label:"Storage",      type:"select",
-      options:["256GB SSD","512GB SSD","1TB SSD","1TB HDD","2TB HDD"] },
+      options:["256GB SSD","512GB SSD","1TB SSD","1TB HDD","2TB HDD", "128GB HDD", "256GB HDD", "128 SSD", "512GB HDD"] },
     { id:"cf-includes",  label:"Includes",     type:"text", placeholder:"e.g. Monitor, Keyboard, Mouse" },
   ],
 
@@ -708,7 +708,7 @@ const CATEGORY_FIELDS = {
     { id:"cf-brand",     label:"Brand",        type:"select",
       options:["Apple iPad","Samsung Galaxy Tab","Lenovo Tab","Huawei MatePad","Other"] },
     { id:"cf-condition", label:"Condition",    type:"select",
-      options:["Brand New","Foreign Used","Local Used"] },
+      options:["Brand New","Foreign Used (UK)","Foreign Used (Dubai)","Local Used", "Refurbished" ] },
     { id:"cf-storage",   label:"Storage",      type:"select",
       options:["32GB","64GB","128GB","256GB","512GB"] },
     { id:"cf-network",   label:"Connectivity", type:"select",
@@ -720,7 +720,7 @@ const CATEGORY_FIELDS = {
     { id:"cf-size",       label:"Screen Size",  type:"select",
       options:["19 inch","21 inch","22 inch","24 inch","27 inch","32 inch","Other"] },
     { id:"cf-condition", label:"Condition",    type:"select",
-      options:["Brand New","Foreign Used","Local Used"] },
+      options:["Brand New","Foreign Used (UK)","Foreign Used (Dubai)","Local Used", "Refurbished" ] },
     { id:"cf-refresh",   label:"Refresh Rate", type:"select",
       options:["60Hz","75Hz","120Hz","144Hz+"] },
   ],
@@ -730,14 +730,14 @@ const CATEGORY_FIELDS = {
       options:["Printer (Inkjet)","Printer (Laser)","All-in-One (Print/Scan/Copy)","Scanner Only","Photocopier"] },
     { id:"cf-brand",     label:"Brand",        type:"text", placeholder:"e.g. HP, Canon, Epson" },
     { id:"cf-condition", label:"Condition",    type:"select",
-      options:["Brand New","Foreign Used","Local Used"] },
+      options:["Brand New","Foreign Used (UK)","Foreign Used (Dubai)","Local Used", "Refurbished" ] },
   ],
 
   "computers-Computer Accessories (Keyboard, Mouse, UPS)": [
     { id:"cf-type",      label:"Item Type",    type:"select",
       options:["Keyboard","Mouse","UPS / Battery Backup","Webcam","Computer Bag","External Hard Drive","Flash Disk","RAM / Internal Parts","Other"] },
     { id:"cf-condition", label:"Condition",    type:"select",
-      options:["Brand New","Foreign Used","Local Used"] },
+      options:["Brand New","Foreign Used (UK)","Foreign Used (Dubai)","Local Used", "Refurbished" ] },
   ],
 
   gaming: [
@@ -749,7 +749,7 @@ const CATEGORY_FIELDS = {
     { id:"cf-platform",    label:"Platform",      type:"select",
       options:["PlayStation 5 (PS5)","PlayStation 4 (PS4)","PlayStation 3 (PS3)","Xbox Series X/S","Xbox One","Nintendo Switch","Retro Console","Other"] },
     { id:"cf-condition",   label:"Condition",     type:"select",
-      options:["Brand New","Foreign Used","Local Used"] },
+      options:["Brand New","Foreign Used (UK)","Foreign Used (Dubai)","Local Used", "Refurbished" ] },
     { id:"cf-storage",     label:"Storage",       type:"select",
       options:["256GB","500GB","512GB","1TB","2TB","Other"] },
     { id:"cf-controllers", label:"Controllers Included", type:"select",
@@ -774,13 +774,13 @@ const CATEGORY_FIELDS = {
     { id:"cf-platform",  label:"Compatible Platform", type:"select",
       options:["PlayStation","Xbox","Nintendo Switch","PC","Universal / Multi-Platform"] },
     { id:"cf-condition", label:"Condition",    type:"select",
-      options:["Brand New","Foreign Used","Local Used"] },
+      options:["Brand New","Foreign Used (UK)","Foreign Used (Dubai)","Local Used", "Refurbished" ] },
   ],
 
   "gaming-Gaming Chair": [
     { id:"cf-brand",     label:"Brand",        type:"text", placeholder:"e.g. Secretlab, No Brand" },
     { id:"cf-condition", label:"Condition",    type:"select",
-      options:["Brand New","Foreign Used","Local Used"] },
+      options:["Brand New","Foreign Used (UK)","Foreign Used (Dubai)","Local Used", "Refurbished" ] },
     { id:"cf-color",     label:"Color",        type:"text", placeholder:"e.g. Black/Red" },
   ],
 
@@ -792,14 +792,14 @@ const CATEGORY_FIELDS = {
     { id:"cf-refresh",   label:"Refresh Rate (if monitor)", type:"select",
       options:["Not Applicable","60Hz","75Hz","120Hz","144Hz","240Hz+"] },
     { id:"cf-condition", label:"Condition",    type:"select",
-      options:["Brand New","Foreign Used","Local Used"] },
+      options:["Brand New","Foreign Used (UK)","Foreign Used (Dubai)","Local Used", "Refurbished" ] },
   ],
 
   "gaming-VR Headset": [
     { id:"cf-brand",     label:"Brand",        type:"select",
       options:["Meta Quest","PlayStation VR","HTC Vive","Other"] },
     { id:"cf-condition", label:"Condition",    type:"select",
-      options:["Brand New","Foreign Used","Local Used"] },
+      options:["Brand New","Foreign Used (UK)","Foreign Used (Dubai)","Local Used", "Refurbished" ] },
     { id:"cf-accessories",label:"Accessories Included", type:"text", placeholder:"e.g. Controllers, charging cable" },
   ],
 
@@ -816,7 +816,7 @@ const CATEGORY_FIELDS = {
     { id:"cf-seats",     label:"Seater",      type:"select",
       options:["1 Seater","2 Seater","3 Seater","5+ Seater Set"] },
     { id:"cf-condition", label:"Condition",   type:"select",
-      options:["Brand New","Foreign Used","Local Used"] },
+      options:["Brand New","Foreign Used (UK)","Foreign Used (Dubai)","Local Used", "Refurbished" ] },
   ],
 
   "home-Bed / Bedroom Furniture": [
@@ -825,7 +825,7 @@ const CATEGORY_FIELDS = {
     { id:"cf-size",      label:"Size",        type:"select",
       options:["3x6","4x6","5x6","6x6","Queen","King","Not Applicable"] },
     { id:"cf-condition", label:"Condition",   type:"select",
-      options:["Brand New","Foreign Used","Local Used"] },
+      options:["Brand New","Foreign Used (UK)","Foreign Used (Dubai)","Local Used", "Refurbished" ] },
   ],
 
   "home-Dining & Kitchen Furniture": [
