@@ -2,6 +2,11 @@
   "hosting": {
     "public": "public",
     "rewrites": [
+
+      {
+       "source": "/install",
+       "destination": "/install.html"
+      },
       {
         "source": "/blog/**",
         "function": "blogSeo"
