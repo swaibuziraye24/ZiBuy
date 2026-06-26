@@ -712,6 +712,25 @@
 </head>
 <body>
 
+  <script>
+(function () {
+  // Don't redirect if already on install page
+  if (window.location.pathname === "/install") return;
+
+  // Don't redirect if app is already installed
+  if (window.matchMedia("(display-mode: standalone)").matches) return;
+
+  // Don't redirect if they've already visited before
+  if (localStorage.getItem("zibuy_has_visited")) return;
+
+  // Mark that they've visited
+  localStorage.setItem("zibuy_has_visited", "true");
+
+  // Send first-time visitors to install page
+  window.location.replace("/install");
+})();
+</script>
+
 <!-- ══ NEW TOPBAR ══ -->
 <header class="zb-topbar">
   <h1 class="logo" id="secret-admin-trigger">
