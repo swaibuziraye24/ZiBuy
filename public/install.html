@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>Install ZiBuy</title>
+
+<meta name="description"
+content="Install ZiBuy to buy and sell across Uganda quickly and securely.">
+
+<link rel="manifest" href="/manifest.json">
+
+<style>
+
+body{
+margin:0;
+font-family:Arial,sans-serif;
+background:#f7f8fa;
+display:flex;
+justify-content:center;
+align-items:center;
+min-height:100vh;
+}
+
+.card{
+
+width:90%;
+max-width:420px;
+
+background:white;
+
+border-radius:22px;
+
+padding:30px;
+
+text-align:center;
+
+box-shadow:0 12px 40px rgba(0,0,0,.12);
+
+}
+
+.logo{
+
+width:90px;
+
+margin-bottom:15px;
+
+}
+
+h1{
+
+margin:0;
+
+font-size:28px;
+
+color:#222;
+
+}
+
+p{
+
+color:#666;
+
+line-height:1.6;
+
+margin-top:15px;
+
+}
+
+button{
+
+margin-top:25px;
+
+width:100%;
+
+padding:16px;
+
+font-size:17px;
+
+font-weight:bold;
+
+border:none;
+
+border-radius:14px;
+
+cursor:pointer;
+
+background:#ff6600;
+
+color:white;
+
+}
+
+button:hover{
+
+opacity:.95;
+
+}
+
+.instructions{
+
+margin-top:25px;
+
+padding:15px;
+
+background:#fff6ef;
+
+border-radius:12px;
+
+font-size:14px;
+
+color:#444;
+
+display:none;
+
+text-align:left;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="card">
+
+<img
+src="/icons/icon-512.png"
+class="logo">
+
+<h1>Install ZiBuy</h1>
+
+<p>
+
+Install ZiBuy on your phone or computer for a faster experience.
+
+Browse products, chat with sellers and receive notifications instantly.
+
+</p>
+
+<button id="installBtn">
+
+Install ZiBuy
+
+</button>
+
+<div
+id="instructions"
+class="instructions">
+
+</div>
+
+</div>
+
+<script>
+
+let deferredPrompt=null;
+
+const btn=document.getElementById("installBtn");
+
+const box=document.getElementById("instructions");
+
+window.addEventListener("beforeinstallprompt",(e)=>{
+
+e.preventDefault();
+
+deferredPrompt=e;
+
+});
+
+btn.onclick=async()=>{
+
+if(deferredPrompt){
+
+deferredPrompt.prompt();
+
+const result=await deferredPrompt.userChoice;
+
+if(result.outcome==="accepted"){
+
+window.location.href="/";
+
+}
+
+return;
+
+}
+
+const isiOS=/iPad|iPhone|iPod/.test(navigator.userAgent);
+
+if(isiOS){
+
+box.style.display="block";
+
+box.innerHTML=`
+<b>Install on iPhone</b><br><br>
+
+1. Tap the Share button.<br>
+
+2. Tap <b>Add to Home Screen</b>.<br>
+
+3. Tap <b>Add</b>.
+`;
+
+return;
+
+}
+
+box.style.display="block";
+
+box.innerHTML=`
+<b>Install using Chrome</b><br><br>
+
+1. Open this page in Google Chrome.<br>
+
+2. Tap the ⋮ menu.<br>
+
+3. Tap <b>Install App</b> or <b>Add to Home Screen</b>.
+`;
+
+};
+
+window.addEventListener("appinstalled",()=>{
+
+window.location.href="/";
+
+});
+
+</script>
+
+</body>
+</html>
