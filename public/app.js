@@ -2518,3 +2518,205 @@ window.toggleLike = async function(productId, btnEl) {
   mo.observe(document.body, { childList: true, subtree: true });
 })();
 
+
+// ============================================
+// SEARCH OVERLAY
+// ============================================
+
+window.openSearchOverlay = function() {
+  const overlay = document.getElementById("search-overlay");
+  if (!overlay) return;
+
+  overlay.style.display = "flex";
+
+  // Focus the overlay input after a tiny delay (mobile keyboards)
+  setTimeout(() => {
+    const inp = document.getElementById("overlay-search-input");
+    if (inp) inp.focus();
+  }, 100);
+
+  // Prevent body scroll while overlay is open
+  document.body.style.overflow = "hidden";
+};
+
+window.closeSearchOverlay = function() {
+  const overlay = document.getElementById("search-overlay");
+  if (!overlay) return;
+
+  overlay.style.display = "none";
+  document.body.style.overflow = "";
+
+  // Clear the overlay input
+  const inp = document.getElementById("overlay-search-input");
+  if (inp) inp.value = "";
+
+  // Reset product results and show quick cats again
+  const results  = document.getElementById("overlay-product-results");
+  const quickCats = document.getElementById("overlay-quick-cats");
+  if (results)   results.innerHTML = "";
+  if (quickCats) quickCats.style.display = "block";
+
+  const clearBtn = document.getElementById("overlay-clear-btn");
+  if (clearBtn) clearBtn.style.display = "none";
+};
+
+window.clearOverlaySearch = function() {
+  const inp = document.getElementById("overlay-search-input");
+  if (inp) { inp.value = ""; inp.focus(); }
+
+  const results   = document.getElementById("overlay-product-results");
+  const quickCats = document.getElementById("overlay-quick-cats");
+  const clearBtn  = document.getElementById("overlay-clear-btn");
+
+  if (results)   results.innerHTML = "";
+  if (quickCats) quickCats.style.display = "block";
+  if (clearBtn)  clearBtn.style.display = "none";
+};
+
+window.runOverlaySearch = function(query) {
+  const results   = document.getElementById("overlay-product-results");
+  const quickCats = document.getElementById("overlay-quick-cats");
+  const clearBtn  = document.getElementById("overlay-clear-btn");
+  if (!results) return;
+
+  const q = (query || "").toLowerCase().trim();
+
+  // Show/hide clear button
+  if (clearBtn) clearBtn.style.display = q ? "block" : "none";
+
+  if (!q) {
+    results.innerHTML = "";
+    if (quickCats) quickCats.style.display = "block";
+    return;
+  }
+
+  if (quickCats) quickCats.style.display = "none";
+
+  // Search across name, category, subcategory, description, location
+  const matches = (window.allProducts || [])
+    .filter(p => {
+      if (p.status && p.status !== "active") return false;
+      const text = `
+        ${p.name || ""}
+        ${p.category || ""}
+        ${p.subcategory || ""}
+        ${p.description || ""}
+        ${p.location || ""}
+        ${p.seller?.location || ""}
+      `.toLowerCase();
+      return text.includes(q);
+    })
+    .slice(0, 30);
+
+  if (matches.length === 0) {
+    results.innerHTML = `
+      <div style="text-align:center;padding:60px 20px;color:#9ca3af">
+        <p style="font-size:40px;margin-bottom:12px">🔍</p>
+        <p style="font-size:16px;font-weight:700;color:#111827">
+          No results for "${query}"
+        </p>
+        <p style="font-size:13px;margin-top:6px">
+          Try a different word or browse categories below
+        </p>
+        <button onclick="closeSearchOverlay()"
+          style="margin-top:16px;background:#ff6600;color:white;
+          border:none;padding:12px 24px;border-radius:10px;
+          font-weight:800;font-size:14px;cursor:pointer;font-family:inherit">
+          Browse All →
+        </button>
+      </div>`;
+    return;
+  }
+
+  // Get condition helper
+  function getCondition(p) {
+    return (
+      p.condition ||
+      p.details?.condition ||
+      p.details?.["cf-condition"] ||
+      ""
+    ).trim();
+  }
+
+  function conditionBadge(cond) {
+    if (!cond) return "";
+    const lower = cond.toLowerCase();
+    let color = "#6b7280";
+    let bg    = "#f3f4f6";
+    if (lower.includes("brand new"))          { color="#065f46"; bg="#d1fae5"; }
+    else if (lower.includes("foreign used") ||
+             lower.includes("london")       ||
+             lower.includes("dubai"))         { color="#1e40af"; bg="#dbeafe"; }
+    else if (lower.includes("local used"))    { color="#92400e"; bg="#fef3c7"; }
+    else if (lower.includes("refurbished"))   { color="#5b21b6"; bg="#ede9fe"; }
+    return `<span style="display:inline-block;background:${bg};color:${color};
+      padding:2px 8px;border-radius:20px;font-size:10px;font-weight:800;
+      margin-right:4px">${cond}</span>`;
+  }
+
+  results.innerHTML = `
+    <p style="font-size:12px;color:#9ca3af;font-weight:700;margin:0 0 12px">
+      ${matches.length} result${matches.length !== 1 ? "s" : ""} for
+      "<strong style="color:#111827">${query}</strong>"
+    </p>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">
+      ${matches.map(p => {
+        const img       = p.images?.[0] || "";
+        const price     = Number(p.price || 0).toLocaleString();
+        const loc       = p.seller?.location || p.location || "";
+        const condition = getCondition(p);
+        const badge     = conditionBadge(condition);
+        const since     = p.sellerMemberSince
+          ? `<p style="margin:2px 0 0;font-size:10px;color:#adb5bd">🗓️ ${p.sellerMemberSince}</p>`
+          : "";
+
+        return `
+          <div onclick="closeSearchOverlay();window.location.href='product.html?id=${p.id}'"
+            style="background:white;border-radius:12px;overflow:hidden;
+            box-shadow:0 2px 10px rgba(0,0,0,0.07);cursor:pointer;
+            border:1.5px solid #f0f0f0;transition:.2s"
+            onmouseover="this.style.borderColor='#ff6600'"
+            onmouseout="this.style.borderColor='#f0f0f0'">
+            <div style="position:relative">
+              <img src="${img}" alt="${p.name}"
+                onerror="this.src='https://via.placeholder.com/200?text=No+Image'"
+                style="width:100%;aspect-ratio:1/1;object-fit:cover">
+              ${p.isPremium ? `
+                <div style="position:absolute;top:6px;right:6px;
+                  background:linear-gradient(135deg,#ff6600,#ff9900);
+                  color:white;padding:2px 7px;border-radius:5px;
+                  font-size:10px;font-weight:800">⭐ Featured</div>
+              ` : ""}
+            </div>
+            <div style="padding:9px">
+              <p style="margin:0 0 3px;font-size:10px;color:#ff6600;
+                font-weight:800;text-transform:uppercase">${p.category || ""}</p>
+              <h4 style="margin:0 0 4px;font-size:12px;font-weight:700;
+                color:#111827;overflow:hidden;text-overflow:ellipsis;
+                white-space:nowrap">${p.name}</h4>
+              <p style="margin:0 0 5px;color:#ff6600;font-weight:900;
+                font-size:14px">UGX ${price}</p>
+              <button style="width:100%;padding:7px;font-size:11px;
+                background:#ff6600;color:white;border:none;border-radius:7px;
+                font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:6px"
+                onclick="event.stopPropagation();closeSearchOverlay();
+                window.location.href='product.html?id=${p.id}'">
+                View →
+              </button>
+              ${badge}
+              <p style="margin:3px 0 0;font-size:10px;color:#9ca3af">
+                ${loc ? `📍 ${loc}` : ""}
+              </p>
+              ${since}
+            </div>
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
+};
+
+// Close overlay with Escape key
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeSearchOverlay();
+});
