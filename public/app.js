@@ -614,6 +614,15 @@ async function loadBuyPowerSection(allProducts) {
 
   section.style.display = "block";
 
+  // Render as horizontal scroll row
+grid.style.display = "flex";
+grid.style.flexWrap = "nowrap";
+grid.style.overflowX = "auto";
+grid.style.gap = "10px";
+grid.style.padding = "10px";
+grid.style.scrollSnapType = "x mandatory";
+grid.style.webkitOverflowScrolling = "touch";
+
   grid.innerHTML = toShow.map(p => {
     const img   = p.images?.[0] || "";
     const price = Number(p.price || 0).toLocaleString();
@@ -626,18 +635,78 @@ async function loadBuyPowerSection(allProducts) {
 
     return `
       <div onclick="window.location.href='product.html?id=${p.id}'"
-        style="background:white;border-radius:12px;overflow:hidden;
-        box-shadow:0 2px 10px rgba(0,0,0,0.06);cursor:pointer;
-        transition:transform .2s,box-shadow .2s;position:relative"
-        onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,0.12)'"
-        onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 2px 10px rgba(0,0,0,0.06)'">
+style="
+flex:0 0 auto;
+width:180px;
+background:white;
+border-radius:12px;
+overflow:hidden;
+box-shadow:0 2px 10px rgba(0,0,0,0.06);
+cursor:pointer;
+transition:transform .2s,box-shadow .2s;
+position:relative;
+scroll-snap-align:start;
+"
+        ${(() => {
+  const condition = (
+    p.condition ||
+    p.details?.condition ||
+    ""
+  ).toLowerCase();
 
-        <!-- Used badge -->
-        <div style="position:absolute;top:8px;left:8px;z-index:2;
-          background:linear-gradient(135deg,#ff6600,#ff9900);color:white;
-          padding:3px 8px;border-radius:6px;font-size:10px;font-weight:800">
-          ⚡ USED
-        </div>
+  // Product condition badge
+const condition = (
+  p.condition ||
+  p.details?.condition ||
+  p.details?.["cf-condition"] ||
+  p.details?.["cf-phone-condition"] ||
+  ""
+).toLowerCase().trim();
+
+let badge = "";
+let color = "#6b7280";
+
+if (condition.includes("brand")) {
+  badge = "🆕 BRAND NEW";
+  color = "#16a34a";
+}
+else if (condition.includes("refurb")) {
+  badge = "♻️ REFURBISHED";
+  color = "#2563eb";
+}
+else if (condition.includes("foreign")) {
+  badge = "🌍 FOREIGN USED";
+  color = "#ff6600";
+}
+else if (condition.includes("local")) {
+  badge = "📦 LOCAL USED";
+  color = "#ea580c";
+}
+else if (condition.includes("used")) {
+  badge = "⚡ USED";
+  color = "#d97706";
+}
+
+return badge
+? `
+<div style="
+  position:absolute;
+  bottom:8px;
+  right:8px;
+  z-index:4;
+  background:${color};
+  color:white;
+  padding:4px 8px;
+  border-radius:6px;
+  font-size:10px;
+  font-weight:800;
+  box-shadow:0 2px 8px rgba(0,0,0,.18);
+">
+  ${badge}
+</div>
+`
+: "";
+})()}
 
         <!-- Save/wishlist btn -->
         <button onclick="event.stopPropagation();toggleLike('${p.id}',this)"
