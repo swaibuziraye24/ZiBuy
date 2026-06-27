@@ -1540,19 +1540,7 @@ window.setActiveCard = function(el) {
         text-transform:uppercase;letter-spacing:.5px;margin:0 0 10px">
         Browse Categories
       </p>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        ${["📱 Phones","💻 Electronics","🚗 Vehicles","👗 Fashion",
-           "🏠 Home","🌾 Agriculture","🏘️ Property","💼 Seeking Work"
-          ].map(c => {
-            const cat = c.split(" ")[1].toLowerCase();
-            return `<button onclick="closeSearchOverlay();filterCategory('${cat}')"
-              style="background:#f3f4f6;border:none;padding:8px 14px;
-              border-radius:20px;font-size:13px;font-weight:700;
-              cursor:pointer;font-family:inherit;color:#374151">
-              ${c}
-            </button>`;
-          }).join("")}
-      </div>
+      
     </div>
 
     <div id="overlay-product-results"></div>
