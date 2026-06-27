@@ -648,21 +648,15 @@ position:relative;
 scroll-snap-align:start;
 "
         ${(() => {
-  const condition = (
-    p.condition ||
-    p.details?.condition ||
-    ""
-  ).toLowerCase();
 
-  // Product condition badge
-const condition = (
+    const condition = (
   p.condition ||
   p.details?.condition ||
   p.details?.["cf-condition"] ||
   p.details?.["cf-phone-condition"] ||
   ""
 ).toLowerCase().trim();
-
+  
 let badge = "";
 let color = "#6b7280";
 
