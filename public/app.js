@@ -977,10 +977,11 @@ window.renderProducts = function () {
   }
 
   const grouped = {};
-  const trending = [];
-  const newArrivals = [];
-  const featured = [];
-  const sponsored = [];
+const trending = [];
+const newArrivals = [];
+const usedProducts = [];
+const featured = [];
+const sponsored = [];
 
   const now = Date.now();
 
@@ -1036,6 +1037,20 @@ window.renderProducts = function () {
     if (now - created <= 7 * 86400000) {
       newArrivals.push(p);
     }
+
+
+    // Used Products row
+const condition = (p.condition || p.details?.condition || "").toLowerCase();
+
+if (
+  condition.includes("used") ||
+  condition.includes("foreign") ||
+  condition.includes("local") ||
+  condition.includes("dubai") ||
+  condition.includes("refurbished")
+) {
+  usedProducts.push(p);
+}
 
     const plan = p.plan || "free";
     const score = getTrendingScore(p, plan);
@@ -1165,7 +1180,8 @@ const topTrending = trending.slice(0, 10);
   }
   
   renderRow("🔥 Trending", topTrending);
-  renderRow("🆕 New Arrivals", newArrivals);
+renderRow("🆕 New Arrivals", newArrivals);
+renderRow("♻️ Used Products", usedProducts);
 
   // ── Infinite scroll grid (below Trending & New Arrivals) ──
   const allSection = document.createElement("div");
@@ -1234,6 +1250,28 @@ function _appendPage() {
             ⭐ Featured
           </div>
         ` : ""}
+
+           ${(() => {
+  const c = (p.condition || p.details?.condition || "").toLowerCase();
+
+  if (c.includes("brand new"))
+    return `<div style="position:absolute;top:35px;left:5px;background:#10b981;color:#fff;font-size:10px;padding:3px 6px;border-radius:5px;font-weight:700">🆕 Brand New</div>`;
+
+  if (c.includes("foreign"))
+    return `<div style="position:absolute;top:35px;left:5px;background:#2563eb;color:#fff;font-size:10px;padding:3px 6px;border-radius:5px;font-weight:700">♻️ Foreign Used</div>`;
+
+  if (c.includes("local"))
+    return `<div style="position:absolute;top:35px;left:5px;background:#7c3aed;color:#fff;font-size:10px;padding:3px 6px;border-radius:5px;font-weight:700">♻️ Local Used</div>`;
+
+  if (c.includes("dubai"))
+    return `<div style="position:absolute;top:35px;left:5px;background:#0ea5e9;color:#fff;font-size:10px;padding:3px 6px;border-radius:5px;font-weight:700">♻️ Dubai Used</div>`;
+
+  if (c.includes("refurbished"))
+    return `<div style="position:absolute;top:35px;left:5px;background:#f59e0b;color:#fff;font-size:10px;padding:3px 6px;border-radius:5px;font-weight:700">🔧 Refurbished</div>`;
+
+  return "";
+})()}
+
         <button onclick="event.stopPropagation();toggleLike('${p.id}',this)"
           style="position:absolute;bottom:5px;right:5px;background:white;border:none;
           width:28px;height:28px;border-radius:50%;font-size:14px;cursor:pointer;
