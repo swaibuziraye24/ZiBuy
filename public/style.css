@@ -8134,3 +8134,76 @@ body {
   .featured-shops-section { padding: 4px 16px 4px; }
   .shop-card { width: 160px; }
 }
+
+/* ===================================================
+   PRE-LOVED PRODUCTS SECTION
+=================================================== */
+
+.used-products-section{
+    margin:25px 0;
+    padding:0 12px;
+}
+
+.used-products-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:12px;
+}
+
+.used-products-header h2{
+    margin:0;
+    font-size:22px;
+    font-weight:800;
+    color:#111827;
+    font-family:'Syne',sans-serif;
+}
+
+.used-products-header p{
+    margin-top:4px;
+    color:#6b7280;
+    font-size:13px;
+}
+
+.used-products-header a{
+    color:#ff6600;
+    text-decoration:none;
+    font-weight:700;
+    font-size:14px;
+}
+
+.used-products-header a:hover{
+    text-decoration:underline;
+}
+
+/* Horizontal scrolling row */
+
+#buy-power-grid{
+
+    display:flex;
+
+    gap:14px;
+
+    overflow-x:auto;
+
+    padding-bottom:10px;
+
+    scroll-behavior:smooth;
+
+    scrollbar-width:none;
+
+}
+
+#buy-power-grid::-webkit-scrollbar{
+    display:none;
+}
+
+#buy-power-grid > div{
+
+    min-width:190px;
+
+    max-width:190px;
+
+    flex:0 0 auto;
+
+}
