@@ -1252,24 +1252,58 @@ function _appendPage() {
         ` : ""}
 
            ${(() => {
+
   const c = (p.condition || p.details?.condition || "").toLowerCase();
 
-  if (c.includes("brand new"))
-    return `<div style="position:absolute;top:35px;left:5px;background:#10b981;color:#fff;font-size:10px;padding:3px 6px;border-radius:5px;font-weight:700">🆕 Brand New</div>`;
+  let badge = "";
 
-  if (c.includes("foreign"))
-    return `<div style="position:absolute;top:35px;left:5px;background:#2563eb;color:#fff;font-size:10px;padding:3px 6px;border-radius:5px;font-weight:700">♻️ Foreign Used</div>`;
+  if (c.includes("brand new")) {
+    badge = "🆕 Brand New";
+  } else if (c.includes("foreign")) {
+    badge = "♻️ Foreign Used";
+  } else if (c.includes("local")) {
+    badge = "♻️ Local Used";
+  } else if (c.includes("dubai")) {
+    badge = "♻️ Dubai Used";
+  } else if (c.includes("refurbished")) {
+    badge = "🔧 Refurbished";
+  }
 
-  if (c.includes("local"))
-    return `<div style="position:absolute;top:35px;left:5px;background:#7c3aed;color:#fff;font-size:10px;padding:3px 6px;border-radius:5px;font-weight:700">♻️ Local Used</div>`;
+  if (!badge) return "";
 
-  if (c.includes("dubai"))
-    return `<div style="position:absolute;top:35px;left:5px;background:#0ea5e9;color:#fff;font-size:10px;padding:3px 6px;border-radius:5px;font-weight:700">♻️ Dubai Used</div>`;
+  let color = "#10b981";
 
-  if (c.includes("refurbished"))
-    return `<div style="position:absolute;top:35px;left:5px;background:#f59e0b;color:#fff;font-size:10px;padding:3px 6px;border-radius:5px;font-weight:700">🔧 Refurbished</div>`;
+  if (badge.includes("Foreign"))
+    color = "#2563eb";
 
-  return "";
+  if (badge.includes("Local"))
+    color = "#7c3aed";
+
+  if (badge.includes("Dubai"))
+    color = "#0ea5e9";
+
+  if (badge.includes("Refurbished"))
+    color = "#f59e0b";
+
+  return `
+    <div style="
+      position:absolute;
+      bottom:8px;
+      right:8px;
+      background:${color};
+      color:white;
+      font-size:10px;
+      padding:4px 8px;
+      border-radius:20px;
+      font-weight:700;
+      box-shadow:0 2px 8px rgba(0,0,0,.25);
+      z-index:5;
+      white-space:nowrap;
+    ">
+      ${badge}
+    </div>
+  `;
+
 })()}
 
         <button onclick="event.stopPropagation();toggleLike('${p.id}',this)"
