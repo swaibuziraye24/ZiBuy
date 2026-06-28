@@ -658,11 +658,43 @@ transition:transform .2s,box-shadow .2s;
 position:relative;
 scroll-snap-align:start;
 "
-        
-})()}
+        ${(() => {
 
-        <!-- Save/wishlist btn -->
-        <button onclick="event.stopPropagation();toggleLike('${p.id}',this)"
+const c = (
+  p.condition ||
+  p.details?.condition ||
+  p.details?.["cf-condition"] ||
+  p.details?.["cf-phone-condition"] ||
+  ""
+).toLowerCase().trim();
+
+let badge = "";
+let color = "#6b7280";
+
+if (c.includes("brand")) {
+  badge = "🆕 BRAND NEW";
+  color = "#16a34a";
+}
+else if (c.includes("refurb")) {
+  badge = "♻️ REFURBISHED";
+  color = "#2563eb";
+}
+else if (c.includes("foreign")) {
+  badge = "🌍 FOREIGN USED";
+  color = "#ff6600";
+}
+else if (c.includes("local")) {
+  badge = "📦 LOCAL USED";
+  color = "#ea580c";
+}
+else if (c.includes("used")) {
+  badge = "⚡ USED";
+  color = "#d97706";
+}
+
+return `
+<!-- Save / Wishlist -->
+<button onclick="event.stopPropagation();toggleLike('${p.id}',this)"
 style="
 position:absolute;
 top:8px;
@@ -683,111 +715,50 @@ box-shadow:0 2px 8px rgba(0,0,0,.18);
 🤍
 </button>
 
-        <div style="position:relative;">
-
-<img src="${img}" alt="${p.name}"
-onerror="this.src='https://zibuy-5deae.web.app/icons/icon-512.png'"
-style="width:100%;height:150px;object-fit:cover">
-
-${(() => {
-
-const cond = (
-p.condition ||
-p.details?.condition ||
-p.details?.["cf-condition"] ||
-p.details?.["cf-phone-condition"] ||
-""
-).toLowerCase();
-
-let badge = "";
-let color = "#6b7280";
-
-if (cond.includes("brand")) {
-    badge = "🆕 BRAND NEW";
-    color = "#16a34a";
-}
-else if (cond.includes("foreign")) {
-    badge = "🌍 FOREIGN USED";
-    color = "#ff6600";
-}
-else if (cond.includes("local")) {
-    badge = "📦 LOCAL USED";
-    color = "#ea580c";
-}
-else if (cond.includes("refurb")) {
-    badge = "♻️ REFURBISHED";
-    color = "#2563eb";
-}
-else if (cond.includes("used")) {
-    badge = "⚡ USED";
-    color = "#d97706";
-}
-
-return badge ? `
+${badge ? `
 <div style="
 position:absolute;
-right:8px;
 bottom:8px;
+right:8px;
+z-index:19;
 background:${color};
 color:white;
 padding:4px 8px;
-border-radius:7px;
+border-radius:6px;
 font-size:10px;
 font-weight:800;
-z-index:15;
-box-shadow:0 2px 8px rgba(0,0,0,.25);
+line-height:1;
+box-shadow:0 2px 6px rgba(0,0,0,.18);
+pointer-events:none;
 ">
 ${badge}
 </div>
-` : "";
+` : ""}
+`;
 
 })()}
 
-</div>
+<img src="${img}" alt="${p.name}"
+onerror="this.src='https://zibuy-5deae.web.app/icons/icon-512.png/200?text=No+Image'"
+style="width:100%;height:150px;object-fit:cover">
 
-<div style="padding:10px">
-
-<p style="
-margin:0 0 4px;
-font-size:11px;
-color:#ff6600;
-font-weight:800;
-text-transform:uppercase;
-letter-spacing:.4px;
-">
-${p.category || ""}
-</p>
-
-<p style="
-margin:0 0 6px;
-font-weight:700;
-font-size:13px;
-color:#111827;
-overflow:hidden;
-text-overflow:ellipsis;
-white-space:nowrap;
-">
-${p.name}
-</p>
-
-<p style="
-margin:0 0 4px;
-color:#ff6600;
-font-weight:900;
-font-size:15px;
-">
-UGX ${price}
-</p>
-
-<p style="
-margin:0;
-font-size:11px;
-color:#9ca3af;
-">
-📍 ${p.seller?.location || p.location || "Uganda"} · ${condition}
-</p>
-
-</div>
+        <div style="padding:10px">
+          <p style="margin:0 0 4px;font-size:11px;color:#ff6600;
+            font-weight:800;text-transform:uppercase;letter-spacing:.4px">
+            ${p.category || ""}
+          </p>
+          <p style="margin:0 0 6px;font-weight:700;font-size:13px;color:#111827;
+            overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+            ${p.name}
+          </p>
+          <p style="margin:0 0 4px;color:#ff6600;font-weight:900;font-size:15px">
+            UGX ${price}
+          </p>
+          <p style="margin:0;font-size:11px;color:#9ca3af">
+            📍 ${p.seller?.location || p.location || "Uganda"} · ${condition}
+          </p>
+        </div>
+      </div>
     `;
   }).join("");
 }
