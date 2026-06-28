@@ -695,19 +695,20 @@ else if (condition.includes("used")) {
 return badge
 ? `
 <div style="
-  position:absolute;
-  bottom:8px;
-  right:8px;
-  z-index:4;
-  background:${color};
-  color:white;
-  padding:4px 8px;
-  border-radius:6px;
-  font-size:10px;
-  font-weight:800;
-  box-shadow:0 2px 8px rgba(0,0,0,.18);
+position:absolute;
+bottom:8px;
+right:8px;
+z-index:15;
+background:${color};
+color:white;
+padding:4px 8px;
+border-radius:7px;
+font-size:10px;
+font-weight:800;
+box-shadow:0 2px 8px rgba(0,0,0,.18);
+pointer-events:none;
 ">
-  ${badge}
+${badge}
 </div>
 `
 : "";
@@ -715,12 +716,25 @@ return badge
 
         <!-- Save/wishlist btn -->
         <button onclick="event.stopPropagation();toggleLike('${p.id}',this)"
-          style="position:absolute;top:8px;right:8px;z-index:2;
-          background:white;border:none;width:30px;height:30px;border-radius:50%;
-          font-size:16px;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,0.12);
-          display:flex;align-items:center;justify-content:center">
-          🤍
-        </button>
+style="
+position:absolute;
+top:8px;
+right:8px;
+z-index:20;
+background:white;
+border:none;
+width:30px;
+height:30px;
+border-radius:50%;
+font-size:15px;
+cursor:pointer;
+display:flex;
+align-items:center;
+justify-content:center;
+box-shadow:0 2px 8px rgba(0,0,0,.18);
+">
+🤍
+</button>
 
         <img src="${img}" alt="${p.name}"
           onerror="this.src='https://zibuy-5deae.web.app/icons/icon-512.png/200?text=No+Image'"
@@ -1388,11 +1402,25 @@ function _appendPage() {
 })()}
 
         <button onclick="event.stopPropagation();toggleLike('${p.id}',this)"
-          style="position:absolute;bottom:5px;right:5px;background:white;border:none;
-          width:28px;height:28px;border-radius:50%;font-size:14px;cursor:pointer;
-          box-shadow:0 2px 6px rgba(0,0,0,0.12);display:flex;align-items:center;justify-content:center">
-          🤍
-        </button>
+style="
+position:absolute;
+top:8px;
+right:8px;
+z-index:20;
+background:white;
+border:none;
+width:32px;
+height:32px;
+border-radius:50%;
+font-size:15px;
+cursor:pointer;
+display:flex;
+align-items:center;
+justify-content:center;
+box-shadow:0 2px 8px rgba(0,0,0,.18);
+">
+🤍
+</button>
       </div>
       <div style="padding:8px">
         <p style="font-size:11px;color:#ff6600;font-weight:700;margin:0 0 3px;
