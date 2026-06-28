@@ -4,7 +4,7 @@
 //   trading centres, villages)
 // ============================================
 
-export const UGANDA_LOCATIONS = {
+export const UGANDA_LOCATIONS = Object.freeze({
 
   // ══ CENTRAL REGION ══
 
@@ -555,7 +555,7 @@ export const UGANDA_LOCATIONS = {
     "Alebtong Town", "Abako", "Adwari", "Aloi"
   ],
 
-};
+});
 
 // ── Helper: get all districts ─────────────────
 export function getDistricts() {
