@@ -104,13 +104,24 @@ if (document.readyState === "loading") {
 
 function initApp() {
   console.log("App initialized");
+
+   // Always start at top of page
+  window.scrollTo({ top: 0, behavior: "instant" });
+  sessionStorage.removeItem("zibuy_scroll");
+
   setupAuthStateListener();
+  
   loadProducts();
+
+  // Defer non-critical loads until after products render
+  setTimeout(() => {
+
   loadBannerAd();
   populateFilterDistricts();
   loadFeaturedShops();
   loadCategorySponsors();
-  
+
+  }, 800);
 
 
   // ── Restore scroll position and category after back navigation ──
@@ -400,23 +411,62 @@ function isTrending(p) {
 // LOAD PRODUCTS FROM FIRESTORE
 // ============================================
 async function loadProducts() {
-  try {
-    const snapshot = await getDocs(collection(db, "products"));
+  // Show skeleton cards immediately so page feels instant
+  const container = document.getElementById("products");
+  if (container) {
+    container.innerHTML = `
+      <div style="padding:10px">
+        <div style="height:22px;width:140px;border-radius:6px;margin-bottom:12px;
+          background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);
+          background-size:200% 100%;animation:shimmer 1.5s infinite"></div>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">
+          ${Array(6).fill(0).map(() => `
+            <div style="border-radius:12px;overflow:hidden;background:white;
+              box-shadow:0 1px 4px rgba(0,0,0,0.08)">
+              <div style="aspect-ratio:1/1;background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);
+                background-size:200% 100%;animation:shimmer 1.5s infinite"></div>
+              <div style="padding:10px">
+                <div style="height:10px;border-radius:4px;margin-bottom:8px;width:60%;
+                  background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);
+                  background-size:200% 100%;animation:shimmer 1.5s infinite"></div>
+                <div style="height:14px;border-radius:4px;margin-bottom:8px;width:80%;
+                  background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);
+                  background-size:200% 100%;animation:shimmer 1.5s infinite"></div>
+                <div style="height:28px;border-radius:7px;
+                  background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);
+                  background-size:200% 100%;animation:shimmer 1.5s infinite"></div>
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    `;
+  }
 
-    // ── Batch load plans + verifications ONCE ──
-    let planMap   = {};
-    let verifSet  = new Set();
+  try {
+    // ── Fire ALL queries in parallel — don't wait for one then another ──
+    let planMap        = {};
+    let verifSet       = new Set();
     let memberSinceMap = {};
 
+    const { limit, orderBy: fbOrderBy } = await import(
+      "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"
+    );
+
+    const [snapshot, usersSnap, verifSnap] = await Promise.all([
+      getDocs(query(
+        collection(db, "products"),
+        fbOrderBy("createdAt", "desc"),
+        limit(100)
+      )),
+      getDocs(collection(db, "users")).catch(() => ({ docs: [] })),
+      getDocs(query(
+        collection(db, "seller_verifications"),
+        where("status", "==", "approved")
+      )).catch(() => ({ docs: [] }))
+    ]);
 
     try {
-      const [usersSnap, verifSnap] = await Promise.all([
-        getDocs(collection(db, "users")),
-        getDocs(query(
-          collection(db, "seller_verifications"),
-          where("status", "==", "approved")
-        ))
-      ]);
 
       // memberSinceMap stores join date per userId
       memberSinceMap = {};
