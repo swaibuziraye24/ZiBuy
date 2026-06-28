@@ -120,7 +120,7 @@ function initApp() {
   populateFilterDistricts();
   loadFeaturedShops();
   loadCategorySponsors();
-
+  
   }, 800);
 
 
@@ -449,16 +449,8 @@ async function loadProducts() {
     let verifSet       = new Set();
     let memberSinceMap = {};
 
-    const { limit, orderBy: fbOrderBy } = await import(
-      "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"
-    );
-
     const [snapshot, usersSnap, verifSnap] = await Promise.all([
-      getDocs(query(
-        collection(db, "products"),
-        fbOrderBy("createdAt", "desc"),
-        limit(100)
-      )),
+      getDocs(collection(db, "products")),
       getDocs(collection(db, "users")).catch(() => ({ docs: [] })),
       getDocs(query(
         collection(db, "seller_verifications"),
