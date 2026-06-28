@@ -594,7 +594,189 @@ async function loadFeaturedShops() {
 }
 
 
+// ============================================
+// BUY POWER — Best Secondhand Deals Section
+// ============================================
+async function loadBuyPowerSection(allProducts) {
+  const section = document.getElementById("buy-power-section");
+  const grid    = document.getElementById("buy-power-grid");
+  if (!section || !grid) return;
 
+  // Priority categories — phones and electronics first, then everything else
+  const priorityCats = ["phones", "electronics", "computers", "gaming", "accessories"];
+
+  // Filter: only secondhand/used products
+  const usedKeywords = ["used", "foreign used", "local used", "refurbished", "secondhand", "second hand"];
+
+  const usedProducts = allProducts.filter(p => {
+    if (!p || p.status !== "active") return false;
+
+    // ONLY products where the seller explicitly selected a used condition
+    // when posting their ad — no guessing from title/description
+    const condition = (
+      p.condition ||
+      p.details?.condition ||
+      p.details?.["cf-condition"] ||
+      p.details?.["cf-phone-condition"] ||
+      ""
+    ).toLowerCase().trim();
+
+    const explicitUsedValues = [
+      "foreign used",
+      "local used",
+      "used",
+      "used – good condition",
+      "used – fair condition",
+      "used — good condition",
+      "used — fair condition",
+      "slightly used",
+      "refurbished",
+      "used – working",
+      "used – sanitized"
+    ];
+
+    return explicitUsedValues.includes(condition);
+  });
+
+  if (usedProducts.length === 0) {
+    section.style.display = "none";
+    return;
+  }
+
+  // Sort: priority categories first, then by views descending
+  usedProducts.sort((a, b) => {
+    const aPriority = priorityCats.includes(a.category) ? 0 : 1;
+    const bPriority = priorityCats.includes(b.category) ? 0 : 1;
+    if (aPriority !== bPriority) return aPriority - bPriority;
+    return (b.views || 0) - (a.views || 0);
+  });
+
+  // Show max 12 products
+  const toShow = usedProducts.slice(0, 12);
+
+  section.style.display = "block";
+
+  // Render as horizontal scroll row
+grid.style.display = "flex";
+grid.style.flexWrap = "nowrap";
+grid.style.overflowX = "auto";
+grid.style.gap = "10px";
+grid.style.padding = "10px";
+grid.style.scrollSnapType = "x mandatory";
+grid.style.webkitOverflowScrolling = "touch";
+
+  grid.innerHTML = toShow.map(p => {
+    const img   = p.images?.[0] || "";
+    const price = Number(p.price || 0).toLocaleString();
+    const condition = (
+      p.condition ||
+      p.details?.condition ||
+      p.details?.["cf-condition"] ||
+      "Used"
+    );
+
+    return `
+      <div onclick="window.location.href='product.html?id=${p.id}'"
+style="
+flex:0 0 auto;
+width:180px;
+background:white;
+border-radius:12px;
+overflow:hidden;
+box-shadow:0 2px 10px rgba(0,0,0,0.06);
+cursor:pointer;
+transition:transform .2s,box-shadow .2s;
+position:relative;
+scroll-snap-align:start;
+"
+        ${(() => {
+
+    const condition = (
+  p.condition ||
+  p.details?.condition ||
+  p.details?.["cf-condition"] ||
+  p.details?.["cf-phone-condition"] ||
+  ""
+).toLowerCase().trim();
+  
+let badge = "";
+let color = "#6b7280";
+
+if (condition.includes("brand")) {
+  badge = "🆕 BRAND NEW";
+  color = "#16a34a";
+}
+else if (condition.includes("refurb")) {
+  badge = "♻️ REFURBISHED";
+  color = "#2563eb";
+}
+else if (condition.includes("foreign")) {
+  badge = "🌍 FOREIGN USED";
+  color = "#ff6600";
+}
+else if (condition.includes("local")) {
+  badge = "📦 LOCAL USED";
+  color = "#ea580c";
+}
+else if (condition.includes("used")) {
+  badge = "⚡ USED";
+  color = "#d97706";
+}
+
+return badge
+? `
+<div style="
+  position:absolute;
+  bottom:8px;
+  right:8px;
+  z-index:4;
+  background:${color};
+  color:white;
+  padding:4px 8px;
+  border-radius:6px;
+  font-size:10px;
+  font-weight:800;
+  box-shadow:0 2px 8px rgba(0,0,0,.18);
+">
+  ${badge}
+</div>
+`
+: "";
+})()}
+
+        <!-- Save/wishlist btn -->
+        <button onclick="event.stopPropagation();toggleLike('${p.id}',this)"
+          style="position:absolute;top:8px;right:8px;z-index:2;
+          background:white;border:none;width:30px;height:30px;border-radius:50%;
+          font-size:16px;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,0.12);
+          display:flex;align-items:center;justify-content:center">
+          🤍
+        </button>
+
+        <img src="${img}" alt="${p.name}"
+          onerror="this.src='https://zibuy-5deae.web.app/icons/icon-512.png/200?text=No+Image'"
+          style="width:100%;height:150px;object-fit:cover">
+
+        <div style="padding:10px">
+          <p style="margin:0 0 4px;font-size:11px;color:#ff6600;
+            font-weight:800;text-transform:uppercase;letter-spacing:.4px">
+            ${p.category || ""}
+          </p>
+          <p style="margin:0 0 6px;font-weight:700;font-size:13px;color:#111827;
+            overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+            ${p.name}
+          </p>
+          <p style="margin:0 0 4px;color:#ff6600;font-weight:900;font-size:15px">
+            UGX ${price}
+          </p>
+          <p style="margin:0;font-size:11px;color:#9ca3af">
+            📍 ${p.seller?.location || p.location || "Uganda"} · ${condition}
+          </p>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
 
 // ============================================
 // LOAD FEATURED PRODUCTS
