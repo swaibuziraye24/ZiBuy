@@ -605,38 +605,7 @@ async function loadBuyPowerSection(allProducts) {
   // Priority categories — phones and electronics first, then everything else
   const priorityCats = ["phones", "electronics", "computers", "gaming", "accessories"];
 
-  // Filter: only secondhand/used products
-  const usedKeywords = ["used", "foreign used", "local used", "refurbished", "secondhand", "second hand"];
-
-  const usedProducts = allProducts.filter(p => {
-    if (!p || p.status !== "active") return false;
-
-    // ONLY products where the seller explicitly selected a used condition
-    // when posting their ad — no guessing from title/description
-    const condition = (
-      p.condition ||
-      p.details?.condition ||
-      p.details?.["cf-condition"] ||
-      p.details?.["cf-phone-condition"] ||
-      ""
-    ).toLowerCase().trim();
-
-    const explicitUsedValues = [
-      "foreign used",
-      "local used",
-      "used",
-      "used – good condition",
-      "used – fair condition",
-      "used — good condition",
-      "used — fair condition",
-      "slightly used",
-      "refurbished",
-      "used – working",
-      "used – sanitized"
-    ];
-
-    return explicitUsedValues.includes(condition);
-  });
+  const usedProducts = allProducts;
 
   if (usedProducts.length === 0) {
     section.style.display = "none";
@@ -1144,17 +1113,23 @@ const sponsored = [];
     }
 
 
-    // Used Products row
-const condition = (p.condition || p.details?.condition || "").toLowerCase();
+    // Buy Power products (formerly Used Products)
 
-if (
+const condition = (
+  p.condition ||
+  p.details?.condition ||
+  ""
+).toLowerCase().trim();
+
+const isUsed =
   condition.includes("used") ||
   condition.includes("foreign") ||
   condition.includes("local") ||
-  condition.includes("dubai") ||
-  condition.includes("refurbished")
-) {
+  condition.includes("refurbished");
+
+if (isUsed) {
   usedProducts.push(p);
+
 }
 
     const plan = p.plan || "free";
@@ -1286,7 +1261,8 @@ const topTrending = trending.slice(0, 10);
   
   renderRow("🔥 Trending", topTrending);
 renderRow("🆕 New Arrivals", newArrivals);
-renderRow("♻️ Used Products", usedProducts);
+
+loadBuyPowerSection(usedProducts);
 
   // ── Infinite scroll grid (below Trending & New Arrivals) ──
   const allSection = document.createElement("div");
