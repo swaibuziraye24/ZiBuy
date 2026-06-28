@@ -295,6 +295,26 @@
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
   }
+
+  .loc-search-wrap { position:relative; }
+.loc-search-input {
+  width:100%;padding:13px 14px;border:1.5px solid #e5e7eb;border-radius:12px;
+  font-size:15px;font-family:inherit;outline:none;background:white;box-sizing:border-box;
+}
+.loc-search-input:focus { border-color:#ff6600; }
+.loc-dropdown {
+  display:none;position:absolute;top:100%;left:0;right:0;z-index:9999;
+  background:white;border:1.5px solid #e5e7eb;border-radius:12px;
+  box-shadow:0 8px 24px rgba(0,0,0,0.12);max-height:260px;overflow-y:auto;
+  margin-top:4px;
+}
+.loc-dropdown.open { display:block; }
+.loc-option {
+  padding:11px 14px;font-size:14px;cursor:pointer;color:#374151;
+  transition:.15s;border-bottom:1px solid #f0f0f0;
+}
+.loc-option:hover { background:#fff4ee;color:#ff6600; }
+.loc-option:last-child { border-bottom:none; }
 </style>
 <script type="module" src="post-ad.js"></script>
 
