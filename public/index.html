@@ -440,11 +440,12 @@
 
     /* ── ACTION ROW: Filters / Sort / Post a Job ── */
     .zb-action-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: nowrap;
-    }
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-bottom:18px;
+}
     .zb-action-btn {
       flex-shrink: 0;
       white-space: nowrap;
@@ -474,6 +475,7 @@
       font-size: 12px;
       text-decoration: none;
       margin-left: auto;
+      flex-shrink:0;
     }
 
     @media (max-width: 600px) {
@@ -641,6 +643,21 @@
       .zb-login-btn span { font-size: 10px; }
       #post-ad-btn { padding: 6px 8px !important; min-width: 28px; }
     }
+
+    @media (max-width:600px){
+
+.section-header{
+    margin-top:18px;
+    display:block;
+    width:100%;
+}
+
+.used-products-section{
+    margin-top:15px;
+    clear:both;
+}
+
+}
   </style>
 
 
@@ -1097,19 +1114,11 @@
 
 </section>
 
-    <button onclick="filterCategory('phones');setActiveCard(document.querySelector('.zb-cat-card'))"
-      style="background:#fff4ee;color:#ff6600;border:1.5px solid #ff6600;
-      padding:8px 14px;border-radius:8px;font-weight:800;font-size:12px;
-      cursor:pointer;font-family:inherit;white-space:nowrap">
-      View All →
-    </button>
-  </div>
-  <div id="buy-power-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px"></div>
-</section>
+    
 
 
 
-<!-- ══ PRODUCTS ══ -->
+
 <!-- ══ PRODUCTS ══ -->
 <div id="products" style="padding:0 20px 40px"></div>
 
