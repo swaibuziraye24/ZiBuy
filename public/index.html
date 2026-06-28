@@ -1005,17 +1005,32 @@
     </div>
     
    <div class="filter-group">
-      <label class="filter-label">📍 District</label>
-      <select id="filter-location" onchange="applyFilters();updateFilterSubLocations()">
-        <option value="">All Uganda</option>
-      </select>
-      <div id="filter-sublocation-wrap" style="display:none;margin-top:8px">
-        <label class="filter-label">🏘️ Town / Area</label>
-        <select id="filter-sublocation" onchange="applyFilters()">
-          <option value="">All Areas</option>
-        </select>
+      <div id="location-wrap">
+        <label style="display:block;font-size:12px;font-weight:800;
+          color:#374151;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">
+          📍 District / City
+        </label>
+        <!-- Hidden real value -->
+        <input type="hidden" id="ad-district">
+        <div class="loc-search-wrap" style="margin-bottom:12px">
+          <input class="loc-search-input" id="ad-district-input"
+            placeholder="🔍 Search district e.g. Kampala, Gulu...">
+          <div class="loc-dropdown" id="ad-district-dropdown"></div>
+        </div>
+
+        <div id="ad-sublocation-wrap" style="display:none">
+          <label style="display:block;font-size:12px;font-weight:800;
+            color:#374151;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">
+            🏘️ Town / Village / Area
+          </label>
+          <input type="hidden" id="ad-sublocation">
+          <div class="loc-search-wrap">
+            <input class="loc-search-input" id="ad-sublocation-input"
+              placeholder="🔍 Search town, village, trading centre...">
+            <div class="loc-dropdown" id="ad-sublocation-dropdown"></div>
+          </div>
+        </div>
       </div>
-    </div>
 
     <div class="filter-group">
       <label class="filter-label">📅 Posted</label>
