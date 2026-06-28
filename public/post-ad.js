@@ -35,6 +35,82 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
+// ── Searchable location picker ──────────────────
+function buildSearchableSelect({
+  inputId, dropdownId, hiddenId, placeholder, options, onSelect
+}) {
+  const input    = document.getElementById(inputId);
+  const dropdown = document.getElementById(dropdownId);
+  if (!input || !dropdown) return;
+
+  function renderOptions(filter = "") {
+    const q = filter.toLowerCase();
+    const filtered = options.filter(o => o.toLowerCase().includes(q));
+    dropdown.innerHTML = filtered.length === 0
+      ? `<div class="loc-option" style="color:#9ca3af">No results</div>`
+      : filtered.map(o =>
+          `<div class="loc-option" data-val="${o}">${o}</div>`
+        ).join("");
+
+    dropdown.querySelectorAll(".loc-option").forEach(el => {
+      el.onclick = () => {
+        input.value  = el.dataset.val || el.textContent;
+        const hidden = document.getElementById(hiddenId);
+        if (hidden) hidden.value = el.dataset.val || el.textContent;
+        dropdown.classList.remove("open");
+        if (onSelect) onSelect(el.dataset.val || el.textContent);
+      };
+    });
+  }
+
+  input.addEventListener("focus", () => {
+    renderOptions(input.value);
+    dropdown.classList.add("open");
+  });
+
+  input.addEventListener("input", () => {
+    renderOptions(input.value);
+    dropdown.classList.add("open");
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+      dropdown.classList.remove("open");
+    }
+  });
+
+  renderOptions();
+}
+
+// ── Wire up district picker ─────────────────────
+document.addEventListener("DOMContentLoaded", () => {
+  const districts = getDistricts();
+
+  buildSearchableSelect({
+    inputId:    "ad-district-input",
+    dropdownId: "ad-district-dropdown",
+    hiddenId:   "ad-district",
+    placeholder: "Search district...",
+    options:    districts,
+    onSelect:   (district) => {
+      // Show sublocation picker
+      const subs     = getSubLocations(district);
+      const subWrap  = document.getElementById("ad-sublocation-wrap");
+      if (subWrap) subWrap.style.display = subs.length > 0 ? "block" : "none";
+
+      buildSearchableSelect({
+        inputId:    "ad-sublocation-input",
+        dropdownId: "ad-sublocation-dropdown",
+        hiddenId:   "ad-sublocation",
+        placeholder: "Search town / village...",
+        options:    subs,
+        onSelect:   () => validateStep2()
+      });
+      validateStep2();
+    }
+  });
+});
+
 let currentStep = 1;
 let selectedCategory = "";
 let uploadedImages = [];
