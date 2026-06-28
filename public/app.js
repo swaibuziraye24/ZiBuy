@@ -658,60 +658,7 @@ transition:transform .2s,box-shadow .2s;
 position:relative;
 scroll-snap-align:start;
 "
-        ${(() => {
-
-    const condition = (
-  p.condition ||
-  p.details?.condition ||
-  p.details?.["cf-condition"] ||
-  p.details?.["cf-phone-condition"] ||
-  ""
-).toLowerCase().trim();
-  
-let badge = "";
-let color = "#6b7280";
-
-if (condition.includes("brand")) {
-  badge = "🆕 BRAND NEW";
-  color = "#16a34a";
-}
-else if (condition.includes("refurb")) {
-  badge = "♻️ REFURBISHED";
-  color = "#2563eb";
-}
-else if (condition.includes("foreign")) {
-  badge = "🌍 FOREIGN USED";
-  color = "#ff6600";
-}
-else if (condition.includes("local")) {
-  badge = "📦 LOCAL USED";
-  color = "#ea580c";
-}
-else if (condition.includes("used")) {
-  badge = "⚡ USED";
-  color = "#d97706";
-}
-
-return badge
-? `
-<div style="
-position:absolute;
-bottom:8px;
-right:8px;
-z-index:15;
-background:${color};
-color:white;
-padding:4px 8px;
-border-radius:7px;
-font-size:10px;
-font-weight:800;
-box-shadow:0 2px 8px rgba(0,0,0,.18);
-pointer-events:none;
-">
-${badge}
-</div>
-`
-: "";
+        
 })()}
 
         <!-- Save/wishlist btn -->
@@ -736,27 +683,111 @@ box-shadow:0 2px 8px rgba(0,0,0,.18);
 🤍
 </button>
 
-        <img src="${img}" alt="${p.name}"
-          onerror="this.src='https://zibuy-5deae.web.app/icons/icon-512.png/200?text=No+Image'"
-          style="width:100%;height:150px;object-fit:cover">
+        <div style="position:relative;">
 
-        <div style="padding:10px">
-          <p style="margin:0 0 4px;font-size:11px;color:#ff6600;
-            font-weight:800;text-transform:uppercase;letter-spacing:.4px">
-            ${p.category || ""}
-          </p>
-          <p style="margin:0 0 6px;font-weight:700;font-size:13px;color:#111827;
-            overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
-            ${p.name}
-          </p>
-          <p style="margin:0 0 4px;color:#ff6600;font-weight:900;font-size:15px">
-            UGX ${price}
-          </p>
-          <p style="margin:0;font-size:11px;color:#9ca3af">
-            📍 ${p.seller?.location || p.location || "Uganda"} · ${condition}
-          </p>
-        </div>
-      </div>
+<img src="${img}" alt="${p.name}"
+onerror="this.src='https://zibuy-5deae.web.app/icons/icon-512.png'"
+style="width:100%;height:150px;object-fit:cover">
+
+${(() => {
+
+const cond = (
+p.condition ||
+p.details?.condition ||
+p.details?.["cf-condition"] ||
+p.details?.["cf-phone-condition"] ||
+""
+).toLowerCase();
+
+let badge = "";
+let color = "#6b7280";
+
+if (cond.includes("brand")) {
+    badge = "🆕 BRAND NEW";
+    color = "#16a34a";
+}
+else if (cond.includes("foreign")) {
+    badge = "🌍 FOREIGN USED";
+    color = "#ff6600";
+}
+else if (cond.includes("local")) {
+    badge = "📦 LOCAL USED";
+    color = "#ea580c";
+}
+else if (cond.includes("refurb")) {
+    badge = "♻️ REFURBISHED";
+    color = "#2563eb";
+}
+else if (cond.includes("used")) {
+    badge = "⚡ USED";
+    color = "#d97706";
+}
+
+return badge ? `
+<div style="
+position:absolute;
+right:8px;
+bottom:8px;
+background:${color};
+color:white;
+padding:4px 8px;
+border-radius:7px;
+font-size:10px;
+font-weight:800;
+z-index:15;
+box-shadow:0 2px 8px rgba(0,0,0,.25);
+">
+${badge}
+</div>
+` : "";
+
+})()}
+
+</div>
+
+<div style="padding:10px">
+
+<p style="
+margin:0 0 4px;
+font-size:11px;
+color:#ff6600;
+font-weight:800;
+text-transform:uppercase;
+letter-spacing:.4px;
+">
+${p.category || ""}
+</p>
+
+<p style="
+margin:0 0 6px;
+font-weight:700;
+font-size:13px;
+color:#111827;
+overflow:hidden;
+text-overflow:ellipsis;
+white-space:nowrap;
+">
+${p.name}
+</p>
+
+<p style="
+margin:0 0 4px;
+color:#ff6600;
+font-weight:900;
+font-size:15px;
+">
+UGX ${price}
+</p>
+
+<p style="
+margin:0;
+font-size:11px;
+color:#9ca3af;
+">
+📍 ${p.seller?.location || p.location || "Uganda"} · ${condition}
+</p>
+
+</div>
     `;
   }).join("");
 }
