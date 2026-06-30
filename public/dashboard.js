@@ -1488,11 +1488,11 @@ async function () {
     const snap =
       await getDoc(shopRef);
 
-    /* SHOP EXISTS */
+    /* SHOP EXISTS — go to edit page, not public view */
     if (snap.exists()) {
 
       window.location.href =
-        `shop.html?seller=${uid}`;
+        `edit-shop.html?seller=${uid}`;
 
     }
 
