@@ -1015,6 +1015,12 @@ window.renderProducts = function () {
   // =========================
   // 6. SORTING
   // =========================
+  function isPinnedActive(p) {
+    if (!p.pinnedUntil) return false;
+    const until = p.pinnedUntil?.toDate?.() || new Date(p.pinnedUntil);
+    return until > new Date();
+  }
+
   switch (filterState.sortBy) {
 
     case "price-low":
@@ -1031,6 +1037,11 @@ window.renderProducts = function () {
 
     default:
       products.sort((a, b) => {
+
+        // Pinned ads always win — above even boosted ads
+        const aPinned = isPinnedActive(a) ? 1 : 0;
+        const bPinned = isPinnedActive(b) ? 1 : 0;
+        if (aPinned !== bPinned) return bPinned - aPinned;
 
         const aBoost = (a.boost?.active || a.isPremium) ? 1 : 0;
         const bBoost = (b.boost?.active || b.isPremium) ? 1 : 0;
@@ -1360,7 +1371,11 @@ function _appendPage() {
         <img src="${p.images?.[0] || 'placeholder.jpg'}"
           style="width:100%;aspect-ratio:1/1;object-fit:cover"
           onerror="this.src='placeholder.jpg'">
-        ${p.isZiBuyOfficial ? `
+        ${(p.pinnedUntil && p.pinnedUntil.toDate?.() > new Date()) ? `
+          <div style="position:absolute;top:5px;left:5px;background:linear-gradient(135deg,#8b5cf6,#a78bfa);color:white;font-size:10px;padding:3px 7px;border-radius:5px;font-weight:800">
+            📍 PINNED
+          </div>
+        ` : p.isZiBuyOfficial ? `
           <div style="position:absolute;top:5px;left:5px;background:linear-gradient(135deg,#111827,#374151);color:white;font-size:10px;padding:3px 8px;border-radius:5px;font-weight:800;display:flex;align-items:center;gap:3px">
             <img src="my_logo.png" style="width:12px;height:12px;object-fit:contain;border-radius:2px"> ZiBuy
           </div>
