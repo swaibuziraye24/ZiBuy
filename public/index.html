@@ -644,6 +644,27 @@
       #post-ad-btn { padding: 6px 8px !important; min-width: 28px; }
     }
 
+
+    .loc-search-wrap { position:relative; }
+.loc-search-input {
+  width:100%;padding:11px 12px;border:1.5px solid #e5e7eb;border-radius:10px;
+  font-size:13px;font-family:inherit;outline:none;background:white;box-sizing:border-box;
+}
+.loc-search-input:focus { border-color:#ff6600; }
+.loc-dropdown {
+  display:none;position:absolute;top:100%;left:0;right:0;z-index:9999;
+  background:white;border:1.5px solid #e5e7eb;border-radius:10px;
+  box-shadow:0 8px 24px rgba(0,0,0,0.12);max-height:220px;overflow-y:auto;
+  margin-top:4px;
+}
+.loc-dropdown.open { display:block; }
+.loc-option {
+  padding:10px 12px;font-size:13px;cursor:pointer;color:#374151;
+  transition:.15s;border-bottom:1px solid #f0f0f0;
+}
+.loc-option:hover { background:#fff4ee;color:#ff6600; }
+.loc-option:last-child { border-bottom:none; }
+
   </style>
 
 
@@ -1007,14 +1028,21 @@
     
    <div class="filter-group">
       <label class="filter-label">📍 District</label>
-      <select id="filter-location" onchange="applyFilters();updateFilterSubLocations()">
-        <option value="">All Uganda</option>
-      </select>
+      <input type="hidden" id="filter-location">
+      <div class="loc-search-wrap">
+        <input class="loc-search-input" id="filter-location-input"
+          placeholder="🔍 Search district e.g. Kampala...">
+        <div class="loc-dropdown" id="filter-location-dropdown"></div>
+      </div>
+
       <div id="filter-sublocation-wrap" style="display:none;margin-top:8px">
         <label class="filter-label">🏘️ Town / Area</label>
-        <select id="filter-sublocation" onchange="applyFilters()">
-          <option value="">All Areas</option>
-        </select>
+        <input type="hidden" id="filter-sublocation">
+        <div class="loc-search-wrap">
+          <input class="loc-search-input" id="filter-sublocation-input"
+            placeholder="🔍 Search town / village...">
+          <div class="loc-dropdown" id="filter-sublocation-dropdown"></div>
+        </div>
       </div>
     </div>
       
