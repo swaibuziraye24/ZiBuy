@@ -325,6 +325,17 @@ async function loadMyProducts() {
                       ⭐ Boost
                     </button>`
               }
+              ${p.pinnedUntil && p.pinnedUntil.toDate?.() > new Date()
+                ? `<button class="btn btn-sm"
+                    style="background:#8b5cf6;color:white;border:none;cursor:default;border-radius:8px">
+                    📍 Pinned
+                  </button>`
+                : `<button class="btn btn-sm"
+                    style="background:#fff4ee;color:#8b5cf6;border:1.5px solid #8b5cf6;cursor:pointer;border-radius:8px"
+                    onclick="pinToTop('${p.id}','${p.name.replace(/'/g,"\\'")}')">
+                    📍 Pin to Top
+                  </button>`
+              }
 
               <button class="btn btn-sm btn-delete" onclick="deleteProduct('${p.id}')">🗑️ Delete</button>
             </div>
@@ -615,7 +626,199 @@ window.submitDashboardBoost = async function(productId, productName, days, price
   }
 };
 
+// ============================================
+// PIN TO TOP — cheap instant placement
+// ============================================
+window.pinToTop = function(productId, productName) {
+  if (!currentUser) { alert("Please login first"); return; }
 
+  const modal = document.createElement("div");
+  modal.className = "modal open";
+  modal.id = "pin-modal-" + productId;
+  modal.innerHTML = `
+    <div class="modal-box" style="max-width:440px">
+      <div class="modal-header">
+        <h2>📍 Pin to Top</h2>
+        <button class="modal-close" onclick="document.getElementById('pin-modal-${productId}')?.remove()">×</button>
+      </div>
+
+      <p style="color:#6b7280;margin-bottom:18px;font-size:14px">
+        Instantly place <strong>${productName}</strong> at the very top of
+        ALL search results — even above regular boosted ads — for a short burst of maximum visibility.
+      </p>
+
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px">
+        <div class="boost-option" onclick="selectPinPlan(this,'${productId}','${productName}',24,3000)">
+          <div>
+            <p style="margin:0;font-weight:800;font-size:15px">⚡ 24 Hours</p>
+            <p style="margin:4px 0 0;color:#6b7280;font-size:13px">UGX 3,000 — Quick visibility spike</p>
+          </div>
+          <input type="radio" name="pin-plan-${productId}">
+        </div>
+        <div class="boost-option" onclick="selectPinPlan(this,'${productId}','${productName}',48,5000)">
+          <div>
+            <p style="margin:0;font-weight:800;font-size:15px">⚡⚡ 48 Hours</p>
+            <p style="margin:4px 0 0;color:#6b7280;font-size:13px">UGX 5,000 — Best value</p>
+          </div>
+          <input type="radio" name="pin-plan-${productId}">
+        </div>
+      </div>
+
+      <div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px;
+        padding:12px;margin-bottom:16px;font-size:12px;color:#5b21b6">
+        💡 Pin to Top is cheaper and faster than Boost — perfect for a quick sale push.
+        For longer-lasting featured placement, use ⭐ Boost instead.
+      </div>
+
+      <button class="btn btn-orange" onclick="proceedToPinPayment()"
+        style="width:100%;padding:14px;font-size:15px;font-weight:800;background:#8b5cf6">
+        Pay via WhatsApp 💬
+      </button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+};
+
+window.selectPinPlan = function(el, productId, productName, hours, price) {
+  document.querySelectorAll(`input[name="pin-plan-${productId}"]`).forEach(r => r.checked = false);
+  el.querySelector("input").checked = true;
+  window.selectedPinPlan = { productId, productName, hours, price };
+};
+
+window.proceedToPinPayment = function() {
+  if (!window.selectedPinPlan) { alert("❌ Please select a plan"); return; }
+
+  const { productId, productName, hours, price } = window.selectedPinPlan;
+  const paymentRef = `PIN-${productId.slice(0, 8).toUpperCase()}`;
+
+  document.getElementById("pin-modal-" + productId)?.remove();
+
+  const payModal = document.createElement("div");
+  payModal.id = "pin-payment-modal";
+  payModal.className = "modal open";
+  payModal.innerHTML = `
+    <div class="modal-box" style="max-width:460px;max-height:90vh;overflow-y:auto">
+      <div class="modal-header">
+        <h2>📱 Pay to Pin Ad</h2>
+        <button class="modal-close" onclick="document.getElementById('pin-payment-modal').remove()">×</button>
+      </div>
+
+      <div style="text-align:center;background:#f5f3ff;border-radius:12px;padding:14px;margin-bottom:16px">
+        <p style="font-size:13px;color:#6b7280;margin:0 0 4px">Pinning: <strong>${productName}</strong></p>
+        <p style="font-size:24px;font-weight:900;color:#8b5cf6;margin:0">${hours}h Pin — UGX ${Number(price).toLocaleString()}</p>
+        <p style="font-size:12px;color:#6b7280;margin:4px 0 0">Reference: <strong style="color:#8b5cf6">${paymentRef}</strong></p>
+      </div>
+
+      <div style="border:2px solid #ffcc00;border-radius:12px;padding:14px;margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <div style="background:#ffcc00;border-radius:6px;padding:4px 8px;font-weight:900;font-size:12px;color:#111">MTN</div>
+          <span style="font-weight:800;font-size:14px">MTN Mobile Money</span>
+        </div>
+        <ol style="padding-left:18px;color:#374151;line-height:2.2;font-size:13px;margin:0">
+          <li>Dial <strong style="color:#8b5cf6">*165#</strong></li>
+          <li>Select <strong>Pay With Momo</strong></li>
+          <li>Merchant Code: <strong style="color:#8b5cf6;font-size:15px">27868095</strong></li>
+          <li>Amount: <strong style="color:#8b5cf6">UGX ${Number(price).toLocaleString()}</strong></li>
+          <li>Confirm with PIN</li>
+        </ol>
+      </div>
+
+      <div style="border:2px solid #ef4444;border-radius:12px;padding:14px;margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <div style="background:#ef4444;border-radius:6px;padding:4px 8px;font-weight:900;font-size:12px;color:white">AIRTEL</div>
+          <span style="font-weight:800;font-size:14px">Airtel Money</span>
+        </div>
+        <ol style="padding-left:18px;color:#374151;line-height:2.2;font-size:13px;margin:0">
+          <li>Dial <strong style="color:#ef4444">*185#</strong></li>
+          <li>Select <strong>Send Money</strong></li>
+          <li>Send to: <strong style="color:#ef4444;font-size:15px">+256575996624</strong></li>
+          <li>Amount: <strong style="color:#ef4444">UGX ${Number(price).toLocaleString()}</strong></li>
+          <li>Confirm with PIN</li>
+        </ol>
+      </div>
+
+      <div style="margin-bottom:14px">
+        <label style="font-size:13px;font-weight:800;color:#111827;display:block;margin-bottom:8px">
+          📋 Enter your transaction ID after paying
+        </label>
+        <input type="text" id="pin-txn-ref"
+          placeholder="e.g. 1234567890"
+          style="width:100%;padding:12px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+
+      <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:12px;margin-bottom:14px;font-size:12px;color:#92400e">
+        ⏱️ Your ad pins to the top within minutes of admin confirmation.
+      </div>
+
+      <button id="pin-submit-btn"
+        onclick="submitPinRequest('${productId}','${productName}',${hours},${price},'${paymentRef}',this)"
+        style="background:#8b5cf6;color:white;border:none;padding:14px;border-radius:12px;
+        font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;width:100%">
+        📲 Send Reference to Admin WhatsApp
+      </button>
+    </div>
+  `;
+  document.body.appendChild(payModal);
+};
+
+window.submitPinRequest = async function(productId, productName, hours, price, paymentRef, btnEl) {
+  const txnInput = document.getElementById("pin-txn-ref");
+  const txnRef   = txnInput ? txnInput.value.trim() : "";
+
+  if (!txnRef) {
+    if (txnInput) {
+      txnInput.style.borderColor = "#ef4444";
+      txnInput.focus();
+    }
+    return;
+  }
+
+  if (btnEl) { btnEl.textContent = "Saving..."; btnEl.disabled = true; }
+
+  try {
+    await addDoc(collection(db, "pin_requests"), {
+      productId,
+      productName,
+      userId:         currentUser.uid,
+      userEmail:      currentUser.email,
+      hours,
+      price,
+      paymentRef,
+      transactionRef: txnRef,
+      status:         "pending",
+      requestedAt:    new Date()
+    });
+
+    document.getElementById("pin-payment-modal")?.remove();
+
+    const waMsg = encodeURIComponent(
+      `Hello ZiBuy Admin 👋\n\n` +
+      `I have paid to Pin to Top my ad.\n\n` +
+      `📋 *Pin Details:*\n` +
+      `• Ad: *${productName}*\n` +
+      `• Duration: *${hours} Hours*\n` +
+      `• Amount: *UGX ${Number(price).toLocaleString()}*\n` +
+      `• Reference Code: *${paymentRef}*\n` +
+      `• Transaction ID: *${txnRef}*\n` +
+      `• Email: *${currentUser.email}*\n\n` +
+      `Please verify and pin my ad. Thank you! 🙏`
+    );
+    window.open(`https://wa.me/256789157512?text=${waMsg}`, "_blank");
+
+    const toast = document.createElement("div");
+    toast.className   = "toast success";
+    toast.textContent = "✅ Pin request sent! Activates shortly.";
+    document.getElementById("toast-container")?.appendChild(toast);
+    setTimeout(() => toast.remove(), 4000);
+
+    loadMyProducts();
+
+  } catch (err) {
+    console.error("Pin submit error:", err);
+    alert("❌ Error: " + err.message);
+    if (btnEl) { btnEl.textContent = "📲 Send Reference to Admin WhatsApp"; btnEl.disabled = false; }
+  }
+};
 
 // ============================================
 // CV BOOST — pin seeking-work ad to top
