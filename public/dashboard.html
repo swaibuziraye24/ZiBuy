@@ -348,5 +348,18 @@ table {
 <script type="module" src="notifications-setup.js"></script>
 <script src="nav.js"></script>
 
+
+<script>
+  // Don't force reload on back/forward navigation — let browser bfcache work
+  window.addEventListener("pageshow", (event) => {
+    if (event.persisted) {
+      // Page restored from bfcache — just refresh dynamic bits, don't reload everything
+      if (typeof window.renderProducts === "function" && window.allProducts?.length) {
+        window.renderProducts();
+      }
+    }
+  });
+</script>
+
 </body>
 </html>
