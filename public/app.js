@@ -1769,6 +1769,7 @@ async function loadJobAds() {
 // ============================================
 window.filterCategory = function(category, el) {
   sessionStorage.setItem("zibuy_last_category", category);
+  sessionStorage.removeItem("zibuy_last_subcategory"); // never carry stale subcategory across category switches
 
 // Job ads use a different collection
 
