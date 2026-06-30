@@ -411,6 +411,23 @@ function isTrending(p) {
 // LOAD PRODUCTS FROM FIRESTORE
 // ============================================
 async function loadProducts() {
+  // ── Use cached data if available and fresh (under 2 minutes old) ──
+  const cached = sessionStorage.getItem("zibuy_products_cache");
+  const cachedAt = sessionStorage.getItem("zibuy_products_cache_time");
+
+  if (cached && cachedAt && (Date.now() - parseInt(cachedAt)) < 120000) {
+    try {
+      allProducts = JSON.parse(cached);
+      window.allProducts = allProducts;
+      filteredProducts = [...allProducts];
+      window.renderProducts();
+      loadBuyPowerSection(allProducts);
+      return; // skip Firestore fetch entirely — instant render
+    } catch (e) {
+      // cache corrupted, fall through to fresh fetch
+    }
+  }
+
   // Show skeleton cards immediately so page feels instant
   const container = document.getElementById("products");
   if (container) {
@@ -536,6 +553,16 @@ window.allProducts = allProducts;
 window.allProducts = allProducts;
 
 filteredProducts = [...allProducts];
+
+filteredProducts = [...allProducts];
+
+// Cache for instant back-navigation
+try {
+  sessionStorage.setItem("zibuy_products_cache", JSON.stringify(allProducts));
+  sessionStorage.setItem("zibuy_products_cache_time", Date.now().toString());
+} catch (e) {
+  // storage full or unavailable — not critical, continue
+}
 
 // loadFeaturedProducts();
 window.renderProducts();
