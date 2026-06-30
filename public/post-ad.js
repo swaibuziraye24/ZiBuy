@@ -2377,27 +2377,25 @@ function updateReview() {
 
 // ── Pick the most relevant field to use as subcategory ──
 function getAutoSubcategory(category) {
-  // Priority field per category — whichever exists becomes the subcategory
+  // Two-step categories: use the base "type" select (cf-{category}-type or similar)
+  // which holds the chosen subtype, e.g. "Land for Sale" for property
+  if (TWO_STEP_CATEGORIES.includes(category)) {
+    const baseField = CATEGORY_FIELDS[category]?.[0];
+    if (baseField) {
+      const el = document.getElementById(baseField.id);
+      if (el && el.value) return el.value;
+    }
+    return "";
+  }
+
+  // Non two-step categories — priority field per category
   const priorityField = {
-    phones:        "cf-brand",
-    electronics:   "cf-type",
     fashion:       "cf-type",
     shoes:         "cf-type",
     beauty:        "cf-type",
     bags:          "cf-type",
     groceries:     "cf-type",
     watches:       "cf-type",
-    computers:     "cf-type",
-    gaming:        "cf-platform",
-    home:          "cf-type",
-    accessories:   "cf-type",
-    vehicles:      "cf-make",
-    animals:       "cf-type",
-    babies:        "cf-type",
-    agriculture:   "cf-type",
-    commercial:    "cf-type",
-    tours:         "cf-type",
-    "seeking-work":"cf-type",
     services:      "cf-service-type"
   };
 
