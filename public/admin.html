@@ -357,6 +357,11 @@
       <span class="nav-icon">📰</span> Blog
     </button>
 
+    <button class="admin-nav-item"
+      onclick="window.showSection('pins', this);loadPinRequestsAdmin()">
+      <span class="nav-icon">📍</span> Pin Requests
+    </button>
+
    <button class="admin-nav-item"
   onclick="window.showSection('activity', this);loadAdminLogs()">
   <span class="nav-icon">📜</span> Activity Log
@@ -974,6 +979,15 @@ Separate paragraphs with a blank line."
       </div>
     </div>
     <!-- ══ end section-blog ══ -->
+
+
+    <!-- ══ PIN REQUESTS ══ -->
+<div class="admin-section" id="section-pins">
+  <h2 style="font-size:20px;font-weight:800;margin-bottom:16px">📍 Pin to Top Requests</h2>
+  <div id="pin-requests-list">
+    <p style="color:var(--gray);font-size:13px">Loading...</p>
+  </div>
+</div>
 
   </main>
 
