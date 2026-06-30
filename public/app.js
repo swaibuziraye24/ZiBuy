@@ -232,40 +232,68 @@ function trackBannerImpression(bannerId) {
     }).catch(() => {});
 }
 
-// ── Populate filter district dropdown ──────────
-async function populateFilterDistricts() {
-  const { getDistricts, getSubLocations } = await import("./uganda-locations.js");
+// ── Searchable district/sublocation filter ──────
+function buildSearchableSelect({ inputId, dropdownId, hiddenId, options, onSelect }) {
+  const input    = document.getElementById(inputId);
+  const dropdown = document.getElementById(dropdownId);
+  if (!input || !dropdown) return;
 
-  // Store for use by updateFilterSubLocations
-  window._getSubLocations = getSubLocations;
+  function renderOptions(filter = "") {
+    const q = filter.toLowerCase();
+    const filtered = options.filter(o => o.toLowerCase().includes(q));
+    dropdown.innerHTML = filtered.length === 0
+      ? `<div class="loc-option" style="color:#9ca3af">No results</div>`
+      : filtered.map(o => `<div class="loc-option" data-val="${o}">${o}</div>`).join("");
 
-  const el = document.getElementById("filter-location");
-  if (!el) return;
-
-  getDistricts().forEach(d => {
-    const opt = document.createElement("option");
-    opt.value = d;
-    opt.textContent = d;
-    el.appendChild(opt);
-  });
-}
-
-window.updateFilterSubLocations = function() {
-  const district = document.getElementById("filter-location")?.value;
-  const wrap     = document.getElementById("filter-sublocation-wrap");
-  const subEl    = document.getElementById("filter-sublocation");
-  if (!wrap || !subEl) return;
-
-  if (!district || !window._getSubLocations) {
-    wrap.style.display = "none";
-    return;
+    dropdown.querySelectorAll(".loc-option").forEach(el => {
+      el.onclick = () => {
+        input.value = el.dataset.val || el.textContent;
+        const hidden = document.getElementById(hiddenId);
+        if (hidden) hidden.value = el.dataset.val || el.textContent;
+        dropdown.classList.remove("open");
+        if (onSelect) onSelect(el.dataset.val || el.textContent);
+      };
+    });
   }
 
-  const subs = window._getSubLocations(district);
-  subEl.innerHTML = `<option value="">All Areas in ${district}</option>` +
-    subs.map(s => `<option value="${s}">${s}</option>`).join("");
-  wrap.style.display = "block";
-};
+  input.addEventListener("focus", () => { renderOptions(input.value); dropdown.classList.add("open"); });
+  input.addEventListener("input", () => { renderOptions(input.value); dropdown.classList.add("open"); });
+  document.addEventListener("click", (e) => {
+    if (!input.contains(e.target) && !dropdown.contains(e.target)) dropdown.classList.remove("open");
+  });
+
+  renderOptions();
+}
+
+async function populateFilterDistricts() {
+  const { getDistricts, getSubLocations } = await import("./uganda-locations.js");
+  window._getSubLocations = getSubLocations;
+
+  buildSearchableSelect({
+    inputId:    "filter-location-input",
+    dropdownId: "filter-location-dropdown",
+    hiddenId:   "filter-location",
+    options:    getDistricts(),
+    onSelect:   (district) => {
+      const subs = getSubLocations(district);
+      const wrap = document.getElementById("filter-sublocation-wrap");
+
+      if (subs.length === 0) {
+        wrap.style.display = "none";
+      } else {
+        wrap.style.display = "block";
+        buildSearchableSelect({
+          inputId:    "filter-sublocation-input",
+          dropdownId: "filter-sublocation-dropdown",
+          hiddenId:   "filter-sublocation",
+          options:    subs,
+          onSelect:   () => applyFilters()
+        });
+      }
+      applyFilters();
+    }
+  });
+}
 
 
 // ============================================
