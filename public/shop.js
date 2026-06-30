@@ -33,6 +33,15 @@ console.log("Seller ID:", sellerId);
 let followDocumentId = null;
 let isFollowing = false;
 
+// ── Show Edit button only to the shop owner ──
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+onAuthStateChanged(auth, (user) => {
+  const editBtn = document.getElementById("edit-shop-btn");
+  if (editBtn && user && sellerId && user.uid === sellerId) {
+    editBtn.style.display = "inline-block";
+  }
+});
+
 /* ---------------- INIT ---------------- */
 loadShop();
 loadSellerReviews();
@@ -43,6 +52,8 @@ loadSellerRating();
 expireOldAds();
 
 /* ---------------- SHOP PRODUCTS ---------------- */
+let _shopAllProducts = [];
+
 async function loadShop() {
 
   const container =
@@ -69,8 +80,23 @@ async function loadShop() {
       });
     });
 
-    if (products.length === 0) {
-     container.innerHTML = `
+    _shopAllProducts = products;
+    renderShopProductsGrid(products);
+
+  } catch (err) {
+    console.error("SHOP ERROR:", err);
+  }
+}
+
+function renderShopProductsGrid(products) {
+
+  const container =
+    document.getElementById("shop-products");
+
+  if (!container) return;
+
+  if (products.length === 0) {
+    container.innerHTML = `
   <div class="empty">
 
     <div style="
@@ -84,22 +110,24 @@ async function loadShop() {
       margin:0;
       color:#333;
     ">
-      No Products Yet
+      No Products Found
     </h2>
 
     <p style="
       color:#777;
       margin-top:10px;
     ">
-      This shop has not uploaded products yet.
+      ${_shopAllProducts.length === 0
+        ? "This shop has not uploaded products yet."
+        : "No products match your search."}
     </p>
 
   </div>
 `;
-      return;
-    }
+    return;
+  }
 
-    container.innerHTML = products.map((p) => `
+  container.innerHTML = products.map((p) => `
       <div
   class="product-card"
   onclick="
@@ -126,11 +154,28 @@ async function loadShop() {
         </div>
       </div>
     `).join("");
-
-  } catch (err) {
-    console.error("SHOP ERROR:", err);
-  }
 }
+
+/* ---------------- SHOP SEARCH ---------------- */
+window.filterShopProducts = function(query) {
+  const count = document.getElementById("shop-search-count");
+  const q = (query || "").toLowerCase().trim();
+
+  const matches = q
+    ? _shopAllProducts.filter(p =>
+        `${p.name || ""} ${p.category || ""} ${p.description || ""}`
+          .toLowerCase().includes(q)
+      )
+    : _shopAllProducts;
+
+  if (count) {
+    count.textContent = q
+      ? `${matches.length} result${matches.length !== 1 ? "s" : ""} for "${query}"`
+      : "";
+  }
+
+  renderShopProductsGrid(matches);
+};
 
 /* ---------------- SHOP HEADER (FIXED) ---------------- */
 async function loadShopHeader() {
