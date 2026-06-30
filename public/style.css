@@ -8227,3 +8227,91 @@ body {
     flex:0 0 auto;
 
 }
+
+
+/* ============================================
+   FEATURED SHOPS — horizontal scroll row
+   ============================================ */
+.featured-shops-row {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding: 4px 2px 12px;
+  scrollbar-width: none;
+}
+.featured-shops-row::-webkit-scrollbar { display: none; }
+
+.shop-card {
+  flex: 0 0 auto;
+  width: 200px;
+  scroll-snap-align: start;
+  background: white;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  cursor: pointer;
+  transition: transform .2s, box-shadow .2s;
+}
+.shop-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+.shop-card-banner {
+  height: 80px;
+  background: linear-gradient(135deg, #ff6600, #ff9900);
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+.shop-card-logo {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 3px solid white;
+  object-fit: cover;
+  background: white;
+  position: absolute;
+  bottom: -28px;
+  left: 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.shop-card-body {
+  padding: 36px 14px 14px;
+}
+
+.shop-card-body h4 {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: 800;
+  color: #111827;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shop-card-loc {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.shop-card-plan {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 800;
+}
+.shop-card-plan.plan-gold   { background: #fef3c7; color: #92400e; }
+.shop-card-plan.plan-silver { background: #f1f5f9; color: #475569; }
+
+@media (max-width: 600px) {
+  .shop-card { width: 160px; }
+  .shop-card-banner { height: 64px; }
+  .shop-card-logo { width: 46px; height: 46px; bottom: -23px; }
+  .shop-card-body { padding: 30px 10px 10px; }
+}
