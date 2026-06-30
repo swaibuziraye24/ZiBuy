@@ -500,7 +500,18 @@ repeat(auto-fill,minmax(160px,1fr));
 </button>
 
 </div>
- 
+
+<div style="margin:20px 20px 0">
+  <div style="position:relative">
+    <input type="text" id="shop-search-input"
+      placeholder="🔍 Search products in this shop..."
+      oninput="filterShopProducts(this.value)"
+      style="width:100%;padding:13px 16px;border:1.5px solid #e5e7eb;
+      border-radius:12px;font-size:14px;font-family:inherit;outline:none;
+      box-sizing:border-box;background:white">
+  </div>
+  <p id="shop-search-count" style="font-size:12px;color:#9ca3af;margin:8px 0 0"></p>
+</div>
 
 <div style="margin:20px 20px 0">
   <input type="text" id="shop-search-input"
