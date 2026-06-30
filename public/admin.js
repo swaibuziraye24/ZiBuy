@@ -633,6 +633,82 @@ window.revokeBoost = async function(boostId, productId) {
 };
 
 
+window.loadPinRequestsAdmin = async function() {
+  const list = document.getElementById("pin-requests-list");
+  if (!list) return;
+  list.innerHTML = `<p style="text-align:center;padding:30px;color:#6b7280">Loading...</p>`;
+
+  try {
+    const snap = await getDocs(query(
+      collection(db, "pin_requests"),
+      where("status", "==", "pending")
+    ));
+
+    if (snap.empty) {
+      list.innerHTML = `<p style="text-align:center;padding:30px;color:#6b7280">No pending pin requests</p>`;
+      return;
+    }
+
+    const requests = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    list.innerHTML = requests.map(r => `
+      <div style="background:white;border:1px solid #e5e7eb;border-radius:12px;
+        padding:16px;margin-bottom:12px">
+        <p style="margin:0 0 6px;font-weight:800;color:#111827">${r.productName}</p>
+        <p style="margin:0 0 4px;font-size:13px;color:#6b7280">
+          ${r.hours}h pin · UGX ${Number(r.price).toLocaleString()} ·
+          Ref: <strong>${r.paymentRef}</strong> · Txn: <strong>${r.transactionRef}</strong>
+        </p>
+        <p style="margin:0 0 12px;font-size:12px;color:#9ca3af">${r.userEmail}</p>
+        <div style="display:flex;gap:8px">
+          <button class="action-btn btn-approve" onclick="approvePin('${r.id}','${r.productId}',${r.hours})">
+            ✅ Approve & Pin
+          </button>
+          <button class="action-btn btn-reject" onclick="rejectPin('${r.id}')">
+            ❌ Reject
+          </button>
+        </div>
+      </div>
+    `).join("");
+
+  } catch (err) {
+    list.innerHTML = `<p style="color:red;padding:20px">Failed: ${err.message}</p>`;
+  }
+};
+
+window.approvePin = async function(requestId, productId, hours) {
+  try {
+    const pinnedUntil = new Date(Date.now() + hours * 60 * 60 * 1000);
+
+    await updateDoc(doc(db, "products", productId), {
+      pinnedUntil
+    });
+
+    await updateDoc(doc(db, "pin_requests", requestId), {
+      status: "approved",
+      approvedAt: new Date()
+    });
+
+    showToast("✅ Ad pinned to top!", "success");
+    loadPinRequestsAdmin();
+  } catch (err) {
+    showToast("Failed: " + err.message, "error");
+  }
+};
+
+window.rejectPin = async function(requestId) {
+  try {
+    await updateDoc(doc(db, "pin_requests", requestId), {
+      status: "rejected",
+      rejectedAt: new Date()
+    });
+    showToast("Request rejected", "info");
+    loadPinRequestsAdmin();
+  } catch (err) {
+    showToast("Failed: " + err.message, "error");
+  }
+};
+
 // ══════════════════════════════════════════════
 //  ALL ADS
 // ══════════════════════════════════════════════
