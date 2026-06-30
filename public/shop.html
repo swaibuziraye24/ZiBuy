@@ -329,22 +329,40 @@ repeat(auto-fill,minmax(160px,1fr));
       <span id="followers-count-2">0</span>
     </div>
 
-    <button
-      id="follow-btn"
-      onclick="toggleFollowShop()"
-      style="
-        margin-top:16px;
-        background:white;
-        color:#ff6600;
-        border:none;
-        padding:12px 18px;
-        border-radius:10px;
-        font-weight:700;
-        cursor:pointer;
-      "
-    >
-      Follow Shop
-    </button>
+    <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
+      <button
+        id="follow-btn"
+        onclick="toggleFollowShop()"
+        style="
+          background:white;
+          color:#ff6600;
+          border:none;
+          padding:12px 18px;
+          border-radius:10px;
+          font-weight:700;
+          cursor:pointer;
+        "
+      >
+        Follow Shop
+      </button>
+
+      <button
+        id="edit-shop-btn"
+        onclick="window.location.href='edit-shop.html'"
+        style="
+          display:none;
+          background:rgba(255,255,255,0.2);
+          color:white;
+          border:1.5px solid white;
+          padding:12px 18px;
+          border-radius:10px;
+          font-weight:700;
+          cursor:pointer;
+        "
+      >
+        ✏️ Edit My Shop
+      </button>
+    </div>
 
 <div class="business-profile-card">
 
@@ -483,6 +501,28 @@ repeat(auto-fill,minmax(160px,1fr));
 
 </div>
 
+<div style="margin:20px 20px 0">
+  <div style="position:relative">
+    <input type="text" id="shop-search-input"
+      placeholder="🔍 Search products in this shop..."
+      oninput="filterShopProducts(this.value)"
+      style="width:100%;padding:13px 16px;border:1.5px solid #e5e7eb;
+      border-radius:12px;font-size:14px;font-family:inherit;outline:none;
+      box-sizing:border-box;background:white">
+  </div>
+  <p id="shop-search-count" style="font-size:12px;color:#9ca3af;margin:8px 0 0"></p>
+</div>
+
+<div style="margin:20px 20px 0">
+  <input type="text" id="shop-search-input"
+    placeholder="🔍 Search products in this shop..."
+    oninput="filterShopProducts(this.value)"
+    style="width:100%;padding:13px 16px;border:1.5px solid #e5e7eb;
+    border-radius:12px;font-size:14px;font-family:inherit;outline:none;
+    box-sizing:border-box;background:white">
+  <p id="shop-search-count" style="font-size:12px;color:#9ca3af;margin:8px 0 0"></p>
+</div>
+
 <div class="products-grid" id="shop-products">
 </div>
 
@@ -491,6 +531,19 @@ repeat(auto-fill,minmax(160px,1fr));
 <script src="nav.js"></script>
 
 <script type="module" src="shop.js"></script>
+
+
+<script>
+  // Don't force reload on back/forward navigation — let browser bfcache work
+  window.addEventListener("pageshow", (event) => {
+    if (event.persisted) {
+      // Page restored from bfcache — just refresh dynamic bits, don't reload everything
+      if (typeof window.renderProducts === "function" && window.allProducts?.length) {
+        window.renderProducts();
+      }
+    }
+  });
+</script>
 
 </body>
 </html>
