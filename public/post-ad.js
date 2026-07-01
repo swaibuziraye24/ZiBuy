@@ -2163,11 +2163,113 @@ window.validateStep2 = function() {
   document.getElementById("step2-next").disabled = !valid;
 };
 
-titleInput.addEventListener("input", validateStep2);
-descInput.addEventListener("input", validateStep2);
-priceInput.addEventListener("input", validateStep2);
-document.getElementById("ad-district")?.addEventListener("change", validateStep2);
-document.getElementById("ad-sublocation")?.addEventListener("change", validateStep2);
+titleInput.addEventListener("input",  () => { validateStep2(); saveDraft(); });
+descInput.addEventListener("input",   () => { validateStep2(); saveDraft(); });
+priceInput.addEventListener("input",  () => { validateStep2(); saveDraft(); });
+document.getElementById("ad-district")?.addEventListener("change",    () => { validateStep2(); saveDraft(); });
+document.getElementById("ad-sublocation")?.addEventListener("change", () => { validateStep2(); saveDraft(); });
+
+
+
+// ── Save draft to localStorage ──────────────────
+function saveDraft() {
+  try {
+    localStorage.setItem("zibuy_ad_draft", JSON.stringify({
+      category:    selectedCategory,
+      title:       titleInput.value,
+      description: descInput.value,
+      price:       priceInput.value,
+      district:    document.getElementById("ad-district-input")?.value || "",
+      sublocation: document.getElementById("ad-sublocation-input")?.value || "",
+      savedAt:     Date.now()
+    }));
+  } catch(e) {}
+}
+
+// ── Restore draft on page load ──────────────────
+function restoreDraft() {
+  try {
+    const raw = localStorage.getItem("zibuy_ad_draft");
+    if (!raw) return;
+
+    const draft = JSON.parse(raw);
+
+    // Discard drafts older than 24 hours
+    if (!draft.savedAt || Date.now() - draft.savedAt > 86400000) {
+      localStorage.removeItem("zibuy_ad_draft");
+      return;
+    }
+
+    if (draft.title)       titleInput.value       = draft.title;
+    if (draft.description) descInput.value        = draft.description;
+    if (draft.price)       priceInput.value       = draft.price;
+
+    // Restore category card selection
+    if (draft.category) {
+      selectedCategory = draft.category;
+      document.querySelectorAll(".cat-card").forEach(card => {
+        if (card.getAttribute("onclick")?.includes(`'${draft.category}'`)) {
+          card.classList.add("selected");
+        }
+      });
+      document.getElementById("step1-next").disabled = false;
+    }
+
+    // Restore location display values
+    if (draft.district) {
+      const districtInput = document.getElementById("ad-district-input");
+      const hiddenDistrict = document.getElementById("ad-district");
+      if (districtInput) districtInput.value = draft.district;
+      if (hiddenDistrict) hiddenDistrict.value = draft.district;
+    }
+    if (draft.sublocation) {
+      const subInput  = document.getElementById("ad-sublocation-input");
+      const hiddenSub = document.getElementById("ad-sublocation");
+      const subWrap   = document.getElementById("ad-sublocation-wrap");
+      if (subInput)  subInput.value  = draft.sublocation;
+      if (hiddenSub) hiddenSub.value = draft.sublocation;
+      if (subWrap)   subWrap.style.display = "block";
+    }
+
+    // Update character counters
+    const titleCount = document.getElementById("title-count");
+    const descCount  = document.getElementById("desc-count");
+    if (titleCount) titleCount.textContent = titleInput.value.length;
+    if (descCount)  descCount.textContent  = descInput.value.length;
+
+    validateStep2();
+
+    // Show restore banner above the form
+    const container = document.querySelector(".post-ad-container");
+    if (container) {
+      const banner = document.createElement("div");
+      banner.id = "draft-banner";
+      banner.style.cssText = `
+        background:#fff4ee;border:1.5px solid #ff6600;border-radius:10px;
+        padding:12px 16px;margin-bottom:16px;display:flex;
+        justify-content:space-between;align-items:center;font-size:13px;
+        font-family:inherit;
+      `;
+      banner.innerHTML = `
+        <span>📋 <strong>Draft restored</strong> — your previous ad details were saved</span>
+        <button onclick="clearDraft()" style="background:none;border:none;
+          color:#6b7280;cursor:pointer;font-size:12px;font-weight:700;
+          font-family:inherit">Clear ×</button>
+      `;
+      // Insert before step 1 content
+      const step1 = document.getElementById("step-1-content");
+      if (step1) container.insertBefore(banner, step1);
+    }
+
+  } catch(e) {}
+}
+
+window.clearDraft = function() {
+  localStorage.removeItem("zibuy_ad_draft");
+  const banner = document.getElementById("draft-banner");
+  if (banner) banner.remove();
+};
+
 
 // ============================================
 // CHARACTER COUNTERS
@@ -2498,22 +2600,38 @@ if (uploadedImages.length > limit) {
     }
 
 
-    // ── 4. Upload images ────────────────────────
+    // ── 4. Upload images (with retry for slow network) ──
     const imageUrls = [];
 
     for (let i = 0; i < uploadedImages.length; i++) {
-      const file      = uploadedImages[i];
-      const fileName  = `products/${currentUser.uid}/${Date.now()}-${i}-${file.name}`;
-      const storageRef = ref(storage, fileName);
+      const file     = uploadedImages[i];
+      const fileName = `products/${currentUser.uid}/${Date.now()}-${i}-${file.name}`;
 
-      try {
-        await uploadBytes(storageRef, file, {
-          contentType: file.type,
-          cacheControl: "public, max-age=31536000"
-        });
-        imageUrls.push(await getDownloadURL(storageRef));
-      } catch (uploadErr) {
-        throw new Error(`Failed to upload image ${i + 1}: ${uploadErr.message}`);
+      if (btn) btn.textContent = `Uploading image ${i + 1} of ${uploadedImages.length}...`;
+
+      let uploaded  = false;
+      let imgTry    = 0;
+      const maxTries = 4;
+
+      while (!uploaded && imgTry < maxTries) {
+        try {
+          const storageRef = ref(storage, fileName);
+          await uploadBytes(storageRef, file, {
+            contentType:  file.type,
+            cacheControl: "public, max-age=31536000"
+          });
+          imageUrls.push(await getDownloadURL(storageRef));
+          uploaded = true;
+        } catch (uploadErr) {
+          imgTry++;
+          if (imgTry >= maxTries) {
+            throw new Error(`Image ${i + 1} failed after ${maxTries} attempts: ${uploadErr.message}`);
+          }
+          // Exponential backoff: 2s → 4s → 8s
+          const wait = Math.pow(2, imgTry) * 1000;
+          if (btn) btn.textContent = `Slow network — retrying image ${i + 1} (${imgTry}/${maxTries - 1})...`;
+          await new Promise(r => setTimeout(r, wait));
+        }
       }
     }
 
@@ -2550,10 +2668,10 @@ expiresAt.setDate(expiresAt.getDate() + adDays);
 views: 0,
 
 boost: {
-  active: false,
+  boosted: false,
   startDate: null,
   endDate: null,
-  type: null // 7d, 14d, 30d
+  type: null
 },
       createdAt:   new Date(),
       updatedAt:   new Date(),
@@ -2570,8 +2688,32 @@ boost: {
       videoUrl:  videoUrl || ""
     };
 
-    // ── 6. Save to Firestore ────────────────────
-    const docRef = await addDoc(collection(db, "products"), productData);
+    // ── 6. Save to Firestore (with retry for slow network) ──
+    if (btn) btn.textContent = "Saving your ad...";
+
+    let docRef;
+    let saveTry    = 0;
+    const maxSaveTries = 4;
+
+    while (!docRef && saveTry < maxSaveTries) {
+      try {
+        docRef = await addDoc(collection(db, "products"), productData);
+      } catch (saveErr) {
+        saveTry++;
+        if (saveTry >= maxSaveTries) throw saveErr;
+        const wait = Math.pow(2, saveTry) * 1500; // 3s → 6s → 12s
+        if (btn) btn.textContent = `Network slow — retrying (${saveTry}/${maxSaveTries - 1})...`;
+        await new Promise(r => setTimeout(r, wait));
+      }
+    }
+
+
+    // Clear draft — ad posted successfully
+    localStorage.removeItem("zibuy_ad_draft");
+
+    // Invalidate homepage cache so new ad appears immediately
+    sessionStorage.removeItem("zibuy_products_cache");
+    sessionStorage.removeItem("zibuy_products_cache_time");
 
 // ── UPDATE ADS COUNT ───────────────────────
 try {
@@ -2593,25 +2735,39 @@ try {
 
     console.log("Product saved:", docRef.id);
 
-    // Check if this triggers a referral reward for whoever referred this user
-    const { checkReferralReward } = await import("./referral.js");
-    await checkReferralReward(auth.currentUser?.uid);
+    // ── Referral reward check ────────────────────
+    try {
+      const { checkReferralReward } = await import("./referral.js");
+      await checkReferralReward(currentUser.uid);
+    } catch(e) {}
 
-    alert("Ad submitted successfully!");
+    // ── In-app notification ──────────────────────
+    try {
+      await addDoc(collection(db, "notifications"), {
+        userId:    currentUser.uid,
+        type:      "ad_posted",
+        title:     "✅ Your ad is live!",
+        message:   `"${productData.name}" is now visible to buyers on ZiBuy.`,
+        relatedId: docRef.id,
+        read:      false,
+        createdAt: new Date()
+      });
+    } catch(e) {}
+
+    alert("🎉 Ad submitted successfully! Check your notifications.");
+
+    // ── 8. Offer boost (before reset so name is intact) ──
+    window._newProductId   = docRef.id;
+    window._newProductName = productData.name;
+    showBoostPrompt(docRef.id, productData.name);
 
     // ── 7. Reset form ───────────────────────────
     titleInput.value    = "";
     descInput.value     = "";
     priceInput.value    = "";
-    locationInput.value = "";
     uploadedImages      = [];
     selectedCategory    = "";
     currentStep         = 1;
-
-   // ── 8. Offer boost ──────────────────────────
-    window._newProductId   = docRef.id;
-    window._newProductName = titleInput.value.trim() || productData.name;
-    showBoostPrompt(docRef.id, productData.name);
 
   } catch (err) {
     console.error("Upload error:", err);
@@ -2922,4 +3078,5 @@ window.skipBoost = function () {
   window.location.href = `dashboard.html?tab=my-ads`;
 };
 
-
+// Restore any saved draft on page load
+restoreDraft();
