@@ -117,42 +117,34 @@ let uploadedImages = [];
 let currentUser = null;
 const productId = new URLSearchParams(window.location.search).get("id"); // ← add this
 
-// Check if user is logged in
-onAuthStateChanged(auth, (user) => {
-  currentUser = user;
-  
-
-onAuthStateChanged(auth, (user) => {
-  if (!user) { window.location.href = "index.html"; return; }
-  currentUser = user;
-  if (productId) loadProductPreview();
-
-  // Enable plan selection only after auth confirmed
-  document.querySelectorAll(".boost-plan-card").forEach(card => {
-    card.style.opacity  = "1";
-    card.style.pointerEvents = "auto";
-  });
-});
-
-// Disable cards until auth confirmed
+// Disable plan cards until auth confirmed
 document.querySelectorAll(".boost-plan-card").forEach(card => {
-  card.style.opacity  = "0.5";
+  card.style.opacity      = "0.5";
   card.style.pointerEvents = "none";
 });
 
-
-  // Hide loading indicator
-  const authCheck = document.getElementById("auth-check");
-  if (authCheck) authCheck.style.display = "none";
-  
+// Single auth listener
+onAuthStateChanged(auth, (user) => {
   if (!user) {
-    // Show login prompt
     alert("❌ You must login first to post ads");
     window.location.href = "index.html";
-  } else {
-    console.log("✅ User logged in as:", user.email);
-    // Form is ready to use
+    return;
   }
+
+  currentUser = user;
+
+  if (productId) loadProductPreview();
+
+  // Enable plan cards
+  document.querySelectorAll(".boost-plan-card").forEach(card => {
+    card.style.opacity      = "1";
+    card.style.pointerEvents = "auto";
+  });
+
+  const authCheck = document.getElementById("auth-check");
+  if (authCheck) authCheck.style.display = "none";
+
+  console.log("✅ User logged in as:", user.email);
 });
 
 // ============================================
@@ -2118,7 +2110,7 @@ const descInput     = document.getElementById("ad-description");
 
 const priceInput    = document.getElementById("ad-price");
 
-const locationInput = document.getElementById("ad-district");
+const locationInput = document.getElementById("ad-district-input");
 
 // ── Collect all field values to save with the ad ─
 function collectCategoryFields(category) {
@@ -2362,8 +2354,8 @@ window.handleImageUpload = function(event) {
   // Slice to max 5
   uploadedImages = files.slice(0, 5);
 
-  document.getElementById("image-count").textContent =
-    uploadedImages.length;
+  const imageCountEl = document.getElementById("image-count");
+  if (imageCountEl) imageCountEl.textContent = uploadedImages.length;
 
   const previewContainer =
     document.getElementById("image-preview-container");
@@ -2412,7 +2404,8 @@ window.handleImageUpload = function(event) {
     previewContainer.scrollIntoView({ behavior: "smooth", block: "nearest" });
 
     // Enable next button
-    document.getElementById("step3-next").disabled = false;
+    const step3Btn = document.getElementById("step3-next");
+    if (step3Btn) step3Btn.disabled = false;
   });
 };
 
@@ -2562,24 +2555,15 @@ try {
     btn.disabled = true;
   }
 
+  const { getActiveSubscription } = await import("./subscription-check.js");
+  const sub = await getActiveSubscription(currentUser.uid);
+  const limit = sub?.details?.images || 3;
 
-  const { getActiveSubscription } =
-  await import("./subscription-check.js");
-
-const sub =
-  await getActiveSubscription(currentUser.uid);
-
-const limit =
-  sub.details.images || 3;
-
-if (uploadedImages.length > limit) {
-
-  alert(
-    `❌ You can only upload ${limit} images on your plan`
-  );
-
-  return;
-}
+  if (uploadedImages.length > limit) {
+    alert(`❌ You can only upload ${limit} images on your ${sub?.details?.name || "current"} plan`);
+    if (btn) { btn.textContent = "Post My Ad 🚀"; btn.disabled = false; }
+    return;
+  }
 
   try {
 
@@ -2652,39 +2636,35 @@ expiresAt.setDate(expiresAt.getDate() + adDays);
       name:        titleInput.value.trim(),
       price:       Number(priceInput.value),
       category:    selectedCategory,
-      subcategory: selectedSubcategory || "",
+      subcategory: getAutoSubcategory(selectedCategory),
       description: descInput.value.trim(),
-    
       location: (() => {
-      const d = document.getElementById("ad-district")?.value || "";
-      const s = document.getElementById("ad-sublocation")?.value || "";
-      return s ? `${s}, ${d}` : d;
-    })(),
-      
-      images:      imageUrls,
-      userId:      currentUser.uid,
-      userEmail:   currentUser.email,
-      status: "active",
-views: 0,
-
-boost: {
-  boosted: false,
-  startDate: null,
-  endDate: null,
-  type: null
-},
-      createdAt:   new Date(),
-      updatedAt:   new Date(),
+        const d = document.getElementById("ad-district")?.value || "";
+        const s = document.getElementById("ad-sublocation")?.value || "";
+        return s ? `${s}, ${d}` : d;
+      })(),
+      images:    imageUrls,
+      userId:    currentUser.uid,
+      userEmail: currentUser.email,
+      status:    "active",
+      views:     0,
+      boost: {
+        boosted:   false,
+        startDate: null,
+        endDate:   null,
+        type:      null
+      },
+      createdAt:  new Date(),
+      updatedAt:  new Date(),
       expiresAt,
-     seller: {
+      seller: {
         name:       currentUser.email.split("@")[0],
         phone:      sellerPhone,
-        location:   locationInput.value,
+        location:   document.getElementById("ad-district-input")?.value || "",
         isVerified: false
       },
-      details:     collectCategoryFields(selectedCategory),
-      condition:   document.getElementById("cf-condition")?.value || "",
-      subcategory: getAutoSubcategory(selectedCategory),
+      details:   collectCategoryFields(selectedCategory),
+      condition: document.getElementById("cf-condition")?.value || "",
       videoUrl:  videoUrl || ""
     };
 
