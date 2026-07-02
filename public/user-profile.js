@@ -24,7 +24,8 @@ async function loadProfile() {
 
     const productsSnap = await getDocs(query(
       collection(db, "products"),
-      where("userId", "==", userId)
+      where("userId", "==", userId),
+      where("status", "==", "active")
     ));
 
     const products = productsSnap.docs.map(doc => ({
@@ -181,7 +182,8 @@ window.openEditProfile = async function() {
     // Also get latest seller info from their products
     const productsSnap = await getDocs(query(
       collection(db, "products"),
-      where("userId", "==", userId)
+      where("userId", "==", userId),
+      where("status", "==", "active")
     ));
     const firstProduct = productsSnap.docs[0]?.data();
 
@@ -233,7 +235,8 @@ window.saveProfile = async function() {
     // 2. Update seller info on all their products
     const productsSnap = await getDocs(query(
       collection(db, "products"),
-      where("userId", "==", userId)
+      where("userId", "==", userId),
+      where("status", "==", "active")
     ));
 
     const updates = productsSnap.docs.map(d =>
