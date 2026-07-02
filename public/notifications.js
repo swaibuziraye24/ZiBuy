@@ -94,13 +94,13 @@ export async function notifyOrderPlaced(userId, orderId, total) {
   );
 }
 
-export async function notifyNewReview(sellerId, rating) {
+export async function notifyNewReview(sellerId, productId, rating) {
   await createNotification(
     "review",
     sellerId,
     `New ${rating}⭐ Review`,
     "Someone left a review on your product!",
-    null
+    productId
   );
 }
 
@@ -108,8 +108,8 @@ export async function notifyAdActivity(userId, adId, views) {
   await createNotification(
     "ad_view",
     userId,
-    `${views} views on your ad!`,
-    "Your ad is getting attention. Check performance.",
+    `👁️ ${views} people viewed your ad!`,
+    "Your ad is getting attention. Visit your dashboard to see performance.",
     adId
   );
 }
