@@ -3,7 +3,7 @@ import {
   doc, query, where, updateDoc
 } from "./firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { onSnapshot,  } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { notifyNewMessage } from "./notifications.js";
 
 let currentUser      = null;
