@@ -227,7 +227,11 @@ async function loadProductReviews(productId) {
     const { getDocs, query, where, collection } = await import("./firebase.js");
     const { db } = await import("./firebase.js");
     
-    const snapshot = await getDocs(query(collection(db, "reviews"), where("productId", "==", productId)));
+    const { orderBy } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+    const snapshot = await getDocs(query(
+      collection(db, "reviews"),
+      where("productId", "==", productId)
+    ));
     const container = document.getElementById("product-reviews");
     
     if (snapshot.empty) {
@@ -250,6 +254,12 @@ async function loadProductReviews(productId) {
         </div>
       `;
       totalRating += review.rating;
+    });
+
+    reviews.sort((a, b) => {
+      const aTime = a.createdAt?.toDate?.()?.getTime() || 0;
+      const bTime = b.createdAt?.toDate?.()?.getTime() || 0;
+      return bTime - aTime;
     });
 
     const avgRating = (totalRating / snapshot.size).toFixed(1);
@@ -281,17 +291,25 @@ window.submitProductReview = async function() {
   }
 
   try {
-    await addDoc(collection(db, "reviews"), {
-      productId: id,
-      sellerId: currentUser?.uid || "",
-      rating: Number(rating),
+    const reviewData = {
+      productId:     id,
+      sellerId:      currentUser?.uid || "",
+      rating:        Number(rating),
       text,
       reviewerEmail: auth.currentUser.email,
-      createdAt: new Date()
-    });
+      createdAt:     new Date()
+    };
+
+    await addDoc(collection(db, "reviews"), reviewData);
+
+    // Notify the seller about the new review
+    try {
+      const { notifyNewReview } = await import("./notifications.js");
+      await notifyNewReview(currentUser?.uid || "", id, Number(rating));
+    } catch(e) {}
 
     document.getElementById("review-text").value = "";
-    alert("Review posted!");
+    alert("✅ Review posted! Thank you.");
     loadProductReviews(id);
   } catch (err) {
     console.error(err);
