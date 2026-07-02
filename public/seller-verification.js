@@ -3,6 +3,7 @@
 // ============================================
 
 import { db, auth, storage, collection, addDoc, getDocs, query, where, doc, updateDoc } from "./firebase.js";
+import { setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
