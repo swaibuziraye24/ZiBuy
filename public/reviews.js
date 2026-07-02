@@ -52,13 +52,22 @@ export async function getSellerReviews(sellerId) {
   }
 }
 
-export async function getProductReviews(productId) {
+ 
+   export async function getProductReviews(productId) {
+
   try {
     const snapshot = await getDocs(query(collection(db, "reviews"), where("productId", "==", productId)));
     const reviews = [];
 
     snapshot.forEach((doc) => {
       reviews.push(doc.data());
+    });
+
+    // Show newest reviews first
+    reviews.sort((a, b) => {
+      const aTime = a.createdAt?.toDate?.()?.getTime() || 0;
+      const bTime = b.createdAt?.toDate?.()?.getTime() || 0;
+      return bTime - aTime;
     });
 
     return reviews;
