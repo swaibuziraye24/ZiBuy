@@ -156,4 +156,3 @@ window.placeOrder = async function() {
   }
 };
 
-loadCheckout();
