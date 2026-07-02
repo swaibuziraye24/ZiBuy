@@ -15,6 +15,66 @@ const { onDocumentCreated } = require("firebase-functions/v2/firestore");
 const { onSchedule } = require("firebase-functions/v2/scheduler");
 
 
+
+// ============================================
+// LOG REVENUE EVENT (CLEAN V2 MODULE)
+// ============================================
+
+exports.logRevenueEvent = onDocumentCreated(
+  "admin_approvals/{id}",
+  async (event) => {
+    try {
+      const data = event.data.data();
+
+      await db.collection("revenue_logs").add({
+        type: data.type || "unknown",
+        amount: data.amount || 0,
+        productId: data.productId || null,
+        userId: data.userId || null,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      await alertAdminPayment(data.type, data.amount || 0);
+
+      console.log(`[REVENUE] Logged ${data.type}`);
+    } catch (err) {
+      console.error("[REVENUE ERROR]", err.message);
+    }
+
+    
+  }
+);
+
+// ============================================
+// SMS FALLBACK SYSTEM (CLEAN UTILITY)
+// ============================================
+
+async function sendSMS(phone, message) {
+  try {
+    if (!phone || !message) return;
+
+    const AfricasTalking = require("africastalking");
+
+    const at = AfricasTalking({
+      apiKey: process.env.AT_API_KEY,
+      username: process.env.AT_USERNAME || "sandbox",
+    });
+
+    const result = await at.SMS.send({
+      to: [phone],
+      message,
+      from: "ZiBuy",
+    });
+
+    console.log("[SMS SENT]", phone);
+    return result;
+
+  } catch (err) {
+    console.error("[SMS ERROR]", err.message);
+  }
+}
+
+
 // ============================================
 // PRODUCT SEO APP
 // ============================================
@@ -408,8 +468,22 @@ exports.sendEmailBroadcast = onDocumentCreated(
   async (event) => {
     const data = event.data.data();
 
-    const users = await db.collection("users").limit(2000).get();
-    const emails = users.docs.map(d => d.data().email).filter(Boolean);
+    // Paginate through all users in batches of 500
+    let allEmails = [];
+    let lastDoc = null;
+
+    while (true) {
+      let q = db.collection("users").limit(500);
+      if (lastDoc) q = q.startAfter(lastDoc);
+      const batch = await q.get();
+      if (batch.empty) break;
+      batch.docs.forEach(d => { if (d.data().email) allEmails.push(d.data().email); });
+      lastDoc = batch.docs[batch.docs.length - 1];
+      if (batch.size < 500) break;
+    }
+
+    const emails = allEmails;
+    // const emails = users.docs.map(d => d.data().email).filter(Boolean);
 
     const batchSize = 50;
 
@@ -493,8 +567,22 @@ exports.abandonedCartEmails = onSchedule(
 exports.weeklyTopDeals = onSchedule(
   { schedule: "every monday 08:00", timeZone: "Africa/Kampala" },
   async () => {
-    const users = await db.collection("users").limit(2000).get();
-    const emails = users.docs.map(d => d.data().email).filter(Boolean);
+    // Paginate through all users in batches of 500
+    let allEmails = [];
+    let lastDoc = null;
+
+    while (true) {
+      let q = db.collection("users").limit(500);
+      if (lastDoc) q = q.startAfter(lastDoc);
+      const batch = await q.get();
+      if (batch.empty) break;
+      batch.docs.forEach(d => { if (d.data().email) allEmails.push(d.data().email); });
+      lastDoc = batch.docs[batch.docs.length - 1];
+      if (batch.size < 500) break;
+    }
+
+    const emails = allEmails;
+    // const emails = users.docs.map(d => d.data().email).filter(Boolean);
 
     for (let i = 0; i < emails.length; i += 15) {
       const batch = emails.slice(i, i + 15);
@@ -659,11 +747,15 @@ exports.planExpiryReminders = onSchedule(
       const snap = await db
         .collection("business_accounts")
         .where("status", "==", "active")
-        .where("endDate", ">", now)
-        .where("endDate", "<=", in48h)
         .get();
 
-      for (const docSnap of snap.docs) {
+      const docsInWindow = snap.docs.filter(d => {
+        const end = d.data().endDate?.toDate?.();
+        if (!end) return false;
+        return end > now && end <= in48h;
+      });
+
+      for (const docSnap of docsInWindow) {
         const sub = docSnap.data();
         const userId = sub.userId;
         const plan = sub.plan || "free";
@@ -758,21 +850,35 @@ exports.boostExpiryReminders = onSchedule(
     timeZone: "Africa/Kampala",
   },
   async () => {
-    const now = new Date();
-    const in48h = new Date(now.getTime() + 48 * 60 * 60 * 1000);
+    const now   = new Date();
+    const in72h = new Date(now.getTime() + 72 * 60 * 60 * 1000);
 
     try {
+      // Fetch all approved boosts, filter in memory — avoids composite index dependency
       const snap = await db
         .collection("boost_requests")
         .where("status", "==", "approved")
-        .where("expiresAt", ">", now)
-        .where("expiresAt", "<=", in48h)
         .get();
 
-      for (const docSnap of snap.docs) {
+      const docsInWindow = snap.docs.filter(d => {
+        const exp = d.data().expiresAt?.toDate?.();
+        if (!exp) return false;
+        return exp > now && exp <= in72h;
+      });
+
+      for (const docSnap of docsInWindow) {
         const boost = docSnap.data();
         const userId = boost.userId;
         const productName = boost.productName || "Your ad";
+
+        // Skip if reminder already pending for this product
+        const existingReminder = await db.collection("whatsapp_reminders")
+          .where("type", "==", "boost_expiry")
+          .where("productId", "==", boost.productId || "")
+          .where("status", "==", "pending")
+          .limit(1)
+          .get();
+        if (!existingReminder.empty) continue;
 
         const userSnap = await db.collection("users").doc(userId).get();
         const user = userSnap.exists ? userSnap.data() : null;
@@ -795,8 +901,19 @@ exports.boostExpiryReminders = onSchedule(
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
         });
 
-            // WhatsApp reminder (ADMIN CLICK-TO-SEND SYSTEM)
+        // Skip if a pending reminder already exists for this product
+        const existing = await db.collection("whatsapp_reminders")
+          .where("type",      "==", "boost_expiry")
+          .where("productId", "==", boost.productId || "")
+          .where("status",    "==", "pending")
+          .limit(1)
+          .get();
+        if (!existing.empty) continue;
+
+        // WhatsApp reminder (ADMIN CLICK-TO-SEND SYSTEM)
         const msg =
+
+            
   `Hello from ZiBuy 👋\n\n` +
   `Your boost for "${productName}" expires in ${daysLeft} day(s).\n\n` +
   `Re-boost to stay visible:\n` +
@@ -838,7 +955,7 @@ await db.collection("whatsapp_reminders").add({
         }
       }
 
-      console.log(`[BOOST EXPIRY] Processed ${snap.size}`);
+      console.log(`[BOOST EXPIRY] Processed ${docsInWindow.length} boosts`);
     } catch (err) {
       console.error("[BOOST EXPIRY ERROR]", err.message);
     }
@@ -1190,64 +1307,6 @@ if (userSnap.exists) {
   }
 );
 
-
-// ============================================
-// LOG REVENUE EVENT (CLEAN V2 MODULE)
-// ============================================
-
-exports.logRevenueEvent = onDocumentCreated(
-  "admin_approvals/{id}",
-  async (event) => {
-    try {
-      const data = event.data.data();
-
-      await db.collection("revenue_logs").add({
-        type: data.type || "unknown",
-        amount: data.amount || 0,
-        productId: data.productId || null,
-        userId: data.userId || null,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
-
-      await alertAdminPayment(data.type, data.amount || 0);
-
-      console.log(`[REVENUE] Logged ${data.type}`);
-    } catch (err) {
-      console.error("[REVENUE ERROR]", err.message);
-    }
-
-    
-  }
-);
-
-// ============================================
-// SMS FALLBACK SYSTEM (CLEAN UTILITY)
-// ============================================
-
-async function sendSMS(phone, message) {
-  try {
-    if (!phone || !message) return;
-
-    const AfricasTalking = require("africastalking");
-
-    const at = AfricasTalking({
-      apiKey: process.env.AT_API_KEY,
-      username: process.env.AT_USERNAME || "sandbox",
-    });
-
-    const result = await at.SMS.send({
-      to: [phone],
-      message,
-      from: "ZiBuy",
-    });
-
-    console.log("[SMS SENT]", phone);
-    return result;
-
-  } catch (err) {
-    console.error("[SMS ERROR]", err.message);
-  }
-}
 
 
 // ============================================
