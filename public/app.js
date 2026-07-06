@@ -70,11 +70,7 @@ let currentCategory = "all";
 let currentSubcategory = "all";
 
 // ── Infinite scroll ──
-let displayedCount = 0;
 const PAGE_SIZE = 20;
-let isLoadingMore = false;
-
-// Infinite scroll grid state
 let _pagedProducts = [];
 let _pageIndex = 0;
 let _isLoadingMore = false;
@@ -582,8 +578,6 @@ window.allProducts = allProducts;
 
 filteredProducts = [...allProducts];
 
-filteredProducts = [...allProducts];
-
 // Cache for instant back-navigation
 try {
   sessionStorage.setItem("zibuy_products_cache", JSON.stringify(allProducts));
@@ -652,22 +646,21 @@ async function loadFeaturedShops() {
 // ============================================
 // BUY POWER — Best Secondhand Deals Section
 // ============================================
-async function loadBuyPowerSection(allProducts) {
+async function loadBuyPowerSection(sourceProducts) {
   const section = document.getElementById("buy-power-section");
   const grid    = document.getElementById("buy-power-grid");
   if (!section || !grid) return;
 
-  // Priority categories — phones and electronics first, then everything else
   const priorityCats = ["phones", "electronics", "computers", "gaming", "accessories"];
 
-  const usedProducts = allProducts;
+  // Slice to avoid mutating the global allProducts array
+  const usedProducts = [...sourceProducts];
 
   if (usedProducts.length === 0) {
     section.style.display = "none";
     return;
   }
 
-  // Sort: priority categories first, then by views descending
   usedProducts.sort((a, b) => {
     const aPriority = priorityCats.includes(a.category) ? 0 : 1;
     const bPriority = priorityCats.includes(b.category) ? 0 : 1;
@@ -1071,8 +1064,8 @@ window.renderProducts = function () {
         const bPinned = isPinnedActive(b) ? 1 : 0;
         if (aPinned !== bPinned) return bPinned - aPinned;
 
-        const aBoost = (a.boost?.active || a.isPremium) ? 1 : 0;
-        const bBoost = (b.boost?.active || b.isPremium) ? 1 : 0;
+        const aBoost = (a.boost?.boosted || a.isPremium) ? 1 : 0;
+        const bBoost = (b.boost?.boosted || b.isPremium) ? 1 : 0;
 
         if (aBoost !== bBoost) return bBoost - aBoost;
 
@@ -1615,12 +1608,12 @@ async function loadCategorySponsors() {
         const dots   = slot.querySelectorAll(".sponsor-dot");
 
         slides[current].style.opacity = "0";
-        dots[current].style.background = "rgba(255,102,0,.3)";
+        dots[current].style.background = "rgba(255,255,255,.4)";
 
         current = (current + 1) % sponsors.length;
 
         slides[current].style.opacity = "1";
-        dots[current].style.background = "#ff6600";
+        dots[current].style.background = "white";
       }, 4500);
     }
 
