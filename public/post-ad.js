@@ -22,19 +22,6 @@ import { updateDoc } from "./firebase.js";
 
 import { getDistricts, getSubLocations } from "./uganda-locations.js";
 
-// Populate district dropdown on load
-document.addEventListener("DOMContentLoaded", () => {
-  const districtEl = document.getElementById("ad-district");
-  if (districtEl) {
-    getDistricts().forEach(d => {
-      const opt = document.createElement("option");
-      opt.value = d;
-      opt.textContent = d;
-      districtEl.appendChild(opt);
-    });
-  }
-});
-
 // ── Searchable location picker ──────────────────
 function buildSearchableSelect({
   inputId, dropdownId, hiddenId, placeholder, options, onSelect
@@ -171,6 +158,8 @@ window.selectCategory = function(category) {
 
   const select =
     document.getElementById("subcategory-select");
+
+  if (!container || !select) return;
 
   select.innerHTML =
     '<option value="">Select Subcategory</option>';
@@ -2110,7 +2099,7 @@ const descInput     = document.getElementById("ad-description");
 
 const priceInput    = document.getElementById("ad-price");
 
-const locationInput = document.getElementById("ad-district-input");
+const locationInput = document.getElementById("ad-district");
 
 // ── Collect all field values to save with the ad ─
 function collectCategoryFields(category) {
