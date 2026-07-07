@@ -4,16 +4,38 @@ import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/fi
 
 import { getDistricts } from "./uganda-locations.js";
 
+import {  getSubLocations } from "./uganda-locations.js";
+import "./uganda-locations.js"; // registers window.updateSubLocations
+
 document.addEventListener("DOMContentLoaded", () => {
   const el = document.getElementById("delivery-district");
-  if (el) {
-    getDistricts().forEach(d => {
-      const opt = document.createElement("option");
-      opt.value = d;
-      opt.textContent = d;
-      el.appendChild(opt);
-    });
-  }
+  if (!el) return;
+
+  getDistricts().forEach(d => {
+    const opt = document.createElement("option");
+    opt.value = d;
+    opt.textContent = d;
+    el.appendChild(opt);
+  });
+
+  // Wire sublocation on district change
+  el.addEventListener("change", () => {
+    const district = el.value;
+    const wrap     = document.getElementById("delivery-sublocation-wrap");
+    const subEl    = document.getElementById("delivery-sublocation");
+    if (!wrap || !subEl) return;
+
+    if (!district) {
+      wrap.style.display = "none";
+      subEl.innerHTML = "<option value=''>Select Town / Village / Area</option>";
+      return;
+    }
+
+    const subs = getSubLocations(district);
+    subEl.innerHTML = `<option value="">Select Town / Village / Area</option>` +
+      subs.map(s => `<option value="${s}">${s}</option>`).join("");
+    wrap.style.display = subs.length > 0 ? "block" : "none";
+  });
 });
 
 let currentUser = null;
@@ -52,16 +74,13 @@ function loadCheckout() {
     const platformFee   = Math.round(subtotal * 0.03); // 3% ZiBuy fee
     const total         = subtotal + delivery + platformFee;
 
-    document.getElementById("subtotal").textContent  = "UGX " + subtotal.toLocaleString();
-    document.getElementById("delivery").textContent  = "UGX " + delivery.toLocaleString();
-
     // Show platform fee line
     const feeEl = document.getElementById("platform-fee");
     if (feeEl) feeEl.textContent = "UGX " + platformFee.toLocaleString();
 
-  document.getElementById("subtotal").textContent = "UGX " + subtotal.toLocaleString();
-  document.getElementById("delivery").textContent = "UGX " + delivery.toLocaleString();
-  document.getElementById("total-price").textContent = "UGX " + total.toLocaleString();
+    document.getElementById("subtotal").textContent    = "UGX " + subtotal.toLocaleString();
+    document.getElementById("delivery").textContent    = "UGX " + delivery.toLocaleString();
+    document.getElementById("total-price").textContent = "UGX " + total.toLocaleString();
 
   // Prefill user data
   const name = currentUser.email.split("@")[0];
@@ -106,8 +125,10 @@ window.placeOrder = async function() {
   try {
     let subtotal = 0;
     cart.forEach(item => subtotal += item.price * item.qty);
-    const total   = subtotal + 5000;
-    const orderId = "ZB-" + Date.now();
+    const delivery    = 5000;
+    const platformFee = Math.round(subtotal * 0.03);
+    const total       = subtotal + delivery + platformFee;
+    const orderId     = "ZB-" + Date.now();
 
     // Save pending order to Firestore
     await addDoc(collection(db, "orders"), {
