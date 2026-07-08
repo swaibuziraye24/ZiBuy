@@ -3,7 +3,7 @@ import {
   doc, query, where, updateDoc
 } from "./firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { onSnapshot,  } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { notifyNewMessage } from "./notifications.js";
 
 let currentUser      = null;
@@ -236,7 +236,7 @@ window.closeChatMobile = function() {
 // Wrap openConversation to show sidebar toggle on mobile
 const originalOpenConversation = window.openConversation;
 window.openConversation = function(email) {
-  originalOpenConversation.call(this, email);
+  originalOpenConversation(email);
 
   if (window.innerWidth <= 768) {
     document.querySelector(".messages-sidebar")?.classList.add("chat-open");
@@ -244,10 +244,9 @@ window.openConversation = function(email) {
   }
 };
 
-// Wrap closeChat to hide chat on mobile
 const originalCloseChat = window.closeChat;
 window.closeChat = function() {
-  originalCloseChat.call(this);
+  originalCloseChat();
 
   if (window.innerWidth <= 768) {
     document.querySelector(".messages-sidebar")?.classList.remove("chat-open");
