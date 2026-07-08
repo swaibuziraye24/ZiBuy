@@ -457,7 +457,11 @@ async function loadBoosts() {
   try {
     const snap = await getDocs(collection(db, "boost_requests"));
     allBoosts = snap.docs.map(d => ({ id: d.id, ...d.data() }))
-                         .sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
+                         .sort((a, b) => {
+                           const aTime = (b.requestedAt || b.createdAt)?.toDate?.() || 0;
+                           const bTime = (a.requestedAt || a.createdAt)?.toDate?.() || 0;
+                           return aTime - bTime;
+                         });
     renderBoosts(allBoosts);
   } catch (e) { console.error(e); }
 }
@@ -684,10 +688,28 @@ window.approvePin = async function(requestId, productId, hours) {
       pinnedUntil
     });
 
+    // Read pin request to get userId for notification
+    const pinDoc  = await getDoc(doc(db, "pin_requests", requestId));
+    const pinData = pinDoc.exists() ? pinDoc.data() : {};
+
     await updateDoc(doc(db, "pin_requests", requestId), {
-      status: "approved",
-      approvedAt: new Date()
+      status:     "approved",
+      approvedAt: new Date(),
+      expiresAt:  pinnedUntil
     });
+
+    // Notify the seller
+    if (pinData.userId) {
+      await addDoc(collection(db, "notifications"), {
+        userId:    pinData.userId,
+        type:      "pin_approved",
+        title:     "📍 Your Ad is Pinned to Top!",
+        message:   `"${pinData.productName || "Your ad"}" is now pinned to the top of all listings for ${hours} hours.`,
+        relatedId: productId,
+        read:      false,
+        createdAt: new Date()
+      });
+    }
 
     showToast("✅ Ad pinned to top!", "success");
     loadPinRequestsAdmin();
