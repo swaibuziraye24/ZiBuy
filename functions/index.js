@@ -368,16 +368,16 @@ exports.onNewOrder = onDocumentCreated(
       );
     }
 
-    // SMS (SAFE + DEDUP SCALE LOCK)
-    // SMS handled by smsGoldSellers trigger (dedicated system)
-    if (seller?.phone) {
+    // SMS handled exclusively by smsGoldSellers trigger
+    // to avoid duplicate messages to gold plan sellers
+    if (seller?.phone && seller?.plan !== "gold") {
       const lock = await logOnce(
-        `order_${orderId}`,
+        `order_sms_${orderId}`,
         {
-          type: "order",
+          type:     "order_sms",
           orderId,
           customer: order.customerName || "",
-          amount: order.total || 0
+          amount:   order.total || 0
         }
       );
       if (!lock) return;
@@ -1134,66 +1134,63 @@ exports.expireBoosts = onSchedule(
 
       const batch = db.batch();
 
+      // Collect products to notify AFTER batch succeeds
+      const toNotify = [];
+
       for (const docSnap of snap.docs) {
-        batch.update(docSnap.ref, {
-          isPremium: false,
-        });
-
-        const product = docSnap.data();
-
-        // notify seller
-        if (product.userId) {
-          await db.collection("notifications").add({
-            userId: product.userId,
-            type: "boost_expired",
-            title: "⭐ Boost Expired",
-            message: `Your ad "${product.name}" is no longer boosted.`,
-            relatedId: docSnap.id,
-            read: false,
-            createdAt: admin.firestore.FieldValue.serverTimestamp(),
-          });
-
-          const seller = product.userId
-  ? await getUser(product.userId)
-  : null;
-
-          if (seller?.email) {
-            
-  await sendEmail(
-    seller.email,
-    "⭐ Boost Expired",
-    emailTemplate(
-      "Boost Expired",
-      `<p>Your boost for <b>${product.name}</b> has ended.</p>
-       <p>You can re-boost anytime.</p>`
-    )
-  );
-
-  if (seller.phone) {
-
-  const msg =
-    `⭐ Your boost for "${product.name}" has expired.\n\n` +
-    `Re-boost to regain top placement.`;
-
-  await db.collection("whatsapp_reminders").add({
-    userId: product.userId,
-    phone: seller.phone,
-    type: "boost_expired",
-    productId: docSnap.id,
-    productName: product.name,
-    message: msg,
-    waLink:
-      `https://wa.me/${seller.phone.replace(/\D/g,"")}?text=${encodeURIComponent(msg)}`,
-    status: "pending",
-    createdAt:
-      admin.firestore.FieldValue.serverTimestamp()
-  });
-}
-}
-        }
+        batch.update(docSnap.ref, { isPremium: false });
+        toNotify.push({ id: docSnap.id, ...docSnap.data() });
       }
 
+      // Commit product updates first
       await batch.commit();
+
+      // Only now send notifications — batch succeeded
+      for (const product of toNotify) {
+        if (!product.userId) continue;
+
+        await db.collection("notifications").add({
+          userId:    product.userId,
+          type:      "boost_expired",
+          title:     "⭐ Boost Expired",
+          message:   `Your ad "${product.name}" is no longer boosted.`,
+          relatedId: product.id,
+          read:      false,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        const seller = await getUser(product.userId);
+
+        if (seller?.email) {
+          await sendEmail(
+            seller.email,
+            "⭐ Boost Expired",
+            emailTemplate(
+              "Boost Expired",
+              `<p>Your boost for <b>${product.name}</b> has ended.</p>
+               <p>You can re-boost anytime.</p>`
+            )
+          );
+        }
+
+        if (seller?.phone) {
+          const msg =
+            `⭐ Your boost for "${product.name}" has expired.\n\n` +
+            `Re-boost to regain top placement.`;
+
+          await db.collection("whatsapp_reminders").add({
+            userId:      product.userId,
+            phone:       seller.phone,
+            type:        "boost_expired",
+            productId:   product.id,
+            productName: product.name,
+            message:     msg,
+            waLink:      `https://wa.me/${seller.phone.replace(/\D/g,"")}?text=${encodeURIComponent(msg)}`,
+            status:      "pending",
+            createdAt:   admin.firestore.FieldValue.serverTimestamp()
+          });
+        }
+      }
 
       console.log(`[BOOST EXPIRE] Updated ${snap.size}`);
     } catch (err) {
