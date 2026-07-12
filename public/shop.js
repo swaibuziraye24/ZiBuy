@@ -380,29 +380,73 @@ async function loadSellerReviews() {
 
 /* ---------------- SUBMIT REVIEW ---------------- */
 window.submitSellerReview = async function () {
+  const rating = document.getElementById("review-rating").value;
+  const text   = document.getElementById("review-text").value.trim();
 
-  const rating =
-    document.getElementById("review-rating").value;
+  if (!text) return alert("Write a review first");
 
-  const text =
-    document.getElementById("review-text").value.trim();
+  if (!auth.currentUser) return alert("You must be logged in to review");
 
-  if (!text) return alert("Write a review");
+  const btn = document.getElementById("submit-review-btn");
+  if (btn) { btn.textContent = "Posting..."; btn.disabled = true; }
 
-  const success = await submitReview(
-    sellerId,
-    null,
-    rating,
-    text
-  );
+  const success = await submitReview(sellerId, null, rating, text);
 
   if (success) {
-    alert("✅ Review submitted");
+    // Recalculate and save average rating back to the shop document
+    try {
+      const { getDocs, query, where, collection, doc, updateDoc } =
+        await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+
+      const reviewsSnap = await getDocs(query(
+        collection(db, "reviews"),
+        where("sellerId", "==", sellerId)
+      ));
+
+      let total = 0;
+      let count = 0;
+      reviewsSnap.forEach(d => {
+        total += Number(d.data().rating || 0);
+        count++;
+      });
+
+      const avgRating = count > 0 ? parseFloat((total / count).toFixed(1)) : 0;
+
+      // Update both shops and business_profiles collections
+      await updateDoc(doc(db, "shops", sellerId), {
+        avgRating,
+        reviewCount: count
+      }).catch(() => {});
+
+      await updateDoc(doc(db, "business_profiles", sellerId), {
+        avgRating,
+        reviewCount: count
+      }).catch(() => {});
+
+    } catch(e) {
+      console.warn("Rating update failed:", e.message);
+    }
+
     document.getElementById("review-text").value = "";
     loadSellerReviews();
+    loadSellerRating(); // refresh the star display immediately
+
+    // Show toast instead of alert
+    const toast = document.createElement("div");
+    toast.style.cssText = `
+      position:fixed;bottom:100px;left:50%;transform:translateX(-50%);
+      background:#10b981;color:white;padding:12px 24px;border-radius:10px;
+      font-weight:700;font-size:14px;z-index:99999;
+      box-shadow:0 4px 12px rgba(0,0,0,0.15)`;
+    toast.textContent = "✅ Review posted! Thank you.";
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+
   } else {
-    alert("Failed");
+    alert("Failed to post review. Please try again.");
   }
+
+  if (btn) { btn.textContent = "Submit Review"; btn.disabled = false; }
 };
 
 /* ---------------- FOLLOW SYSTEM ---------------- */
@@ -445,18 +489,19 @@ async function checkFollowStatus() {
 
 /* ---------------- FOLLOW ACTION ---------------- */
 function setFollowState(state) {
-
   const btn = document.getElementById("follow-btn");
   if (!btn) return;
 
   if (state) {
-    btn.textContent = "✓ Following";
+    btn.innerHTML = `✓ Following`;
     btn.style.background = "#10b981";
-    btn.style.color = "white";
+    btn.style.color      = "white";
+    btn.style.border     = "none";
   } else {
-    btn.textContent = "Follow Shop";
+    btn.innerHTML = `🔔 Follow Shop`;
     btn.style.background = "white";
-    btn.style.color = "#ff6600";
+    btn.style.color      = "#ff6600";
+    btn.style.border     = "1.5px solid #ff6600";
   }
 }
 
@@ -495,52 +540,51 @@ window.toggleFollowShop = async function () {
 
 /* ---------------- FOLLOWERS LIVE ---------------- */
 function listenToFollowers() {
-
   const q = query(
     collection(db, "shop_followers"),
     where("shopId", "==", sellerId)
   );
 
   onSnapshot(q, (snapshot) => {
+    const count = snapshot.size;
 
-    const el1 =
-  document.getElementById("followers-count");
+    const el1 = document.getElementById("followers-count");
+    const el2 = document.getElementById("followers-count-2");
+    if (el1) el1.textContent = count;
+    if (el2) el2.textContent = count;
 
-const el2 =
-  document.getElementById("followers-count-2");
-
-if (el1) {
-  el1.textContent = snapshot.size;
-}
-
-if (el2) {
-  el2.textContent = snapshot.size;
-}
-
+    // Update follow button label with live count
+    const btn = document.getElementById("follow-btn");
+    if (btn && isFollowing) {
+      btn.innerHTML = `✓ Following (${count})`;
+    } else if (btn) {
+      btn.innerHTML = `🔔 Follow (${count})`;
+    }
   });
 }
 
 /* ---------------- RATING ---------------- */
 async function loadSellerRating() {
-
-  const data = await getSellerReviews(sellerId);
-
+  const data    = await getSellerReviews(sellerId);
   const ratings = data.reviews.map(r => r.rating);
+  const ratingEl = document.getElementById("shop-rating");
+  if (!ratingEl) return;
 
-  if (!ratings.length) return;
+  if (!ratings.length) {
+    ratingEl.innerHTML = `<span style="color:#9ca3af;font-size:13px">No reviews yet</span>`;
+    return;
+  }
 
-  const avg =
-    ratings.reduce((a, b) => a + b, 0) / ratings.length;
+  const avg   = ratings.reduce((a, b) => a + b, 0) / ratings.length;
+  const stars  = Math.round(avg);
+  const filled = "⭐".repeat(stars);
+  const empty  = "☆".repeat(5 - stars);
 
-  const ratingEl =
-  document.getElementById("shop-rating");
-
-if (ratingEl) {
-
-  ratingEl.textContent =
-    `⭐ ${avg.toFixed(1)} / 5`;
-
-}
+  ratingEl.innerHTML = `
+    <span style="font-size:16px">${filled}${empty}</span>
+    <span style="font-weight:800;color:#111827;margin-left:4px">${avg.toFixed(1)}</span>
+    <span style="color:#6b7280;font-size:13px;margin-left:4px">(${ratings.length} review${ratings.length !== 1 ? "s" : ""})</span>
+  `;
 }
 
 async function checkBeforePosting() {
