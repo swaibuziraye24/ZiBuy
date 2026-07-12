@@ -545,6 +545,100 @@ document.head.appendChild(reviewScript);
   }
 };
 
+
+
+async function loadRelatedProducts(category, currentProductId) {
+  try {
+    const { getDocs, query, where, collection, limit } =
+      await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+    const { db } = await import("./firebase.js");
+
+    const snap = await getDocs(query(
+      collection(db, "products"),
+      where("category", "==", category),
+      where("status",   "==", "active")
+    ));
+
+    const related = snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .filter(p => p.id !== currentProductId)
+      .sort(() => Math.random() - 0.5) // shuffle for variety
+      .slice(0, 6);
+
+    if (related.length === 0) return;
+
+    const section = document.createElement("div");
+    section.style.cssText = `
+      max-width:1100px;margin:24px auto;padding:0 24px`;
+
+    section.innerHTML = `
+      <div style="background:white;border-radius:20px;padding:28px;
+        box-shadow:0 4px 20px rgba(0,0,0,0.08)">
+        <h2 style="font-size:18px;font-weight:800;margin:0 0 18px;color:#111827">
+          🛍️ You Might Also Like
+        </h2>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px">
+          ${related.map(p => {
+            const img   = p.images?.[0] || "";
+            const price = Number(p.price || 0).toLocaleString();
+            const cond  = p.condition || p.details?.condition || p.details?.["cf-condition"] || "";
+
+            let condBadge = "";
+            if (cond) {
+              const c = cond.toLowerCase();
+              let bg = "#f3f4f6", color = "#374151";
+              if (c.includes("brand new"))   { bg="#d1fae5"; color="#065f46"; }
+              else if (c.includes("foreign")){ bg="#dbeafe"; color="#1e40af"; }
+              else if (c.includes("local"))  { bg="#fef3c7"; color="#92400e"; }
+              else if (c.includes("refurb")) { bg="#ede9fe"; color="#5b21b6"; }
+              condBadge = `<span style="display:inline-block;background:${bg};color:${color};
+                padding:2px 7px;border-radius:20px;font-size:10px;font-weight:700;
+                margin-top:4px">${cond}</span>`;
+            }
+
+            return `
+              <div onclick="window.location.href='product.html?id=${p.id}'"
+                style="background:white;border-radius:12px;overflow:hidden;
+                border:1.5px solid #f0f0f0;cursor:pointer;transition:.2s"
+                onmouseover="this.style.borderColor='#ff6600';this.style.transform='translateY(-3px)'"
+                onmouseout="this.style.borderColor='#f0f0f0';this.style.transform='translateY(0)'">
+                <img src="${img}" alt="${p.name}"
+                  onerror="this.src='https://via.placeholder.com/200?text=ZiBuy'"
+                  style="width:100%;aspect-ratio:1/1;object-fit:cover">
+                <div style="padding:10px">
+                  <p style="margin:0 0 3px;font-size:10px;color:#ff6600;
+                    font-weight:800;text-transform:uppercase">${p.category || ""}</p>
+                  <h4 style="margin:0 0 4px;font-size:12px;font-weight:700;
+                    color:#111827;overflow:hidden;text-overflow:ellipsis;
+                    white-space:nowrap">${p.name}</h4>
+                  <p style="margin:0;color:#ff6600;font-weight:900;font-size:14px">
+                    UGX ${price}
+                  </p>
+                  ${condBadge}
+                  <p style="margin:4px 0 0;font-size:10px;color:#9ca3af">
+                    📍 ${p.seller?.location || p.location || "Uganda"}
+                  </p>
+                </div>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      </div>
+    `;
+
+    // Insert after the reviews section
+    const reviewsSection = document.querySelector(".product-page-wrap:last-of-type");
+    if (reviewsSection) {
+      reviewsSection.after(section);
+    } else {
+      document.body.appendChild(section);
+    }
+
+  } catch(e) {
+    console.warn("loadRelatedProducts:", e.message);
+  }
+}
+
 /* ============================================
    LIKE / UNLIKE
 ============================================ */
