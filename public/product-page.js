@@ -125,6 +125,7 @@ async function loadProduct() {
 
     loadProductReviews(id);
     loadSellerRating(p.userId);
+    loadRelatedProducts(p.category, id);
     loadSellerBadges(p.userId);
 
   } catch (err) {
