@@ -466,13 +466,13 @@ async function checkFollowStatus() {
 
     if (!snapshot.empty) {
 
-      followDocumentId =
-        snapshot.docs[0].id;
-
+      followDocumentId = snapshot.docs[0].id;
+      isFollowing = true;
       setFollowState(true);
 
     } else {
 
+      isFollowing = false;
       setFollowState(false);
 
     }
@@ -516,6 +516,7 @@ window.toggleFollowShop = async function () {
       await deleteDoc(doc(db, "shop_followers", followDocumentId));
 
       followDocumentId = null;
+      isFollowing = false;
       setFollowState(false);
       return;
     }
@@ -531,6 +532,7 @@ window.toggleFollowShop = async function () {
     );
 
     followDocumentId = docRef.id;
+    isFollowing = true;
     setFollowState(true);
 
   } catch (err) {
