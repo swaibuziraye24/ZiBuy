@@ -403,9 +403,8 @@ document.head.appendChild(schemaTag);
         ` : ""}
 
         <div style="margin-top:16px;padding:16px;background:#fff4ee;border-radius:12px;font-size:13px;color:#b45309">
-          🛡️ <strong>Safe buying tip:</strong>
-
-      </div>
+          🛡️ <strong>Safe buying tip:</strong> Meet the seller in a public place, inspect before paying, never send money in advance.
+        </div>
     `;
 
     window.switchImage = function (index) {
@@ -415,6 +414,7 @@ document.head.appendChild(schemaTag);
 
     loadProductReviews(id);
     loadRelatedProducts(p.category, id);
+    loadSellerRating(p.userId);
   } catch (err) {
     console.error(err);
   }
@@ -557,7 +557,8 @@ async function loadRelatedProducts(category, currentProductId) {
     const snap = await getDocs(query(
       collection(db, "products"),
       where("category", "==", category),
-      where("status",   "==", "active")
+      where("status",   "==", "active"),
+      limit(20)
     ));
 
     const related = snap.docs
@@ -637,6 +638,57 @@ async function loadRelatedProducts(category, currentProductId) {
 
   } catch(e) {
     console.warn("loadRelatedProducts:", e.message);
+  }
+}
+
+
+async function loadSellerRating(userId) {
+  const ratingEl = document.getElementById("seller-rating-text");
+  if (!ratingEl || !userId) return;
+
+  try {
+    const snap = await getDocs(query(
+      collection(db, "reviews"),
+      where("sellerId", "==", userId)
+    ));
+
+    if (snap.empty) {
+      ratingEl.textContent = "No reviews yet";
+      return;
+    }
+
+    let total = 0;
+    let count = 0;
+    snap.forEach(d => {
+      total += Number(d.data().rating || 0);
+      count++;
+    });
+
+    const avg   = (total / count).toFixed(1);
+    const stars = "⭐".repeat(Math.round(total / count));
+
+    ratingEl.textContent = `${stars} ${avg} (${count} review${count !== 1 ? "s" : ""})`;
+
+    // Also show verified badge if seller is verified
+    const userSnap = await getDoc(doc(db, "users", userId));
+    if (userSnap.exists() && userSnap.data().isSellerVerified) {
+      const badge = document.getElementById("seller-verified-badge");
+      if (badge) badge.style.display = "inline-block";
+    }
+
+    // Show member since
+    const memberEl = document.getElementById("seller-member-since");
+    if (memberEl && userSnap.exists()) {
+      const joined = userSnap.data().createdAt?.toDate?.();
+      if (joined) {
+        memberEl.textContent = `Member since ${joined.toLocaleDateString("en-UG", { month: "long", year: "numeric" })}`;
+      }
+    }
+
+  } catch (err) {
+    console.warn("loadSellerRating:", err.message);
+    const ratingEl = document.getElementById("seller-rating-text");
+    if (ratingEl) ratingEl.textContent = "—";
   }
 }
 
