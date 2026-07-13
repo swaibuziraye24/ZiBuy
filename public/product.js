@@ -414,6 +414,7 @@ document.head.appendChild(schemaTag);
     };
 
     loadProductReviews(id);
+    loadRelatedProducts(p.category, id);
   } catch (err) {
     console.error(err);
   }
@@ -509,7 +510,7 @@ if (productSchemaTag) {
   productSchemaTag.textContent = JSON.stringify(currentSchema);
 }
 
-    // ============================================
+// ============================================
 // REVIEW SCHEMA FOR GOOGLE
 // ============================================
 
