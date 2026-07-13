@@ -569,7 +569,7 @@ async function loadRelatedProducts(category, currentProductId) {
 
     const section = document.createElement("div");
     section.style.cssText = `
-      max-width:1100px;margin:24px auto;padding:0 24px`;
+      max-width:1100px;margin:24px auto 100px;padding:0 24px`;
 
     section.innerHTML = `
       <div style="background:white;border-radius:20px;padding:28px;
@@ -626,10 +626,10 @@ async function loadRelatedProducts(category, currentProductId) {
       </div>
     `;
 
-    // Insert after the reviews section
-    const reviewsSection = document.querySelector(".product-page-wrap:last-of-type");
-    if (reviewsSection) {
-      reviewsSection.after(section);
+    // Insert before the closing </body> but above the bottom nav
+    const bottomNav = document.querySelector(".zibuy-bottom-nav");
+    if (bottomNav) {
+      document.body.insertBefore(section, bottomNav);
     } else {
       document.body.appendChild(section);
     }
