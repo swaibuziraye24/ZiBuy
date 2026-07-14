@@ -570,10 +570,6 @@ async function loadProducts() {
   
  // Store all products globally for use in other functions
 allProducts = products.sort((a, b) => b.rankScore - a.rankScore);
-
-window.allProducts = allProducts;
-
-// keep global sync (CRITICAL FIX)
 window.allProducts = allProducts;
 
 filteredProducts = [...allProducts];
@@ -588,7 +584,6 @@ try {
 
 // loadFeaturedProducts();
 window.renderProducts();
-loadBuyPowerSection(allProducts);
 
 } catch (err) {
   console.error(err);
@@ -1086,8 +1081,8 @@ window.renderProducts = function () {
   // =========================
   // BOOST MIX SYSTEM
   // =========================
-  const boostedProducts = products.filter(p => p.boost?.active || p.isPremium);
-  const normalProducts = products.filter(p => !p.boost?.active && !p.isPremium);
+  const boostedProducts = products.filter(p => p.boost?.boosted || p.isPremium);
+  const normalProducts  = products.filter(p => !p.boost?.boosted && !p.isPremium);
 
   const mixedProducts = [];
   let boostIndex = 0;
@@ -1174,7 +1169,7 @@ const sponsored = [];
     if (!grouped[cat]) grouped[cat] = [];
     grouped[cat].push(p);
 
-    if (p.boost?.active || p.isPremium) {
+    if (p.boost?.boosted || p.isPremium) {
       sponsored.push(p);
       featured.push(p);
     }
@@ -1830,6 +1825,25 @@ window.applyFilters = function() {
 };
 
 
+window.filterByDate = function(range) {
+  filterState.dateRange = range;
+
+  document.querySelectorAll(".date-filter-btn").forEach(btn => {
+    btn.classList.remove("active");
+  });
+
+  event.target.classList.add("active");
+
+  window.renderProducts();
+};
+
+window.applySortFilter = function() {
+  const el = document.getElementById("sort-filter");
+  if (el) filterState.sortBy = el.value;
+  window.renderProducts();
+};
+
+
 window.resetFilters = function() {
   filterState = {
     priceMin: 0,
@@ -2072,11 +2086,22 @@ window.closeProductModal = function() {
 
 window.searchProducts = function () {
   const input = document.getElementById("search-input");
-  const box = document.getElementById("search-suggestions");
+  const box   = document.getElementById("search-suggestions");
 
   if (!input) return;
 
   searchQuery = input.value.toLowerCase().trim();
+
+  // If search overlay exists, route through it instead of rendering behind it
+  const overlayInput = document.getElementById("overlay-search-input");
+  const overlay      = document.getElementById("search-overlay");
+  if (overlay && searchQuery) {
+    overlay.style.display = "flex";
+    document.body.style.overflow = "hidden";
+    if (overlayInput) overlayInput.value = input.value;
+    window.runOverlaySearch(searchQuery);
+    return;
+  }
 
   renderProducts();
 
@@ -2317,7 +2342,7 @@ window.addEventListener("beforeinstallprompt", (e) => {
 });
 
 // Install button click
-function installZiBuy() {
+window.installZiBuy = function() {
   if (!deferredPrompt) return;
 
   deferredPrompt.prompt();
@@ -2328,7 +2353,7 @@ function installZiBuy() {
     }
     deferredPrompt = null;
   });
-}
+};
 
 
 window.addEventListener("appinstalled", () => {
