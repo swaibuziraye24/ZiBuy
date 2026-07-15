@@ -131,7 +131,11 @@ async function loadAll() {
     loadReports(),
     loadBanners(),
     loadReminders(),
-    loadJobAdsAdmin()
+    loadJobAdsAdmin(),
+    loadBroadcasts(),
+    loadBlogAdmin(),
+    loadCategorySponsorsAdmin(),
+    loadPinRequestsAdmin()
   ]);
   renderOverview();
 }
@@ -219,10 +223,24 @@ function renderUsers(users) {
             <option value="gold"   ${plan==="gold"   ?"selected":""}>🥇 Gold</option>
           </select>
         </td>
-        <td>
+        <td style="display:flex;gap:6px;flex-wrap:wrap">
           ${u.banned
             ? `<button class="action-btn btn-unban" onclick="toggleBan('${u.id}', false)">Unban</button>`
             : `<button class="action-btn btn-ban"   onclick="toggleBan('${u.id}', true)">Ban</button>`}
+          ${u.phone ? `
+            <a href="https://wa.me/${u.phone.replace(/\D/g,"")}?text=${encodeURIComponent("Hello from ZiBuy Support:")}"
+              target="_blank"
+              style="background:#25d366;color:white;border:none;padding:6px 10px;border-radius:7px;font-size:12px;font-weight:700;text-decoration:none">
+              💬 WA
+            </a>` : ""}
+          <button class="action-btn" style="background:#dbeafe;color:#1e40af;border:none;padding:6px 10px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer"
+            onclick="adminViewUserAds('${u.id}','${u.email}')">
+            📋 Ads
+          </button>
+          <button class="action-btn" style="background:#f3e8ff;color:#7e22ce;border:none;padding:6px 10px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer"
+            onclick="adminForceExpireAd('${u.id}')">
+            🕒 Force Expire
+          </button>
         </td>
       </tr>`;
   }).join("");
@@ -458,9 +476,9 @@ async function loadBoosts() {
     const snap = await getDocs(collection(db, "boost_requests"));
     allBoosts = snap.docs.map(d => ({ id: d.id, ...d.data() }))
                          .sort((a, b) => {
-                           const aTime = (b.requestedAt || b.createdAt)?.toDate?.() || 0;
-                           const bTime = (a.requestedAt || a.createdAt)?.toDate?.() || 0;
-                           return aTime - bTime;
+                           const aTime = (a.requestedAt || a.createdAt)?.toDate?.() || 0;
+                           const bTime = (b.requestedAt || b.createdAt)?.toDate?.() || 0;
+                           return bTime - aTime;
                          });
     renderBoosts(allBoosts);
   } catch (e) { console.error(e); }
@@ -763,7 +781,12 @@ function renderAdsTable(ads) {
       <td style="font-size:12px">${a.userEmail || "—"}</td>
       <td><span class="plan-chip ${chipClass(a.status)}">${a.status || "active"}</span></td>
       <td style="font-size:12px">${fmtDate(a.expiresAt)}</td>
-      <td>
+      <td style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="action-btn btn-approve" onclick="adminEditAd('${a.id}')">✏️ Edit</button>
+        <button class="action-btn" style="background:#dbeafe;color:#1e40af;border:none;padding:6px 10px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer"
+          onclick="adminToggleAdStatus('${a.id}','${a.status}')">
+          ${a.status === "active" ? "📦 Mark Sold" : "♻️ Restore"}
+        </button>
         <button class="action-btn btn-reject" onclick="adminDeleteAd('${a.id}')">🗑️ Delete</button>
       </td>
     </tr>`).join("");
@@ -816,7 +839,8 @@ function renderOrdersTable(orders) {
       <td style="font-size:12px">${o.paymentMethod || "—"}</td>
       <td><span class="plan-chip ${chipClass(o.status)}">${o.status}</span></td>
       <td style="font-size:12px">${fmtDate(o.createdAt)}</td>
-      <td>
+      <td style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+        <button class="action-btn btn-approve" onclick="viewOrderDetail('${o.id}')">👁️ View</button>
         <select class="plan-select" onchange="updateOrderStatus('${o.id}', this.value)">
           <option value="">— Update —</option>
           <option value="Pending">Pending</option>
@@ -1987,7 +2011,7 @@ if (!tableBody) return;
 `;
     });
 
-    tableBody.innerHTML = rows || "<p>No activity found</p>";
+    tableBody.innerHTML = rows || `<tr><td colspan="4" style="text-align:center;padding:30px;color:#6b7280">No activity found</td></tr>`;
 
   } catch (err) {
 
@@ -2001,3 +2025,236 @@ if (!tableBody) return;
 }
 
 window.loadAdminLogs = loadAdminLogs;
+
+
+// ══════════════════════════════════════════════
+//  EDIT ANY AD (Admin)
+// ══════════════════════════════════════════════
+window.adminEditAd = async function(adId) {
+  const ad = allAds.find(a => a.id === adId);
+  if (!ad) return;
+
+  const newName  = prompt("Product name:", ad.name || "");
+  if (newName === null) return;
+
+  const newPrice = prompt("Price (UGX):", ad.price || "");
+  if (newPrice === null) return;
+
+  const newDesc  = prompt("Description:", ad.description || "");
+  if (newDesc === null) return;
+
+  try {
+    await updateDoc(doc(db, "products", adId), {
+      name:        newName.trim(),
+      price:       Number(newPrice),
+      description: newDesc.trim(),
+      updatedAt:   new Date()
+    });
+    showToast("Ad updated ✅", "success");
+    loadAds();
+  } catch(e) {
+    showToast("Failed: " + e.message, "error");
+  }
+};
+
+
+window.adminToggleAdStatus = async function(adId, currentStatus) {
+  const newStatus = currentStatus === "active" ? "sold" : "active";
+  if (!confirm(`Mark this ad as ${newStatus}?`)) return;
+  try {
+    await updateDoc(doc(db, "products", adId), {
+      status:    newStatus,
+      updatedAt: new Date()
+    });
+    showToast(`Ad marked as ${newStatus}`, "info");
+    loadAds();
+  } catch(e) {
+    showToast("Failed", "error");
+  }
+};
+
+
+// ══════════════════════════════════════════════
+//  REVIEWS MANAGEMENT
+// ══════════════════════════════════════════════
+window.loadReviewsAdmin = async function() {
+  const tbody = document.getElementById("reviews-admin-table-body");
+  if (!tbody) return;
+  tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:#6b7280">Loading...</td></tr>`;
+
+  try {
+    const snap = await getDocs(collection(db, "reviews"));
+    const reviews = snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
+
+    if (reviews.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:#6b7280">No reviews</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = reviews.map(r => `
+      <tr>
+        <td style="font-size:12px">${r.reviewerEmail || "—"}</td>
+        <td style="font-size:12px">${r.productId?.slice(0,12) || "—"}</td>
+        <td style="font-weight:800;color:#ff6600">${"⭐".repeat(Math.min(r.rating || 0, 5))} ${r.rating}/5</td>
+        <td style="font-size:13px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.text || r.reviewText || "—"}</td>
+        <td style="font-size:12px">${fmtDate(r.createdAt)}</td>
+        <td>
+          <button class="action-btn btn-reject" onclick="adminDeleteReview('${r.id}','${r.productId}','${r.sellerId}')">🗑️ Delete</button>
+        </td>
+      </tr>`).join("");
+
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="6" style="color:red;padding:20px">Failed: ${e.message}</td></tr>`;
+  }
+};
+
+window.adminDeleteReview = async function(reviewId, productId, sellerId) {
+  if (!confirm("Delete this review permanently?")) return;
+  try {
+    await deleteDoc(doc(db, "reviews", reviewId));
+
+    // Recalculate seller rating after deletion
+    if (sellerId) {
+      const remaining = await getDocs(query(
+        collection(db, "reviews"),
+        where("sellerId", "==", sellerId)
+      ));
+      let total = 0;
+      let count = 0;
+      remaining.forEach(d => { total += Number(d.data().rating || 0); count++; });
+      const avg = count > 0 ? parseFloat((total / count).toFixed(1)) : 0;
+      await updateDoc(doc(db, "shops", sellerId), { avgRating: avg, reviewCount: count }).catch(() => {});
+      await updateDoc(doc(db, "business_profiles", sellerId), { avgRating: avg, reviewCount: count }).catch(() => {});
+    }
+
+    showToast("Review deleted ✅", "info");
+    loadReviewsAdmin();
+  } catch(e) {
+    showToast("Failed: " + e.message, "error");
+  }
+};
+
+
+// ══════════════════════════════════════════════
+//  ORDER DETAIL VIEW
+// ══════════════════════════════════════════════
+window.viewOrderDetail = function(orderId) {
+  const order = allOrders.find(o => o.id === orderId);
+  if (!order) return;
+
+  const modal = document.createElement("div");
+  modal.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px`;
+  modal.innerHTML = `
+    <div style="background:white;border-radius:20px;padding:28px;max-width:500px;width:100%;max-height:90vh;overflow-y:auto">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <h2 style="margin:0;font-size:18px;font-weight:800">📦 Order ${order.orderId}</h2>
+        <button onclick="this.closest('div').parentElement.remove()"
+          style="background:#f3f4f6;border:none;width:32px;height:32px;border-radius:50%;font-size:18px;cursor:pointer">×</button>
+      </div>
+      <div style="background:#f9fafb;border-radius:12px;padding:14px;margin-bottom:14px">
+        <p style="margin:0 0 6px;font-size:13px"><strong>Customer:</strong> ${order.customerName || "—"}</p>
+        <p style="margin:0 0 6px;font-size:13px"><strong>Phone:</strong> ${order.customerPhone || "—"}</p>
+        <p style="margin:0 0 6px;font-size:13px"><strong>Email:</strong> ${order.userEmail || order.buyerEmail || "—"}</p>
+        <p style="margin:0 0 6px;font-size:13px"><strong>Location:</strong> ${order.customerLocation || order.deliveryAddress || "—"}</p>
+        <p style="margin:0 0 6px;font-size:13px"><strong>Payment:</strong> ${order.paymentMethod || "—"}</p>
+        <p style="margin:0 0 6px;font-size:13px"><strong>Total:</strong> <span style="color:#ff6600;font-weight:800">UGX ${Number(order.total || 0).toLocaleString()}</span></p>
+        <p style="margin:0;font-size:13px"><strong>Status:</strong> ${order.status}</p>
+      </div>
+      <h3 style="font-size:14px;font-weight:800;margin-bottom:8px">Items:</h3>
+      ${(order.items || []).map(item => `
+        <div style="display:flex;justify-content:space-between;padding:8px;background:#f9fafb;border-radius:8px;margin-bottom:6px;font-size:13px">
+          <span>${item.name} × ${item.qty}</span>
+          <span style="font-weight:700;color:#ff6600">UGX ${Number(item.price * item.qty).toLocaleString()}</span>
+        </div>`).join("") || "<p style='color:#6b7280;font-size:13px'>No items recorded</p>"}
+      ${order.customerPhone ? `
+        <a href="https://wa.me/${order.customerPhone.replace(/\D/g,"")}?text=${encodeURIComponent("Hello "+order.customerName+", your ZiBuy order "+order.orderId+" update:")}"
+          target="_blank"
+          style="display:block;margin-top:14px;background:#25d366;color:white;padding:12px;border-radius:10px;text-align:center;font-weight:800;text-decoration:none">
+          💬 Contact Customer on WhatsApp
+        </a>` : ""}
+    </div>
+  `;
+  document.body.appendChild(modal);
+};
+
+
+// ══════════════════════════════════════════════
+//  FORCE EXPIRE AD
+// ══════════════════════════════════════════════
+window.adminForceExpireAd = async function(adId) {
+  if (!confirm("Force expire this ad now? It will be hidden from buyers.")) return;
+  try {
+    await updateDoc(doc(db, "products", adId), {
+      status:    "expired",
+      expiresAt: new Date(),
+      updatedAt: new Date()
+    });
+    showToast("Ad expired", "info");
+    loadAds();
+  } catch(e) {
+    showToast("Failed", "error");
+  }
+};
+
+
+window.adminViewUserAds = async function(userId, email) {
+  try {
+    const snap = await getDocs(query(
+      collection(db, "products"),
+      where("userId", "==", userId)
+    ));
+
+    const ads = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    const modal = document.createElement("div");
+    modal.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px`;
+    modal.innerHTML = `
+      <div style="background:white;border-radius:20px;padding:24px;max-width:560px;width:100%;max-height:90vh;overflow-y:auto">
+        <div style="display:flex;justify-content:space-between;margin-bottom:16px">
+          <h2 style="margin:0;font-size:16px;font-weight:800">📋 ${email} — ${ads.length} Ads</h2>
+          <button onclick="this.closest('div').parentElement.remove()"
+            style="background:#f3f4f6;border:none;width:32px;height:32px;border-radius:50%;font-size:18px;cursor:pointer">×</button>
+        </div>
+        ${ads.length === 0 ? `<p style="color:#6b7280;text-align:center;padding:20px">No ads posted yet</p>` :
+          ads.map(a => `
+            <div style="display:flex;gap:12px;padding:10px;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:8px">
+              <img src="${a.images?.[0] || ''}" style="width:50px;height:50px;object-fit:cover;border-radius:8px;background:#f3f4f6;flex-shrink:0">
+              <div style="flex:1">
+                <p style="margin:0;font-weight:700;font-size:13px">${a.name}</p>
+                <p style="margin:2px 0;font-size:12px;color:#ff6600;font-weight:800">UGX ${Number(a.price||0).toLocaleString()}</p>
+                <span style="font-size:11px;background:${a.status==='active'?'#dcfce7':'#fee2e2'};color:${a.status==='active'?'#16a34a':'#ef4444'};padding:2px 7px;border-radius:20px;font-weight:700">${a.status}</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:4px">
+                <a href="product.html?id=${a.id}" target="_blank"
+                  style="background:#f3f4f6;color:#111827;padding:5px 8px;border-radius:7px;font-size:11px;font-weight:700;text-decoration:none;text-align:center">View</a>
+                <button onclick="if(confirm('Delete?')){deleteDoc(doc(db,'products','${a.id}')).then(()=>{showToast('Deleted','info');this.closest('div').parentElement.remove()})}"
+                  style="background:#fee2e2;color:#ef4444;border:none;padding:5px 8px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer">Del</button>
+              </div>
+            </div>`).join("")}
+      </div>
+    `;
+    document.body.appendChild(modal);
+  } catch(e) {
+    showToast("Failed: " + e.message, "error");
+  }
+};
+
+
+// ══════════════════════════════════════════════
+//  CLEAR USER NOTIFICATIONS
+// ══════════════════════════════════════════════
+window.clearUserNotifications = async function(userId) {
+  if (!confirm("Clear ALL notifications for this user?")) return;
+  try {
+    const snap = await getDocs(query(
+      collection(db, "notifications"),
+      where("userId", "==", userId)
+    ));
+    await Promise.all(snap.docs.map(d => deleteDoc(doc(db, "notifications", d.id))));
+    showToast(`Cleared ${snap.size} notifications`, "info");
+  } catch(e) {
+    showToast("Failed", "error");
+  }
+};
