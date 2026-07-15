@@ -736,20 +736,14 @@
 
   <script>
 (function () {
-  // Don't redirect if already on install page
   if (window.location.pathname === "/install") return;
-
-  // Don't redirect if app is already installed
   if (window.matchMedia("(display-mode: standalone)").matches) return;
-
-  // Don't redirect if they've already visited before
   if (localStorage.getItem("zibuy_has_visited")) return;
-
-  // Mark that they've visited
   localStorage.setItem("zibuy_has_visited", "true");
-
-  // Send first-time visitors to install page
-  window.location.replace("/install");
+  // Only redirect if install page is reachable — don't break the app
+  fetch("/install", { method: "HEAD" })
+    .then(r => { if (r.ok) window.location.replace("/install"); })
+    .catch(() => {}); // silently skip if install page missing
 })();
 </script>
 
@@ -1136,7 +1130,7 @@
 <footer>
   <div class="footer-top">
     <div class="footer-brand">
-       <h1 class="logo" id="secret-admin-trigger">
+       <h1 class="logo">
   <a href="index.html">
     <img
       src="my_logo.png"
@@ -1573,8 +1567,8 @@ window.setActiveCard = function(el) {
 
 <script type="module" src="app.js"></script>
 <script type="module" src="notifications-setup.js"></script>
-<script src="nav.js"></script>
-<script src="install-btn.js"></script>
+<script type="module" src="nav.js"></script>
+<script type="module" src="install-btn.js"></script>
 
 <script>
   // Don't force reload on back/forward navigation — let browser bfcache work
