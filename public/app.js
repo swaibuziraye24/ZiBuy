@@ -340,12 +340,11 @@ function setupAuthStateListener() {
     // Safely update all DOM elements
    const isAdmin = user?.email === "swaibuziraye22@gmail.com";
     const elements = {
-      "post-ad-btn":       user ? "block" : "none",
-      "dashboard-btn":     user && !isAdmin ? "block" : "none",
-      "upgrade-btn":       user && !isAdmin ? "block" : "none",
-      "messages-btn":      user ? "block" : "none",
-      "admin-panel-btn":   isAdmin ? "block" : "none",
-      "go-admin-btn":      isAdmin ? "flex"  : "none"
+      "post-ad-btn":   user ? "block" : "none",
+      "dashboard-btn": user && !isAdmin ? "block" : "none",
+      "upgrade-btn":   user && !isAdmin ? "block" : "none",
+      "messages-btn":  user ? "block" : "none",
+      "go-admin-btn":  isAdmin ? "flex" : "none"
     };
 
     Object.keys(elements).forEach(id => {
@@ -356,7 +355,10 @@ function setupAuthStateListener() {
     });
 
     // Update account button
+    // Handle both old (#account-btn) and new (#login-btn) topbar
     const accountBtn = document.getElementById("account-btn");
+    const loginBtn   = document.getElementById("login-btn");
+
     if (accountBtn) {
       if (user) {
         accountBtn.textContent = "🚪 Logout";
@@ -364,6 +366,21 @@ function setupAuthStateListener() {
       } else {
         accountBtn.textContent = "Account";
         accountBtn.onclick = () => openAuthModal();
+      }
+    }
+
+    if (loginBtn) {
+      if (user) {
+        loginBtn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span>${user.email.split("@")[0]}</span>`;
+        loginBtn.onclick = () => logoutCustomer();
+        loginBtn.title   = "Click to logout";
+        loginBtn.style.background = "#10b981";
+      } else {
+        loginBtn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span>Login/SignUp</span>`;
+        loginBtn.onclick = () => openAuthModal();
+        loginBtn.style.background = "#ff6600";
       }
     }
 
