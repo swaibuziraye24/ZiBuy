@@ -48,30 +48,30 @@
     <div class="post-ad-step active" id="step-1-content">
       <h2>What are you selling?</h2>
       <div class="category-grid">
-        <button class="cat-card" onclick="selectCategory('phones')">📱<span>Phones</span></button>
-        <button class="cat-card" onclick="selectCategory('electronics')">💻<span>Electronics</span></button>
-        <button class="cat-card" onclick="selectCategory('fashion')">👗<span>Fashion</span></button>
-        <button class="cat-card" onclick="selectCategory('shoes')">👟<span>Shoes</span></button>
-        <button class="cat-card" onclick="selectCategory('beauty')">💄<span>Beauty</span></button>
-        <button class="cat-card" onclick="selectCategory('bags')">👜<span>Bags</span></button>
-        <button class="cat-card" onclick="selectCategory('groceries')">🛒<span>Groceries</span></button>
-        <button class="cat-card" onclick="selectCategory('watches')">⌚<span>Watches</span></button>
-        <button class="cat-card" onclick="selectCategory('computers')">🖥️<span>Computers</span></button>
-        <button class="cat-card" onclick="selectCategory('gaming')">🎮<span>Gaming</span></button>
-        <button class="cat-card" onclick="selectCategory('home')">🏠<span>Home</span></button>
-        <button class="cat-card" onclick="selectCategory('accessories')">💎<span>Accessories</span></button>
-        <button class="cat-card" onclick="selectCategory('repair-construction')">🔨<span>Repair & Construction</span></button>
-        <button class="cat-card" onclick="selectCategory('property')">🏘️<span>Property</span></button>
-        <button class="cat-card" onclick="selectCategory('leisure-activities')">🎯<span>Leisure & Activities</span></button>
-        <button class="cat-card" onclick="selectCategory('phone-accessories')">🔌<span>Phone Accessories & Parts</span></button>
-        <button class="cat-card" onclick="selectCategory('services')">🔧<span>Services</span></button>
-        <button class="cat-card" onclick="selectCategory('vehicles')">🚗<span>Vehicles</span></button>
-        <button class="cat-card" onclick="selectCategory('animals')">🐾<span>Animals & Pets</span></button>
-        <button class="cat-card" onclick="selectCategory('babies')">👶<span>Babies & Kids</span></button>
-        <button class="cat-card" onclick="selectCategory('agriculture')">🌾<span>Agriculture</span></button>
-        <button class="cat-card" onclick="selectCategory('commercial')">🏗️<span>Commercial Equip.</span></button>
-        <button class="cat-card" onclick="selectCategory('tours')">✈️<span>Tours & Leisure</span></button>
-        <button class="cat-card" onclick="selectCategory('seeking-work')">💼<span>Seeking Work / CVs</span></button>
+        <button class="cat-card" onclick="selectCategory('phones',this)">📱<span>Phones</span></button>
+<button class="cat-card" onclick="selectCategory('electronics',this)">💻<span>Electronics</span></button>
+<button class="cat-card" onclick="selectCategory('fashion',this)">👗<span>Fashion</span></button>
+<button class="cat-card" onclick="selectCategory('shoes',this)">👟<span>Shoes</span></button>
+<button class="cat-card" onclick="selectCategory('beauty',this)">💄<span>Beauty</span></button>
+<button class="cat-card" onclick="selectCategory('bags',this)">👜<span>Bags</span></button>
+<button class="cat-card" onclick="selectCategory('groceries',this)">🛒<span>Groceries</span></button>
+<button class="cat-card" onclick="selectCategory('watches',this)">⌚<span>Watches</span></button>
+<button class="cat-card" onclick="selectCategory('computers',this)">🖥️<span>Computers</span></button>
+<button class="cat-card" onclick="selectCategory('gaming',this)">🎮<span>Gaming</span></button>
+<button class="cat-card" onclick="selectCategory('home',this)">🏠<span>Home</span></button>
+<button class="cat-card" onclick="selectCategory('accessories',this)">💎<span>Accessories</span></button>
+<button class="cat-card" onclick="selectCategory('repair-construction',this)">🔨<span>Repair & Construction</span></button>
+<button class="cat-card" onclick="selectCategory('property',this)">🏘️<span>Property</span></button>
+<button class="cat-card" onclick="selectCategory('leisure-activities',this)">🎯<span>Leisure & Activities</span></button>
+<button class="cat-card" onclick="selectCategory('phone-accessories',this)">🔌<span>Phone Accessories & Parts</span></button>
+<button class="cat-card" onclick="selectCategory('services',this)">🔧<span>Services</span></button>
+<button class="cat-card" onclick="selectCategory('vehicles',this)">🚗<span>Vehicles</span></button>
+<button class="cat-card" onclick="selectCategory('animals',this)">🐾<span>Animals & Pets</span></button>
+<button class="cat-card" onclick="selectCategory('babies',this)">👶<span>Babies & Kids</span></button>
+<button class="cat-card" onclick="selectCategory('agriculture',this)">🌾<span>Agriculture</span></button>
+<button class="cat-card" onclick="selectCategory('commercial',this)">🏗️<span>Commercial Equip.</span></button>
+<button class="cat-card" onclick="selectCategory('tours',this)">✈️<span>Tours & Leisure</span></button>
+<button class="cat-card" onclick="selectCategory('seeking-work',this)">💼<span>Seeking Work / CVs</span></button>
       </div>
 
          <div id="subcategory-container"
@@ -186,21 +186,19 @@
         </div>
       </div>
 
-      <div class="file-upload-area" id="file-upload-area"
-        onclick="document.getElementById('ad-images').click()"
-        style="cursor:pointer">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
-        </svg>
-        <p>Tap to select photos from gallery</p>
-        <span>Up to 5 photos · JPG, PNG, WEBP</span>
-      </div>
+     <label class="file-upload-area" id="file-upload-area" for="ad-images" style="cursor:pointer">
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+  </svg>
+  <p>Tap to select photos from gallery</p>
+  <span>Up to 5 photos · JPG, PNG, WEBP</span>
+</label>
 
       <input type="file" id="ad-images"
-        multiple
-        accept="image/jpeg,image/jpg,image/png,image/webp,image/*"
-        onchange="handleImageUpload(event)"
-        style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none">
+  multiple
+  accept="image/jpeg,image/jpg,image/png,image/webp,image/*"
+  onchange="handleImageUpload(event)"
+  style="display:none">
 
       <div id="image-preview-container" class="image-preview-grid"></div>
       <p class="char-count"><span id="image-count">0</span>/5 photos</p>
@@ -274,7 +272,7 @@
     <div class="modal-divider">— or —</div>
     <button class="full-btn secondary" onclick="customerRegister()">Create Account</button>
     <div class="modal-divider"></div>
-    <button class="full-btn secondary" onclick="customerLogout()">Logout</button>
+    <button class="full-btn secondary" onclick="logoutCustomer()">Logout</button>
   </div>
 </div>
 
@@ -283,8 +281,23 @@
   <div style="background:white;padding:32px;border-radius:16px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,0.3)">
     <p style="font-size:48px;margin-bottom:16px;animation:spin 2s linear infinite">⚙️</p>
     <p style="font-size:16px;font-weight:700;color:#111827">Verifying login...</p>
+    <p id="auth-check-slow" style="display:none;font-size:13px;color:#6b7280;margin-top:12px">
+      Slow connection? <a href="index.html" style="color:#ff6600;font-weight:700">Go back home</a>
+    </p>
   </div>
 </div>
+<script>
+  // Show "slow connection" message after 6 seconds
+  setTimeout(() => {
+    const msg = document.getElementById("auth-check-slow");
+    if (msg) msg.style.display = "block";
+  }, 6000);
+  // Force hide after 12 seconds — never leave user stuck
+  setTimeout(() => {
+    const check = document.getElementById("auth-check");
+    if (check) check.style.display = "none";
+  }, 12000);
+</script>
 
 
 
@@ -316,10 +329,8 @@
 </style>
 
 <script type="module" src="post-ad.js"></script>
-
 <script type="module" src="notifications-setup.js"></script>
-
-<script src="nav.js"></script>
+<script type="module" src="nav.js"></script>
 
 </body>
 </html>
