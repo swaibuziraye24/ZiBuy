@@ -120,7 +120,28 @@ onAuthStateChanged(auth, (user) => {
 
   currentUser = user;
 
-  if (productId) loadProductPreview();
+  if (productId) {
+    import("./firebase.js").then(({ db, doc, getDoc }) => {
+      getDoc(doc(db, "products", productId)).then(snap => {
+        if (!snap.exists()) return;
+        const p = snap.data();
+        // Pre-fill form fields for edit mode
+        if (titleInput)  titleInput.value  = p.name        || "";
+        if (descInput)   descInput.value   = p.description || "";
+        if (priceInput)  priceInput.value  = p.price       || "";
+        const hiddenDist = document.getElementById("ad-district");
+        const visibleDist = document.getElementById("ad-district-input");
+        if (hiddenDist  && p.location) hiddenDist.value  = p.location;
+        if (visibleDist && p.location) visibleDist.value = p.location;
+        if (p.category) {
+          selectedCategory = p.category;
+          document.getElementById("step1-next").disabled = false;
+          renderCategoryFields(p.category);
+        }
+        validateStep2();
+      }).catch(console.error);
+    });
+  }
 
   // Enable plan cards
   document.querySelectorAll(".boost-plan-card").forEach(card => {
@@ -138,7 +159,7 @@ onAuthStateChanged(auth, (user) => {
 // CATEGORY SELECTION
 // ============================================
 
-window.selectCategory = function(category) {
+window.selectCategory = function(category, el) {
 
   selectedCategory = category;
 
@@ -146,7 +167,9 @@ window.selectCategory = function(category) {
     card.classList.remove("selected");
   });
 
- event.currentTarget.classList.add("selected");
+  // el is passed from onclick; fall back to event.currentTarget for direct calls
+  const clicked = el || event?.currentTarget;
+  if (clicked) clicked.classList.add("selected");
   document.getElementById("step1-next").disabled = false;
   renderCategoryFields(category);
   toggleVideoUpload(category);
@@ -395,7 +418,7 @@ const SUBCATEGORIES = {
 
 document
   .getElementById("subcategory-select")
-  .addEventListener("change", (e) => {
+  ?.addEventListener("change", (e) => {
 
     selectedSubcategory = e.target.value;
 
@@ -2144,8 +2167,19 @@ window.validateStep2 = function() {
   document.getElementById("step2-next").disabled = !valid;
 };
 
-titleInput.addEventListener("input",  () => { validateStep2(); saveDraft(); });
-descInput.addEventListener("input",   () => { validateStep2(); saveDraft(); });
+titleInput.addEventListener("input", () => {
+  validateStep2();
+  saveDraft();
+  const el = document.getElementById("title-count");
+  if (el) el.textContent = titleInput.value.length;
+});
+
+descInput.addEventListener("input", () => {
+  validateStep2();
+  saveDraft();
+  const el = document.getElementById("desc-count");
+  if (el) el.textContent = descInput.value.length;
+});
 priceInput.addEventListener("input",  () => { validateStep2(); saveDraft(); });
 document.getElementById("ad-district")?.addEventListener("change",    () => { validateStep2(); saveDraft(); });
 document.getElementById("ad-sublocation")?.addEventListener("change", () => { validateStep2(); saveDraft(); });
@@ -2198,11 +2232,12 @@ function restoreDraft() {
 
     // Restore location display values
     if (draft.district) {
-      const districtInput = document.getElementById("ad-district-input");
+      const districtInput  = document.getElementById("ad-district-input");
       const hiddenDistrict = document.getElementById("ad-district");
-      if (districtInput) districtInput.value = draft.district;
+      if (districtInput)  districtInput.value  = draft.district;
       if (hiddenDistrict) hiddenDistrict.value = draft.district;
     }
+
     if (draft.sublocation) {
       const subInput  = document.getElementById("ad-sublocation-input");
       const hiddenSub = document.getElementById("ad-sublocation");
@@ -2210,6 +2245,13 @@ function restoreDraft() {
       if (subInput)  subInput.value  = draft.sublocation;
       if (hiddenSub) hiddenSub.value = draft.sublocation;
       if (subWrap)   subWrap.style.display = "block";
+    }
+
+    // Trigger sublocation list rebuild if district was restored
+    if (draft.district) {
+      const subs    = getSubLocations(draft.district);
+      const subWrap = document.getElementById("ad-sublocation-wrap");
+      if (subWrap) subWrap.style.display = subs.length > 0 ? "block" : "none";
     }
 
     // Update character counters
