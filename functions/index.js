@@ -6,13 +6,18 @@ const express = require("express");
 admin.initializeApp();
 const db = admin.firestore();
 
-const { setGlobalOptions } =
-  require("firebase-functions/v2");
+const { setGlobalOptions } = require("firebase-functions/v2");
+const { onRequest }         = require("firebase-functions/v2/https");
+const { onDocumentCreated, onDocumentUpdated } = require("firebase-functions/v2/firestore");
+const { onSchedule }        = require("firebase-functions/v2/scheduler");
 
-const { onRequest } =
-  require("firebase-functions/v2/https");
-const { onDocumentCreated } = require("firebase-functions/v2/firestore");
-const { onSchedule } = require("firebase-functions/v2/scheduler");
+// ── Must be called before any function exports ──
+setGlobalOptions({
+  region:         "us-central1",
+  memory:         "1GiB",
+  timeoutSeconds: 540,
+  maxInstances:   10,
+});
 
 
 
@@ -80,13 +85,6 @@ async function sendSMS(phone, message) {
 // ============================================
 
 const seoApp = express();
-
-setGlobalOptions({
-  region: "us-central1",
-  memory: "1GiB", // SCALE MODE UPGRADE
-  timeoutSeconds: 540, // avoid timeout crashes in heavy AI/broadcast jobs
-  maxInstances: 10, // prevent cost spikes + overload
-});
 
 
 
@@ -649,9 +647,19 @@ exports.aiRecommendations = onSchedule(
   },
   async () => {
     try {
-      const usersSnap = await db.collection("users")
-  .limit(1000)
-  .get();
+      // Paginate users in batches of 500 to handle any database size
+      let allUserDocs = [];
+      let lastUserDoc = null;
+      while (true) {
+        let q = db.collection("users").limit(500);
+        if (lastUserDoc) q = q.startAfter(lastUserDoc);
+        const batch = await q.get();
+        if (batch.empty) break;
+        batch.docs.forEach(d => allUserDocs.push(d));
+        lastUserDoc = batch.docs[batch.docs.length - 1];
+        if (batch.size < 500) break;
+      }
+      const usersSnap = { docs: allUserDocs };
       const productsSnap = await db
         .collection("products")
         .where("status", "==", "active")
@@ -901,15 +909,7 @@ exports.boostExpiryReminders = onSchedule(
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
         });
 
-        // Skip if a pending reminder already exists for this product
-        const existing = await db.collection("whatsapp_reminders")
-          .where("type",      "==", "boost_expiry")
-          .where("productId", "==", boost.productId || "")
-          .where("status",    "==", "pending")
-          .limit(1)
-          .get();
-        if (!existing.empty) continue;
-
+        
         // WhatsApp reminder (ADMIN CLICK-TO-SEND SYSTEM)
         const msg =
 
@@ -1018,6 +1018,10 @@ exports.momoPaymentVerify = onDocumentCreated(
     if (lock.exists) return;
 
     await lockRef.set({
+      status:    "confirmed",
+      amount:    data.amount || 0,
+      type:      data.type   || "unknown",
+      userId:    data.userId,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
@@ -1061,7 +1065,7 @@ exports.momoPaymentVerify = onDocumentCreated(
 exports.revenueTracker = onSchedule(
   { schedule: "every day 00:00", timeZone: "Africa/Kampala" },
   async () => {
-    const payments = await db.collection("momo_payments")
+    const payments = await db.collection("payment_logs")
       .where("status", "==", "confirmed")
       .get();
 
@@ -1225,77 +1229,69 @@ exports.expireSubscriptions = onSchedule(
 
       const batch = db.batch();
 
+      // Collect expired subs first, commit batch, then notify
+      const toExpire = [];
+
       for (const docSnap of snap.docs) {
         const data = docSnap.data();
-
-        const end = data.endDate?.toDate?.();
+        const end  = data.endDate?.toDate?.();
         if (!end || end > now) continue;
-
-        batch.update(docSnap.ref, {
-          status: "expired",
-        });
-
-        // downgrade user plan
-        if (data.userId) {
-          await db.collection("users").doc(data.userId).update({
-            plan: "free",
-          });
-
-          await db.collection("notifications").add({
-            userId: data.userId,
-            type: "subscription_expired",
-            title: "⚠️ Subscription Expired",
-            message: "Your seller plan has expired. Renew to restore benefits.",
-            read: false,
-            createdAt: admin.firestore.FieldValue.serverTimestamp(),
-          });
-
-
-          const userSnap =
-  await db.collection("users")
-    .doc(data.userId)
-    .get();
-
-if (userSnap.exists) {
-
-  const user = userSnap.data();
-
-  if (user.phone) {
-
-  const msg =
-    `⚠️ Your ZiBuy subscription has expired.\n\n` +
-    `Renew now to restore your seller benefits.`;
-
-  await db.collection("whatsapp_reminders").add({
-    userId: data.userId,
-    phone: user.phone,
-    type: "subscription_expired",
-    message: msg,
-    waLink:
-      `https://wa.me/${user.phone.replace(/\D/g,"")}?text=${encodeURIComponent(msg)}`,
-    status: "pending",
-    createdAt:
-      admin.firestore.FieldValue.serverTimestamp()
-  });
-}
-
-  if (user.email) {
-
-    await sendEmail(
-      user.email,
-      "⚠️ Subscription Expired",
-      emailTemplate(
-        "Subscription Expired",
-        `<p>Your seller subscription has expired.</p>
-         <p>Renew to restore premium benefits.</p>`
-      )
-    );
-  }
-}
-        }
+        batch.update(docSnap.ref, { status: "expired" });
+        toExpire.push({ id: docSnap.id, ...data });
       }
 
+      if (toExpire.length === 0) {
+        console.log("[SUBS EXPIRE] Nothing expired");
+        return;
+      }
+
+      // Commit subscription status changes first
       await batch.commit();
+
+      // Only then downgrade users and notify
+      for (const data of toExpire) {
+        if (!data.userId) continue;
+
+        await db.collection("users").doc(data.userId).update({ plan: "free" }).catch(() => {});
+
+        await db.collection("notifications").add({
+          userId:    data.userId,
+          type:      "subscription_expired",
+          title:     "⚠️ Subscription Expired",
+          message:   "Your seller plan has expired. Renew to restore benefits.",
+          read:      false,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        const userSnap = await db.collection("users").doc(data.userId).get();
+        if (!userSnap.exists) continue;
+        const user = userSnap.data();
+
+        if (user.phone) {
+          const msg = `⚠️ Your ZiBuy subscription has expired.\n\nRenew now to restore your seller benefits.`;
+          await db.collection("whatsapp_reminders").add({
+            userId:  data.userId,
+            phone:   user.phone,
+            type:    "subscription_expired",
+            message: msg,
+            waLink:  `https://wa.me/${user.phone.replace(/\D/g,"")}?text=${encodeURIComponent(msg)}`,
+            status:  "pending",
+            createdAt: admin.firestore.FieldValue.serverTimestamp()
+          });
+        }
+
+        if (user.email) {
+          await sendEmail(
+            user.email,
+            "⚠️ Subscription Expired",
+            emailTemplate(
+              "Subscription Expired",
+              `<p>Your seller subscription has expired.</p>
+               <p>Renew to restore premium benefits.</p>`
+            )
+          );
+        }
+      }
 
       console.log(`[SUBS EXPIRE] Completed`);
     } catch (err) {
@@ -1460,7 +1456,7 @@ exports.processQueue = onSchedule(
   }
 );
 
-const { onDocumentUpdated } = require("firebase-functions/v2/firestore");
+
 
 exports.subscriptionApprovalNotifications = onDocumentUpdated(
   "business_accounts/{id}",
@@ -1551,29 +1547,18 @@ exports.blogSeo = onRequest(async (req, res) => {
 
     const slug = req.path.replace("/blog/", "");
 
+    // Query directly by slug field — requires index on (slug, status)
     const posts = await db.collection("blog_posts")
       .where("status", "==", "published")
+      .where("slug",   "==", slug)
+      .limit(1)
       .get();
 
     let matchedPost = null;
 
-    posts.forEach(doc => {
-      const data = doc.data();
-
-      const generatedSlug =
-        (data.slug ||
-        data.title
-          ?.toLowerCase()
-          .replace(/[^\w\s-]/g, "")
-          .replace(/\s+/g, "-"));
-
-      if (generatedSlug === slug) {
-        matchedPost = {
-          id: doc.id,
-          ...data
-        };
-      }
-    });
+    if (!posts.empty) {
+      matchedPost = { id: posts.docs[0].id, ...posts.docs[0].data() };
+    }
 
     if (!matchedPost) {
       return res.redirect(
