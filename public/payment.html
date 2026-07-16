@@ -29,15 +29,14 @@
       <div class="order-summary">
         <h2>Order Summary</h2>
 
-<div class="summary-line">
-  <span>ZiBuy Fee (3%):</span>
-  <span id="platform-fee">UGX 0</span>
-</div>
-
-        <div id="order-items"></div>
+<div id="order-items"></div>
         <div class="summary-line">
           <span>Subtotal:</span>
           <span id="subtotal">UGX 0</span>
+        </div>
+        <div class="summary-line">
+          <span>ZiBuy Fee (3%):</span>
+          <span id="platform-fee">UGX 0</span>
         </div>
         <div class="summary-line">
           <span>Delivery:</span>
@@ -59,32 +58,29 @@
           <input type="tel" id="delivery-phone" placeholder="Phone Number" required>
           <input type="text" id="delivery-address" placeholder="Street Address" required>
 
-          <select id="delivery-district" required>
-        <label style="display:block;font-size:12px;font-weight:800;
-          color:#374151;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">
-          📍 District / City
-        </label>
-        <!-- Hidden real value -->
-        <input type="hidden" id="ad-district">
-        <div class="loc-search-wrap" style="margin-bottom:12px">
-          <input class="loc-search-input" id="ad-district-input"
-            placeholder="🔍 Search district e.g. Kampala, Gulu...">
-          <div class="loc-dropdown" id="ad-district-dropdown"></div>
-        </div>
-
-        <div id="ad-sublocation-wrap" style="display:none">
           <label style="display:block;font-size:12px;font-weight:800;
             color:#374151;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">
-            🏘️ Town / Village / Area
+            📍 District / City
           </label>
-          <input type="hidden" id="ad-sublocation">
-          <div class="loc-search-wrap">
-            <input class="loc-search-input" id="ad-sublocation-input"
-              placeholder="🔍 Search town, village, trading centre...">
-            <div class="loc-dropdown" id="ad-sublocation-dropdown"></div>
+          <input type="hidden" id="delivery-district">
+          <div class="loc-search-wrap" style="margin-bottom:12px">
+            <input class="loc-search-input" id="delivery-district-input"
+              placeholder="🔍 Search district e.g. Kampala, Gulu...">
+            <div class="loc-dropdown" id="delivery-district-dropdown"></div>
           </div>
-        </div>
-      </div>
+
+          <div id="delivery-sublocation-wrap" style="display:none">
+            <label style="display:block;font-size:12px;font-weight:800;
+              color:#374151;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">
+              🏘️ Town / Village / Area
+            </label>
+            <input type="hidden" id="delivery-sublocation">
+            <div class="loc-search-wrap">
+              <input class="loc-search-input" id="delivery-sublocation-input"
+                placeholder="🔍 Search town, village, trading centre...">
+              <div class="loc-dropdown" id="delivery-sublocation-dropdown"></div>
+            </div>
+          </div>
 
         <div class="form-section">
           <h3>Payment Method</h3>
@@ -110,10 +106,8 @@
 <div id="overlay" class="overlay"></div>
 <div id="toast-container" class="toast-container"></div>
 
-<script type="module" src="notifications-setup.js"></script>
-
-<script src="nav.js"></script>
-
 <script type="module" src="payment.js"></script>
+<script type="module" src="notifications-setup.js"></script>
+<script type="module" src="nav.js"></script>
 </body>
 </html>
