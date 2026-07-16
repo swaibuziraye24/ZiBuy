@@ -2,41 +2,68 @@ import { db, auth, collection, addDoc } from "./firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 
-import { getDistricts } from "./uganda-locations.js";
-
-import {  getSubLocations } from "./uganda-locations.js";
-import "./uganda-locations.js"; // registers window.updateSubLocations
+import { getDistricts, getSubLocations } from "./uganda-locations.js";
 
 document.addEventListener("DOMContentLoaded", () => {
-  const el = document.getElementById("delivery-district");
-  if (!el) return;
+  buildSearchableSelect({
+    inputId:    "delivery-district-input",
+    dropdownId: "delivery-district-dropdown",
+    hiddenId:   "delivery-district",
+    options:    getDistricts(),
+    onSelect:   (district) => {
+      const subs = getSubLocations(district);
+      const wrap = document.getElementById("delivery-sublocation-wrap");
+      if (!wrap) return;
 
-  getDistricts().forEach(d => {
-    const opt = document.createElement("option");
-    opt.value = d;
-    opt.textContent = d;
-    el.appendChild(opt);
-  });
-
-  // Wire sublocation on district change
-  el.addEventListener("change", () => {
-    const district = el.value;
-    const wrap     = document.getElementById("delivery-sublocation-wrap");
-    const subEl    = document.getElementById("delivery-sublocation");
-    if (!wrap || !subEl) return;
-
-    if (!district) {
-      wrap.style.display = "none";
-      subEl.innerHTML = "<option value=''>Select Town / Village / Area</option>";
-      return;
+      if (subs.length === 0) {
+        wrap.style.display = "none";
+      } else {
+        wrap.style.display = "block";
+        buildSearchableSelect({
+          inputId:    "delivery-sublocation-input",
+          dropdownId: "delivery-sublocation-dropdown",
+          hiddenId:   "delivery-sublocation",
+          options:    subs,
+          onSelect:   () => {}
+        });
+      }
     }
-
-    const subs = getSubLocations(district);
-    subEl.innerHTML = `<option value="">Select Town / Village / Area</option>` +
-      subs.map(s => `<option value="${s}">${s}</option>`).join("");
-    wrap.style.display = subs.length > 0 ? "block" : "none";
   });
 });
+
+function buildSearchableSelect({ inputId, dropdownId, hiddenId, options, onSelect }) {
+  const input    = document.getElementById(inputId);
+  const dropdown = document.getElementById(dropdownId);
+  if (!input || !dropdown) return;
+
+  function renderOptions(filter = "") {
+    const q = filter.toLowerCase();
+    const filtered = options.filter(o => o.toLowerCase().includes(q));
+    dropdown.innerHTML = filtered.length === 0
+      ? `<div class="loc-option" style="color:#9ca3af">No results</div>`
+      : filtered.map(o => `<div class="loc-option" data-val="${o}">${o}</div>`).join("");
+
+    dropdown.querySelectorAll(".loc-option").forEach(el => {
+      el.onclick = () => {
+        input.value = el.dataset.val || el.textContent;
+        const hidden = document.getElementById(hiddenId);
+        if (hidden) hidden.value = el.dataset.val || el.textContent;
+        dropdown.classList.remove("open");
+        if (onSelect) onSelect(el.dataset.val || el.textContent);
+      };
+    });
+  }
+
+  input.addEventListener("focus", () => { renderOptions(input.value); dropdown.classList.add("open"); });
+  input.addEventListener("input", () => { renderOptions(input.value); dropdown.classList.add("open"); });
+  document.addEventListener("click", (e) => {
+    if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+      dropdown.classList.remove("open");
+    }
+  });
+
+  renderOptions();
+}
 
 let currentUser = null;
 let cart = JSON.parse(localStorage.getItem("zibuy-cart")) || [];
@@ -86,10 +113,7 @@ function loadCheckout() {
   const name = currentUser.email.split("@")[0];
   document.getElementById("delivery-name").value = name;
 
-  // Show payment details based on selection
-  document.querySelectorAll("input[name='payment']").forEach((radio) => {
-    radio.addEventListener("change", showPaymentDetails);
-  });
+  
 }
 
 function showPaymentDetails() {
@@ -106,12 +130,14 @@ function showPaymentDetails() {
 const ZIBUY_WHATSAPP = "256789157512"; // ← replace with your number
 
 window.placeOrder = async function() {
-  const name     = document.getElementById("delivery-name").value.trim();
-  const phone    = document.getElementById("delivery-phone").value.trim();
-  const address  = document.getElementById("delivery-address").value.trim();
-  const district  = document.getElementById("delivery-district")?.value || "";
-  const subLoc    = document.getElementById("delivery-sublocation")?.value || "";
-  const location  = subLoc ? `${subLoc}, ${district}` : district;
+  const name     = document.getElementById("delivery-name")?.value.trim()    || "";
+  const phone    = document.getElementById("delivery-phone")?.value.trim()   || "";
+  const address  = document.getElementById("delivery-address")?.value.trim() || "";
+  const district    = document.getElementById("delivery-district")?.value    || "";
+  const sublocation = document.getElementById("delivery-sublocation")?.value || "";
+  const location    = sublocation ? `${sublocation}, ${district}` : district;
+  const paymentEl   = document.querySelector("input[name='payment']:checked");
+  const payment     = paymentEl ? paymentEl.value : "whatsapp";
 
   if (!name || !phone || !address || !location) {
     alert("Please fill all delivery details");
