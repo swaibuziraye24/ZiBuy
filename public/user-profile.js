@@ -1,4 +1,5 @@
 import { db, auth, collection, getDocs, query, where, doc, getDoc, updateDoc, addDoc } from "./firebase.js";
+import "./report-seller.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const params = new URLSearchParams(window.location.search);
@@ -152,6 +153,10 @@ window.messageProfile = function() {
     return;
   }
   window.location.href = `messages.html?to=${window.sellerEmail}`;
+};
+
+window.reportThisSeller = function() {
+  openReportModal(userId, window.sellerName || "Seller", "", "");
 };
 
 loadProfile();
