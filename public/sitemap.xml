@@ -1,108 +1,116 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
-  <!-- HOME (highest priority for SEO keywords like "buy and sell Uganda") -->
   <url>
     <loc>https://zibuy-5deae.web.app/</loc>
+    <lastmod>2026-07-16</lastmod>
     <priority>1.0</priority>
     <changefreq>daily</changefreq>
   </url>
 
   <url>
+    <loc>https://zibuy-5deae.web.app/post-ad.html</loc>
+    <lastmod>2026-07-16</lastmod>
+    <priority>0.9</priority>
+    <changefreq>daily</changefreq>
+  </url>
+
+  <url>
+    <loc>https://zibuy-5deae.web.app/shops.html</loc>
+    <lastmod>2026-07-16</lastmod>
+    <priority>0.9</priority>
+    <changefreq>daily</changefreq>
+  </url>
+
+  <url>
     <loc>https://zibuy-5deae.web.app/blog.html</loc>
+    <lastmod>2026-07-16</lastmod>
     <priority>0.8</priority>
     <changefreq>weekly</changefreq>
   </url>
 
   <url>
     <loc>https://zibuy-5deae.web.app/business-plans.html</loc>
+    <lastmod>2026-07-16</lastmod>
     <priority>0.7</priority>
     <changefreq>monthly</changefreq>
   </url>
 
   <url>
-    <loc>https://zibuy-5deae.web.app/dashboard.html</loc>
-    <priority>0.6</priority>
-    <changefreq>daily</changefreq>
-  </url>
-
-  <url>
-    <loc>https://zibuy-5deae.web.app/login.html</loc>
-    <priority>0.4</priority>
-    <changefreq>yearly</changefreq>
-  </url>
-
-  <url>
-    <loc>https://zibuy-5deae.web.app/register.html</loc>
-    <priority>0.4</priority>
-    <changefreq>yearly</changefreq>
-  </url>
-
-  <url>
-    <loc>https://zibuy-5deae.web.app/post-ad.html</loc>
-    <priority>0.9</priority>
-    <changefreq>daily</changefreq>
-  </url>
-
-  <url>
-    <loc>https://zibuy-5deae.web.app/privacy.html</loc>
-    <priority>0.3</priority>
-    <changefreq>yearly</changefreq>
-  </url>
-
-  <url>
-    <loc>https://zibuy-5deae.web.app/terms.html</loc>
-    <priority>0.3</priority>
-    <changefreq>yearly</changefreq>
-  </url>
-
-  <url>
-    <loc>https://zibuy-5deae.web.app/about.html</loc>
-    <priority>0.5</priority>
-    <changefreq>monthly</changefreq>
-  </url>
-
-  <url>
-    <loc>https://zibuy-5deae.web.app/contact.html</loc>
-    <priority>0.5</priority>
-    <changefreq>monthly</changefreq>
-  </url>
-
-  <url>
-    <loc>https://zibuy-5deae.web.app/shops.html</loc>
-    <priority>0.9</priority>
-    <changefreq>daily</changefreq>
-  </url>
-
-  <url>
-    <loc>https://zibuy-5deae.web.app/support.html</loc>
-    <priority>0.5</priority>
-    <changefreq>monthly</changefreq>
-  </url>
-
-  <url>
-    <loc>https://zibuy-5deae.web.app/hiring.html</loc>
-    <priority>0.6</priority>
-    <changefreq>monthly</changefreq>
-  </url>
-
-  <url>
     <loc>https://zibuy-5deae.web.app/advertise.html</loc>
+    <lastmod>2026-07-16</lastmod>
     <priority>0.7</priority>
     <changefreq>monthly</changefreq>
   </url>
 
   <url>
     <loc>https://zibuy-5deae.web.app/boost-product.html</loc>
+    <lastmod>2026-07-16</lastmod>
     <priority>0.7</priority>
     <changefreq>weekly</changefreq>
   </url>
 
   <url>
-    <loc>https://zibuy-5deae.web.app/seller-verification.html</loc>
+    <loc>https://zibuy-5deae.web.app/hiring.html</loc>
+    <lastmod>2026-07-16</lastmod>
     <priority>0.6</priority>
     <changefreq>monthly</changefreq>
+  </url>
+
+  <url>
+    <loc>https://zibuy-5deae.web.app/seller-verification.html</loc>
+    <lastmod>2026-07-16</lastmod>
+    <priority>0.6</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+
+  <url>
+    <loc>https://zibuy-5deae.web.app/safety.html</loc>
+    <lastmod>2026-07-16</lastmod>
+    <priority>0.6</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+
+  <url>
+    <loc>https://zibuy-5deae.web.app/about.html</loc>
+    <lastmod>2026-07-16</lastmod>
+    <priority>0.5</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+
+  <url>
+    <loc>https://zibuy-5deae.web.app/contact.html</loc>
+    <lastmod>2026-07-16</lastmod>
+    <priority>0.5</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+
+  <url>
+    <loc>https://zibuy-5deae.web.app/support.html</loc>
+    <lastmod>2026-07-16</lastmod>
+    <priority>0.5</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+
+  <url>
+    <loc>https://zibuy-5deae.web.app/report.html</loc>
+    <lastmod>2026-07-16</lastmod>
+    <priority>0.4</priority>
+    <changefreq>yearly</changefreq>
+  </url>
+
+  <url>
+    <loc>https://zibuy-5deae.web.app/privacy.html</loc>
+    <lastmod>2026-07-16</lastmod>
+    <priority>0.3</priority>
+    <changefreq>yearly</changefreq>
+  </url>
+
+  <url>
+    <loc>https://zibuy-5deae.web.app/terms.html</loc>
+    <lastmod>2026-07-16</lastmod>
+    <priority>0.3</priority>
+    <changefreq>yearly</changefreq>
   </url>
 
 </urlset>
