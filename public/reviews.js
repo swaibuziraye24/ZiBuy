@@ -8,10 +8,18 @@ onAuthStateChanged(auth, (user) => {
 });
 
 export async function submitReview(sellerId, productId, rating, reviewText) {
-  if (!currentUser) {
+  // Import auth directly to get current state rather than relying on
+  // the onAuthStateChanged listener which may not have fired yet
+  const { auth } = await import("./firebase.js");
+  const user = auth.currentUser;
+
+  if (!user) {
     alert("You must be logged in to review");
     return;
   }
+
+  // Keep currentUser in sync
+  currentUser = user;
 
   try {
     await addDoc(collection(db, "reviews"), {
