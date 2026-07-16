@@ -565,36 +565,160 @@ exports.abandonedCartEmails = onSchedule(
 exports.weeklyTopDeals = onSchedule(
   { schedule: "every monday 08:00", timeZone: "Africa/Kampala" },
   async () => {
-    // Paginate through all users in batches of 500
-    let allEmails = [];
-    let lastDoc = null;
+    try {
+      // ── 1. Fetch top active products (most viewed) ──
+      const productsSnap = await db
+        .collection("products")
+        .where("status", "==", "active")
+        .limit(200)
+        .get();
 
-    while (true) {
-      let q = db.collection("users").limit(500);
-      if (lastDoc) q = q.startAfter(lastDoc);
-      const batch = await q.get();
-      if (batch.empty) break;
-      batch.docs.forEach(d => { if (d.data().email) allEmails.push(d.data().email); });
-      lastDoc = batch.docs[batch.docs.length - 1];
-      if (batch.size < 500) break;
-    }
+      const products = productsSnap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => (b.views || 0) - (a.views || 0))
+        .slice(0, 6); // top 6 for the email
 
-    const emails = allEmails;
-    // const emails = users.docs.map(d => d.data().email).filter(Boolean);
+      if (products.length === 0) {
+        console.log("[WEEKLY] No products to feature");
+        return;
+      }
 
-    for (let i = 0; i < emails.length; i += 15) {
-      const batch = emails.slice(i, i + 15);
+      // ── 2. Build product cards HTML ──
+      const productCardsHtml = products.map(p => {
+        const image    = p.images?.[0] || "https://zibuy-5deae.web.app/icons/icon-512.png";
+        const price    = Number(p.price || 0).toLocaleString();
+        const name     = p.name || "Product";
+        const category = (p.category || "").charAt(0).toUpperCase() + (p.category || "").slice(1);
+        const location = p.seller?.location || p.location || "Uganda";
+        const link     = `https://zibuy-5deae.web.app/product.html?id=${p.id}`;
 
-      await Promise.allSettled(
-        batch.map(email =>
-          sendEmail(email, "Top Deals This Week", "Check ZiBuy deals")
-        )
+        return `
+          <div style="
+            display:inline-block;
+            width:160px;
+            vertical-align:top;
+            margin:8px;
+            background:#ffffff;
+            border-radius:12px;
+            border:1px solid #e5e7eb;
+            overflow:hidden;
+            font-family:Arial,sans-serif;
+          ">
+            <a href="${link}" style="text-decoration:none">
+              <img src="${image}" alt="${name}"
+                width="160" height="130"
+                style="width:160px;height:130px;object-fit:cover;display:block;background:#f3f4f6">
+            </a>
+            <div style="padding:10px">
+              <p style="margin:0 0 3px;font-size:10px;font-weight:700;color:#ff6600;
+                text-transform:uppercase;letter-spacing:.5px">
+                ${category}
+              </p>
+              <p style="margin:0 0 5px;font-size:13px;font-weight:700;color:#111827;
+                overflow:hidden;white-space:nowrap;text-overflow:ellipsis">
+                ${name}
+              </p>
+              <p style="margin:0 0 8px;font-size:15px;font-weight:900;color:#ff6600">
+                UGX ${price}
+              </p>
+              <p style="margin:0 0 10px;font-size:11px;color:#9ca3af">
+                📍 ${location}
+              </p>
+              <a href="${link}"
+                style="
+                  display:block;
+                  background:#ff6600;
+                  color:white;
+                  text-align:center;
+                  padding:8px;
+                  border-radius:8px;
+                  font-size:12px;
+                  font-weight:700;
+                  text-decoration:none;
+                  font-family:Arial,sans-serif;
+                ">
+                View →
+              </a>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      // ── 3. Build full email HTML ──
+      const emailHtml = emailTemplate(
+        "🔥 Top Deals This Week on ZiBuy",
+        `
+          <p style="color:#6b7280;margin-bottom:20px">
+            Here are the hottest listings right now on ZiBuy Uganda.
+            Don't miss out — these go fast!
+          </p>
+
+          <div style="text-align:center;margin-bottom:20px">
+            ${productCardsHtml}
+          </div>
+
+          <div style="background:#f9fafb;border-radius:10px;padding:16px;
+            margin-top:20px;text-align:center">
+            <p style="margin:0 0 10px;font-size:13px;color:#374151;font-weight:700">
+              Want to see more deals?
+            </p>
+            <a href="https://zibuy-5deae.web.app"
+              style="
+                background:#111827;
+                color:white;
+                padding:10px 24px;
+                border-radius:8px;
+                font-size:13px;
+                font-weight:700;
+                text-decoration:none;
+                display:inline-block;
+              ">
+              Browse All Listings →
+            </a>
+          </div>
+
+          <p style="font-size:11px;color:#9ca3af;margin-top:20px;text-align:center">
+            You're receiving this because you have a ZiBuy account.<br>
+            <a href="https://zibuy-5deae.web.app" style="color:#ff6600">Visit ZiBuy</a>
+          </p>
+        `,
+        "",
+        ""
       );
 
-      await new Promise(r => setTimeout(r, 1500));
-    }
+      // ── 4. Paginate through all users and send ──
+      let allEmails = [];
+      let lastDoc   = null;
 
-    console.log("[WEEKLY] done");
+      while (true) {
+        let q = db.collection("users").limit(500);
+        if (lastDoc) q = q.startAfter(lastDoc);
+        const batch = await q.get();
+        if (batch.empty) break;
+        batch.docs.forEach(d => { if (d.data().email) allEmails.push(d.data().email); });
+        lastDoc = batch.docs[batch.docs.length - 1];
+        if (batch.size < 500) break;
+      }
+
+      // ── 5. Send in batches of 15 with throttle ──
+      for (let i = 0; i < allEmails.length; i += 15) {
+        const batch = allEmails.slice(i, i + 15);
+
+        await Promise.allSettled(
+          batch.map(email =>
+            sendEmail(email, "🔥 Top Deals This Week on ZiBuy Uganda", emailHtml)
+          )
+        );
+
+        // Throttle — avoid Gmail rate limits
+        await new Promise(r => setTimeout(r, 1500));
+      }
+
+      console.log(`[WEEKLY] Sent to ${allEmails.length} users with ${products.length} products`);
+
+    } catch (err) {
+      console.error("[WEEKLY ERROR]", err.message);
+    }
   }
 );
 
