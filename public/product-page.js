@@ -9,6 +9,7 @@ import { showToast } from "./app.js";
 
 // Re-import app.js so cart works on this page too
 import "./app.js";
+import "./report-seller.js";
 
 let currentUser = null;
 
