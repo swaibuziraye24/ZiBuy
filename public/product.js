@@ -629,9 +629,9 @@ async function loadRelatedProducts(category, currentProductId) {
     `;
 
     // Insert before the closing </body> but above the bottom nav
-    const bottomNav = document.querySelector(".zibuy-bottom-nav");
-    if (bottomNav) {
-      document.body.insertBefore(section, bottomNav);
+    const anchor = document.getElementById("related-products-anchor");
+    if (anchor) {
+      anchor.parentNode.insertBefore(section, anchor);
     } else {
       document.body.appendChild(section);
     }
@@ -774,6 +774,7 @@ window.buyNowWhatsApp = function (name, price, phone) {
   window.open(`https://wa.me/${clean}?text=${msg}`, "_blank");
 };
 
+window.loadProduct = loadProduct;
 loadProduct();
 
 /* ============================================
