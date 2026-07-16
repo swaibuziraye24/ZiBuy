@@ -20,6 +20,7 @@ import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/fi
 import { showToast } from "./app.js";
 
 import "./app.js";
+import "./report-seller.js";
 
 
 // ── Smart back button ─────────────────────────
@@ -345,6 +346,12 @@ document.head.appendChild(schemaTag);
           </div>
           <span style="margin-left:auto;font-size:12px;color:#ff6600;font-weight:700;flex-shrink:0">View Profile →</span>
         </div>
+
+        <a href="javascript:void(0)"
+          onclick="event.stopPropagation();openReportModal('${p.userId || ""}','${(seller.name || "Seller").replace(/'/g,"\\'")}', '${snap.id}', '${p.name.replace(/'/g,"\\'")}')"
+          style="font-size:11px;color:#9ca3af;text-decoration:underline;display:inline-block;margin:6px 0 0">
+          🚩 Report this seller
+        </a>
 
         <!-- Category + Title + Price -->
         <p class="product-cat" style="font-size:12px;font-weight:700;color:#ff6600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">${p.category || "Product"}</p>
