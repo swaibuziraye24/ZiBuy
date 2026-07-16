@@ -22,31 +22,31 @@ async function loadProfile() {
       }
     }
 
-    const productsSnap = await getDocs(query(
-      collection(db, "products"),
-      where("userId", "==", userId),
-      where("status", "==", "active")
-    ));
+    const [productsSnap, reviewsSnap, verificationSnap] = await Promise.all([
+      getDocs(query(
+        collection(db, "products"),
+        where("userId", "==", userId),
+        where("status", "==", "active")
+      )),
+      getDocs(query(
+        collection(db, "reviews"),
+        where("sellerId", "==", userId)
+      )),
+      getDocs(query(
+        collection(db, "seller_verifications"),
+        where("userId", "==", userId)
+      ))
+    ]);
 
     const products = productsSnap.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     }));
 
-    const reviewsSnap = await getDocs(query(
-      collection(db, "reviews"),
-      where("sellerId", "==", userId)
-    ));
-
     const reviews = reviewsSnap.docs.map(doc => doc.data());
     const avgRating = reviews.length > 0
       ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
       : 0;
-
-    const verificationSnap = await getDocs(query(
-      collection(db, "seller_verifications"),
-      where("userId", "==", userId)
-    ));
 
     const isVerified = !verificationSnap.empty &&
                        verificationSnap.docs[0].data().status === "approved";
@@ -117,7 +117,7 @@ async function loadProfile() {
       reviewsContainer.innerHTML = reviews.slice(0, 5).map(r => `
         <div style="padding:14px;background:#f9fafb;border-radius:10px;border-left:4px solid #ff6600">
           <p style="margin:0;font-weight:700">${"⭐".repeat(r.rating)}</p>
-          <p style="margin:6px 0 0;color:#6b7280;font-size:13px">${r.text}</p>
+          <p style="margin:6px 0 0;color:#6b7280;font-size:13px">${r.text || r.reviewText || "—"}</p>
           <p style="margin:6px 0 0;font-size:11px;color:#adb5bd">${r.reviewerEmail} • ${new Date(r.createdAt.toDate()).toLocaleDateString()}</p>
         </div>
       `).join("");
@@ -249,27 +249,14 @@ window.saveProfile = async function() {
     );
     await Promise.all(updates);
 
-    // 3. Update page display immediately
-    document.getElementById("profile-name").textContent     = sellerName;
-    document.getElementById("profile-location").textContent = "📍 " + sellerLocation;
-    document.getElementById("profile-rating").textContent   = `⭐ ${avgRating} (${reviews.length} reviews)`;
+    // 3. Update page display immediately from form values
+    const updatedName     = name;
+    const updatedLocation = document.getElementById("ep-location")?.value || "";
 
-    // Verified badge
-    if (isVerified) {
-      const verifiedEl = document.getElementById("profile-verified");
-      if (verifiedEl) verifiedEl.style.display = "inline-block";
-    }
-
-    // Member since — from user doc createdAt
-    const memberSinceEl = document.getElementById("stat-joined");
-    if (memberSinceEl && userData?.createdAt) {
-      const joinDate = userData.createdAt?.toDate?.();
-      if (joinDate) {
-        memberSinceEl.textContent = joinDate.toLocaleDateString("en-UG", {
-          day: "numeric", month: "long", year: "numeric"
-        });
-      }
-    }
+    const nameEl = document.getElementById("profile-name");
+    const locEl  = document.getElementById("profile-location");
+    if (nameEl) nameEl.textContent = updatedName;
+    if (locEl)  locEl.textContent  = "📍 " + updatedLocation;
 
     window.sellerPhone = phone;
     window.sellerName  = name;
