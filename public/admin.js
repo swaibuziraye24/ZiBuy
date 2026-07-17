@@ -4,7 +4,7 @@
 
 import {
   db, auth, collection, getDocs, doc,
-  getDoc, query, where, updateDoc, deleteDoc, orderBy, limit, addDoc
+  getDoc, query, where, updateDoc, deleteDoc, orderBy, limit, addDoc, setDoc
 } from "./firebase.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 const PLAN_LIMITS = {
@@ -877,6 +877,10 @@ function renderAdsTable(ads) {
           onclick="adminToggleAdStatus('${a.id}','${a.status}')">
           ${a.status === "active" ? "📦 Mark Sold" : "♻️ Restore"}
         </button>
+        <button class="action-btn" style="background:#fff4ee;color:#ff6600;border:none;padding:6px 10px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer"
+          onclick="grantFreeBoost('${a.id}','${(a.name||"").replace(/'/g,"\\'")}')">⭐ Free Boost</button>
+        <button class="action-btn" style="background:#ede9fe;color:#5b21b6;border:none;padding:6px 10px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer"
+          onclick="grantFreePin('${a.id}')">📍 Free Pin</button>
         <button class="action-btn btn-reject" onclick="adminDeleteAd('${a.id}')">🗑️ Delete</button>
       </td>
     </tr>`).join("");
@@ -2346,5 +2350,270 @@ window.clearUserNotifications = async function(userId) {
     showToast(`Cleared ${snap.size} notifications`, "info");
   } catch(e) {
     showToast("Failed", "error");
+  }
+};
+
+
+// ══════════════════════════════════════════════
+//  MESSAGE MODERATION
+// ══════════════════════════════════════════════
+window.loadMessagesAdmin = async function() {
+  const container = document.getElementById("messages-admin-list");
+  if (!container) return;
+  container.innerHTML = `<p style="text-align:center;padding:30px;color:#6b7280">Loading...</p>`;
+
+  try {
+    const snap = await getDocs(collection(db, "messages"));
+    const messages = snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (b.timestamp?.toDate?.() || 0) - (a.timestamp?.toDate?.() || 0))
+      .slice(0, 200);
+
+    if (messages.length === 0) {
+      container.innerHTML = `<p style="text-align:center;padding:30px;color:#6b7280">No messages</p>`;
+      return;
+    }
+
+    container.innerHTML = messages.map(m => `
+      <div style="padding:12px;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:8px;font-size:13px">
+        <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap">
+          <span style="font-weight:700">${m.senderEmail || "—"} → ${(m.participants||[]).find(p=>p!==m.senderEmail) || "—"}</span>
+          <span style="color:#9ca3af;font-size:11px">${fmtDate(m.timestamp)}</span>
+        </div>
+        <p style="margin:6px 0;color:#374151">${m.text || ""}</p>
+        <button class="action-btn btn-reject" onclick="adminDeleteMessage('${m.id}')">🗑️ Delete Message</button>
+      </div>`).join("");
+
+  } catch(e) {
+    container.innerHTML = `<p style="color:red;padding:20px">Failed: ${e.message}</p>`;
+  }
+};
+
+window.searchMessagesByUser = async function() {
+  const email = document.getElementById("messages-search-email")?.value.trim().toLowerCase();
+  if (!email) { loadMessagesAdmin(); return; }
+
+  const container = document.getElementById("messages-admin-list");
+  container.innerHTML = `<p style="text-align:center;padding:30px;color:#6b7280">Searching...</p>`;
+
+  try {
+    const snap = await getDocs(query(
+      collection(db, "messages"),
+      where("participants", "array-contains", email)
+    ));
+
+    const messages = snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (b.timestamp?.toDate?.() || 0) - (a.timestamp?.toDate?.() || 0));
+
+    if (messages.length === 0) {
+      container.innerHTML = `<p style="text-align:center;padding:30px;color:#6b7280">No messages found for ${email}</p>`;
+      return;
+    }
+
+    container.innerHTML = messages.map(m => `
+      <div style="padding:12px;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:8px;font-size:13px">
+        <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap">
+          <span style="font-weight:700">${m.senderEmail || "—"} → ${(m.participants||[]).find(p=>p!==m.senderEmail) || "—"}</span>
+          <span style="color:#9ca3af;font-size:11px">${fmtDate(m.timestamp)}</span>
+        </div>
+        <p style="margin:6px 0;color:#374151">${m.text || ""}</p>
+        <button class="action-btn btn-reject" onclick="adminDeleteMessage('${m.id}')">🗑️ Delete Message</button>
+      </div>`).join("");
+  } catch(e) {
+    container.innerHTML = `<p style="color:red;padding:20px">Failed: ${e.message}</p>`;
+  }
+};
+
+window.adminDeleteMessage = async function(messageId) {
+  if (!confirm("Delete this message permanently?")) return;
+  try {
+    await deleteDoc(doc(db, "messages", messageId));
+    showToast("Message deleted", "info");
+    loadMessagesAdmin();
+  } catch(e) {
+    showToast("Failed", "error");
+  }
+};
+
+
+// ══════════════════════════════════════════════
+//  BUYER RATINGS MODERATION
+// ══════════════════════════════════════════════
+window.loadBuyerRatingsAdmin = async function() {
+  const tbody = document.getElementById("buyer-ratings-table-body");
+  if (!tbody) return;
+
+  try {
+    const snap = await getDocs(collection(db, "buyer_ratings"));
+    const ratings = snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
+
+    if (ratings.length === 0) {
+      tbody.innerHTML = `<tr class="empty-row"><td colspan="5">No buyer ratings yet</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = ratings.map(r => `
+      <tr>
+        <td style="font-size:12px">${r.sellerEmail || "—"}</td>
+        <td style="font-size:12px">${r.buyerId?.slice(0,10) || "—"}</td>
+        <td style="font-weight:800;color:#ff6600">${"⭐".repeat(Math.min(r.rating||0,5))} ${r.rating}/5</td>
+        <td style="font-size:13px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.text || "—"}</td>
+        <td><button class="action-btn btn-reject" onclick="adminDeleteBuyerRating('${r.id}','${r.buyerId}')">🗑️ Delete</button></td>
+      </tr>`).join("");
+
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="5" style="color:red">Failed: ${e.message}</td></tr>`;
+  }
+};
+
+window.adminDeleteBuyerRating = async function(ratingId, buyerId) {
+  if (!confirm("Delete this buyer rating? This recalculates the buyer's average.")) return;
+  try {
+    await deleteDoc(doc(db, "buyer_ratings", ratingId));
+
+    const remaining = await getDocs(query(collection(db, "buyer_ratings"), where("buyerId", "==", buyerId)));
+    let total = 0, count = 0;
+    remaining.forEach(d => { total += Number(d.data().rating || 0); count++; });
+    const avg = count > 0 ? parseFloat((total/count).toFixed(1)) : 0;
+    await updateDoc(doc(db, "users", buyerId), { buyerRating: avg, buyerRatingCount: count }).catch(()=>{});
+
+    showToast("Rating deleted ✅", "info");
+    loadBuyerRatingsAdmin();
+  } catch(e) {
+    showToast("Failed: " + e.message, "error");
+  }
+};
+
+
+// ══════════════════════════════════════════════
+//  FREE BOOST / PIN (Admin promo grant — bypasses payment)
+// ══════════════════════════════════════════════
+window.grantFreeBoost = async function(productId, productName) {
+  const customDays = prompt("Boost duration in days:", "7");
+  if (!customDays) return;
+
+  try {
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + Number(customDays));
+
+    await updateDoc(doc(db, "products", productId), {
+      isPremium:        true,
+      premiumExpiresAt: expiresAt,
+      boostApprovedAt:  new Date(),
+      boostExpiresAt:   expiresAt
+    });
+
+    await addDoc(collection(db, "boost_requests"), {
+      productId, productName,
+      status:      "approved",
+      days:        Number(customDays),
+      price:       0,
+      approvedAt:  new Date(),
+      approvedBy:  "admin_free_grant",
+      requestedAt: new Date()
+    });
+
+    showToast(`✅ Free ${customDays}-day boost granted`, "success");
+    loadAds();
+  } catch(e) {
+    showToast("Failed: " + e.message, "error");
+  }
+};
+
+window.grantFreePin = async function(productId) {
+  const customHours = prompt("Pin duration in hours:", "24");
+  if (!customHours) return;
+
+  try {
+    const pinnedUntil = new Date(Date.now() + Number(customHours) * 3600000);
+    await updateDoc(doc(db, "products", productId), { pinnedUntil });
+    showToast(`✅ Pinned to top for ${customHours}h`, "success");
+    loadAds();
+  } catch(e) {
+    showToast("Failed: " + e.message, "error");
+  }
+};
+
+// ══════════════════════════════════════════════
+//  DATA EXPORT (CSV)
+// ══════════════════════════════════════════════
+function downloadCSV(filename, rows) {
+  if (!rows.length) { showToast("Nothing to export", "info"); return; }
+
+  const headers  = Object.keys(rows[0]);
+  const csvLines = [
+    headers.join(","),
+    ...rows.map(row =>
+      headers.map(h => `"${String(row[h] ?? "").replace(/"/g, '""')}"`).join(",")
+    )
+  ];
+
+  const blob = new Blob([csvLines.join("\n")], { type: "text/csv;charset=utf-8;" });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  a.href     = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+window.exportUsersCSV = function() {
+  const rows = allUsers.map(u => ({
+    email: u.email || "", plan: u.plan || "free", phone: u.phone || "",
+    verified: u.isSellerVerified ? "yes" : "no", banned: u.banned ? "yes" : "no",
+    buyerRating: u.buyerRating || "", joined: fmtDate(u.createdAt)
+  }));
+  downloadCSV(`zibuy-users-${Date.now()}.csv`, rows);
+};
+
+window.exportOrdersCSV = function() {
+  const rows = allOrders.map(o => ({
+    orderId: o.orderId || "", customer: o.customerName || "", phone: o.customerPhone || "",
+    email: o.userEmail || o.buyerEmail || "", total: o.total || 0,
+    paymentMethod: o.paymentMethod || "", status: o.status || "", date: fmtDate(o.createdAt)
+  }));
+  downloadCSV(`zibuy-orders-${Date.now()}.csv`, rows);
+};
+
+
+// ══════════════════════════════════════════════
+//  MAINTENANCE MODE
+// ══════════════════════════════════════════════
+window.loadMaintenanceStatus = async function() {
+  const toggle   = document.getElementById("maintenance-toggle");
+  const msgInput = document.getElementById("maintenance-message");
+  if (!toggle) return;
+
+  try {
+    const snap = await getDoc(doc(db, "system_config", "maintenance"));
+    const data = snap.exists() ? snap.data() : { enabled: false, message: "" };
+    toggle.checked = !!data.enabled;
+    if (msgInput) msgInput.value = data.message || "ZiBuy is undergoing scheduled maintenance. We'll be back shortly.";
+  } catch(e) { console.warn(e); }
+};
+
+window.toggleMaintenanceMode = async function() {
+  const toggle  = document.getElementById("maintenance-toggle");
+  const enabled = toggle.checked;
+  const message = document.getElementById("maintenance-message")?.value.trim()
+    || "ZiBuy is undergoing scheduled maintenance. We'll be back shortly.";
+
+  if (enabled && !confirm("Enable maintenance mode? This blocks ALL non-admin users from using the site.")) {
+    toggle.checked = false;
+    return;
+  }
+
+  try {
+    await setDoc(doc(db, "system_config", "maintenance"), {
+      enabled, message, updatedAt: new Date(), updatedBy: ADMIN_EMAIL
+    });
+    showToast(enabled ? "🔴 Maintenance mode ON" : "🟢 Maintenance mode OFF", enabled ? "error" : "success");
+  } catch(e) {
+    showToast("Failed: " + e.message, "error");
   }
 };
