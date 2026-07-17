@@ -21,6 +21,7 @@ import { showToast } from "./app.js";
 
 import "./app.js";
 import "./report-seller.js";
+import "./phone-verify.js";
 
 
 // ── Smart back button ─────────────────────────
@@ -340,6 +341,7 @@ document.head.appendChild(schemaTag);
                 </span>` : ""}
             </div>
               <span id="seller-verified-badge" style="display:none;background:#10b981;color:white;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:800">✅ Verified</span>
+              <span id="seller-phone-verified-badge" style="display:none;background:#3b82f6;color:white;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:800">📱 Phone Verified</span>
             </div>
             <p style="margin:0;font-size:12px;color:#6b7280">📍 ${seller.location || "Uganda"} · <span id="seller-rating-text">Loading...</span></p>
             <p style="margin:3px 0 0;font-size:12px;color:#6b7280" id="seller-member-since"></p>
@@ -654,6 +656,13 @@ async function loadSellerRating(userId) {
   if (!ratingEl || !userId) return;
 
   try {
+    // Check phone verification status
+    const userSnapForPhone = await getDoc(doc(db, "users", userId));
+    if (userSnapForPhone.exists() && userSnapForPhone.data().phoneVerified) {
+      const phoneBadge = document.getElementById("seller-phone-verified-badge");
+      if (phoneBadge) phoneBadge.style.display = "inline-flex";
+    }
+
     const snap = await getDocs(query(
       collection(db, "reviews"),
       where("sellerId", "==", userId)
