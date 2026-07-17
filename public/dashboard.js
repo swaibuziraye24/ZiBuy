@@ -222,7 +222,7 @@ async function loadWishlist() {
 // LOAD MY PRODUCTS
 // ============================================
 
-async function loadMyProducts() {
+window.loadMyProducts = async function () {
   debug("loadMyProducts() called");
   
   if (!currentUser) {
@@ -326,14 +326,18 @@ async function loadMyProducts() {
                     </button>`
               }
      
-               ${!ad.autoRenew ? `
-  <button class="btn-sm" style="background:#dbeafe;color:#1e40af;border:none;border-radius:8px;font-weight:700"
-    onclick="openAutoRenewModal('${ad.id}','${ad.name.replace(/'/g,"\\'")}')">
+               ${!p.autoRenew ? `
+  <button class="btn-sm"
+    style="background:#dbeafe;color:#1e40af;border:none;border-radius:8px;font-weight:700"
+    onclick="openAutoRenewModal('${p.id}','${p.name.replace(/'/g,"\\'")}')">
     🔄 Auto-Renew
-  </button>` : `
+  </button>`
+:
+`
   <span style="background:#dcfce7;color:#16a34a;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:700">
     🔄 Auto-Renewing
-  </span>`}
+  </span>
+`}
 
               ${p.pinnedUntil && p.pinnedUntil.toDate?.() > new Date()
                 ? `<button class="btn btn-sm"
