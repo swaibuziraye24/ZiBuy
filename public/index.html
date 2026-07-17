@@ -833,6 +833,10 @@
     📣 Advertise
   </a>
 
+  <a href="javascript:void(0)" onclick="openMySavedSearchesModal()">
+    🔔 My Alerts
+  </a>
+
   <a href="support.html">
     🆘 Help
   </a>
@@ -1083,6 +1087,10 @@
     
     <button class="btn btn-orange" onclick="applyFilters()" style="width:100%;margin-top:12px">Apply Filters</button>
     <button class="btn btn-outline" onclick="resetFilters()" style="width:100%;margin-top:8px">Reset All</button>
+    <button class="btn" style="width:100%;margin-top:8px;background:#fff4ee;color:#ff6600;border:1.5px solid #ff6600"
+      onclick="openSaveSearchModal()">
+      🔔 Save This Search & Get Alerts
+    </button>
   </div>
   <div class="active-filters" id="active-filters"></div>
 </div>
@@ -1588,6 +1596,7 @@ window.setActiveCard = function(el) {
 <!-- ============ SCRIPTS ============ -->
 
 <script type="module" src="app.js"></script>
+<script type="module" src="saved-searches.js"></script>
 <script type="module" src="notifications-setup.js"></script>
 <script type="module" src="nav.js"></script>
 <script type="module" src="install-btn.js"></script>
