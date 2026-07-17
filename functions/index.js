@@ -1064,6 +1064,113 @@ await db.collection("whatsapp_reminders").add({
   }
 );
 
+
+// ============================================
+// AUTO-RENEW ADS — daily processor
+// ============================================
+
+exports.processAutoRenewals = onSchedule(
+  {
+    schedule: "every 24 hours",
+    timeZone: "Africa/Kampala",
+  },
+  async () => {
+    try {
+      const now = admin.firestore.Timestamp.now();
+
+      // Find active products with autoRenew enabled that are about to expire (within 24h)
+      const snap = await db
+        .collection("products")
+        .where("autoRenew", "==", true)
+        .where("status", "==", "active")
+        .get();
+
+      if (snap.empty) {
+        console.log("[AUTO-RENEW] Nothing to process");
+        return;
+      }
+
+      const nowDate = new Date();
+
+      for (const docSnap of snap.docs) {
+        const product = docSnap.data();
+        const expiresAt = product.expiresAt?.toDate?.();
+        if (!expiresAt) continue;
+
+        // Only renew if within 24h of expiry or already expired
+        const hoursUntilExpiry = (expiresAt - nowDate) / 3600000;
+        if (hoursUntilExpiry > 24) continue;
+
+        // Check the seller has an active auto-renew subscription for this product
+        const renewalSnap = await db
+          .collection("auto_renewals")
+          .where("productId", "==", docSnap.id)
+          .where("status", "==", "active")
+          .limit(1)
+          .get();
+
+        if (renewalSnap.empty) {
+          // No active auto-renew plan — turn off the flag and let it expire normally
+          await docSnap.ref.update({ autoRenew: false });
+          continue;
+        }
+
+        const renewal = renewalSnap.docs[0].data();
+
+        // Check renewal subscription hasn't itself expired
+        const renewalExpiresAt = renewal.expiresAt?.toDate?.();
+        if (renewalExpiresAt && renewalExpiresAt < nowDate) {
+          await renewalSnap.docs[0].ref.update({ status: "expired" });
+          await docSnap.ref.update({ autoRenew: false });
+
+          // Notify seller their auto-renew subscription lapsed
+          if (product.userId) {
+            await db.collection("notifications").add({
+              userId:    product.userId,
+              type:      "auto_renew_expired",
+              title:     "⏰ Auto-Renew Subscription Expired",
+              message:   `Auto-renew for "${product.name}" has ended. Your ad will expire on schedule unless you renew.`,
+              relatedId: docSnap.id,
+              read:      false,
+              createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+          }
+          continue;
+        }
+
+        // Push expiry forward by 30 more days
+        const newExpiresAt = new Date();
+        newExpiresAt.setDate(newExpiresAt.getDate() + 30);
+
+        await docSnap.ref.update({
+          expiresAt:      admin.firestore.Timestamp.fromDate(newExpiresAt),
+          status:         "active",
+          lastRenewedAt:  admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        // Notify seller
+        if (product.userId) {
+          await db.collection("notifications").add({
+            userId:    product.userId,
+            type:      "auto_renewed",
+            title:     "🔄 Ad Auto-Renewed",
+            message:   `"${product.name}" has been automatically renewed for another 30 days.`,
+            relatedId: docSnap.id,
+            read:      false,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+        }
+
+        console.log(`[AUTO-RENEW] Renewed ${docSnap.id}`);
+      }
+
+      console.log(`[AUTO-RENEW] Processed ${snap.size} candidates`);
+    } catch (err) {
+      console.error("[AUTO-RENEW ERROR]", err.message);
+    }
+  }
+);
+
 // ============================================
 // BOOST EXPIRY REMINDERS (CLEAN V2 MODULE)
 // ============================================
@@ -1672,7 +1779,72 @@ exports.processQueue = onSchedule(
   }
 );
 
+// ============================================
+// SAVED SEARCH ALERTS
+// ============================================
 
+exports.notifySavedSearchMatches = onDocumentCreated(
+  "products/{productId}",
+  async (event) => {
+    try {
+      const product   = event.data.data();
+      const productId = event.params.productId;
+
+      if (!product || product.status !== "active") return;
+
+      // Fetch searches matching this exact category, plus category-agnostic ("all") searches
+      const [categorySnap, allCatSnap] = await Promise.all([
+        product.category
+          ? db.collection("saved_searches").where("category", "==", product.category).limit(200).get()
+          : Promise.resolve({ docs: [] }),
+        db.collection("saved_searches").where("category", "==", "all").limit(200).get()
+      ]);
+
+      const candidates = [...categorySnap.docs, ...allCatSnap.docs];
+      if (candidates.length === 0) return;
+
+      const price = Number(product.price || 0);
+      const productText = `${product.name || ""} ${product.description || ""} ${product.location || ""} ${product.seller?.location || ""}`.toLowerCase();
+
+      const notifiedUsers = new Set();
+
+      for (const docSnap of candidates) {
+        const s = docSnap.data();
+
+        if (s.userId === product.userId) continue; // don't alert sellers about their own ad
+        if (notifiedUsers.has(s.userId)) continue;   // one notification per user per product
+
+        if (s.priceMin != null && price < s.priceMin) continue;
+        if (s.priceMax != null && price > s.priceMax) continue;
+
+        if (s.keyword && !productText.includes(s.keyword)) continue;
+        if (s.location && !productText.includes(s.location)) continue;
+
+        notifiedUsers.add(s.userId);
+
+        await db.collection("notifications").add({
+          userId:    s.userId,
+          type:      "saved_search_match",
+          title:     `🔔 New match for "${s.label}"`,
+          message:   `"${product.name}" — UGX ${Number(product.price).toLocaleString()}`,
+          relatedId: productId,
+          read:      false,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        await docSnap.ref.update({
+          lastNotifiedAt: admin.firestore.FieldValue.serverTimestamp()
+        }).catch(() => {});
+      }
+
+      if (notifiedUsers.size > 0) {
+        console.log(`[SAVED SEARCH] Notified ${notifiedUsers.size} users for product ${productId}`);
+      }
+    } catch (err) {
+      console.error("[SAVED SEARCH ERROR]", err.message);
+    }
+  }
+);
 
 exports.subscriptionApprovalNotifications = onDocumentUpdated(
   "business_accounts/{id}",
