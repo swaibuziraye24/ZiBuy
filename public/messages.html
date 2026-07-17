@@ -38,10 +38,13 @@
     <div id="chat-window" style="display:none;height:100%;flex-direction:column;width:100%">
       <!-- Header -->
       <div class="chat-header">
+        <div>
         <button onclick="closeChat()"
           style="background:none;border:none;font-size:20px;cursor:pointer;padding:0;margin-right:8px;color:#6b7280;display:none"
           id="chat-back-btn">←</button>
         <h3 id="chat-with-name" style="margin:0;flex:1">Chat</h3>
+        <span id="chat-buyer-rating" style="display:none;font-size:11px;color:#ff6600;font-weight:700"></span>
+        </div>
         <button class="btn btn-outline" onclick="closeChat()" style="padding:6px 12px;font-size:12px">Close</button>
       </div>
       <style>
