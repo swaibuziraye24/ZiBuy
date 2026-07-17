@@ -87,6 +87,17 @@ let filterState = {
 // Keep global sync in real-time
 window.allProducts = allProducts;
 
+// Expose current search/filter state for saved-searches.js
+window.getCurrentSearchState = function() {
+  return {
+    keyword:  searchQuery || "",
+    category: currentCategory || "all",
+    priceMin: filterState.priceMin,
+    priceMax: filterState.priceMax,
+    location: filterState.location || ""
+  };
+};
+
 // ============================================
 // DOM READY CHECK
 // ============================================
