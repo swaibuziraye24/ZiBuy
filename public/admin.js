@@ -135,6 +135,7 @@ async function loadAll() {
     loadBroadcasts(),
     loadBlogAdmin(),
     loadCategorySponsorsAdmin(),
+    loadAutoRenewRequests(),
     loadPinRequestsAdmin()
   ]);
   renderOverview();
@@ -653,6 +654,94 @@ window.revokeBoost = async function(boostId, productId) {
     showToast("Boost revoked", "info");
     loadBoosts();
   } catch (e) { showToast("Failed", "error"); }
+};
+
+
+// ══════════════════════════════════════════════
+//  AUTO-RENEW REQUESTS
+// ══════════════════════════════════════════════
+window.loadAutoRenewRequests = async function() {
+  const tbody = document.getElementById("auto-renew-table-body");
+  if (!tbody) return;
+
+  try {
+    const snap = await getDocs(query(
+      collection(db, "auto_renewals"),
+      where("status", "==", "pending_verification")
+    ));
+
+    const requests = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    if (requests.length === 0) {
+      tbody.innerHTML = `<tr class="empty-row"><td colspan="6">No pending auto-renew requests</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = requests.map(r => `
+      <tr>
+        <td style="font-weight:700;font-size:13px">${r.productName}</td>
+        <td style="font-size:12px">${r.userEmail}</td>
+        <td style="font-weight:800;color:var(--orange)">UGX ${Number(r.price||0).toLocaleString()}</td>
+        <td style="font-size:12px">${r.paymentRef}<br><span style="color:#6b7280">Txn: ${r.transactionRef}</span></td>
+        <td style="font-size:12px">${fmtDate(r.createdAt)}</td>
+        <td>
+          <button class="action-btn btn-approve" onclick="approveAutoRenew('${r.id}','${r.productId}')">✅ Approve</button>
+          <button class="action-btn btn-reject" onclick="rejectAutoRenew('${r.id}')">✗ Reject</button>
+        </td>
+      </tr>`).join("");
+
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="6" style="color:red">Failed: ${e.message}</td></tr>`;
+  }
+};
+
+window.approveAutoRenew = async function(renewalId, productId) {
+  try {
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 30);
+
+    await updateDoc(doc(db, "auto_renewals", renewalId), {
+      status:      "active",
+      approvedAt:  new Date(),
+      expiresAt
+    });
+
+    await updateDoc(doc(db, "products", productId), {
+      autoRenew: true,
+      expiresAt: expiresAt
+    });
+
+    const renewalSnap = await getDoc(doc(db, "auto_renewals", renewalId));
+    const renewal = renewalSnap.data();
+
+    if (renewal?.userId) {
+      await addDoc(collection(db, "notifications"), {
+        userId:    renewal.userId,
+        type:      "auto_renew_activated",
+        title:     "🔄 Auto-Renew Activated!",
+        message:   `Your ad "${renewal.productName}" will now auto-renew every 30 days.`,
+        relatedId: productId,
+        read:      false,
+        createdAt: new Date()
+      });
+    }
+
+    showToast("Auto-renew activated ✅", "success");
+    loadAutoRenewRequests();
+  } catch(e) {
+    showToast("Failed: " + e.message, "error");
+  }
+};
+
+window.rejectAutoRenew = async function(renewalId) {
+  if (!confirm("Reject this auto-renew request?")) return;
+  try {
+    await updateDoc(doc(db, "auto_renewals", renewalId), { status: "rejected" });
+    showToast("Rejected", "info");
+    loadAutoRenewRequests();
+  } catch(e) {
+    showToast("Failed", "error");
+  }
 };
 
 
