@@ -97,12 +97,26 @@ function renderConversations(convos) {
 }
 
 // ── Real-time chat window ─────────────────────
-window.openConversation = function(email) {
+window.openConversation = async function(email) {
   activeConversation = email;
-
-  document.getElementById("chat-empty").style.display  = "none";
+  document.getElementById("chat-empty").style.display = "none";
   document.getElementById("chat-window").style.display = "flex";
   document.getElementById("chat-with-name").textContent = email.split("@")[0];
+
+  // Show buyer rating badge if this contact has one
+  try {
+    const userSnap = await getDocs(query(collection(db, "users"), where("email", "==", email)));
+    const badgeEl = document.getElementById("chat-buyer-rating");
+    if (badgeEl) {
+      if (!userSnap.empty && userSnap.docs[0].data().buyerRating) {
+        const uData = userSnap.docs[0].data();
+        badgeEl.textContent   = `⭐ ${uData.buyerRating} Buyer Rating (${uData.buyerRatingCount || 0})`;
+        badgeEl.style.display = "inline-block";
+      } else {
+        badgeEl.style.display = "none";
+      }
+    }
+  } catch(e) {}
 
   if (chatUnsubscribe) chatUnsubscribe();
 
