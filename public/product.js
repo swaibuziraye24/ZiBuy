@@ -26,14 +26,18 @@ import "./phone-verify.js";
 
 // ── Smart back button ─────────────────────────
 window.goBackToHome = function() {
-  // Always go back to index — browser history handles the rest
-  // But if we came FROM index (referrer), use history.back()
-  // so scroll position and category are preserved
-  const referrer = document.referrer;
-  if (referrer && referrer.includes("index.html") ||
-      referrer && new URL(referrer).pathname === "/") {
-    history.back();
-  } else {
+  try {
+    const referrer = document.referrer;
+    // Came from anywhere on ZiBuy itself — safe to use browser back
+    const cameFromZiBuy = referrer && referrer.includes(window.location.host);
+
+    if (cameFromZiBuy && window.history.length > 1) {
+      history.back();
+    } else {
+      window.location.href = "index.html";
+    }
+  } catch (err) {
+    // A malformed referrer must never break the back button
     window.location.href = "index.html";
   }
 };
