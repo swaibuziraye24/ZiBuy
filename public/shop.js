@@ -17,6 +17,8 @@ import {
   renderStars
 } from "./reviews.js";
 
+import "./buyer-ratings.js";
+
 import { onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 
@@ -37,9 +39,13 @@ let isFollowing = false;
 // ── Show Edit button only to the shop owner ──
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 onAuthStateChanged(auth, (user) => {
-  const editBtn = document.getElementById("edit-shop-btn");
+  const editBtn      = document.getElementById("edit-shop-btn");
+  const ordersSection = document.getElementById("orders-to-review-section");
+
   if (editBtn && user && sellerId && user.uid === sellerId) {
     editBtn.style.display = "inline-block";
+    if (ordersSection) ordersSection.style.display = "block";
+    loadSellerOrdersToRate();
   }
 });
 
@@ -88,6 +94,89 @@ async function loadShop() {
     console.error("SHOP ERROR:", err);
   }
 }
+
+
+// ── ORDERS TO REVIEW (seller rates buyers) ──
+window.loadSellerOrdersToRate = async function() {
+  const container = document.getElementById("orders-to-review");
+  if (!container) return;
+  if (!auth.currentUser || auth.currentUser.uid !== sellerId) return;
+
+  container.innerHTML = `<p style="color:#6b7280;font-size:13px;padding:16px;text-align:center">Loading orders...</p>`;
+
+  try {
+    let productIds = _shopAllProducts.map(p => p.id);
+
+    // Fallback fetch — covers race condition if this runs before loadShop finishes
+    if (productIds.length === 0) {
+      const freshSnap = await getDocs(query(
+        collection(db, "products"),
+        where("userId", "==", sellerId)
+      ));
+      productIds = freshSnap.docs.map(d => d.id);
+    }
+
+    if (productIds.length === 0) {
+      container.innerHTML = `<p style="color:#6b7280;font-size:13px;padding:16px;text-align:center">No products yet</p>`;
+      return;
+    }
+
+    // Firestore 'in' queries max 10 values — batch if needed
+    const batches = [];
+    for (let i = 0; i < productIds.length; i += 10) {
+      batches.push(productIds.slice(i, i + 10));
+    }
+
+    let orders = [];
+    for (const batch of batches) {
+      const snap = await getDocs(query(
+        collection(db, "orders"),
+        where("productId", "in", batch)
+      ));
+      snap.forEach(d => orders.push({ id: d.id, ...d.data() }));
+    }
+
+    // Only Buy Now orders have a real buyerUid
+    orders = orders.filter(o => o.buyerUid && o.buyerUid !== "guest");
+
+    if (orders.length === 0) {
+      container.innerHTML = `<p style="color:#6b7280;font-size:13px;padding:16px;text-align:center">No orders yet to review</p>`;
+      return;
+    }
+
+    const ratedSnap = await getDocs(query(
+      collection(db, "buyer_ratings"),
+      where("sellerId", "==", sellerId)
+    ));
+    const ratedOrderIds = new Set(ratedSnap.docs.map(d => d.data().orderId));
+
+    container.innerHTML = orders.map(o => {
+      const orderKey     = o.orderRef || o.orderId || o.id;
+      const alreadyRated = ratedOrderIds.has(orderKey);
+
+      return `
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;
+          padding:14px;border:1px solid #e5e7eb;border-radius:12px;margin-bottom:10px;flex-wrap:wrap">
+          <div>
+            <p style="margin:0;font-weight:800;font-size:14px;color:#111827">${o.productName || "Product"}</p>
+            <p style="margin:3px 0 0;font-size:12px;color:#6b7280">Buyer: ${o.buyerEmail || o.userEmail || "—"}</p>
+            <p style="margin:2px 0 0;font-size:11px;color:#9ca3af">UGX ${Number(o.price || o.total || 0).toLocaleString()}</p>
+          </div>
+          ${alreadyRated
+            ? `<span style="background:#f3f4f6;color:#9ca3af;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:700">✅ Rated</span>`
+            : `<button onclick="openRateBuyerModal('${sellerId}','${o.buyerUid}','${(o.buyerEmail||o.userEmail||"Buyer").replace(/'/g,"\\'")}','${orderKey}','${o.productId || ""}','${(o.productName||"").replace(/'/g,"\\'")}')"
+                style="background:#ff6600;color:white;border:none;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit">
+                ⭐ Rate Buyer
+              </button>`}
+        </div>
+      `;
+    }).join("");
+
+  } catch (err) {
+    console.error("loadSellerOrdersToRate:", err);
+    container.innerHTML = `<p style="color:#ef4444;font-size:13px;padding:16px">Failed to load orders</p>`;
+  }
+};
 
 function renderShopProductsGrid(products) {
 
