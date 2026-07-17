@@ -7,7 +7,7 @@ admin.initializeApp();
 const db = admin.firestore();
 
 const { setGlobalOptions } = require("firebase-functions/v2");
-const { onRequest }         = require("firebase-functions/v2/https");
+const { onRequest, onCall, HttpsError } = require("firebase-functions/v2/https");
 const { onDocumentCreated, onDocumentUpdated } = require("firebase-functions/v2/firestore");
 const { onSchedule }        = require("firebase-functions/v2/scheduler");
 
@@ -762,6 +762,98 @@ await docRef.set({
     }
   }
 );
+
+
+// ============================================
+// PHONE OTP VERIFICATION
+// ============================================
+
+function generateOTP() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+exports.sendPhoneOTP = onCall(async (request) => {
+  const uid = request.auth?.uid;
+  if (!uid) throw new HttpsError("unauthenticated", "You must be logged in");
+
+  const phone = (request.data?.phone || "").replace(/\D/g, "");
+  if (!phone || phone.length < 9) {
+    throw new HttpsError("invalid-argument", "Enter a valid phone number");
+  }
+
+  const otpRef   = db.collection("phone_otps").doc(uid);
+  const existing = await otpRef.get();
+
+  // Cooldown: 60 seconds between sends
+  if (existing.exists) {
+    const lastSent = existing.data().createdAt?.toDate?.();
+    if (lastSent && (Date.now() - lastSent.getTime()) < 60000) {
+      const waitSec = Math.ceil((60000 - (Date.now() - lastSent.getTime())) / 1000);
+      throw new HttpsError("resource-exhausted", `Please wait ${waitSec}s before requesting another code`);
+    }
+  }
+
+  const code      = generateOTP();
+  const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+  await otpRef.set({
+    code,
+    phone,
+    expiresAt: admin.firestore.Timestamp.fromDate(expiresAt),
+    attempts:  0,
+    createdAt: admin.firestore.FieldValue.serverTimestamp()
+  });
+
+  const fullPhone = phone.startsWith("256") ? phone : "256" + phone.replace(/^0/, "");
+
+  await sendSMS(fullPhone, `Your ZiBuy verification code is ${code}. It expires in 5 minutes. Do not share this code with anyone.`);
+
+  return { success: true };
+});
+
+exports.verifyPhoneOTP = onCall(async (request) => {
+  const uid = request.auth?.uid;
+  if (!uid) throw new HttpsError("unauthenticated", "You must be logged in");
+
+  const code = (request.data?.code || "").trim();
+  if (!code) throw new HttpsError("invalid-argument", "Enter the code");
+
+  const otpRef = db.collection("phone_otps").doc(uid);
+  const snap   = await otpRef.get();
+
+  if (!snap.exists) {
+    throw new HttpsError("not-found", "No verification code found. Please request a new one.");
+  }
+
+  const data      = snap.data();
+  const expiresAt = data.expiresAt?.toDate?.();
+
+  if (!expiresAt || expiresAt < new Date()) {
+    await otpRef.delete();
+    throw new HttpsError("deadline-exceeded", "Code expired. Please request a new one.");
+  }
+
+  if ((data.attempts || 0) >= 5) {
+    await otpRef.delete();
+    throw new HttpsError("resource-exhausted", "Too many attempts. Please request a new code.");
+  }
+
+  if (data.code !== code) {
+    await otpRef.update({ attempts: admin.firestore.FieldValue.increment(1) });
+    throw new HttpsError("invalid-argument", "Incorrect code. Please try again.");
+  }
+
+  // Success — mark user's phone as verified
+  await db.collection("users").doc(uid).set({
+    phone:           data.phone,
+    phoneVerified:   true,
+    phoneVerifiedAt: admin.firestore.FieldValue.serverTimestamp()
+  }, { merge: true });
+
+  await otpRef.delete();
+
+  return { success: true, phone: data.phone };
+});
 
 
 exports.aiRecommendations = onSchedule(
