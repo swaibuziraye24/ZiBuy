@@ -49,8 +49,9 @@ async function loadProfile() {
       ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
       : 0;
 
-    const isVerified = !verificationSnap.empty &&
-                       verificationSnap.docs[0].data().status === "approved";
+    const isVerified    = !verificationSnap.empty &&
+                          verificationSnap.docs[0].data().status === "approved";
+    const phoneVerified = userData?.phoneVerified === true;
 
     const sellerName     = products.length > 0 ? products[0].seller?.name     || "Seller" : "Seller";
     const sellerLocation = products.length > 0 ? products[0].seller?.location || "Uganda" : "Uganda";
@@ -69,6 +70,11 @@ async function loadProfile() {
         avatarEl.style.background  = "linear-gradient(135deg, #10b981, #059669)";
         avatarEl.style.boxShadow   = "0 0 12px rgba(16, 185, 129, 0.3)";
       }
+    }
+
+    if (phoneVerified) {
+      const badge = document.getElementById("phone-verified-badge");
+      if (badge) badge.style.display = "inline-flex";
     }
 
     // Plan badge
@@ -170,6 +176,15 @@ onAuthStateChanged(auth, (user) => {
     // Hide "Send Message" — no point messaging yourself
     const msgBtn = document.querySelector("button[onclick='messageProfile()']");
     if (msgBtn) msgBtn.style.display = "none";
+
+    // Show "Verify Phone" button only to the profile owner, and only if not yet verified
+    getDoc(doc(db, "users", userId)).then(snap => {
+      const data = snap.exists() ? snap.data() : {};
+      if (!data.phoneVerified) {
+        const verifyBtn = document.getElementById("verify-phone-btn");
+        if (verifyBtn) verifyBtn.style.display = "inline-block";
+      }
+    });
   }
 });
 
