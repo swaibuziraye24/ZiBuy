@@ -54,8 +54,12 @@ function categoryEmoji(cat) {
 }
 
 // ── Save scroll position before leaving page ──
+// Guarded so product/shop/dashboard pages (which also import app.js)
+// don't overwrite the homepage's saved scroll with their own page's scroll
 window.addEventListener("beforeunload", () => {
-  sessionStorage.setItem("zibuy_scroll", window.scrollY);
+  if (document.getElementById("products")) {
+    sessionStorage.setItem("zibuy_scroll", window.scrollY);
+  }
 });
 
 // =============================
@@ -111,6 +115,10 @@ if (document.readyState === "loading") {
 
 function initApp() {
   console.log("App initialized");
+
+  // Fire-and-forget: doesn't block normal page load, only intervenes
+  // if maintenance mode is genuinely turned on
+  checkMaintenanceMode();
 
    // Always start at top of page
   window.scrollTo({ top: 0, behavior: "instant" });
@@ -463,57 +471,68 @@ function isTrending(p) {
 // LOAD PRODUCTS FROM FIRESTORE
 // ============================================
 async function loadProducts() {
-  // ── Use cached data if available and fresh (under 2 minutes old) ──
-  const cached = sessionStorage.getItem("zibuy_products_cache");
+  const cached   = sessionStorage.getItem("zibuy_products_cache");
   const cachedAt = sessionStorage.getItem("zibuy_products_cache_time");
+  const cacheAge = cachedAt ? Date.now() - parseInt(cachedAt) : Infinity;
 
-  if (cached && cachedAt && (Date.now() - parseInt(cachedAt)) < 120000) {
+  // Cache usable up to 10 minutes — keeps "Home" feeling instant even
+  // after browsing other pages (dashboard, product, shop) for a while
+  if (cached && cacheAge < 600000) {
     try {
       allProducts = JSON.parse(cached);
       window.allProducts = allProducts;
       filteredProducts = [...allProducts];
-      window.renderProducts();
-      loadBuyPowerSection(allProducts);
-      return; // skip Firestore fetch entirely — instant render
+      window.renderProducts(); // instant paint — zero network wait
+
+      // Cache a bit stale (>90s)? Refresh it quietly in the background
+      // without blocking or re-showing a skeleton — stale-while-revalidate
+      if (cacheAge > 90000) {
+        fetchAndCacheProducts(true);
+      }
+      return;
     } catch (e) {
-      // cache corrupted, fall through to fresh fetch
+      // cache corrupted — fall through to a fresh fetch below
     }
   }
 
-  // Show skeleton cards immediately so page feels instant
-  const container = document.getElementById("products");
-  if (container) {
-    container.innerHTML = `
-      <div style="padding:10px">
-        <div style="height:22px;width:140px;border-radius:6px;margin-bottom:12px;
-          background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);
-          background-size:200% 100%;animation:shimmer 1.5s infinite"></div>
-        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">
-          ${Array(6).fill(0).map(() => `
-            <div style="border-radius:12px;overflow:hidden;background:white;
-              box-shadow:0 1px 4px rgba(0,0,0,0.08)">
-              <div style="aspect-ratio:1/1;background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);
-                background-size:200% 100%;animation:shimmer 1.5s infinite"></div>
-              <div style="padding:10px">
-                <div style="height:10px;border-radius:4px;margin-bottom:8px;width:60%;
-                  background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);
-                  background-size:200% 100%;animation:shimmer 1.5s infinite"></div>
-                <div style="height:14px;border-radius:4px;margin-bottom:8px;width:80%;
-                  background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);
-                  background-size:200% 100%;animation:shimmer 1.5s infinite"></div>
-                <div style="height:28px;border-radius:7px;
-                  background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);
-                  background-size:200% 100%;animation:shimmer 1.5s infinite"></div>
-              </div>
-            </div>
-          `).join("")}
-        </div>
-      </div>
-    `;
-  }
+  showProductSkeleton();
+  await fetchAndCacheProducts(false);
+}
 
+function showProductSkeleton() {
+  const container = document.getElementById("products");
+  if (!container) return;
+  container.innerHTML = `
+    <div style="padding:10px">
+      <div style="height:22px;width:140px;border-radius:6px;margin-bottom:12px;
+        background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);
+        background-size:200% 100%;animation:shimmer 1.5s infinite"></div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">
+        ${Array(6).fill(0).map(() => `
+          <div style="border-radius:12px;overflow:hidden;background:white;
+            box-shadow:0 1px 4px rgba(0,0,0,0.08)">
+            <div style="aspect-ratio:1/1;background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);
+              background-size:200% 100%;animation:shimmer 1.5s infinite"></div>
+            <div style="padding:10px">
+              <div style="height:10px;border-radius:4px;margin-bottom:8px;width:60%;
+                background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);
+                background-size:200% 100%;animation:shimmer 1.5s infinite"></div>
+              <div style="height:14px;border-radius:4px;margin-bottom:8px;width:80%;
+                background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);
+                background-size:200% 100%;animation:shimmer 1.5s infinite"></div>
+              <div style="height:28px;border-radius:7px;
+                background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);
+                background-size:200% 100%;animation:shimmer 1.5s infinite"></div>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+    </div>
+  `;
+}
+
+async function fetchAndCacheProducts(isBackground) {
   try {
-    // ── Fire ALL queries in parallel — don't wait for one then another ──
     let planMap        = {};
     let verifSet       = new Set();
     let memberSinceMap = {};
@@ -528,16 +547,11 @@ async function loadProducts() {
     ]);
 
     try {
-
-      // memberSinceMap stores join date per userId
-      memberSinceMap = {};
-
       usersSnap.forEach(d => {
         const data = d.data();
         if (data.plan && data.plan !== "free") {
           planMap[d.id] = data.plan;
         }
-       // Store member since — try createdAt, fall back to planUpdatedAt
         const rawDate = data.createdAt || data.planUpdatedAt || data.lastVerificationSubmit || null;
         if (rawDate) {
           const joinDate = rawDate?.toDate?.() || (rawDate instanceof Date ? rawDate : null);
@@ -547,77 +561,74 @@ async function loadProducts() {
             });
           }
         }
-       
       });
-
       verifSnap.forEach(d => verifSet.add(d.data().userId));
     } catch (e) {
       console.warn("Batch load skipped (guest mode):", e.code);
     }
 
     const products = snapshot.docs.map((docSnap) => {
-        const product = {
-          id: docSnap.id,
-          ...docSnap.data()
-        };
+      const product = { id: docSnap.id, ...docSnap.data() };
 
-        // expires check
-        if (product.expiresAt) {
-          const expiryDate = product.expiresAt.toDate
-            ? product.expiresAt.toDate()
-            : new Date(product.expiresAt);
-          if (expiryDate < new Date()) product.status = "expired";
-        }
+      if (product.expiresAt) {
+        const expiryDate = product.expiresAt.toDate
+          ? product.expiresAt.toDate()
+          : new Date(product.expiresAt);
+        if (expiryDate < new Date()) product.status = "expired";
+      }
 
-        // plan + verified from batch maps — zero extra reads
-       product.shopPlan = planMap[product.userId] || "free";
-        product.seller   = product.seller || {};
-        product.seller.isVerified = verifSet.has(product.userId);
-        product.sellerMemberSince = memberSinceMap[product.userId] || null;
-        product.sellerIsVerified  = verifSet.has(product.userId);
+      product.shopPlan = planMap[product.userId] || "free";
+      product.seller   = product.seller || {};
+      product.seller.isVerified = verifSet.has(product.userId);
+      product.sellerMemberSince = memberSinceMap[product.userId] || null;
+      product.sellerIsVerified  = verifSet.has(product.userId);
 
-        // Admin-posted ads = ZiBuy official + auto featured
-        const isAdminPost = product.userEmail === "swaibuziraye22@gmail.com";
-        product.isZiBuyOfficial = isAdminPost;
-        if (isAdminPost) product.isPremium = true;
+      const isAdminPost = product.userEmail === "swaibuziraye22@gmail.com";
+      product.isZiBuyOfficial = isAdminPost;
+      if (isAdminPost) product.isPremium = true;
 
-        const planScore      = PLAN_SCORE[product.shopPlan] || 1;
-        const boostScore     = product.isPremium ? 5000 : 0;
-        const verifScore     = product.seller.isVerified ? 500 : 0;
-        const created        = product.createdAt?.toDate?.() || new Date();
-        const freshnessScore = Math.max(0, 100 - (new Date() - created) / 3_600_000);
+      const planScore      = PLAN_SCORE[product.shopPlan] || 1;
+      const boostScore     = product.isPremium ? 5000 : 0;
+      const verifScore     = product.seller.isVerified ? 500 : 0;
+      const created        = product.createdAt?.toDate?.() || new Date();
+      const freshnessScore = Math.max(0, 100 - (new Date() - created) / 3_600_000);
 
-        // Admin posts always rank first — never overwrite with calculated score
-        product.rankScore = isAdminPost
-          ? 999999
-          : (planScore * 1000) + boostScore + verifScore + freshnessScore;
-       
+      product.rankScore = isAdminPost
+        ? 999999
+        : (planScore * 1000) + boostScore + verifScore + freshnessScore;
 
-        return product;
-      });
-  
- // Store all products globally for use in other functions
-allProducts = products.sort((a, b) => b.rankScore - a.rankScore);
-window.allProducts = allProducts;
+      return product;
+    });
 
-filteredProducts = [...allProducts];
+    allProducts = products.sort((a, b) => b.rankScore - a.rankScore);
+    window.allProducts = allProducts;
+    filteredProducts = [...allProducts];
 
-// Cache for instant back-navigation
-try {
-  sessionStorage.setItem("zibuy_products_cache", JSON.stringify(allProducts));
-  sessionStorage.setItem("zibuy_products_cache_time", Date.now().toString());
-} catch (e) {
-  // storage full or unavailable — not critical, continue
-}
+    try {
+      sessionStorage.setItem("zibuy_products_cache", JSON.stringify(allProducts));
+      sessionStorage.setItem("zibuy_products_cache_time", Date.now().toString());
+    } catch (e) {
+      // storage full — not critical
+    }
 
-// loadFeaturedProducts();
-window.renderProducts();
+    window.renderProducts();
 
-} catch (err) {
-  console.error(err);
-
-
-}
+  } catch (err) {
+    console.error(err);
+    // A failed background refresh fails silently and keeps showing cached data.
+    // A failed first-load shows a retry button.
+    if (!isBackground) {
+      const container = document.getElementById("products");
+      if (container) {
+        container.innerHTML = `
+          <div style="padding:40px 20px;text-align:center;color:#6b7280">
+            <p style="font-size:32px;margin-bottom:10px">⚠️</p>
+            <p>Couldn't load listings. Check your connection.</p>
+            <button onclick="location.reload()" style="margin-top:12px;background:#ff6600;color:white;border:none;padding:10px 20px;border-radius:8px;font-weight:700;cursor:pointer">Retry</button>
+          </div>`;
+      }
+    }
+  }
 }
 
 // ============================================
@@ -2885,3 +2896,34 @@ window.runOverlaySearch = function(query) {
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") closeSearchOverlay();
 });
+
+
+async function checkMaintenanceMode() {
+  try {
+    const { getDoc, doc } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+    const snap = await getDoc(doc(db, "system_config", "maintenance"));
+    if (!snap.exists()) return;
+
+    const data = snap.data();
+    if (!data.enabled) return;
+
+    // Never block the admin
+    if (auth.currentUser?.email === "swaibuziraye22@gmail.com") return;
+
+    document.body.innerHTML = `
+      <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;
+        padding:24px;background:#fff8f4;text-align:center;font-family:'Nunito',sans-serif">
+        <div>
+          <p style="font-size:56px;margin-bottom:16px">🛠️</p>
+          <h1 style="font-size:22px;font-weight:800;color:#111827;margin-bottom:10px">
+            ZiBuy is under maintenance
+          </h1>
+          <p style="color:#6b7280;font-size:14px;max-width:360px;margin:0 auto">
+            ${data.message || "We'll be back shortly. Thank you for your patience."}
+          </p>
+        </div>
+      </div>`;
+  } catch(e) {
+    // Never let a failed check block the whole site
+  }
+}
