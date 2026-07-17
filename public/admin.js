@@ -194,7 +194,7 @@ function renderUsers(users) {
   if (!tbody) return;
 
   if (users.length === 0) {
-    tbody.innerHTML = `<tr class="empty-row"><td colspan="7">No users found</td></tr>`;
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="8">No users found</td></tr>`;
     return;
   }
 
@@ -209,6 +209,7 @@ function renderUsers(users) {
         <td><span class="plan-chip chip-${plan}">${planEmoji(plan)} ${plan}</span></td>
         <td id="ads-count-${u.id}">—</td>
         <td>${verified}</td>
+        <td>${u.buyerRating ? `⭐ ${u.buyerRating} (${u.buyerRatingCount || 0})` : "—"}</td>
         <td>
           <span class="plan-chip ${u.banned ? 'chip-expired' : 'chip-approved'}">
             ${banned}
