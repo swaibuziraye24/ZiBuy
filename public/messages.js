@@ -19,14 +19,30 @@ let unsubscribeMessages      = null;
 onAuthStateChanged(auth, (user) => {
   currentUser = user;
 
-  // Logged out — detach live listeners so they don't fire against a null user
   if (!user) {
-    if (unsubscribeConversations) { unsubscribeConversations(); unsubscribeConversations = null; }
-    if (unsubscribeMessages)      { unsubscribeMessages();      unsubscribeMessages      = null; }
+    if (unsubscribeConversations) {
+      unsubscribeConversations();
+      unsubscribeConversations = null;
+    }
+
+    if (unsubscribeMessages) {
+      unsubscribeMessages();
+      unsubscribeMessages = null;
+    }
+
+    activeConversation = null;
     return;
   }
 
   loadConversations();
+
+  const to = new URLSearchParams(window.location.search).get("to");
+
+  if (to) {
+    setTimeout(() => {
+      openConversation(to);
+    }, 400);
+  }
 });
 
 // ============================================
@@ -253,8 +269,8 @@ window.sendMessage = async function() {
       senderEmail:     currentUser.email,
       text,
       read:            false,
-      timestamp:       new Date(),
-      lastMessageTime: new Date()
+      timestamp: serverTimestamp(),
+      lastMessageTime: serverTimestamp()
     });
 
     // Notify recipient — in-app + push, no manual UI refresh needed here;
@@ -268,6 +284,14 @@ window.sendMessage = async function() {
     if (!recipientSnap.empty) {
       const recipientId = recipientSnap.docs[0].id;
       notifyNewMessage(currentUser.uid, recipientId, currentUser.email);
+
+      const container = document.getElementById("messages-container");
+
+setTimeout(() => {
+    if (container) {
+        container.scrollTop = container.scrollHeight;
+    }
+}, 100);
     }
 
   } catch (err) {
@@ -309,11 +333,12 @@ export async function startConversation(recipientEmail, productId, productName) 
       text:            `Hi! I'm interested in: ${productName}`,
       productId,
       read:            false,
-      timestamp:       new Date(),
-      lastMessageTime: new Date()
+      timestamp: serverTimestamp(),
+      lastMessageTime: serverTimestamp()
     });
 
-    window.location.href = "messages.html";
+    window.location.href =
+`messages.html?to=${encodeURIComponent(recipientEmail)}`;
   } catch (err) {
     console.error(err);
     alert("Failed to start conversation. Try again.");
