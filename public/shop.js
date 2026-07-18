@@ -33,6 +33,8 @@ const sellerId = params.get("seller");
 
 console.log("Seller ID:", sellerId);
 
+
+
 let followDocumentId = null;
 let isFollowing = false;
 
