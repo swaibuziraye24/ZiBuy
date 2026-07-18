@@ -300,6 +300,115 @@ async function enqueueNotificationJob(payload) {
 
 
 // ============================================
+// TRUST SCORE SYSTEM
+// ============================================
+
+function getTrustTierLabel(score) {
+  if (score >= 90) return "elite";
+  if (score >= 70) return "gold";
+  if (score >= 50) return "silver";
+  if (score >= 30) return "bronze";
+  return "new";
+}
+
+async function recalculateTrustScore(userId) {
+  if (!userId) return;
+
+  try {
+    const userSnap = await db.collection("users").doc(userId).get();
+    if (!userSnap.exists) return;
+    const user = userSnap.data();
+
+    // Seller reviews
+    const reviewsSnap = await db.collection("reviews").where("sellerId", "==", userId).get();
+    let totalRating = 0, reviewCount = 0;
+    reviewsSnap.forEach(d => {
+      const r = d.data();
+      if (r.rating) { totalRating += Number(r.rating); reviewCount++; }
+    });
+    const avgRating = reviewCount > 0 ? totalRating / reviewCount : 0;
+
+    // ID verification
+    const verifSnap = await db.collection("seller_verifications")
+      .where("userId", "==", userId)
+      .where("status", "==", "approved")
+      .limit(1)
+      .get();
+    const isVerified = !verifSnap.empty;
+
+    const buyerRating = Number(user.buyerRating || 0);
+
+    let score = 0;
+    if (user.phoneVerified) score += 15;
+    if (isVerified)         score += 20;
+    if (reviewCount > 0)    score += (avgRating / 5) * 25;
+    score += Math.min(reviewCount, 20) * 0.5;            // up to 10
+    if (buyerRating > 0)    score += (buyerRating / 5) * 8;
+
+    const joined = user.createdAt?.toDate?.();
+    if (joined) {
+      const monthsActive = Math.min(12, (Date.now() - joined.getTime()) / (30 * 86400000));
+      score += monthsActive; // up to 12
+    }
+
+    score = Math.round(Math.min(100, score));
+    const tier = getTrustTierLabel(score);
+
+    // Skip the write entirely if nothing actually changed
+    if (user.trustScore === score && user.trustTier === tier) return;
+
+    await db.collection("users").doc(userId).update({
+      trustScore:     score,
+      trustTier:      tier,
+      trustUpdatedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+  } catch (err) {
+    console.error("[TRUST SCORE ERROR]", err.message);
+  }
+}
+
+// ── Recalculate whenever a new seller review comes in ──
+exports.trustScoreOnReview = onDocumentCreated("reviews/{id}", async (event) => {
+  const data = event.data.data();
+  if (data?.sellerId) await recalculateTrustScore(data.sellerId);
+});
+
+// ── Recalculate whenever a buyer gets rated ──
+exports.trustScoreOnBuyerRating = onDocumentCreated("buyer_ratings/{id}", async (event) => {
+  const data = event.data.data();
+  if (data?.buyerId) await recalculateTrustScore(data.buyerId);
+});
+
+// ── Recalculate the moment ID verification is approved ──
+exports.trustScoreOnVerification = onDocumentUpdated("seller_verifications/{id}", async (event) => {
+  const before = event.data.before.data();
+  const after  = event.data.after.data();
+  if (before.status !== "approved" && after.status === "approved" && after.userId) {
+    await recalculateTrustScore(after.userId);
+  }
+});
+
+// ── Nightly sweep — keeps account-age scoring fresh for active sellers ──
+exports.trustScoreDailySweep = onSchedule(
+  { schedule: "every 24 hours", timeZone: "Africa/Kampala" },
+  async () => {
+    try {
+      const snap = await db.collection("products").where("status", "==", "active").limit(2000).get();
+      const sellerIds = new Set();
+      snap.forEach(d => { const uid = d.data().userId; if (uid) sellerIds.add(uid); });
+
+      for (const uid of sellerIds) {
+        await recalculateTrustScore(uid);
+      }
+      console.log(`[TRUST SWEEP] Recalculated ${sellerIds.size} sellers`);
+    } catch (err) {
+      console.error("[TRUST SWEEP ERROR]", err.message);
+    }
+  }
+);
+
+// ============================================
 // PUSH NOTIFICATIONS
 // ============================================
 
@@ -851,6 +960,7 @@ exports.verifyPhoneOTP = onCall(async (request) => {
   }, { merge: true });
 
   await otpRef.delete();
+  await recalculateTrustScore(uid);
 
   return { success: true, phone: data.phone };
 });
