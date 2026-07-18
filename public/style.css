@@ -7808,8 +7808,11 @@ body {
 .messages-main{
     display:flex;
     flex-direction:column;
-    height:100%;
+    height:calc(100dvh - 56px);
     overflow:hidden;
+    background:#fff;
+    margin:0;
+    padding:0;
 }
 
 /* empty state */
