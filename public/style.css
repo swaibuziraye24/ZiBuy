@@ -7863,17 +7863,16 @@ body {
 
 
 .chat-input-area{
+display:flex;
+align-items:center;
+gap:10px;
+padding:12px;
+background:#fff;
+border-top:1px solid #e5e7eb;
+flex-shrink:0;
 position:sticky;
 bottom:70px;
-left:0;
-right:0;
-background:#fff;
-padding:12px;
-border-top:1px solid #e5e7eb;
-display:flex;
-gap:10px;
 z-index:100;
-flex-shrink:0;
 }
 
 @media (max-width:768px){
