@@ -923,7 +923,9 @@ window.openBuyNow = function(productId, productName, price, sellerPhone, sellerN
 
   const orderRef  = `ORDER-${productId.slice(0,8).toUpperCase()}-${Date.now().toString().slice(-4)}`;
   const adminPhone = "256789157512";
-  const payPhone   = sellerPhone || adminPhone; // pay seller directly or admin
+  const payPhone   = sellerPhone || adminPhone;
+
+  const protectFee = Math.max(1000, Math.round(price * 0.025)); // 2.5%, min UGX 1,000
 
   const modal = document.createElement("div");
   modal.id = "buy-now-modal";
@@ -936,19 +938,32 @@ window.openBuyNow = function(productId, productName, price, sellerPhone, sellerN
   modal.innerHTML = `
     <div style="background:white;border-radius:20px;padding:24px;max-width:480px;width:100%;max-height:90vh;overflow-y:auto">
 
-      <!-- Header -->
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
         <h2 style="margin:0;font-size:18px;font-weight:800">⚡ Buy Now</h2>
         <button onclick="document.getElementById('buy-now-modal').remove()"
           style="background:#f3f4f6;border:none;width:32px;height:32px;border-radius:50%;font-size:18px;cursor:pointer">×</button>
       </div>
 
-      <!-- Product summary -->
       <div style="background:#f9fafb;border-radius:12px;padding:14px;margin-bottom:16px">
         <p style="margin:0;font-size:13px;color:#6b7280">You are buying</p>
         <p style="margin:4px 0 0;font-size:16px;font-weight:800;color:#111827">${productName}</p>
-        <p style="margin:4px 0 0;font-size:22px;font-weight:900;color:#ff6600">UGX ${Number(price).toLocaleString()}</p>
+        <p style="margin:4px 0 0;font-size:22px;font-weight:900;color:#ff6600">UGX <span id="bn-item-price">${Number(price).toLocaleString()}</span></p>
         <p style="margin:4px 0 0;font-size:12px;color:#6b7280">Seller: <strong>${sellerName}</strong></p>
+      </div>
+
+      <!-- ZiBuy Protect toggle -->
+      <div style="border:2px solid #10b981;border-radius:14px;padding:16px;margin-bottom:16px;background:#f0fdf4">
+        <label style="display:flex;align-items:flex-start;gap:12px;cursor:pointer">
+          <input type="checkbox" id="bn-protect-toggle" checked onchange="toggleBuyNowProtect(${price})"
+            style="width:20px;height:20px;margin-top:2px;accent-color:#10b981;cursor:pointer;flex-shrink:0">
+          <div>
+            <p style="margin:0;font-weight:800;font-size:14px;color:#166534">🛡️ ZiBuy Protect (+UGX ${protectFee.toLocaleString()})</p>
+            <p style="margin:4px 0 0;font-size:12px;color:#15803d;line-height:1.5">
+              Confirm you received the item before it's marked complete. If there's a problem,
+              raise a dispute and our team steps in. Highly recommended for high-value items.
+            </p>
+          </div>
+        </label>
       </div>
 
       <!-- MTN -->
@@ -961,7 +976,7 @@ window.openBuyNow = function(productId, productName, price, sellerPhone, sellerN
           <li>Dial <strong style="color:#ff6600">*165#</strong> on your MTN line</li>
           <li>Select <strong>Pay With Momo</strong></li>
           <li>Enter Merchant Code: <strong style="color:#ff6600;font-size:15px">27868095</strong></li>
-          <li>Amount: <strong style="color:#ff6600">UGX ${Number(price).toLocaleString()}</strong></li>
+          <li>Amount: <strong id="bn-total-mtn" style="color:#ff6600">UGX ${Number(price + protectFee).toLocaleString()}</strong></li>
           <li>Reference: <strong style="color:#ff6600;letter-spacing:.5px">${orderRef}</strong></li>
           <li>Enter PIN to confirm</li>
         </ol>
@@ -977,13 +992,12 @@ window.openBuyNow = function(productId, productName, price, sellerPhone, sellerN
           <li>Dial <strong style="color:#ef4444">*185#</strong> on your Airtel line</li>
           <li>Select <strong>Send Money</strong></li>
           <li>Send to: <strong style="color:#ef4444;font-size:15px">+256575996624</strong></li>
-          <li>Amount: <strong style="color:#ef4444">UGX ${Number(price).toLocaleString()}</strong></li>
+          <li>Amount: <strong id="bn-total-airtel" style="color:#ef4444">UGX ${Number(price + protectFee).toLocaleString()}</strong></li>
           <li>Reference: <strong style="color:#ef4444;letter-spacing:.5px">${orderRef}</strong></li>
           <li>Enter PIN to confirm</li>
         </ol>
       </div>
 
-      <!-- Transaction ID input -->
       <div style="margin-bottom:14px">
         <label style="font-size:13px;font-weight:800;color:#111827;display:block;margin-bottom:8px">
           📋 Enter your transaction ID after paying
@@ -1002,7 +1016,6 @@ window.openBuyNow = function(productId, productName, price, sellerPhone, sellerN
         ⏱️ After entering your transaction ID, tap below to notify the seller via WhatsApp.
       </div>
 
-      <!-- Buttons -->
       <div style="display:flex;flex-direction:column;gap:10px">
         <button onclick="confirmBuyNow('${productId}','${productName.replace(/'/g,"\\'")}',${price},'${sellerPhone}','${orderRef}','${sellerName}')"
           style="background:#ff6600;color:white;border:none;padding:14px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;width:100%">
@@ -1020,6 +1033,17 @@ window.openBuyNow = function(productId, productName, price, sellerPhone, sellerN
   document.body.appendChild(modal);
 };
 
+window.toggleBuyNowProtect = function(price) {
+  const checked   = document.getElementById("bn-protect-toggle")?.checked;
+  const protectFee = Math.max(1000, Math.round(price * 0.025));
+  const total = checked ? price + protectFee : price;
+
+  const mtnEl    = document.getElementById("bn-total-mtn");
+  const airtelEl = document.getElementById("bn-total-airtel");
+  if (mtnEl)    mtnEl.textContent    = "UGX " + Number(total).toLocaleString();
+  if (airtelEl) airtelEl.textContent = "UGX " + Number(total).toLocaleString();
+};
+
 window.confirmBuyNow = async function(productId, productName, price, sellerPhone, orderRef, sellerName) {
   const txnInput = document.getElementById("buy-txn-ref");
   const txnRef   = txnInput ? txnInput.value.trim() : "";
@@ -1033,38 +1057,45 @@ window.confirmBuyNow = async function(productId, productName, price, sellerPhone
     return;
   }
 
+  const isProtected = document.getElementById("bn-protect-toggle")?.checked || false;
+  const protectFee  = isProtected ? Math.max(1000, Math.round(price * 0.025)) : 0;
+  const totalPaid   = price + protectFee;
+
   const btn = event.target;
   btn.textContent = "Saving order...";
   btn.disabled    = true;
 
   try {
-    // Save order to Firestore
     await addDoc(collection(db, "orders"), {
       productId,
       productName,
       price,
       orderRef,
-      transactionRef: txnRef,
-      userEmail:      auth.currentUser?.email || "guest",
-      buyerEmail:     auth.currentUser?.email || "guest",
-      buyerUid:       auth.currentUser?.uid   || "guest",
+      transactionRef:    txnRef,
+      userEmail:         auth.currentUser?.email || "guest",
+      buyerEmail:        auth.currentUser?.email || "guest",
+      buyerUid:          auth.currentUser?.uid   || "guest",
       sellerName,
       sellerPhone,
-      paymentMethod:  "mobile_money",
-      status:         "pending_verification",
-      createdAt:      new Date()
+      paymentMethod:     "mobile_money",
+      status:            "pending_verification",
+      protected:         isProtected,
+      protectionFee:      protectFee,
+      total:             totalPaid,
+      deliveryConfirmed: false,
+      disputeStatus:     null,
+      createdAt:         new Date()
     });
 
     document.getElementById("buy-now-modal")?.remove();
 
-    // Build WhatsApp message to seller (or admin if no seller phone)
     const waPhone = sellerPhone || "256789157512";
     const waMsg   = encodeURIComponent(
       `Hello ${sellerName} 👋\n\n` +
       `I have paid for your product on *ZiBuy*.\n\n` +
       `📦 *Order Details:*\n` +
       `• Product: *${productName}*\n` +
-      `• Amount: *UGX ${Number(price).toLocaleString()}*\n` +
+      `• Amount: *UGX ${Number(totalPaid).toLocaleString()}*${isProtected ? " (incl. ZiBuy Protect)" : ""}\n` +
       `• Order Ref: *${orderRef}*\n` +
       `• Transaction ID: *${txnRef}*\n` +
       `• Buyer Email: *${auth.currentUser?.email || "Guest"}*\n\n` +
@@ -1073,7 +1104,6 @@ window.confirmBuyNow = async function(productId, productName, price, sellerPhone
 
     window.open(`https://wa.me/${waPhone}?text=${waMsg}`, "_blank");
 
-    // Show success
     const success = document.createElement("div");
     success.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px`;
     success.innerHTML = `
@@ -1090,6 +1120,11 @@ window.confirmBuyNow = async function(productId, productName, price, sellerPhone
             <strong style="color:#ff6600">${txnRef}</strong>
           </div>
         </div>
+        ${isProtected ? `
+          <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:12px;margin-bottom:16px;font-size:12px;color:#166534;text-align:left">
+            🛡️ <strong>ZiBuy Protect active.</strong> Once your item arrives, confirm receipt in
+            your dashboard's "My Orders" tab. If something's wrong, you can raise a dispute instead.
+          </div>` : ""}
         <p style="color:#6b7280;font-size:13px;margin-bottom:20px;line-height:1.6">
           Your payment reference has been sent to the seller via WhatsApp.
           The seller will contact you to arrange delivery.
