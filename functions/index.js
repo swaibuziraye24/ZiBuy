@@ -2245,3 +2245,66 @@ Redirecting...
 });
 
 exports.productSeo = onRequest(seoApp);
+
+
+// ============================================
+// ZIBUY PROTECT — auto-confirm & dispute alerts
+// ============================================
+
+exports.autoConfirmProtectedOrders = onSchedule(
+  { schedule: "every 24 hours", timeZone: "Africa/Kampala" },
+  async () => {
+    try {
+      const cutoff = new Date(Date.now() - 7 * 86400000);
+
+      const snap = await db.collection("orders")
+        .where("protected", "==", true)
+        .where("deliveryConfirmed", "==", false)
+        .get();
+
+      let count = 0;
+
+      for (const docSnap of snap.docs) {
+        const order = docSnap.data();
+        if (order.disputeStatus === "open") continue; // never auto-confirm a disputed order
+
+        const created = order.createdAt?.toDate?.();
+        if (!created || created > cutoff) continue;
+
+        await docSnap.ref.update({
+          deliveryConfirmed: true,
+          autoConfirmed:      true,
+          confirmedAt:         admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        if (order.buyerUid && order.buyerUid !== "guest") {
+          await db.collection("notifications").add({
+            userId:  order.buyerUid,
+            type:    "order_auto_confirmed",
+            title:   "✅ Order Auto-Confirmed",
+            message: `"${order.productName}" was automatically marked as received after 7 days.`,
+            read:    false,
+            createdAt: admin.firestore.FieldValue.serverTimestamp()
+          });
+        }
+
+        count++;
+      }
+
+      console.log(`[ZIBUY PROTECT] Auto-confirmed ${count} orders`);
+    } catch (err) {
+      console.error("[ZIBUY PROTECT ERROR]", err.message);
+    }
+  }
+);
+
+// Alert admin the moment a dispute is filed
+exports.notifyAdminOnDispute = onDocumentCreated("disputes/{id}", async (event) => {
+  const dispute = event.data.data();
+  await pushAdminAlert(
+    "dispute",
+    "🚨 New Dispute Filed",
+    `${dispute.productName} — ${dispute.reason}`,
+    { orderId: dispute.orderId }
+  );
+});
