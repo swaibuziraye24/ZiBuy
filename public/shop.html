@@ -13,6 +13,7 @@ content="width=device-width, initial-scale=1.0">
 
 <title>ZiBuy Shop</title>
 
+<link rel="stylesheet" href="style.css">
 <link rel="manifest" href="/manifest.json">
 
 <style>
@@ -248,6 +249,10 @@ repeat(auto-fill,minmax(160px,1fr));
 
 }
 
+body {
+  padding-bottom: 70px; /* clears a fixed bottom nav bar if present */
+}
+
 
 </style>
 
@@ -260,13 +265,6 @@ repeat(auto-fill,minmax(160px,1fr));
   class="shop-header"
   id="shop-header"
 >
-
-<section id="orders-to-review-section" style="display:none;max-width:900px;margin:0 auto 24px;padding:0 20px">
-  <div style="background:white;border-radius:16px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,0.06)">
-    <h3 style="font-size:16px;font-weight:800;margin:0 0 14px;color:#111827">📦 Orders to Review</h3>
-    <div id="orders-to-review"></div>
-  </div>
-</section>
 
   <img
     id="shop-banner"
@@ -438,6 +436,13 @@ repeat(auto-fill,minmax(160px,1fr));
 
 </div>
 
+<section id="orders-to-review-section" style="display:none;max-width:900px;margin:20px auto;padding:0 20px">
+  <div style="background:white;border-radius:16px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,0.06)">
+    <h3 style="font-size:16px;font-weight:800;margin:0 0 14px;color:#111827">📦 Orders to Review</h3>
+    <div id="orders-to-review"></div>
+  </div>
+</section>
+
 <div
   style="
     background:white;
@@ -509,18 +514,6 @@ repeat(auto-fill,minmax(160px,1fr));
 </div>
 
 <div style="margin:20px 20px 0">
-  <div style="position:relative">
-    <input type="text" id="shop-search-input"
-      placeholder="🔍 Search products in this shop..."
-      oninput="filterShopProducts(this.value)"
-      style="width:100%;padding:13px 16px;border:1.5px solid #e5e7eb;
-      border-radius:12px;font-size:14px;font-family:inherit;outline:none;
-      box-sizing:border-box;background:white">
-  </div>
-  <p id="shop-search-count" style="font-size:12px;color:#9ca3af;margin:8px 0 0"></p>
-</div>
-
-<div style="margin:20px 20px 0">
   <input type="text" id="shop-search-input"
     placeholder="🔍 Search products in this shop..."
     oninput="filterShopProducts(this.value)"
@@ -533,13 +526,10 @@ repeat(auto-fill,minmax(160px,1fr));
 <div class="products-grid" id="shop-products">
 </div>
 
-<script type="module" src="notifications-setup.js"></script>
-
-<script src="nav.js"></script>
-
 <script type="module" src="shop.js"></script>
-
 <script type="module" src="buyer-ratings.js"></script>
+<script type="module" src="notifications-setup.js"></script>
+<script type="module" src="nav.js"></script>
 
 
 <script>
