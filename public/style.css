@@ -7858,13 +7858,31 @@ body {
   max-width: 85%;
 }
 
-.chat-input-area {
-  padding: 12px 16px;
-  border-top: 1px solid #e5e7eb;
-  display: flex;
-  gap: 8px;
-  background: white;
-  border-radius: 0;
+.chat-input-area{
+position:sticky;
+bottom:0;
+left:0;
+right:0;
+background:#fff;
+padding:12px;
+border-top:1px solid #e5e7eb;
+display:flex;
+gap:10px;
+z-index:50;
+}
+
+
+.messages-main{
+overflow:hidden;
+display:flex;
+flex-direction:column;
+}
+
+#chat-window{
+display:flex;
+flex-direction:column;
+height:100%;
+overflow:hidden;
 }
 
 #message-input {
