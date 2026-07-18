@@ -239,6 +239,11 @@ function renderUsers(users) {
             onclick="adminViewUserAds('${u.id}','${u.email}')">
             📋 Ads
           </button>
+          <button class="action-btn" style="background:#dcfce7;color:#166534;border:none;padding:6px 10px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer"
+            onclick="adminViewUserOrders('${u.id}','${u.email}')">
+            🛍️ Orders
+          </button>
+      
           <button class="action-btn" style="background:#f3e8ff;color:#7e22ce;border:none;padding:6px 10px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer"
             onclick="adminForceExpireAd('${u.id}')">
             🕒 Force Expire
@@ -1338,6 +1343,10 @@ async function loadBanners() {
                 style="background:${b.active ? '#dcfce7' : '#fee2e2'};color:${b.active ? '#16a34a' : '#ef4444'};border:none;padding:7px 12px;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer">
                 ${b.active ? '✅ Active' : '❌ Paused'}
               </button>
+              <button onclick="editBanner('${b.id}')"
+                style="background:#dbeafe;color:#1e40af;border:none;padding:7px 12px;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer">
+                ✏️ Edit
+              </button>
               <button onclick="deleteBanner('${b.id}')"
                 style="background:#fee2e2;color:#ef4444;border:none;padding:7px 12px;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer">
                 🗑️ Delete
@@ -1450,6 +1459,28 @@ window.deleteBanner = async function(bannerId) {
     showToast("Banner deleted", "info");
     loadBanners();
   } catch (e) { showToast("Failed", "error"); }
+};
+
+
+window.editBanner = async function(bannerId) {
+  const snap = await getDoc(doc(db, "banner_ads", bannerId));
+  if (!snap.exists()) return;
+  const b = snap.data();
+
+  const newTitle = prompt("Banner title:", b.title || "");
+  if (newTitle === null) return;
+  const newUrl = prompt("Destination URL:", b.url || "");
+  if (newUrl === null) return;
+  const newPrice = prompt("Price (UGX/mo):", b.price || 0);
+  if (newPrice === null) return;
+
+  try {
+    await updateDoc(doc(db, "banner_ads", bannerId), {
+      title: newTitle.trim(), url: newUrl.trim(), price: Number(newPrice)
+    });
+    showToast("Banner updated ✅", "success");
+    loadBanners();
+  } catch(e) { showToast("Failed", "error"); }
 };
 
 
@@ -2336,6 +2367,43 @@ window.adminViewUserAds = async function(userId, email) {
 };
 
 
+window.adminViewUserOrders = async function(userId, email) {
+  try {
+    const snap = await getDocs(query(
+      collection(db, "orders"),
+      where("userEmail", "==", email)
+    ));
+
+    const orders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    const modal = document.createElement("div");
+    modal.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px`;
+    modal.innerHTML = `
+      <div style="background:white;border-radius:20px;padding:24px;max-width:560px;width:100%;max-height:90vh;overflow-y:auto">
+        <div style="display:flex;justify-content:space-between;margin-bottom:16px">
+          <h2 style="margin:0;font-size:16px;font-weight:800">🛍️ ${email} — ${orders.length} Orders</h2>
+          <button onclick="this.closest('div').parentElement.remove()"
+            style="background:#f3f4f6;border:none;width:32px;height:32px;border-radius:50%;font-size:18px;cursor:pointer">×</button>
+        </div>
+        ${orders.length === 0 ? `<p style="color:#6b7280;text-align:center;padding:20px">No orders yet</p>` :
+          orders.map(o => `
+            <div style="padding:12px;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:8px;font-size:13px">
+              <div style="display:flex;justify-content:space-between">
+                <strong>${o.orderId || o.id.slice(0,10)}</strong>
+                <span class="plan-chip ${chipClass(o.status)}">${o.status}</span>
+              </div>
+              <p style="margin:4px 0;color:#6b7280">UGX ${Number(o.total||0).toLocaleString()} · ${o.paymentMethod || "—"}</p>
+              <p style="margin:0;font-size:11px;color:#9ca3af">${fmtDate(o.createdAt)}</p>
+            </div>`).join("")}
+      </div>
+    `;
+    document.body.appendChild(modal);
+  } catch(e) {
+    showToast("Failed: " + e.message, "error");
+  }
+};
+
+
 // ══════════════════════════════════════════════
 //  CLEAR USER NOTIFICATIONS
 // ══════════════════════════════════════════════
@@ -2616,4 +2684,60 @@ window.toggleMaintenanceMode = async function() {
   } catch(e) {
     showToast("Failed: " + e.message, "error");
   }
+};
+
+// ══════════════════════════════════════════════
+//  LIVE ADMIN ALERTS FEED
+// ══════════════════════════════════════════════
+window.loadAdminAlerts = async function() {
+  const list = document.getElementById("admin-alerts-list");
+  if (!list) return;
+
+  try {
+    const snap = await getDocs(collection(db, "admin_alerts"));
+    const alerts = snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0))
+      .slice(0, 100);
+
+    if (alerts.length === 0) {
+      list.innerHTML = `<p style="text-align:center;color:#6b7280;padding:30px">No alerts yet</p>`;
+      return;
+    }
+
+    const icons = { order: "🛍️", payment: "💰", notification: "🔔" };
+
+    list.innerHTML = alerts.map(a => `
+      <div style="display:flex;gap:12px;padding:12px;border-bottom:1px solid #f0f0f0;${a.read ? "opacity:.6" : ""}">
+        <span style="font-size:20px;flex-shrink:0">${icons[a.type] || "📌"}</span>
+        <div style="flex:1">
+          <p style="margin:0;font-weight:800;font-size:13px;color:#111827">${a.title}</p>
+          <p style="margin:3px 0 0;font-size:12px;color:#6b7280">${a.message}</p>
+          <p style="margin:3px 0 0;font-size:11px;color:#9ca3af">${fmtDate(a.createdAt)}</p>
+        </div>
+        ${!a.read ? `<button onclick="markAlertRead('${a.id}')" style="background:#f3f4f6;border:none;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;height:fit-content">Mark Read</button>` : ""}
+      </div>`).join("");
+
+  } catch(e) {
+    list.innerHTML = `<p style="color:red;padding:20px">Failed: ${e.message}</p>`;
+  }
+};
+
+window.markAlertRead = async function(alertId) {
+  try {
+    await updateDoc(doc(db, "admin_alerts", alertId), { read: true });
+    loadAdminAlerts();
+  } catch(e) { showToast("Failed", "error"); }
+};
+
+window.clearAllAdminAlerts = async function() {
+  if (!confirm("Clear all read alerts older than 7 days?")) return;
+  try {
+    const cutoff = new Date(Date.now() - 7 * 86400000);
+    const snap = await getDocs(query(collection(db, "admin_alerts"), where("read", "==", true)));
+    const toDelete = snap.docs.filter(d => (d.data().createdAt?.toDate?.() || new Date()) < cutoff);
+    await Promise.all(toDelete.map(d => deleteDoc(doc(db, "admin_alerts", d.id))));
+    showToast(`Cleared ${toDelete.length} old alerts`, "info");
+    loadAdminAlerts();
+  } catch(e) { showToast("Failed", "error"); }
 };
