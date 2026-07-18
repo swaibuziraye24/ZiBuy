@@ -11,6 +11,7 @@ import { showToast } from "./app.js";
 import "./app.js";
 import "./report-seller.js";
 import "./phone-verify.js";
+import { renderTrustBadge } from "./trust-badge.js";
 
 let currentUser = null;
 
