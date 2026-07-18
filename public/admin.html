@@ -392,6 +392,11 @@
   <span class="nav-icon">🚨</span> Live Alerts
 </button>
 
+<button class="admin-nav-item"
+  onclick="window.showSection('disputes', this);loadDisputesAdmin()">
+  <span class="nav-icon">🚨</span> Disputes
+</button>
+
   </aside>
 
   <!-- ── MAIN ── -->
@@ -481,7 +486,7 @@
             </tr>
           </thead>
           <tbody id="users-table-body">
-            <tr class="empty-row"><td colspan="8">Loading…</td></tr>
+            <tr class="empty-row"><td colspan="10">Loading…</td></tr>
           </tbody>
         </table>
       </div>
@@ -1082,6 +1087,20 @@ Separate paragraphs with a blank line."
   </div>
   <div class="admin-card">
     <div id="admin-alerts-list"><p style="color:var(--gray)">Loading...</p></div>
+  </div>
+</div>
+
+<div class="admin-section" id="section-disputes">
+  <h2 style="font-size:20px;font-weight:800;margin-bottom:16px">🚨 ZiBuy Protect Disputes</h2>
+  <div class="admin-card">
+    <table class="data-table">
+      <thead>
+        <tr><th>Product</th><th>Buyer</th><th>Reason</th><th>Details</th><th>Status</th><th>Actions</th></tr>
+      </thead>
+      <tbody id="disputes-table-body">
+        <tr class="empty-row"><td colspan="6">Loading…</td></tr>
+      </tbody>
+    </table>
   </div>
 </div>
 
