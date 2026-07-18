@@ -387,6 +387,11 @@
   <span class="nav-icon">📜</span> Activity Log
 </button>
 
+<button class="admin-nav-item"
+  onclick="window.showSection('alerts', this);loadAdminAlerts()">
+  <span class="nav-icon">🚨</span> Live Alerts
+</button>
+
   </aside>
 
   <!-- ── MAIN ── -->
@@ -1065,6 +1070,20 @@ Separate paragraphs with a blank line."
         </table>
       </div>
     </div>
+
+
+    <div class="admin-section" id="section-alerts">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+    <h2 style="font-size:20px;font-weight:800;margin:0">🚨 Live Alerts</h2>
+    <button onclick="clearAllAdminAlerts()"
+      style="background:#f3f4f6;border:none;padding:8px 16px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer">
+      🗑️ Clear Old
+    </button>
+  </div>
+  <div class="admin-card">
+    <div id="admin-alerts-list"><p style="color:var(--gray)">Loading...</p></div>
+  </div>
+</div>
 
     <!-- ══ SYSTEM (Maintenance + Data Export) ══ -->
     <div class="admin-section" id="section-system">
