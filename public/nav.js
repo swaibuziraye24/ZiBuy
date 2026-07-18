@@ -53,36 +53,43 @@
   document.body.appendChild(nav);
 
   // ── Back button on inner pages ──────────────
-  if (!isHome) {
+  if (!isHome && !document.getElementById("nav-back-btn")) {
     const topbar = document.querySelector(".topbar, .admin-topbar");
-    if (topbar && !document.getElementById("nav-back-btn")) {
-      const back = document.createElement("button");
-      back.id        = "nav-back-btn";
-      back.className = "zbn-back-btn";
-      back.innerHTML = `<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>`;
-     // Track navigation history in sessionStorage
-      const navStack = JSON.parse(sessionStorage.getItem("zibuy-nav") || "[]");
-      const thisPage = location.href;
 
-      // Add current page if different from last
-      if (navStack[navStack.length - 1] !== thisPage) {
-        navStack.push(thisPage);
-        sessionStorage.setItem("zibuy-nav", JSON.stringify(navStack));
+    const back = document.createElement("button");
+    back.id        = "nav-back-btn";
+    back.innerHTML = `<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>`;
+
+    // Track navigation history in sessionStorage
+    const navStack = JSON.parse(sessionStorage.getItem("zibuy-nav") || "[]");
+    const thisPage = location.href;
+
+    if (navStack[navStack.length - 1] !== thisPage) {
+      navStack.push(thisPage);
+      sessionStorage.setItem("zibuy-nav", JSON.stringify(navStack));
+    }
+
+    back.onclick = () => {
+      const stack = JSON.parse(sessionStorage.getItem("zibuy-nav") || "[]");
+      stack.pop(); // remove current
+      const prev = stack[stack.length - 1];
+      sessionStorage.setItem("zibuy-nav", JSON.stringify(stack));
+
+      if (prev) {
+        window.location.href = prev;
+      } else {
+        window.location.href = "index.html";
       }
+    };
 
-      back.onclick = () => {
-        const stack = JSON.parse(sessionStorage.getItem("zibuy-nav") || "[]");
-        stack.pop(); // remove current
-        const prev = stack[stack.length - 1];
-        sessionStorage.setItem("zibuy-nav", JSON.stringify(stack));
-
-        if (prev) {
-          window.location.href = prev;
-        } else {
-          window.location.href = "index.html";
-        }
-      };
+    if (topbar) {
+      // Page has a topbar (product.html, messages.html, etc.) — insert inline
+      back.className = "zbn-back-btn";
       topbar.insertBefore(back, topbar.firstChild);
+    } else {
+      // No topbar on this page (e.g. shop.html) — float it top-left instead
+      back.className = "zbn-back-btn zbn-back-floating";
+      document.body.appendChild(back);
     }
   }
 
