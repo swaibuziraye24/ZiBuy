@@ -7754,6 +7754,24 @@ body {
 }
 
 
+/* Back button — floating variant for pages with no .topbar (e.g. shop.html) */
+.zbn-back-floating {
+  position: fixed !important;
+  top: 14px !important;
+  left: 14px !important;
+  z-index: 9500 !important;
+  background: rgba(0,0,0,0.4) !important;
+  backdrop-filter: blur(4px) !important;
+  color: white !important;
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 50% !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
 /* ════════════════════════════════════════════════
    MESSAGES PAGE — RESPONSIVE MOBILE FIX
    ════════════════════════════════════════════════ */
