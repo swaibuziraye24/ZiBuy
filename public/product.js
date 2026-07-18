@@ -22,6 +22,7 @@ import { showToast } from "./app.js";
 import "./app.js";
 import "./report-seller.js";
 import "./phone-verify.js";
+import { renderTrustBadge } from "./trust-badge.js";
 
 
 // ── Smart back button ─────────────────────────
@@ -346,6 +347,7 @@ document.head.appendChild(schemaTag);
             </div>
               <span id="seller-verified-badge" style="display:none;background:#10b981;color:white;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:800">✅ Verified</span>
               <span id="seller-phone-verified-badge" style="display:none;background:#3b82f6;color:white;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:800">📱 Phone Verified</span>
+              <span id="seller-trust-badge"></span>
             </div>
             <p style="margin:0;font-size:12px;color:#6b7280">📍 ${seller.location || "Uganda"} · <span id="seller-rating-text">Loading...</span></p>
             <p style="margin:3px 0 0;font-size:12px;color:#6b7280" id="seller-member-since"></p>
@@ -710,6 +712,8 @@ async function loadSellerRating(userId) {
     const ratingEl = document.getElementById("seller-rating-text");
     if (ratingEl) ratingEl.textContent = "—";
   }
+
+  renderTrustBadge(userId, "seller-trust-badge");
 }
 
 /* ============================================
