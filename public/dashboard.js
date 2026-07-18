@@ -6,6 +6,9 @@
 import { db, auth, collection, getDocs, addDoc, query, where, updateDoc, deleteDoc, doc, getDoc, serverTimestamp  } from "./firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+// Registers window.confirmOrderReceipt / window.openDisputeModal / window.submitDispute
+import "./my-orders.js";
+
 // Subscription expiry is now handled server-side by the
 // expireSubscriptions Cloud Function (runs daily automatically)
 
@@ -1142,13 +1145,17 @@ window.deleteProduct = async function(productId) {
 };
 
 // ============================================
-// LOAD MY ORDERS
+// LOAD MY ORDERS — now handles both cart-checkout
+// orders and ZiBuy Protect Buy Now orders
 // ============================================
 
 async function loadMyOrders() {
   debug("loadMyOrders() called");
-  
+
   if (!currentUser) return;
+
+  const container = document.getElementById("orders-list");
+  if (!container) return;
 
   try {
     const snapshot = await getDocs(query(
@@ -1156,34 +1163,98 @@ async function loadMyOrders() {
       where("userEmail", "==", currentUser.email)
     ));
 
-    const orders = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+    const orders = snapshot.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => {
+        const at = a.createdAt?.toDate?.() || new Date(a.createdAt || 0);
+        const bt = b.createdAt?.toDate?.() || new Date(b.createdAt || 0);
+        return bt - at;
+      });
 
-    const container = document.getElementById("orders-list");
-    
     if (orders.length === 0) {
       container.innerHTML = `<p style="text-align:center;color:#6b7280;padding:40px">📦 No orders yet</p>`;
       return;
     }
 
-    container.innerHTML = orders.map(o => `
-      <div class="order-card">
-        <h4>${o.orderId}</h4>
-        <p><strong>Items:</strong> ${o.items?.length || 0} product(s)</p>
-        <p><strong>Total:</strong> UGX ${Number(o.total).toLocaleString()}</p>
-        <p><strong>Status:</strong> <span class="order-status">${o.status}</span></p>
-        <p><strong>Delivery:</strong> ${o.customerLocation}</p>
-        <p style="font-size:12px;color:#6b7280">Order Date: ${new Date(o.createdAt?.toDate?.() || o.createdAt).toLocaleDateString()}</p>
-      </div>
-    `).join("");
+    container.innerHTML = orders.map(o => renderOrderCard(o)).join("");
 
   } catch (err) {
     debug("❌ Load orders error:", err);
-    document.getElementById("orders-list").innerHTML = `<p style="color:red">Error: ${err.message}</p>`;
+    container.innerHTML = `<p style="color:red;padding:20px">Error: ${err.message}</p>`;
   }
 }
+
+function renderOrderCard(o) {
+  const dateStr  = new Date(o.createdAt?.toDate?.() || o.createdAt).toLocaleDateString();
+  const isBuyNow = !!o.productId; // Buy Now orders always carry a single productId
+
+  // ── Status badge ──
+  let badge;
+  if (o.protected) {
+    if (o.disputeStatus === "open") {
+      badge = { bg: "#fee2e2", color: "#991b1b", label: "🚨 Disputed" };
+    } else if (o.deliveryConfirmed) {
+      badge = o.autoConfirmed
+        ? { bg: "#dbeafe", color: "#1e40af", label: "✅ Auto-Confirmed" }
+        : { bg: "#dcfce7", color: "#166534", label: "✅ Confirmed" };
+    } else {
+      badge = { bg: "#fef3c7", color: "#92400e", label: "⏳ Awaiting Confirmation" };
+    }
+  } else {
+    badge = { bg: "#f3f4f6", color: "#374151", label: o.status || "pending" };
+  }
+
+  // ── Item line: single-product Buy Now vs multi-item cart checkout ──
+  const itemLine = isBuyNow
+    ? `<p style="margin:4px 0"><strong>Item:</strong> ${o.productName || "—"}</p>`
+    : `<p style="margin:4px 0"><strong>Items:</strong> ${o.items?.length || 0} product(s)</p>`;
+
+  const locationLine = o.customerLocation
+    ? `<p style="margin:4px 0"><strong>Delivery:</strong> ${o.customerLocation}</p>`
+    : "";
+
+  const feeNote = o.protected
+    ? `<p style="margin:4px 0;font-size:12px;color:#166534">🛡️ Includes ZiBuy Protect fee (UGX ${Number(o.protectionFee || 0).toLocaleString()})</p>`
+    : "";
+
+  // ── Protect actions — only while unresolved ──
+  const actions = (o.protected && !o.deliveryConfirmed && o.disputeStatus !== "open")
+    ? `
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+        <button onclick="confirmOrderReceipt('${o.id}')"
+          style="background:#10b981;color:white;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit">
+          ✅ I Received This
+        </button>
+        <button onclick="openDisputeModal('${o.id}','${(o.productName || "").replace(/'/g, "\\'")}')"
+          style="background:#fee2e2;color:#ef4444;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit">
+          🚨 Report a Problem
+        </button>
+      </div>`
+    : (o.disputeStatus === "open"
+      ? `<p style="margin:10px 0 0;font-size:12px;color:#991b1b;background:#fee2e2;padding:8px;border-radius:8px">
+          Your dispute is under review. Our team will contact you shortly.
+        </p>`
+      : "");
+
+  return `
+    <div class="order-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
+        <h4 style="margin:0">${o.orderId || o.orderRef || o.id.slice(0, 10)}</h4>
+        <span style="background:${badge.bg};color:${badge.color};padding:3px 10px;border-radius:20px;font-size:11px;font-weight:800;white-space:nowrap">${badge.label}</span>
+      </div>
+      ${itemLine}
+      <p style="margin:4px 0"><strong>Total:</strong> UGX ${Number(o.total || o.price || 0).toLocaleString()}</p>
+      ${locationLine}
+      ${feeNote}
+      <p style="font-size:12px;color:#6b7280;margin:4px 0 0">Order Date: ${dateStr}</p>
+      ${actions}
+    </div>
+  `;
+}
+
+// Lets my-orders.js trigger a refresh of THIS page's orders tab
+// after a confirm/dispute action, instead of its own standalone widget
+window.refreshOrdersTab = loadMyOrders;
 
 
 
