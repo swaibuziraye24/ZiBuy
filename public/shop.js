@@ -18,6 +18,7 @@ import {
 } from "./reviews.js";
 
 import "./buyer-ratings.js";
+import { renderTrustBadge } from "./trust-badge.js";
 
 import { onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
@@ -332,6 +333,9 @@ if (verifiedBadge) {
     `
     : "";
 }
+
+// Trust Badge
+renderTrustBadge(sellerId, "shop-trust-badge");
 
 // Plan Badge
 if (planBadge) {
