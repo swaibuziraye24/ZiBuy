@@ -195,7 +195,7 @@ function renderUsers(users) {
   if (!tbody) return;
 
   if (users.length === 0) {
-    tbody.innerHTML = `<tr class="empty-row"><td colspan="8">No users found</td></tr>`;
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="9">No users found</td></tr>`;
     return;
   }
 
@@ -211,6 +211,7 @@ function renderUsers(users) {
         <td id="ads-count-${u.id}">—</td>
         <td>${verified}</td>
         <td>${u.buyerRating ? `⭐ ${u.buyerRating} (${u.buyerRatingCount || 0})` : "—"}</td>
+        <td>${u.trustTier ? `${u.trustScore} <span style="text-transform:capitalize;color:#6b7280;font-size:11px">(${u.trustTier})</span>` : "—"}</td>
         <td>
           <span class="plan-chip ${u.banned ? 'chip-expired' : 'chip-approved'}">
             ${banned}
