@@ -362,6 +362,26 @@
       <span class="nav-icon">📍</span> Pin Requests
     </button>
 
+    <button class="admin-nav-item"
+      onclick="window.showSection('messages', this);loadMessagesAdmin()">
+      <span class="nav-icon">💬</span> Messages
+    </button>
+
+    <button class="admin-nav-item"
+      onclick="window.showSection('buyer-ratings', this);loadBuyerRatingsAdmin()">
+      <span class="nav-icon">🙋</span> Buyer Ratings
+    </button>
+
+    <button class="admin-nav-item"
+      onclick="window.showSection('auto-renew', this);loadAutoRenewRequests()">
+      <span class="nav-icon">🔄</span> Auto-Renew
+    </button>
+
+    <button class="admin-nav-item"
+      onclick="window.showSection('system', this);loadMaintenanceStatus()">
+      <span class="nav-icon">🛠️</span> System
+    </button>
+
    <button class="admin-nav-item"
   onclick="window.showSection('activity', this);loadAdminLogs()">
   <span class="nav-icon">📜</span> Activity Log
@@ -989,14 +1009,107 @@ Separate paragraphs with a blank line."
   </div>
 </div>
 
+    <!-- ══ MESSAGES MODERATION ══ -->
+    <div class="admin-section" id="section-messages">
+      <h2 style="font-size:20px;font-weight:800;margin-bottom:16px">💬 Message Moderation</h2>
+
+      <div style="background:#fef3c7;border:1.5px solid #fde68a;border-radius:12px;
+        padding:14px;margin-bottom:16px;font-size:13px;color:#92400e;line-height:1.6">
+        ⚠️ Use only when investigating a report or dispute. Shows the 200 most recent messages by default.
+      </div>
+
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+        <input class="search-input" type="text" id="messages-search-email"
+          placeholder="Search by user email…" style="margin-bottom:0;flex:1;min-width:200px">
+        <button class="action-btn btn-approve" onclick="searchMessagesByUser()">🔍 Search</button>
+        <button class="action-btn" style="background:#f3f4f6;color:#374151" onclick="loadMessagesAdmin()">🔄 Reset</button>
+      </div>
+
+      <div class="admin-card">
+        <div id="messages-admin-list">
+          <p style="color:var(--gray);font-size:13px">Click a nav item to load</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ BUYER RATINGS ══ -->
+    <div class="admin-section" id="section-buyer-ratings">
+      <h2 style="font-size:20px;font-weight:800;margin-bottom:16px">🙋 Buyer Ratings</h2>
+      <div class="admin-card">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Seller</th><th>Buyer ID</th><th>Rating</th><th>Comment</th><th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="buyer-ratings-table-body">
+            <tr class="empty-row"><td colspan="5">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══ AUTO-RENEW REQUESTS ══ -->
+    <div class="admin-section" id="section-auto-renew">
+      <h2 style="font-size:20px;font-weight:800;margin-bottom:16px">🔄 Auto-Renew Requests</h2>
+      <div class="admin-card">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Ad</th><th>Seller</th><th>Amount</th><th>Reference</th><th>Requested</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="auto-renew-table-body">
+            <tr class="empty-row"><td colspan="6">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══ SYSTEM (Maintenance + Data Export) ══ -->
+    <div class="admin-section" id="section-system">
+      <h2 style="font-size:20px;font-weight:800;margin-bottom:16px">🛠️ System Controls</h2>
+
+      <div class="admin-card" style="margin-bottom:16px">
+        <h2>🚧 Maintenance Mode</h2>
+        <p style="font-size:13px;color:var(--gray);margin-bottom:14px">
+          When enabled, all non-admin visitors see a maintenance screen instead of the site. Use this during major updates.
+        </p>
+
+        <label style="display:flex;align-items:center;gap:10px;margin-bottom:14px;cursor:pointer">
+          <input type="checkbox" id="maintenance-toggle" onchange="toggleMaintenanceMode()"
+            style="width:20px;height:20px;cursor:pointer;accent-color:#ef4444">
+          <span style="font-weight:700;font-size:14px">Enable Maintenance Mode</span>
+        </label>
+
+        <label style="display:block;font-size:12px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">
+          Message shown to visitors
+        </label>
+        <textarea id="maintenance-message" rows="2"
+          class="search-input" style="resize:vertical"
+          placeholder="ZiBuy is undergoing scheduled maintenance. We'll be back shortly."></textarea>
+      </div>
+
+      <div class="admin-card">
+        <h2>📥 Export Data</h2>
+        <p style="font-size:13px;color:var(--gray);margin-bottom:14px">
+          Download CSV files of your platform data for reporting or backup.
+        </p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="action-btn btn-approve" style="padding:10px 18px;font-size:13px" onclick="exportUsersCSV()">📥 Export Users CSV</button>
+          <button class="action-btn btn-approve" style="padding:10px 18px;font-size:13px" onclick="exportOrdersCSV()">📥 Export Orders CSV</button>
+        </div>
+      </div>
+    </div>
+
   </main>
 
 </div>
 
 <div id="toast-container" class="toast-container"></div>
 
-<script type="module" src="notifications-setup.js"></script>
-<script src="nav.js"></script>
 <script type="module" src="admin.js"></script>
+<script type="module" src="notifications-setup.js"></script>
+<script type="module" src="nav.js"></script>
 </body>
 </html>
