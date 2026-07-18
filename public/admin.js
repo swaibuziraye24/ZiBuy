@@ -195,7 +195,7 @@ function renderUsers(users) {
   if (!tbody) return;
 
   if (users.length === 0) {
-    tbody.innerHTML = `<tr class="empty-row"><td colspan="9">No users found</td></tr>`;
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="10">No users found</td></tr>`;
     return;
   }
 
@@ -2740,5 +2740,68 @@ window.clearAllAdminAlerts = async function() {
     await Promise.all(toDelete.map(d => deleteDoc(doc(db, "admin_alerts", d.id))));
     showToast(`Cleared ${toDelete.length} old alerts`, "info");
     loadAdminAlerts();
+  } catch(e) { showToast("Failed", "error"); }
+};
+
+
+// ══════════════════════════════════════════════
+//  DISPUTES
+// ══════════════════════════════════════════════
+window.loadDisputesAdmin = async function() {
+  const tbody = document.getElementById("disputes-table-body");
+  if (!tbody) return;
+
+  try {
+    const snap = await getDocs(collection(db, "disputes"));
+    const disputes = snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
+
+    if (disputes.length === 0) {
+      tbody.innerHTML = `<tr class="empty-row"><td colspan="6">No disputes</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = disputes.map(d => `
+      <tr>
+        <td style="font-weight:700;font-size:13px">${d.productName}</td>
+        <td style="font-size:12px">${d.buyerEmail}</td>
+        <td><span class="plan-chip chip-rejected">${d.reason}</span></td>
+        <td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.details}</td>
+        <td><span class="plan-chip ${d.status === 'resolved' ? 'chip-approved' : 'chip-pending'}">${d.status}</span></td>
+        <td>
+          ${d.status !== "resolved" ? `
+            <button class="action-btn btn-approve" onclick="resolveDispute('${d.id}','${d.orderId}')">✅ Resolve — Buyer Wins</button>
+            <button class="action-btn btn-reject" onclick="dismissDispute('${d.id}','${d.orderId}')">✗ Dismiss</button>
+          ` : "—"}
+        </td>
+      </tr>`).join("");
+
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="6" style="color:red">Failed: ${e.message}</td></tr>`;
+  }
+};
+
+window.resolveDispute = async function(disputeId, orderId) {
+  if (!confirm("Mark resolved in buyer's favor? This does NOT auto-refund — arrange that manually with the seller.")) return;
+  try {
+    await updateDoc(doc(db, "disputes", disputeId), { status: "resolved", resolution: "buyer_favor", resolvedAt: new Date() });
+    if (orderId) {
+      await updateDoc(doc(db, "orders", orderId), { disputeStatus: "resolved_buyer_favor" });
+    }
+    showToast("Dispute resolved", "success");
+    loadDisputesAdmin();
+  } catch(e) { showToast("Failed", "error"); }
+};
+
+window.dismissDispute = async function(disputeId, orderId) {
+  if (!confirm("Dismiss this dispute?")) return;
+  try {
+    await updateDoc(doc(db, "disputes", disputeId), { status: "resolved", resolution: "dismissed", resolvedAt: new Date() });
+    if (orderId) {
+      await updateDoc(doc(db, "orders", orderId), { disputeStatus: "dismissed" });
+    }
+    showToast("Dispute dismissed", "info");
+    loadDisputesAdmin();
   } catch(e) { showToast("Failed", "error"); }
 };
