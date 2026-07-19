@@ -206,7 +206,7 @@ function renderUsers(users) {
 
     return `
       <tr>
-        <td><span style="font-weight:700">${u.email || u.id}</span></td>
+        <td><span style="font-weight:700">${escapeHTML(u.email) || escapeHTML(u.id)}</span></td>
         <td><span class="plan-chip chip-${plan}">${planEmoji(plan)} ${plan}</span></td>
         <td id="ads-count-${u.id}">—</td>
         <td>${verified}</td>
@@ -366,7 +366,7 @@ function renderSubs(subs) {
 
     return `
       <tr>
-        <td style="font-size:12px">${s.email || s.userId}</td>
+        <td style="font-size:12px">${escapeHTML(s.email) || escapeHTML(s.userId)}</td>
         <td><span class="plan-chip chip-${s.plan}">${planEmoji(s.plan)} ${s.plan}</span></td>
         <td style="font-size:12px">${s.billing || "monthly"}</td>
         <td style="font-weight:700;color:var(--orange)">UGX ${Number(s.price || 0).toLocaleString()}</td>
@@ -533,21 +533,21 @@ function renderBoosts(boosts) {
       <td>
         <a href="product.html?id=${b.productId}" target="_blank"
           style="color:var(--orange);font-weight:800;font-size:13px">
-          ${b.productName || b.productId?.slice(0,14) || "—"}
+          ${escapeHTML(b.productName) || b.productId?.slice(0,14) || "—"}
         </a>
         <br>
         <span style="font-size:11px;color:#6b7280">${b.productId?.slice(0,12)}</span>
       </td>
       <td>
-        <span style="font-weight:700;font-size:13px">${b.userEmail || "—"}</span>
+        <span style="font-weight:700;font-size:13px">${escapeHTML(b.userEmail) || "—"}</span>
       </td>
       <td style="font-weight:800;text-align:center">${b.days || "—"} days</td>
       <td style="font-weight:800;color:var(--orange)">UGX ${Number(b.price||0).toLocaleString()}</td>
       <td>
         <span style="font-size:12px;font-weight:700;color:#ff6600;background:#fff4ee;padding:4px 8px;border-radius:6px;letter-spacing:.5px;display:inline-block">
-          ${b.paymentRef || "—"}
+          ${escapeHTML(b.paymentRef) || "—"}
         </span>
-        ${b.transactionRef ? `<br><span style="font-size:11px;color:#6b7280">Txn: ${b.transactionRef}</span>` : ""}
+        ${b.transactionRef ? `<br><span style="font-size:11px;color:#6b7280">Txn: ${escapeHTML(b.transactionRef)}</span>` : ""}
       </td>
       <td style="font-size:12px">${fmtDate(b.requestedAt || b.createdAt)}</td>
       <td style="font-size:12px">${isApproved ? fmtDate(b.approvedAt) : "—"}</td>
@@ -688,10 +688,10 @@ window.loadAutoRenewRequests = async function() {
 
     tbody.innerHTML = requests.map(r => `
       <tr>
-        <td style="font-weight:700;font-size:13px">${r.productName}</td>
-        <td style="font-size:12px">${r.userEmail}</td>
+        <td style="font-weight:700;font-size:13px">${escapeHTML(r.productName)}</td>
+        <td style="font-size:12px">${escapeHTML(r.userEmail)}</td>
         <td style="font-weight:800;color:var(--orange)">UGX ${Number(r.price||0).toLocaleString()}</td>
-        <td style="font-size:12px">${r.paymentRef}<br><span style="color:#6b7280">Txn: ${r.transactionRef}</span></td>
+        <td style="font-size:12px">${escapeHTML(r.paymentRef)}<br><span style="color:#6b7280">Txn: ${escapeHTML(r.transactionRef)}</span></td>
         <td style="font-size:12px">${fmtDate(r.createdAt)}</td>
         <td>
           <button class="action-btn btn-approve" onclick="approveAutoRenew('${r.id}','${r.productId}')">✅ Approve</button>
@@ -875,9 +875,9 @@ function renderAdsTable(ads) {
         <img src="${a.images?.[0] || ''}" alt=""
           style="width:44px;height:44px;object-fit:cover;border-radius:8px;background:#f3f4f6">
       </td>
-      <td style="font-weight:700;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.name}</td>
+      <td style="font-weight:700;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(a.name)}</td>
       <td style="color:var(--orange);font-weight:800">UGX ${Number(a.price||0).toLocaleString()}</td>
-      <td style="font-size:12px">${a.userEmail || "—"}</td>
+      <td style="font-size:12px">${escapeHTML(a.userEmail) || "—"}</td>
       <td><span class="plan-chip ${chipClass(a.status)}">${a.status || "active"}</span></td>
       <td style="font-size:12px">${fmtDate(a.expiresAt)}</td>
       <td style="display:flex;gap:6px;flex-wrap:wrap">
@@ -936,8 +936,8 @@ function renderOrdersTable(orders) {
 
   tbody.innerHTML = orders.map(o => `
     <tr>
-      <td style="font-weight:700;font-size:12px;color:var(--orange)">${o.orderId}</td>
-      <td style="font-size:12px">${o.customerName || "—"}<br><span style="color:var(--gray)">${o.customerPhone || ""}</span></td>
+      <td style="font-weight:700;font-size:12px;color:var(--orange)">${escapeHTML(o.orderId)}</td>
+      <td style="font-size:12px">${escapeHTML(o.customerName) || "—"}<br><span style="color:var(--gray)">${escapeHTML(o.customerPhone)}</span></td>
       <td style="font-weight:800">UGX ${Number(o.total||0).toLocaleString()}</td>
       <td style="font-size:12px">${o.paymentMethod || "—"}</td>
       <td><span class="plan-chip ${chipClass(o.status)}">${o.status}</span></td>
@@ -1035,7 +1035,7 @@ function renderPremiumAds(ads) {
     return `
       <tr>
         <td><a href="product.html?id=${a.productId}" target="_blank" style="color:var(--orange);font-weight:700">${a.productId?.slice(0,10)}…</a></td>
-        <td style="font-size:12px">${a.userEmail || a.userId?.slice(0,8)}</td>
+        <td style="font-size:12px">${escapeHTML(a.userEmail) || a.userId?.slice(0,8)}</td>
         <td>${a.days} days</td>
         <td style="font-weight:800;color:var(--orange)">UGX ${Number(a.price||0).toLocaleString()}</td>
         <td>${a.clicks || 0}</td>
@@ -1079,11 +1079,11 @@ function renderVerifs(verifs) {
   }
   tbody.innerHTML = verifs.map(v => `
     <tr>
-      <td style="font-weight:700">${v.fullName || "—"}</td>
-      <td>${v.businessName || "—"}</td>
-      <td style="font-size:12px">${v.email || "—"}</td>
-      <td style="font-size:12px">${v.phone || "—"}</td>
-      <td style="font-size:12px">${v.location || "—"}</td>
+      <td style="font-weight:700">${escapeHTML(v.fullName) || "—"}</td>
+      <td>${escapeHTML(v.businessName) || "—"}</td>
+      <td style="font-size:12px">${escapeHTML(v.email) || "—"}</td>
+      <td style="font-size:12px">${escapeHTML(v.phone) || "—"}</td>
+      <td style="font-size:12px">${escapeHTML(v.location) || "—"}</td>
       <td><span class="plan-chip ${chipClass(v.status)}">${v.status}</span></td>
       <td style="display:flex;gap:6px;flex-wrap:wrap">
         ${v.status === "pending" ? `
@@ -1145,15 +1145,15 @@ function renderReports(reports) {
   }
   tbody.innerHTML = reports.map(r => `
     <tr>
-      <td style="font-weight:800;color:#ef4444">${r.reason || "—"}</td>
+      <td style="font-weight:800;color:#ef4444">${escapeHTML(r.reason) || "—"}</td>
       <td>
-        <span style="font-weight:700;font-size:13px;color:#111827">${r.sellerName || r.productId || "—"}</span>
+        <span style="font-weight:700;font-size:13px;color:#111827">${escapeHTML(r.sellerName) || escapeHTML(r.productId) || "—"}</span>
         ${r.productRef && r.productRef !== "—"
-          ? `<br><span style="font-size:11px;color:#6b7280">${r.productRef.slice(0,30)}</span>`
+          ? `<br><span style="font-size:11px;color:#6b7280">${escapeHTML(r.productRef.slice(0,30))}</span>`
           : ""}
       </td>
-      <td style="font-size:12px">${r.reporterEmail || r.reportedBy || "—"}</td>
-      <td style="font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.description || "—"}</td>
+      <td style="font-size:12px">${escapeHTML(r.reporterEmail || r.reportedBy) || "—"}</td>
+      <td style="font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(r.description) || "—"}</td>
       <td><span class="plan-chip ${r.status === 'resolved' ? 'chip-approved' : 'chip-pending'}">${r.status || "open"}</span></td>
       <td style="display:flex;gap:6px;flex-wrap:wrap">
         ${r.status !== "resolved"
@@ -1309,8 +1309,8 @@ async function loadBroadcasts() {
 
     list.innerHTML = items.map(b => `
       <div style="padding:12px;border-bottom:1px solid #f0f0f0">
-        <p style="font-weight:800;font-size:14px;margin:0 0 4px">🔥 ${b.title}</p>
-        <p style="font-size:13px;color:var(--gray);margin:0 0 4px">${b.message}</p>
+        <p style="font-weight:800;font-size:14px;margin:0 0 4px">🔥 ${escapeHTML(b.title)}</p>
+        <p style="font-size:13px;color:var(--gray);margin:0 0 4px">${escapeHTML(b.message)}</p>
         <p style="font-size:11px;color:#adb5bd;margin:0">${fmtDate(b.createdAt)}</p>
       </div>
     `).join("");
@@ -1338,7 +1338,7 @@ async function loadBanners() {
         <div style="border:1px solid #e5e7eb;border-radius:10px;padding:14px;margin-bottom:10px">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
             <div>
-              <p style="font-weight:800;margin:0 0 4px">${b.title}</p>
+              <p style="font-weight:800;margin:0 0 4px">${escapeHTML(b.title)}</p>
               <p style="font-size:12px;color:#6b7280;margin:0 0 4px">👁️ ${b.impressions || 0} impressions · 🖱️ ${b.clicks || 0} clicks</p>
               <p style="font-size:12px;color:#ff6600;font-weight:700;margin:0">UGX ${Number(b.price || 0).toLocaleString()}/mo</p>
             </div>
@@ -1560,12 +1560,12 @@ function renderReminders(reminders) {
           </div>
 
           <p style="margin:0 0 3px;font-weight:800;font-size:14px;color:#111827">
-            ${r.email || r.userId?.slice(0,16) || "Unknown user"}
+            ${escapeHTML(r.email) || r.userId?.slice(0,16) || "Unknown user"}
           </p>
           <p style="margin:0;font-size:12px;color:#6b7280">
-            📱 ${r.phone || "No phone"} ·
-            ${r.plan ? "Plan: " + r.plan.toUpperCase() : ""}
-            ${r.productName ? "Ad: " + r.productName : ""}
+            📱 ${escapeHTML(r.phone) || "No phone"} ·
+            ${r.plan ? "Plan: " + escapeHTML(r.plan.toUpperCase()) : ""}
+            ${r.productName ? "Ad: " + escapeHTML(r.productName) : ""}
           </p>
           <p style="margin:4px 0 0;font-size:11px;color:#9ca3af">
             ${fmtDate(r.createdAt)}
@@ -1652,12 +1652,12 @@ window.loadJobAdsAdmin = async function() {
     tbody.innerHTML = jobs.map(j => `
       <tr style="border-bottom:1px solid #f0f0f0">
         <td style="padding:12px">
-          <p style="margin:0;font-weight:800;font-size:13px">${j.title}</p>
+          <p style="margin:0;font-weight:800;font-size:13px">${escapeHTML(j.title)}</p>
           <p style="margin:2px 0 0;font-size:11px;color:#6b7280">
-            📍 ${j.location} · ${j.type || "Full Time"}
+            📍 ${escapeHTML(j.location)} · ${escapeHTML(j.type) || "Full Time"}
           </p>
         </td>
-        <td style="padding:12px;font-size:13px;font-weight:700">${j.company}</td>
+        <td style="padding:12px;font-size:13px;font-weight:700">${escapeHTML(j.company)}</td>
         <td style="padding:12px">
           <span style="background:${j.isTop ? "#fff4ee" : "#f3f4f6"};
             color:${j.isTop ? "#ff6600" : "#374151"};padding:3px 8px;
@@ -1842,9 +1842,9 @@ window.loadCategorySponsorsAdmin = async function() {
         padding:12px;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:8px;
         background:${s.active ? "white" : "#fafafa"};flex-wrap:wrap;gap:10px">
         <div>
-          <p style="margin:0;font-weight:800;font-size:14px">${s.sponsorName}</p>
+          <p style="margin:0;font-weight:800;font-size:14px">${escapeHTML(s.sponsorName)}</p>
           <p style="margin:3px 0;font-size:12px;color:#ff6600;font-weight:700">
-            Category: ${s.category}
+            Category: ${escapeHTML(s.category)}
           </p>
           <p style="margin:0;font-size:11px;color:#9ca3af">
             ${fmtDate(s.createdAt)} · Expires: ${fmtDate(s.expiresAt)} ·
@@ -2078,9 +2078,9 @@ window.loadBlogAdmin = async function() {
           style="width:80px;height:60px;object-fit:cover;border-radius:8px;background:#f3f4f6;flex-shrink:0">
 
         <div style="flex:1;min-width:160px">
-          <p style="margin:0;font-weight:800;font-size:14px;color:#111827">${p.title}</p>
+          <p style="margin:0;font-weight:800;font-size:14px;color:#111827">${escapeHTML(p.title)}</p>
           <p style="margin:4px 0;font-size:12px;color:#6b7280">
-            ${p.category || "—"} · by ${p.author || "ZiBuy Team"} · 👁️ ${p.views || 0} views
+            ${escapeHTML(p.category) || "—"} · by ${escapeHTML(p.author) || "ZiBuy Team"} · 👁️ ${p.views || 0} views
           </p>
           <span class="plan-chip ${p.status === 'published' ? 'chip-approved' : 'chip-pending'}">
             ${p.status === 'published' ? '✅ Published' : '📝 Draft'}
@@ -2293,10 +2293,10 @@ window.viewOrderDetail = function(orderId) {
           style="background:#f3f4f6;border:none;width:32px;height:32px;border-radius:50%;font-size:18px;cursor:pointer">×</button>
       </div>
       <div style="background:#f9fafb;border-radius:12px;padding:14px;margin-bottom:14px">
-        <p style="margin:0 0 6px;font-size:13px"><strong>Customer:</strong> ${order.customerName || "—"}</p>
-        <p style="margin:0 0 6px;font-size:13px"><strong>Phone:</strong> ${order.customerPhone || "—"}</p>
-        <p style="margin:0 0 6px;font-size:13px"><strong>Email:</strong> ${order.userEmail || order.buyerEmail || "—"}</p>
-        <p style="margin:0 0 6px;font-size:13px"><strong>Location:</strong> ${order.customerLocation || order.deliveryAddress || "—"}</p>
+        <p style="margin:0 0 6px;font-size:13px"><strong>Customer:</strong> ${escapeHTML(order.customerName) || "—"}</p>
+        <p style="margin:0 0 6px;font-size:13px"><strong>Phone:</strong> ${escapeHTML(order.customerPhone) || "—"}</p>
+        <p style="margin:0 0 6px;font-size:13px"><strong>Email:</strong> ${escapeHTML(order.userEmail || order.buyerEmail) || "—"}</p>
+        <p style="margin:0 0 6px;font-size:13px"><strong>Location:</strong> ${escapeHTML(order.customerLocation || order.deliveryAddress) || "—"}</p>
         <p style="margin:0 0 6px;font-size:13px"><strong>Payment:</strong> ${order.paymentMethod || "—"}</p>
         <p style="margin:0 0 6px;font-size:13px"><strong>Total:</strong> <span style="color:#ff6600;font-weight:800">UGX ${Number(order.total || 0).toLocaleString()}</span></p>
         <p style="margin:0;font-size:13px"><strong>Status:</strong> ${order.status}</p>
@@ -2304,7 +2304,7 @@ window.viewOrderDetail = function(orderId) {
       <h3 style="font-size:14px;font-weight:800;margin-bottom:8px">Items:</h3>
       ${(order.items || []).map(item => `
         <div style="display:flex;justify-content:space-between;padding:8px;background:#f9fafb;border-radius:8px;margin-bottom:6px;font-size:13px">
-          <span>${item.name} × ${item.qty}</span>
+          <span>${escapeHTML(item.name)} × ${item.qty}</span>
           <span style="font-weight:700;color:#ff6600">UGX ${Number(item.price * item.qty).toLocaleString()}</span>
         </div>`).join("") || "<p style='color:#6b7280;font-size:13px'>No items recorded</p>"}
       ${order.customerPhone ? `
@@ -2364,7 +2364,7 @@ window.adminViewUserAds = async function(userId, email) {
             <div style="display:flex;gap:12px;padding:10px;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:8px">
               <img src="${a.images?.[0] || ''}" style="width:50px;height:50px;object-fit:cover;border-radius:8px;background:#f3f4f6;flex-shrink:0">
               <div style="flex:1">
-                <p style="margin:0;font-weight:700;font-size:13px">${a.name}</p>
+                <p style="margin:0;font-weight:700;font-size:13px">${escapeHTML(a.name)}</p>
                 <p style="margin:2px 0;font-size:12px;color:#ff6600;font-weight:800">UGX ${Number(a.price||0).toLocaleString()}</p>
                 <span style="font-size:11px;background:${a.status==='active'?'#dcfce7':'#fee2e2'};color:${a.status==='active'?'#16a34a':'#ef4444'};padding:2px 7px;border-radius:20px;font-weight:700">${a.status}</span>
               </div>
@@ -2408,7 +2408,7 @@ window.adminViewUserOrders = async function(userId, email) {
           orders.map(o => `
             <div style="padding:12px;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:8px;font-size:13px">
               <div style="display:flex;justify-content:space-between">
-                <strong>${o.orderId || o.id.slice(0,10)}</strong>
+                <strong>${escapeHTML(o.orderId) || o.id.slice(0,10)}</strong>
                 <span class="plan-chip ${chipClass(o.status)}">${o.status}</span>
               </div>
               <p style="margin:4px 0;color:#6b7280">UGX ${Number(o.total||0).toLocaleString()} · ${o.paymentMethod || "—"}</p>
@@ -2464,10 +2464,10 @@ window.loadMessagesAdmin = async function() {
     container.innerHTML = messages.map(m => `
       <div style="padding:12px;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:8px;font-size:13px">
         <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap">
-          <span style="font-weight:700">${m.senderEmail || "—"} → ${(m.participants||[]).find(p=>p!==m.senderEmail) || "—"}</span>
+          <span style="font-weight:700">${escapeHTML(m.senderEmail) || "—"} → ${escapeHTML((m.participants||[]).find(p=>p!==m.senderEmail)) || "—"}</span>
           <span style="color:#9ca3af;font-size:11px">${fmtDate(m.timestamp)}</span>
         </div>
-        <p style="margin:6px 0;color:#374151">${m.text || ""}</p>
+        <p style="margin:6px 0;color:#374151">${escapeHTML(m.text)}</p>
         <button class="action-btn btn-reject" onclick="adminDeleteMessage('${m.id}')">🗑️ Delete Message</button>
       </div>`).join("");
 
@@ -2489,22 +2489,22 @@ window.searchMessagesByUser = async function() {
       where("participants", "array-contains", email)
     ));
 
-    const messages = snap.docs
+    const messagesData = snap.docs
       .map(d => ({ id: d.id, ...d.data() }))
       .sort((a, b) => (b.timestamp?.toDate?.() || 0) - (a.timestamp?.toDate?.() || 0));
 
-    if (messages.length === 0) {
-      container.innerHTML = `<p style="text-align:center;padding:30px;color:#6b7280">No messages found for ${email}</p>`;
+    if (messagesData.length === 0) {
+      container.innerHTML = `<p style="text-align:center;color:#6b7280;padding:30px">No messages found for ${escapeHTML(email)}</p>`;
       return;
     }
 
-    container.innerHTML = messages.map(m => `
+    container.innerHTML = messagesData.map(m => `
       <div style="padding:12px;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:8px;font-size:13px">
         <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap">
-          <span style="font-weight:700">${m.senderEmail || "—"} → ${(m.participants||[]).find(p=>p!==m.senderEmail) || "—"}</span>
+          <span style="font-weight:700">${escapeHTML(m.senderEmail) || "—"} → ${escapeHTML((m.participants||[]).find(p=>p!==m.senderEmail)) || "—"}</span>
           <span style="color:#9ca3af;font-size:11px">${fmtDate(m.timestamp)}</span>
         </div>
-        <p style="margin:6px 0;color:#374151">${m.text || ""}</p>
+        <p style="margin:6px 0;color:#374151">${escapeHTML(m.text)}</p>
         <button class="action-btn btn-reject" onclick="adminDeleteMessage('${m.id}')">🗑️ Delete Message</button>
       </div>`).join("");
   } catch(e) {
@@ -2544,10 +2544,10 @@ window.loadBuyerRatingsAdmin = async function() {
 
     tbody.innerHTML = ratings.map(r => `
       <tr>
-        <td style="font-size:12px">${r.sellerEmail || "—"}</td>
+        <td style="font-size:12px">${escapeHTML(r.sellerEmail) || "—"}</td>
         <td style="font-size:12px">${r.buyerId?.slice(0,10) || "—"}</td>
         <td style="font-weight:800;color:#ff6600">${"⭐".repeat(Math.min(r.rating||0,5))} ${r.rating}/5</td>
-        <td style="font-size:13px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.text || "—"}</td>
+        <td style="font-size:13px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(r.text) || "—"}</td>
         <td><button class="action-btn btn-reject" onclick="adminDeleteBuyerRating('${r.id}','${r.buyerId}')">🗑️ Delete</button></td>
       </tr>`).join("");
 
@@ -2782,10 +2782,10 @@ window.loadDisputesAdmin = async function() {
 
     tbody.innerHTML = disputes.map(d => `
       <tr>
-        <td style="font-weight:700;font-size:13px">${d.productName}</td>
-        <td style="font-size:12px">${d.buyerEmail}</td>
-        <td><span class="plan-chip chip-rejected">${d.reason}</span></td>
-        <td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.details}</td>
+        <td style="font-weight:700;font-size:13px">${escapeHTML(d.productName)}</td>
+        <td style="font-size:12px">${escapeHTML(d.buyerEmail)}</td>
+        <td><span class="plan-chip chip-rejected">${escapeHTML(d.reason)}</span></td>
+        <td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(d.details)}</td>
         <td><span class="plan-chip ${d.status === 'resolved' ? 'chip-approved' : 'chip-pending'}">${d.status}</span></td>
         <td>
           ${d.status !== "resolved" ? `
