@@ -129,8 +129,8 @@ function buildDetailsCard(p) {
       return `
         <div style="display:flex;justify-content:space-between;align-items:center;
           padding:10px 0;border-bottom:1px solid #f3f4f6;font-size:13px;gap:12px">
-          <span style="color:#6b7280;font-weight:600;flex-shrink:0">${label}</span>
-          <span style="font-weight:700;color:#111827;text-align:right">${v}</span>
+          <span style="color:#6b7280;font-weight:600;flex-shrink:0">${escapeHTML(label)}</span>
+          <span style="font-weight:700;color:#111827;text-align:right">${escapeHTML(v)}</span>
         </div>`;
     });
 
@@ -339,7 +339,7 @@ document.head.appendChild(schemaTag);
           <div class="seller-info">
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">
              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-              <h4 style="margin:0;font-size:15px;font-weight:800">${seller.name || "ZiBuy Seller"}</h4>
+              <h4 style="margin:0;font-size:15px;font-weight:800">${escapeHTML(seller.name) || "ZiBuy Seller"}</h4>
               ${p.userEmail === "swaibuziraye22@gmail.com" ? `
                 <span style="background:linear-gradient(135deg,#111827,#374151);color:white;font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px;display:inline-flex;align-items:center;gap:4px">
                   <img src="my_logo.png" style="width:12px;height:12px;object-fit:contain;border-radius:2px"> ZiBuy Official
@@ -349,7 +349,7 @@ document.head.appendChild(schemaTag);
               <span id="seller-phone-verified-badge" style="display:none;background:#3b82f6;color:white;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:800">📱 Phone Verified</span>
               <span id="seller-trust-badge"></span>
             </div>
-            <p style="margin:0;font-size:12px;color:#6b7280">📍 ${seller.location || "Uganda"} · <span id="seller-rating-text">Loading...</span></p>
+            <p style="margin:0;font-size:12px;color:#6b7280">📍 ${escapeHTML(seller.location) || "Uganda"} · <span id="seller-rating-text">Loading...</span></p>
             <p style="margin:3px 0 0;font-size:12px;color:#6b7280" id="seller-member-since"></p>
           </div>
           <span style="margin-left:auto;font-size:12px;color:#ff6600;font-weight:700;flex-shrink:0">View Profile →</span>
@@ -368,7 +368,7 @@ document.head.appendChild(schemaTag);
         <p class="product-cat" style="font-size:12px;font-weight:700;color:#ff6600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">${p.category || "Product"}</p>
         <h1 style="font-size:26px;font-weight:800;color:#111827;line-height:1.2;margin-bottom:10px">${escapeHTML(p.name)}</h1>
         <p style="font-size:32px;font-weight:900;color:#ff6600;margin-bottom:6px">UGX ${Number(p.price).toLocaleString()}</p>
-        <p style="font-size:13px;color:#6b7280;margin-bottom:18px">📍 ${seller.location || "Uganda"} · Posted ${p.createdAt ? new Date(p.createdAt.toDate()).toLocaleDateString() : "recently"}</p>
+        <p style="font-size:13px;color:#6b7280;margin-bottom:18px">📍 ${escapeHTML(seller.location) || "Uganda"} · Posted ${p.createdAt ? new Date(p.createdAt.toDate()).toLocaleDateString() : "recently"}</p>
 
         <!-- Description -->
         <div style="background:#f9fafb;border-radius:12px;padding:16px;margin-bottom:20px">
@@ -627,16 +627,16 @@ async function loadRelatedProducts(category, currentProductId) {
                   style="width:100%;aspect-ratio:1/1;object-fit:cover">
                 <div style="padding:10px">
                   <p style="margin:0 0 3px;font-size:10px;color:#ff6600;
-                    font-weight:800;text-transform:uppercase">${p.category || ""}</p>
+                    font-weight:800;text-transform:uppercase">${escapeHTML(p.category)}</p>
                   <h4 style="margin:0 0 4px;font-size:12px;font-weight:700;
                     color:#111827;overflow:hidden;text-overflow:ellipsis;
-                    white-space:nowrap">${p.name}</h4>
+                    white-space:nowrap">${escapeHTML(p.name)}</h4>
                   <p style="margin:0;color:#ff6600;font-weight:900;font-size:14px">
                     UGX ${price}
                   </p>
                   ${condBadge}
                   <p style="margin:4px 0 0;font-size:10px;color:#9ca3af">
-                    📍 ${p.seller?.location || p.location || "Uganda"}
+                    📍 ${escapeHTML(p.seller?.location || p.location) || "Uganda"}
                   </p>
                 </div>
               </div>
@@ -954,8 +954,8 @@ window.openBuyNow = function(productId, productName, price, sellerPhone, sellerN
 
       <div style="background:#f9fafb;border-radius:12px;padding:14px;margin-bottom:16px">
         <p style="margin:0;font-size:13px;color:#6b7280">You are buying</p>
-        <p style="margin:4px 0 0;font-size:16px;font-weight:800;color:#111827">${productName}</p>
-        <p style="margin:4px 0 0;font-size:12px;color:#6b7280">Seller: <strong>${sellerName}</strong></p>
+        <p style="margin:4px 0 0;font-size:16px;font-weight:800;color:#111827">${escapeHTML(productName)}</p>
+        <p style="margin:4px 0 0;font-size:12px;color:#6b7280">Seller: <strong>${escapeHTML(sellerName)}</strong></p>
       </div>
 
       <!-- Delivery details — previously missing entirely -->
