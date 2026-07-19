@@ -1590,7 +1590,7 @@ async function loadAnalytics() {
     // ── FREE ──────────────────────────────────
     if (plan === "free") {
       container.innerHTML = `
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px">
+        <div class="zb-stats-grid">
           ${statCard("Active Ads", activeAds.length, "#ff6600")}
           ${statCard("Total Views", totalViews.toLocaleString(), "#6b7280")}
         </div>
@@ -1603,7 +1603,7 @@ async function loadAnalytics() {
     if (plan === "bronze") {
       const topAds = [...ads].sort((a, b) => (b.views||0) - (a.views||0)).slice(0, 5);
       container.innerHTML = `
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px">
+        <div class="zb-stats-grid">
           ${statCard("Active Ads",   activeAds.length,          "#ff6600")}
           ${statCard("Total Views",  totalViews.toLocaleString(),"#6b7280")}
           ${statCard("Orders Made",  totalOrders,               "#10b981")}
@@ -1637,7 +1637,7 @@ async function loadAnalytics() {
       });
 
       container.innerHTML = `
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px">
+        <div class="zb-stats-grid">
           ${statCard("Active Ads",     activeAds.length,                 "#ff6600")}
           ${statCard("Total Views",    totalViews.toLocaleString(),       "#6b7280")}
           ${statCard("Orders Made",    totalOrders,                      "#10b981")}
@@ -1645,7 +1645,7 @@ async function loadAnalytics() {
           ${statCard("Orders (7 days)",last7.length,                     "#f59e0b")}
         </div>
 
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+        <div class="zb-two-col">
           <div style="background:white;border-radius:14px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
             <h3 style="font-size:14px;font-weight:800;margin-bottom:14px">👁️ Top Ads by Views</h3>
             ${topAds.length === 0 ? "<p style='color:#6b7280;font-size:13px'>No ads</p>" :
@@ -1675,7 +1675,7 @@ async function loadAnalytics() {
     const boostedAds = ads.filter(a => a.isPremium).length;
 
     container.innerHTML = `
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:20px">
+      <div class="zb-stats-grid">
         ${statCard("Active Ads",     activeAds.length,                  "#ff6600")}
         ${statCard("Total Views",    totalViews.toLocaleString(),        "#6b7280")}
         ${statCard("Orders",         totalOrders,                       "#10b981")}
@@ -1684,7 +1684,7 @@ async function loadAnalytics() {
         ${statCard("Boosted Ads",    boostedAds,                        "#b45309")}
       </div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+      <div class="zb-two-col">
         <div style="background:white;border-radius:14px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
           <h3 style="font-size:14px;font-weight:800;margin-bottom:14px">👁️ Top 10 Ads by Views</h3>
           ${topAds.map(a => barRow(a.name, a.views||0, totalViews||1, "#ff6600")).join("") || "<p style='color:#6b7280;font-size:13px'>No ads</p>"}
@@ -1700,6 +1700,7 @@ async function loadAnalytics() {
           <h3 style="font-size:14px;font-weight:800;margin:0">📋 Full Ad Performance</h3>
           <button onclick="exportAnalyticsCSV()" style="background:#ff6600;color:white;border:none;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer">⬇️ Export CSV</button>
         </div>
+        <div class="zb-table-wrap">
         <table style="width:100%;border-collapse:collapse;font-size:13px">
           <thead>
             <tr style="background:#f9fafb">
@@ -1723,6 +1724,7 @@ async function loadAnalytics() {
               </tr>`).join("")}
           </tbody>
         </table>
+        </div>
       </div>
     `;
 
@@ -1948,7 +1950,7 @@ async function loadMyProfile() {
     container.innerHTML = `
 
       <!-- Avatar + Name -->
-      <div style="background:white;border-radius:20px;padding:28px;box-shadow:0 2px 12px rgba(0,0,0,0.07);margin-bottom:16px;display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+      <div class="zb-profile-header" style="background:white;border-radius:20px;padding:28px;box-shadow:0 2px 12px rgba(0,0,0,0.07);margin-bottom:16px">
         <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#ff6600,#ff9900);color:white;font-size:32px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0">
           ${initial}
         </div>
@@ -1969,7 +1971,7 @@ async function loadMyProfile() {
       </div>
 
       <!-- Stats Row -->
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:16px">
+      <div class="zb-stats-grid">
         ${profileStat("📦", "Total Ads", products.length, "#ff6600")}
         ${profileStat("✅", "Active Ads", activeAds, "#10b981")}
         ${profileStat("👁️", "Total Views", totalViews.toLocaleString(), "#6b7280")}
@@ -2015,8 +2017,8 @@ async function loadMyProfile() {
           ? `<p style="color:#6b7280;font-size:14px">No ads posted yet. <a href="post-ad.html" style="color:#ff6600;font-weight:700">Post your first ad →</a></p>`
           : `<div style="display:flex;flex-direction:column;gap:10px">
               ${products.slice(0, 3).map(p => `
-                <div onclick="window.location.href='product.html?id=${p.id}'"
-                  style="display:flex;gap:12px;align-items:center;padding:10px;background:#f9fafb;border-radius:10px;cursor:pointer;transition:.2s"
+                <div onclick="window.location.href='product.html?id=${p.id}'" class="zb-row-flex"
+                  style="padding:10px;background:#f9fafb;border-radius:10px;cursor:pointer;transition:.2s"
                   onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='#f9fafb'">
                   <img src="${p.images?.[0] || ''}"
                     onerror="this.style.display='none'"
