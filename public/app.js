@@ -663,8 +663,8 @@ async function loadFeaturedShops() {
           <img class="shop-card-logo" src="${s.logoUrl || 'https://zibuy-5deae.web.app/icons/icon-512.png/80?text=Zi'}" alt="${s.name || 'Shop'}">
         </div>
         <div class="shop-card-body">
-          <h4>${s.name || "ZiBuy Shop"} ${s.isVerified ? "✅" : ""}</h4>
-          <p class="shop-card-loc">📍 ${s.location || "Uganda"}</p>
+          <h4>${escapeHTML(s.name) || "ZiBuy Shop"} ${s.isVerified ? "✅" : ""}</h4>
+          <p class="shop-card-loc">📍 ${escapeHTML(s.location) || "Uganda"}</p>
           <span class="shop-card-plan plan-${s.plan}">${s.plan === "gold" ? "🥇 Gold Seller" : "🥈 Silver Seller"}</span>
         </div>
       </div>
@@ -837,7 +837,7 @@ style="width:100%;height:150px;object-fit:cover">
             UGX ${price}
           </p>
           <p style="margin:0;font-size:11px;color:#9ca3af">
-            📍 ${p.seller?.location || p.location || "Uganda"} · ${condition}
+            📍 ${escapeHTML(p.seller?.location || p.location || "Uganda")} · ${escapeHTML(condition)}
           </p>
         </div>
       </div>
@@ -1322,7 +1322,7 @@ const topTrending = trending.slice(0, 10);
 
           <div style="padding:6px;">
             <h3 style="font-size:12px;margin:0;">
-              ${p.name || "No name"}
+              ${escapeHTML(p.name) || "No name"}
             </h3>
 
             <p style="color:#f68b1e;font-weight:700;margin:4px 0;">
@@ -1338,7 +1338,7 @@ const topTrending = trending.slice(0, 10);
             <p class="location"
               style="color:#999;font-size:11px;margin:0 0 2px;cursor:pointer"
               onclick="event.stopPropagation();window.location.href='user-profile.html?id=${p.userId}'">
-              📍 ${p.location || "Unknown"}
+              📍 ${escapeHTML(p.location) || "Unknown"}
             </p>
             ${p.sellerIsVerified
               ? `<span style="display:inline-block;background:#10b981;color:white;padding:1px 7px;border-radius:20px;font-size:10px;font-weight:800;margin-bottom:2px">✅ Verified</span>`
@@ -1525,7 +1525,7 @@ box-shadow:0 2px 8px rgba(0,0,0,.18);
         <p style="font-size:11px;color:#ff6600;font-weight:700;margin:0 0 3px;
           text-transform:uppercase;letter-spacing:.3px">${p.category || ""}</p>
         <h3 style="font-size:12px;margin:0 0 4px;color:#111827;overflow:hidden;
-          text-overflow:ellipsis;white-space:nowrap">${p.name || "No name"}</h3>
+          text-overflow:ellipsis;white-space:nowrap">${escapeHTML(p.name) || "No name"}</h3>
         <p style="color:#ff6600;font-weight:800;font-size:14px;margin:0 0 6px">
           UGX ${Number(p.price || 0).toLocaleString()}
         </p>
@@ -1535,7 +1535,7 @@ box-shadow:0 2px 8px rgba(0,0,0,.18);
           View →
         </button>
         <p style="color:#9ca3af;font-size:11px;margin:4px 0 0">
-          📍 ${p.location || p.seller?.location || "Uganda"}
+          📍 ${escapeHTML(p.location || p.seller?.location || "Uganda")}
           ${p.sellerIsVerified ? ' · <span style="color:#10b981;font-weight:700">✅ Verified</span>' : ""}
         </p>
       </div>
@@ -1740,19 +1740,19 @@ async function loadJobAds() {
               <!-- Title -->
               <h3 style="margin:0 0 4px;font-size:16px;font-weight:800;
                 color:#111827;line-height:1.3">
-                ${job.title}
+                ${escapeHTML(job.title)}
               </h3>
 
               <!-- Company -->
               <p style="margin:0 0 8px;font-size:13px;font-weight:700;color:#ff6600">
-                🏢 ${job.company}
+                🏢 ${escapeHTML(job.company)}
               </p>
 
               <!-- Meta -->
               <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:#6b7280">
-                <span>📍 ${job.location}</span>
-                <span>💰 ${job.salary}</span>
-                <span>🗂️ ${job.category}</span>
+                <span>📍 ${escapeHTML(job.location)}</span>
+                <span>💰 ${escapeHTML(job.salary)}</span>
+                <span>🗂️ ${escapeHTML(job.category)}</span>
               </div>
             </div>
 
@@ -1776,7 +1776,7 @@ async function loadJobAds() {
           <p style="margin:10px 0 0;font-size:13px;color:#6b7280;
             line-height:1.6;overflow:hidden;display:-webkit-box;
             -webkit-line-clamp:2;-webkit-box-orient:vertical">
-            ${job.desc || ""}
+            ${escapeHTML(job.desc)}
           </p>
 
         </div>`;
@@ -2869,7 +2869,7 @@ window.runOverlaySearch = function(query) {
                 font-weight:800;text-transform:uppercase">${p.category || ""}</p>
               <h4 style="margin:0 0 4px;font-size:12px;font-weight:700;
                 color:#111827;overflow:hidden;text-overflow:ellipsis;
-                white-space:nowrap">${p.name}</h4>
+                white-space:nowrap">${escapeHTML(p.name)}</h4>
               <p style="margin:0 0 5px;color:#ff6600;font-weight:900;
                 font-size:14px">UGX ${price}</p>
               <button style="width:100%;padding:7px;font-size:11px;
@@ -2881,7 +2881,7 @@ window.runOverlaySearch = function(query) {
               </button>
               ${badge}
               <p style="margin:3px 0 0;font-size:10px;color:#9ca3af">
-                ${loc ? `📍 ${loc}` : ""}
+                ${loc ? `📍 ${escapeHTML(loc)}` : ""}
               </p>
               ${since}
             </div>
