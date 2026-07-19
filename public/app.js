@@ -2927,3 +2927,14 @@ async function checkMaintenanceMode() {
     // Never let a failed check block the whole site
   }
 }
+
+// ── XSS-safe escaping for ANY user-typed text rendered via innerHTML ──
+window.escapeHTML = function(str) {
+  if (str == null) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+};
