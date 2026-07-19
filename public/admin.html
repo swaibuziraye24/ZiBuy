@@ -588,13 +588,25 @@
         </tr>
       </thead>
 
-      <select id="log-filter">
-  <option value="all">All Logs</option>
-  <option value="NEW_USER">Users</option>
-  <option value="NEW_ORDER">Orders</option>
-  <option value="MOMO_PAYMENT">Payments</option>
-  <option value="PAYMENT_APPROVED">Revenue</option>
-</select>
+      <select id="log-filter" onchange="filterActivityLogs()"
+        style="margin:12px 0;padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:inherit;font-size:13px">
+        <option value="all">All Activity</option>
+        <option value="NEW_USER">👤 New Users</option>
+        <option value="AD_POSTED">📦 Ads Posted</option>
+        <option value="SHOP_CREATED">🏪 Shops Created</option>
+        <option value="NEW_ORDER">🛍️ Orders</option>
+        <option value="REVIEW_POSTED">⭐ Reviews</option>
+        <option value="BUYER_RATED">🙋 Buyer Ratings</option>
+        <option value="BOOST_REQUESTED">⭐ Boost Requests</option>
+        <option value="PIN_REQUESTED">📍 Pin Requests</option>
+        <option value="CV_BOOST_REQUESTED">📌 CV Boosts</option>
+        <option value="AUTO_RENEW_REQUESTED">🔄 Auto-Renew Requests</option>
+        <option value="VERIFICATION_REQUESTED">✅ Verification Requests</option>
+        <option value="SUBSCRIPTION_REQUESTED">💼 Subscription Requests</option>
+        <option value="REPORT_FILED">🚨 Reports</option>
+        <option value="JOB_AD_POSTED">💼 Job Ads</option>
+        <option value="MOMO_PAYMENT">💰 Payments</option>
+      </select>
 
       <tbody id="activity-table-body">
         <tr class="empty-row">
