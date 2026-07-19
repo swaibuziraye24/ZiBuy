@@ -118,14 +118,14 @@ function renderConversationsList(convos) {
 
     btn.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-        <p style="margin:0;font-weight:700;color:#111827">${email.split("@")[0]}</p>
+        <p style="margin:0;font-weight:700;color:#111827">${escapeHTML(email.split("@")[0])}</p>
         <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
           <span style="font-size:11px;color:#9ca3af">${timeText}</span>
           ${data.unread ? `<span style="width:9px;height:9px;background:#ff6600;border-radius:50%"></span>` : ""}
         </div>
       </div>
       <p style="margin:4px 0 0;font-size:12px;color:#6b7280;overflow:hidden;text-overflow:ellipsis;
-        white-space:nowrap;font-weight:${data.unread ? "700" : "400"}">${data.lastMessage}</p>
+        white-space:nowrap;font-weight:${data.unread ? "700" : "400"}">${escapeHTML(data.lastMessage)}</p>
     `;
     btn.onclick = () => openConversation(email);
     container.appendChild(btn);
@@ -220,7 +220,7 @@ function renderMessages(thread, container) {
     div.innerHTML = `
       <div style="background:${isOwn ? "#ff6600" : "#e5e7eb"};color:${isOwn ? "white" : "#111827"};
         padding:10px 14px;border-radius:10px;max-width:70%;word-wrap:break-word;font-size:14px">
-        ${msg.text}
+        ${escapeHTML(msg.text)}
         <p style="margin:4px 0 0;font-size:11px;opacity:.75;display:flex;gap:6px;align-items:center;justify-content:flex-end">
           ${time} ${ticks}
         </p>
