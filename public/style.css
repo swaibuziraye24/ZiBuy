@@ -2127,6 +2127,70 @@ footer {
 
 
 /* ============================================
+   DASHBOARD ANALYTICS & PROFILE — responsive grids
+   ============================================ */
+
+.zb-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+@media (min-width: 640px) {
+  .zb-stats-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (min-width: 1024px) {
+  .zb-stats-grid { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
+}
+
+.zb-two-col {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+@media (min-width: 768px) {
+  .zb-two-col { grid-template-columns: 1fr 1fr; }
+}
+
+.zb-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.zb-table-wrap table {
+  width: max-content;
+  min-width: 100%;
+}
+
+.zb-profile-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+@media (max-width: 480px) {
+  .zb-profile-header {
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+  }
+  .zb-profile-header > a {
+    width: 100%;
+    text-align: center;
+    box-sizing: border-box;
+  }
+}
+
+.zb-row-flex {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  min-width: 0;
+}
+.zb-row-flex > div { min-width: 0; }
+
+/* ============================================
    ADMIN ANALYTICS
    ============================================ */
 
