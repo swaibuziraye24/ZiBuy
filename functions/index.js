@@ -495,6 +495,23 @@ exports.trustScoreDailySweep = onSchedule(
   }
 );
 
+
+exports.adminRecalculateTrustScore = onCall(async (request) => {
+  const callerUid = request.auth?.uid;
+  if (!callerUid) throw new HttpsError("unauthenticated", "Login required");
+
+  const callerSnap = await db.collection("users").doc(callerUid).get();
+  if (callerSnap.data()?.email !== "swaibuziraye22@gmail.com") {
+    throw new HttpsError("permission-denied", "Admin only");
+  }
+
+  const targetUid = request.data?.userId;
+  if (!targetUid) throw new HttpsError("invalid-argument", "userId required");
+
+  await recalculateTrustScore(targetUid);
+  return { success: true };
+});
+
 // ============================================
 // PUSH NOTIFICATIONS
 // ============================================
