@@ -2099,56 +2099,64 @@ window.loadBlogAdmin = async function() {
   }
 };
 
+let _allActivityLogs = [];
+
 async function loadAdminLogs() {
+  const tableBody = document.getElementById("activity-table-body");
+  if (!tableBody) return;
 
-  const tableBody =
-  document.getElementById("activity-table-body");
-
-if (!tableBody) return;
-
+  tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:30px;color:#6b7280">Loading...</td></tr>`;
 
   try {
-
     const snap = await getDocs(
       query(
         collection(db, "function_logs"),
         orderBy("createdAt", "desc"),
-        limit(100)
+        limit(200)
       )
     );
 
-    let rows = "";
+    _allActivityLogs = snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      // Filter out silent dedup-lock documents (no type field = not a real event)
+      .filter(d => d.type);
 
-    snap.forEach(doc => {
-
-      const data = doc.data();
-
-      const date =
-        data.createdAt?.toDate?.()
-          ?.toLocaleString() || "";
-
-      rows += `
-<tr>
-  <td>${date}</td>
-  <td>${data.type || "event"}</td>
-  <td>${data.admin || "-"}</td>
-  <td>${doc.id}</td>
-</tr>
-`;
-    });
-
-    tableBody.innerHTML = rows || `<tr><td colspan="4" style="text-align:center;padding:30px;color:#6b7280">No activity found</td></tr>`;
+    renderActivityLogs(_allActivityLogs);
 
   } catch (err) {
-
     console.error(err);
-
-    tableBody.innerHTML =
-  `<tr>
-     <td colspan="4">Failed to load logs</td>
-   </tr>`;
+    tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:30px;color:red">Failed to load logs</td></tr>`;
   }
 }
+
+function renderActivityLogs(logs) {
+  const tableBody = document.getElementById("activity-table-body");
+  if (!tableBody) return;
+
+  if (logs.length === 0) {
+    tableBody.innerHTML = `<tr class="empty-row"><td colspan="4">No activity found</td></tr>`;
+    return;
+  }
+
+  tableBody.innerHTML = logs.map(data => {
+    const date = data.createdAt?.toDate?.()?.toLocaleString() || "";
+    return `
+      <tr>
+        <td style="font-size:12px">${date}</td>
+        <td><span class="plan-chip chip-pending">${data.type || "event"}</span></td>
+        <td style="font-size:12px">${data.admin || "-"}</td>
+        <td style="font-size:12px">${data.details || "-"}</td>
+      </tr>`;
+  }).join("");
+}
+
+window.filterActivityLogs = function() {
+  const val = document.getElementById("log-filter")?.value || "all";
+  const filtered = val === "all"
+    ? _allActivityLogs
+    : _allActivityLogs.filter(d => d.type === val);
+  renderActivityLogs(filtered);
+};
 
 window.loadAdminLogs = loadAdminLogs;
 
