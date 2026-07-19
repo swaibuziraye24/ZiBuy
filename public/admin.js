@@ -2271,12 +2271,14 @@ window.viewOrderDetail = function(orderId) {
   if (!order) return;
 
   const modal = document.createElement("div");
+  modal.id = "admin-order-detail-modal";
   modal.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px`;
+  modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
   modal.innerHTML = `
     <div style="background:white;border-radius:20px;padding:28px;max-width:500px;width:100%;max-height:90vh;overflow-y:auto">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
         <h2 style="margin:0;font-size:18px;font-weight:800">📦 Order ${order.orderId}</h2>
-        <button onclick="this.closest('div').parentElement.remove()"
+        <button onclick="document.getElementById('admin-order-detail-modal').remove()"
           style="background:#f3f4f6;border:none;width:32px;height:32px;border-radius:50%;font-size:18px;cursor:pointer">×</button>
       </div>
       <div style="background:#f9fafb;border-radius:12px;padding:14px;margin-bottom:14px">
@@ -2335,12 +2337,15 @@ window.adminViewUserAds = async function(userId, email) {
     const ads = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
     const modal = document.createElement("div");
+    modal.id = "admin-user-ads-modal";
     modal.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px`;
+    // Click on the dark background itself also closes it — safety net
+    modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
     modal.innerHTML = `
       <div style="background:white;border-radius:20px;padding:24px;max-width:560px;width:100%;max-height:90vh;overflow-y:auto">
         <div style="display:flex;justify-content:space-between;margin-bottom:16px">
           <h2 style="margin:0;font-size:16px;font-weight:800">📋 ${email} — ${ads.length} Ads</h2>
-          <button onclick="this.closest('div').parentElement.remove()"
+          <button onclick="document.getElementById('admin-user-ads-modal').remove()"
             style="background:#f3f4f6;border:none;width:32px;height:32px;border-radius:50%;font-size:18px;cursor:pointer">×</button>
         </div>
         ${ads.length === 0 ? `<p style="color:#6b7280;text-align:center;padding:20px">No ads posted yet</p>` :
@@ -2355,7 +2360,7 @@ window.adminViewUserAds = async function(userId, email) {
               <div style="display:flex;flex-direction:column;gap:4px">
                 <a href="product.html?id=${a.id}" target="_blank"
                   style="background:#f3f4f6;color:#111827;padding:5px 8px;border-radius:7px;font-size:11px;font-weight:700;text-decoration:none;text-align:center">View</a>
-                <button onclick="if(confirm('Delete?')){deleteDoc(doc(db,'products','${a.id}')).then(()=>{showToast('Deleted','info');this.closest('div').parentElement.remove()})}"
+                <button onclick="if(confirm('Delete?')){deleteDoc(doc(db,'products','${a.id}')).then(()=>{showToast('Deleted','info');document.getElementById('admin-user-ads-modal')?.remove()})}"
                   style="background:#fee2e2;color:#ef4444;border:none;padding:5px 8px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer">Del</button>
               </div>
             </div>`).join("")}
