@@ -927,6 +927,11 @@ window.openBuyNow = function(productId, productName, price, sellerPhone, sellerN
 
   const protectFee = Math.max(1000, Math.round(price * 0.025)); // 2.5%, min UGX 1,000
 
+  const districtOptions = [
+    "Kampala","Wakiso","Mukono","Jinja","Mbarara","Entebbe","Gulu","Mbale",
+    "Masaka","Fort Portal","Hoima","Arua","Masindi","Bushenyi"
+  ].map(d => `<option value="${d}">${d}</option>`).join("");
+
   const modal = document.createElement("div");
   modal.id = "buy-now-modal";
   modal.style.cssText = `
@@ -947,23 +952,55 @@ window.openBuyNow = function(productId, productName, price, sellerPhone, sellerN
       <div style="background:#f9fafb;border-radius:12px;padding:14px;margin-bottom:16px">
         <p style="margin:0;font-size:13px;color:#6b7280">You are buying</p>
         <p style="margin:4px 0 0;font-size:16px;font-weight:800;color:#111827">${productName}</p>
-        <p style="margin:4px 0 0;font-size:22px;font-weight:900;color:#ff6600">UGX <span id="bn-item-price">${Number(price).toLocaleString()}</span></p>
         <p style="margin:4px 0 0;font-size:12px;color:#6b7280">Seller: <strong>${sellerName}</strong></p>
       </div>
 
+      <!-- Delivery details — previously missing entirely -->
+      <div style="margin-bottom:16px">
+        <label style="font-size:13px;font-weight:800;color:#111827;display:block;margin-bottom:8px">📍 Delivery Details</label>
+        <input type="text" id="bn-name" placeholder="Your full name"
+          style="width:100%;padding:11px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:8px">
+        <input type="tel" id="bn-phone" placeholder="Your phone number e.g. 256701234567"
+          style="width:100%;padding:11px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:8px">
+        <select id="bn-district"
+          style="width:100%;padding:11px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box;background:white;margin-bottom:8px">
+          <option value="">Select your district</option>
+          ${districtOptions}
+        </select>
+        <input type="text" id="bn-address" placeholder="Area / landmark (e.g. Ntinda, near XYZ shop)"
+          style="width:100%;padding:11px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+
       <!-- ZiBuy Protect toggle -->
-      <div style="border:2px solid #10b981;border-radius:14px;padding:16px;margin-bottom:16px;background:#f0fdf4">
+      <div style="border:2px solid #10b981;border-radius:14px;padding:16px;margin-bottom:12px;background:#f0fdf4">
         <label style="display:flex;align-items:flex-start;gap:12px;cursor:pointer">
           <input type="checkbox" id="bn-protect-toggle" checked onchange="toggleBuyNowProtect(${price})"
             style="width:20px;height:20px;margin-top:2px;accent-color:#10b981;cursor:pointer;flex-shrink:0">
           <div>
-            <p style="margin:0;font-weight:800;font-size:14px;color:#166534">🛡️ ZiBuy Protect (+UGX ${protectFee.toLocaleString()})</p>
+            <p style="margin:0;font-weight:800;font-size:14px;color:#166534">🛡️ ZiBuy Protect</p>
             <p style="margin:4px 0 0;font-size:12px;color:#15803d;line-height:1.5">
               Confirm you received the item before it's marked complete. If there's a problem,
-              raise a dispute and our team steps in. Highly recommended for high-value items.
+              raise a dispute and our team steps in.
             </p>
           </div>
         </label>
+      </div>
+
+      <!-- Clear price breakdown — this is the part that was invisible before -->
+      <div style="background:white;border:1.5px solid #e5e7eb;border-radius:12px;padding:14px;margin-bottom:16px">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px">
+          <span style="color:#6b7280">Item Price</span>
+          <span id="bn-item-price" style="font-weight:700">UGX ${Number(price).toLocaleString()}</span>
+        </div>
+        <div id="bn-fee-line" style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px">
+          <span style="color:#6b7280">ZiBuy Protect Fee</span>
+          <span id="bn-fee-amount" style="font-weight:700;color:#166534">+ UGX ${protectFee.toLocaleString()}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:15px;padding-top:8px;border-top:1.5px solid #f0f0f0">
+          <strong>Total to Pay</strong>
+          <strong id="bn-total-display" style="color:#ff6600">UGX ${Number(price + protectFee).toLocaleString()}</strong>
+        </div>
+        <p style="margin:8px 0 0;font-size:11px;color:#9ca3af">Pay this single total via MTN or Airtel below — item price and protection fee go together in one payment.</p>
       </div>
 
       <!-- MTN -->
@@ -1031,22 +1068,43 @@ window.openBuyNow = function(productId, productName, price, sellerPhone, sellerN
   `;
 
   document.body.appendChild(modal);
+
+  // Prefill name from account email
+  const nameInput = document.getElementById("bn-name");
+  if (nameInput && auth.currentUser?.email) {
+    nameInput.value = auth.currentUser.email.split("@")[0];
+  }
 };
 
 window.toggleBuyNowProtect = function(price) {
-  const checked   = document.getElementById("bn-protect-toggle")?.checked;
+  const checked    = document.getElementById("bn-protect-toggle")?.checked;
   const protectFee = Math.max(1000, Math.round(price * 0.025));
-  const total = checked ? price + protectFee : price;
+  const total      = checked ? price + protectFee : price;
 
+  const feeLine = document.getElementById("bn-fee-line");
+  if (feeLine) feeLine.style.display = checked ? "flex" : "none";
+
+  const totalDisplay = document.getElementById("bn-total-display");
   const mtnEl    = document.getElementById("bn-total-mtn");
   const airtelEl = document.getElementById("bn-total-airtel");
-  if (mtnEl)    mtnEl.textContent    = "UGX " + Number(total).toLocaleString();
-  if (airtelEl) airtelEl.textContent = "UGX " + Number(total).toLocaleString();
+  if (totalDisplay) totalDisplay.textContent = "UGX " + Number(total).toLocaleString();
+  if (mtnEl)        mtnEl.textContent        = "UGX " + Number(total).toLocaleString();
+  if (airtelEl)      airtelEl.textContent     = "UGX " + Number(total).toLocaleString();
 };
 
+
 window.confirmBuyNow = async function(productId, productName, price, sellerPhone, orderRef, sellerName) {
+  const name    = document.getElementById("bn-name")?.value.trim()    || "";
+  const phone   = document.getElementById("bn-phone")?.value.trim()   || "";
+  const district = document.getElementById("bn-district")?.value      || "";
+  const address = document.getElementById("bn-address")?.value.trim() || "";
   const txnInput = document.getElementById("buy-txn-ref");
   const txnRef   = txnInput ? txnInput.value.trim() : "";
+
+  if (!name || !phone || !district) {
+    alert("Please fill in your name, phone, and district so the seller knows where to deliver.");
+    return;
+  }
 
   if (!txnRef) {
     if (txnInput) {
@@ -1057,6 +1115,7 @@ window.confirmBuyNow = async function(productId, productName, price, sellerPhone
     return;
   }
 
+  const location     = address ? `${address}, ${district}` : district;
   const isProtected = document.getElementById("bn-protect-toggle")?.checked || false;
   const protectFee  = isProtected ? Math.max(1000, Math.round(price * 0.025)) : 0;
   const totalPaid   = price + protectFee;
@@ -1075,6 +1134,9 @@ window.confirmBuyNow = async function(productId, productName, price, sellerPhone
       userEmail:         auth.currentUser?.email || "guest",
       buyerEmail:        auth.currentUser?.email || "guest",
       buyerUid:          auth.currentUser?.uid   || "guest",
+      customerName:      name,
+      customerPhone:     phone,
+      customerLocation:  location,
       sellerName,
       sellerPhone,
       paymentMethod:     "mobile_money",
@@ -1097,8 +1159,11 @@ window.confirmBuyNow = async function(productId, productName, price, sellerPhone
       `• Product: *${productName}*\n` +
       `• Amount: *UGX ${Number(totalPaid).toLocaleString()}*${isProtected ? " (incl. ZiBuy Protect)" : ""}\n` +
       `• Order Ref: *${orderRef}*\n` +
-      `• Transaction ID: *${txnRef}*\n` +
-      `• Buyer Email: *${auth.currentUser?.email || "Guest"}*\n\n` +
+      `• Transaction ID: *${txnRef}*\n\n` +
+      `📍 *Delivery To:*\n` +
+      `• Name: *${name}*\n` +
+      `• Phone: *${phone}*\n` +
+      `• Location: *${location}*\n\n` +
       `Please confirm and arrange delivery. Thank you! 🙏`
     );
 
@@ -1123,15 +1188,14 @@ window.confirmBuyNow = async function(productId, productName, price, sellerPhone
         ${isProtected ? `
           <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:12px;margin-bottom:16px;font-size:12px;color:#166534;text-align:left">
             🛡️ <strong>ZiBuy Protect active.</strong> Once your item arrives, confirm receipt in
-            your dashboard's "My Orders" tab. If something's wrong, you can raise a dispute instead.
+            your dashboard's "My Orders" tab. If something's wrong, you can raise a dispute or cancel instead.
           </div>` : ""}
         <p style="color:#6b7280;font-size:13px;margin-bottom:20px;line-height:1.6">
-          Your payment reference has been sent to the seller via WhatsApp.
-          The seller will contact you to arrange delivery.
+          Your payment reference has been sent to the seller via WhatsApp along with your delivery details.
         </p>
-        <button onclick="this.closest('div').parentElement.remove()"
+        <button onclick="this.closest('div').parentElement.remove();window.location.href='dashboard.html?tab=orders'"
           style="background:#ff6600;color:white;border:none;padding:14px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;width:100%">
-          Done →
+          View My Orders →
         </button>
       </div>
     `;
