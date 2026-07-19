@@ -756,18 +756,7 @@
 </head>
 <body>
 
-  <script>
-(function () {
-  if (window.location.pathname === "/install") return;
-  if (window.matchMedia("(display-mode: standalone)").matches) return;
-  if (localStorage.getItem("zibuy_has_visited")) return;
-  localStorage.setItem("zibuy_has_visited", "true");
-  // Only redirect if install page is reachable — don't break the app
-  fetch("/install", { method: "HEAD" })
-    .then(r => { if (r.ok) window.location.replace("/install"); })
-    .catch(() => {}); // silently skip if install page missing
-})();
-</script>
+  
 
 <!-- ══ NEW TOPBAR ══ -->
 <header class="zb-topbar">
