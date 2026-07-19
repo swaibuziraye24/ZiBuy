@@ -831,7 +831,7 @@ style="width:100%;height:150px;object-fit:cover">
           </p>
           <p style="margin:0 0 6px;font-weight:700;font-size:13px;color:#111827;
             overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
-            ${p.name}
+            ${escapeHTML(p.name)}
           </p>
           <p style="margin:0 0 4px;color:#ff6600;font-weight:900;font-size:15px">
             UGX ${price}
