@@ -235,6 +235,93 @@ async function auditLog(action, adminName, details = "") {
   }
 }
 
+
+// ============================================
+// PLATFORM-WIDE ACTIVITY LOGGING
+// Fires server-side on every "creation" event —
+// cannot be bypassed by client-side code
+// ============================================
+
+function logCreationTrigger(collectionName, actionType, summaryFn) {
+  return onDocumentCreated(`${collectionName}/{id}`, async (event) => {
+    try {
+      const data = event.data.data();
+      const actor = data.userEmail || data.email || data.reporterEmail ||
+                    data.buyerEmail || data.sellerEmail || "user";
+      await auditLog(actionType, actor, summaryFn(data));
+    } catch (err) {
+      console.error(`[ACTIVITY LOG ERROR - ${actionType}]`, err.message);
+    }
+  });
+}
+
+exports.logAdPosted = logCreationTrigger(
+  "products", "AD_POSTED",
+  d => `"${d.name || "Untitled"}" — ${d.category || "—"} — UGX ${Number(d.price || 0).toLocaleString()}`
+);
+
+// Logged on both possible collection names since shop creation may
+// write to either "shops" or "business_profiles" depending on the flow
+exports.logShopCreatedA = logCreationTrigger(
+  "shops", "SHOP_CREATED",
+  d => `${d.name || "New shop"} — ${d.location || "—"}`
+);
+exports.logShopCreatedB = logCreationTrigger(
+  "business_profiles", "SHOP_CREATED",
+  d => `${d.name || d.shopName || "New shop"} — ${d.location || "—"}`
+);
+
+exports.logReviewPosted = logCreationTrigger(
+  "reviews", "REVIEW_POSTED",
+  d => `${d.rating || "?"}⭐ review posted`
+);
+
+exports.logBuyerRated = logCreationTrigger(
+  "buyer_ratings", "BUYER_RATED",
+  d => `${d.rating || "?"}⭐ buyer rating given`
+);
+
+exports.logBoostRequested = logCreationTrigger(
+  "boost_requests", "BOOST_REQUESTED",
+  d => `"${d.productName || "Ad"}" — ${d.days || "?"} days — UGX ${Number(d.price || 0).toLocaleString()}`
+);
+
+exports.logPinRequested = logCreationTrigger(
+  "pin_requests", "PIN_REQUESTED",
+  d => `"${d.productName || "Ad"}" — ${d.hours || "?"}h — UGX ${Number(d.price || 0).toLocaleString()}`
+);
+
+exports.logCVBoostRequested = logCreationTrigger(
+  "cv_boosts", "CV_BOOST_REQUESTED",
+  d => `"${d.productName || "CV"}" — ${d.days || "?"} days`
+);
+
+exports.logAutoRenewRequested = logCreationTrigger(
+  "auto_renewals", "AUTO_RENEW_REQUESTED",
+  d => `"${d.productName || "Ad"}" — UGX ${Number(d.price || 0).toLocaleString()}`
+);
+
+exports.logVerificationRequested = logCreationTrigger(
+  "seller_verifications", "VERIFICATION_REQUESTED",
+  d => `${d.fullName || "—"} — ${d.businessName || "—"}`
+);
+
+exports.logSubscriptionRequested = logCreationTrigger(
+  "business_accounts", "SUBSCRIPTION_REQUESTED",
+  d => `${(d.plan || "plan").toUpperCase()} — ${d.billing || "monthly"}`
+);
+
+exports.logReportFiled = logCreationTrigger(
+  "reports", "REPORT_FILED",
+  d => `${d.reason || "Report"} — target: ${d.sellerName || d.productId || "—"}`
+);
+
+exports.logJobAdPosted = logCreationTrigger(
+  "job_ads", "JOB_AD_POSTED",
+  d => `${d.title || "Job"} at ${d.company || "—"}`
+);
+
+
 // ============================================
 // HELPERS (OPTIMIZED FOR SCALE)
 // ============================================
