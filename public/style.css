@@ -7786,6 +7786,7 @@ body {
     height:calc(100vh - 68px);
     overflow:hidden;
     background:#fff;
+    position:relative;
 }
 
 /* ================= SIDEBAR ================= */
@@ -8006,7 +8007,7 @@ body {
 
 .messages-wrap{
 
-    grid-template-columns:1fr;
+    grid-template-columns:110px 1fr;
 
     height:calc(100vh - 60px);
 
@@ -8014,11 +8015,7 @@ body {
 
 .messages-sidebar{
 
-    position:absolute;
-
-    top:0;
-
-    left:0;
+    position:static;
 
     width:100%;
 
@@ -8026,27 +8023,19 @@ body {
 
     background:#fff;
 
-    z-index:100;
+    border-right:1px solid #ececec;
 
     display:flex;
 
     flex-direction:column;
 
-}
+    padding:10px 6px;
 
-.messages-sidebar.chat-open{
-
-    display:none;
+    overflow-y:auto;
 
 }
 
 .messages-main{
-
-    display:none;
-
-}
-
-.messages-main.chat-open{
 
     display:flex;
 
