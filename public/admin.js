@@ -2383,12 +2383,14 @@ window.adminViewUserOrders = async function(userId, email) {
     const orders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
     const modal = document.createElement("div");
+    modal.id = "admin-user-orders-modal";
     modal.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px`;
+    modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
     modal.innerHTML = `
       <div style="background:white;border-radius:20px;padding:24px;max-width:560px;width:100%;max-height:90vh;overflow-y:auto">
         <div style="display:flex;justify-content:space-between;margin-bottom:16px">
           <h2 style="margin:0;font-size:16px;font-weight:800">🛍️ ${email} — ${orders.length} Orders</h2>
-          <button onclick="this.closest('div').parentElement.remove()"
+          <button onclick="document.getElementById('admin-user-orders-modal').remove()"
             style="background:#f3f4f6;border:none;width:32px;height:32px;border-radius:50%;font-size:18px;cursor:pointer">×</button>
         </div>
         ${orders.length === 0 ? `<p style="color:#6b7280;text-align:center;padding:20px">No orders yet</p>` :
