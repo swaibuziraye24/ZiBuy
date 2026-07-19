@@ -2033,210 +2033,21 @@ footer {
 @media (max-width: 768px) {
   .dashboard-wrap {
     grid-template-columns: 1fr;
-    padding: 16px;
-    padding-top: 0;
+    padding: 12px;
+    gap: 12px;
   }
 
   .dashboard-sidebar {
     display: flex;
-    flex-direction: column;
-    gap: 12px;
-    position: sticky;
-    top: 0;
-    z-index: 50;
-    background: #f7f8fa;
-    padding: 12px 0 8px;
-    margin: 0 -16px;
-    padding-left: 16px;
-    padding-right: 16px;
-  }
-
-  .dashboard-sidebar .user-profile-card {
-    display: none; /* profile card stays in the My Profile tab instead — saves vertical space */
-  }
-
-  .dashboard-sidebar > .btn {
-    display: none; /* "My Shop" / "Get Verified" buttons — accessible from My Profile tab on mobile */
-  }
-
-  .dashboard-nav {
-    display: flex;
     flex-direction: row;
-    gap: 6px;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    padding: 4px 2px;
-    background: none;
-    box-shadow: none;
+    gap: 12px;
+    align-items: center;
+    background: white;
+    padding: 12px;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    order: -1;
   }
-
-  .dashboard-nav::-webkit-scrollbar { display: none; }
-
-  .dashboard-nav .nav-item {
-    flex-shrink: 0;
-    flex-direction: column;
-    gap: 4px;
-    padding: 8px 14px;
-    font-size: 11px;
-    white-space: nowrap;
-    border-radius: 10px;
-  }
-
-  .dashboard-nav .nav-item span:first-child {
-    font-size: 18px;
-  }
-
-   /* ============================================
-   DASHBOARD ANALYTICS — full responsive fix
-   ============================================ */
-
-#analytics-container {
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-  overflow: hidden; /* the page itself never scrolls sideways */
-}
-
-/* Stat card grids (used in every plan tier) */
-#analytics-container > div[style*="grid-template-columns:repeat(auto-fit"] {
-  display: grid !important;
-  grid-template-columns: repeat(2, 1fr) !important;
-  gap: 10px !important;
-}
-
-@media (min-width: 640px) {
-  #analytics-container > div[style*="grid-template-columns:repeat(auto-fit"] {
-    grid-template-columns: repeat(3, 1fr) !important;
-  }
-}
-
-@media (min-width: 1024px) {
-  #analytics-container > div[style*="grid-template-columns:repeat(auto-fit"] {
-    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)) !important;
-  }
-}
-
-/* Two-column "Top Ads / Category" panels — stack on mobile */
-#analytics-container div[style*="grid-template-columns:1fr 1fr"] {
-  display: grid !important;
-  grid-template-columns: 1fr !important;
-  gap: 14px !important;
-}
-
-@media (min-width: 768px) {
-  #analytics-container div[style*="grid-template-columns:1fr 1fr"] {
-    grid-template-columns: 1fr 1fr !important;
-  }
-}
-
-/* Bar chart rows — long ad names truncate instead of overflowing */
-#analytics-container div[style*="justify-content:space-between"] span[style*="max-width:70%"] {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* The full performance table — scrolls in its OWN box, never clips */
-#analytics-container table {
-  width: max-content;
-  min-width: 100%;
-}
-
-#analytics-container div:has(> table) {
-  width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  border-radius: 10px;
-}
-
-/* Every card inside analytics respects the column width, no exceptions */
-#analytics-container * {
-  max-width: 100%;
-  box-sizing: border-box;
-}
-
-@media (max-width: 480px) {
-  #analytics-container > div[style*="grid-template-columns:repeat(auto-fit"] {
-    grid-template-columns: 1fr 1fr !important;
-    gap: 8px !important;
-  }
-}
-
-
-
-   /* ============================================
-   DASHBOARD MY PROFILE — full responsive fix
-   ============================================ */
-
-#myprofile-container {
-  width: 100%;
-  box-sizing: border-box;
-  overflow: hidden;
-}
-
-#myprofile-container * {
-  max-width: 100%;
-  box-sizing: border-box;
-}
-
-/* Avatar + name + plan badge header — wraps instead of overflowing */
-#myprofile-container > div:first-child {
-  flex-wrap: wrap !important;
-}
-
-@media (max-width: 480px) {
-  #myprofile-container > div:first-child {
-    flex-direction: column;
-    align-items: flex-start !important;
-    text-align: left;
-  }
-
-  #myprofile-container > div:first-child > div:last-child {
-    width: 100%;
-  }
-
-  #myprofile-container > div:first-child a {
-    width: 100%;
-    text-align: center;
-    box-sizing: border-box;
-  }
-}
-
-/* Stats row — 2 cols on phones, 3 on tablets, 6 on desktop */
-#myprofile-container div[style*="grid-template-columns:repeat(auto-fit,minmax(130px"] {
-  display: grid !important;
-  grid-template-columns: repeat(2, 1fr) !important;
-  gap: 10px !important;
-}
-
-@media (min-width: 640px) {
-  #myprofile-container div[style*="grid-template-columns:repeat(auto-fit,minmax(130px"] {
-    grid-template-columns: repeat(3, 1fr) !important;
-  }
-}
-
-@media (min-width: 1024px) {
-  #myprofile-container div[style*="grid-template-columns:repeat(auto-fit,minmax(130px"] {
-    grid-template-columns: repeat(6, 1fr) !important;
-  }
-}
-
-/* Plan details row — stacks on small screens instead of squeezing */
-#myprofile-container div[style*="justify-content:space-between;align-items:center;flex-wrap:wrap"] {
-  flex-wrap: wrap !important;
-}
-
-@media (max-width: 420px) {
-  #myprofile-container div[style*="justify-content:space-between;align-items:center;flex-wrap:wrap"] button {
-    width: 100%;
-  }
-}
-
-/* Ad preview rows inside My Ads / Reviews cards — keep text from pushing layout wide */
-#myprofile-container div[style*="display:flex;gap:12px;align-items:center"] > div {
-  min-width: 0; /* lets text-overflow:ellipsis actually work inside a flex child */
-}
 
   .user-profile-card {
     display: flex;
