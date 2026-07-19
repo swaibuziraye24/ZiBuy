@@ -1186,11 +1186,14 @@ async function loadMyOrders() {
 
 function renderOrderCard(o) {
   const dateStr  = new Date(o.createdAt?.toDate?.() || o.createdAt).toLocaleDateString();
-  const isBuyNow = !!o.productId; // Buy Now orders always carry a single productId
+  const isBuyNow = !!o.productId;
 
-  // ── Status badge ──
+  const isCancelled = o.status === "cancelled_by_buyer";
+
   let badge;
-  if (o.protected) {
+  if (isCancelled) {
+    badge = { bg: "#f3f4f6", color: "#6b7280", label: "🚫 Cancelled" };
+  } else if (o.protected) {
     if (o.disputeStatus === "open") {
       badge = { bg: "#fee2e2", color: "#991b1b", label: "🚨 Disputed" };
     } else if (o.deliveryConfirmed) {
@@ -1204,7 +1207,6 @@ function renderOrderCard(o) {
     badge = { bg: "#f3f4f6", color: "#374151", label: o.status || "pending" };
   }
 
-  // ── Item line: single-product Buy Now vs multi-item cart checkout ──
   const itemLine = isBuyNow
     ? `<p style="margin:4px 0"><strong>Item:</strong> ${o.productName || "—"}</p>`
     : `<p style="margin:4px 0"><strong>Items:</strong> ${o.items?.length || 0} product(s)</p>`;
@@ -1217,8 +1219,14 @@ function renderOrderCard(o) {
     ? `<p style="margin:4px 0;font-size:12px;color:#166534">🛡️ Includes ZiBuy Protect fee (UGX ${Number(o.protectionFee || 0).toLocaleString()})</p>`
     : "";
 
-  // ── Protect actions — only while unresolved ──
-  const actions = (o.protected && !o.deliveryConfirmed && o.disputeStatus !== "open")
+  // Can this order still be cancelled by the buyer?
+  const nonCancellableStatuses = ["cancelled_by_buyer", "Delivered", "Shipped"];
+  const canCancel = !isCancelled &&
+    !nonCancellableStatuses.includes(o.status) &&
+    !o.deliveryConfirmed &&
+    o.disputeStatus !== "open";
+
+  const protectActions = (o.protected && !o.deliveryConfirmed && o.disputeStatus !== "open" && !isCancelled)
     ? `
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
         <button onclick="confirmOrderReceipt('${o.id}')"
@@ -1236,6 +1244,13 @@ function renderOrderCard(o) {
         </p>`
       : "");
 
+  const cancelButton = canCancel
+    ? `<button onclick="cancelMyOrder('${o.id}','${o.sellerPhone || ""}','${(o.productName || "your order").replace(/'/g, "\\'")}')"
+        style="background:#f3f4f6;color:#991b1b;border:1.5px solid #fecaca;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;margin-top:8px">
+        🚫 Cancel Order
+      </button>`
+    : "";
+
   return `
     <div class="order-card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
@@ -1247,10 +1262,43 @@ function renderOrderCard(o) {
       ${locationLine}
       ${feeNote}
       <p style="font-size:12px;color:#6b7280;margin:4px 0 0">Order Date: ${dateStr}</p>
-      ${actions}
+      ${protectActions}
+      ${cancelButton}
     </div>
   `;
 }
+
+window.cancelMyOrder = async function(orderId, sellerPhone, productName) {
+  if (!confirm(`Cancel this order for "${productName}"? This cannot be undone.`)) return;
+
+  try {
+    await updateDoc(doc(db, "orders", orderId), {
+      status:      "cancelled_by_buyer",
+      cancelledAt: new Date()
+    });
+
+    // Let the seller know via WhatsApp, since that's how they were notified of the order
+    if (sellerPhone) {
+      const waMsg = encodeURIComponent(
+        `Hi, I'd like to cancel my order for "${productName}" on ZiBuy.\n\n` +
+        `If you've already started preparing it, please let me know. Thank you.`
+      );
+      window.open(`https://wa.me/${sellerPhone.replace(/\D/g, "")}?text=${waMsg}`, "_blank");
+    }
+
+    const toast = document.createElement("div");
+    toast.className   = "toast success";
+    toast.textContent = "✅ Order cancelled";
+    document.getElementById("toast-container")?.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+
+    loadMyOrders();
+
+  } catch (err) {
+    console.error("cancelMyOrder:", err);
+    alert("❌ Failed to cancel: " + err.message);
+  }
+};
 
 // Lets my-orders.js trigger a refresh of THIS page's orders tab
 // after a confirm/dispute action, instead of its own standalone widget
