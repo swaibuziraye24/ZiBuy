@@ -211,7 +211,10 @@ function renderUsers(users) {
         <td id="ads-count-${u.id}">—</td>
         <td>${verified}</td>
         <td>${u.buyerRating ? `⭐ ${u.buyerRating} (${u.buyerRatingCount || 0})` : "—"}</td>
-        <td>${u.trustTier ? `${u.trustScore} <span style="text-transform:capitalize;color:#6b7280;font-size:11px">(${u.trustTier})</span>` : "—"}</td>
+        <td>
+          ${u.trustTier ? `${u.trustScore} <span style="text-transform:capitalize;color:#6b7280;font-size:11px">(${u.trustTier})</span>` : "—"}
+          <button onclick="adminForceTrustRecalc('${u.id}')" style="background:none;border:none;cursor:pointer;font-size:12px;margin-left:4px" title="Recalculate now">🔄</button>
+        </td>
         <td>
           <span class="plan-chip ${u.banned ? 'chip-expired' : 'chip-approved'}">
             ${banned}
@@ -2819,4 +2822,17 @@ window.dismissDispute = async function(disputeId, orderId) {
     showToast("Dispute dismissed", "info");
     loadDisputesAdmin();
   } catch(e) { showToast("Failed", "error"); }
+};
+
+
+window.adminForceTrustRecalc = async function(userId) {
+  try {
+    const { getFunctions, httpsCallable } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js");
+    const fn = httpsCallable(getFunctions(), "adminRecalculateTrustScore");
+    await fn({ userId });
+    showToast("Trust score recalculated ✅", "success");
+    loadUsers();
+  } catch (e) {
+    showToast("Failed: " + e.message, "error");
+  }
 };
