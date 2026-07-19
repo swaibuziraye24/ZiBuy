@@ -363,14 +363,14 @@ document.head.appendChild(schemaTag);
 
         <!-- Category + Title + Price -->
         <p class="product-cat" style="font-size:12px;font-weight:700;color:#ff6600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">${p.category || "Product"}</p>
-        <h1 style="font-size:26px;font-weight:800;color:#111827;line-height:1.2;margin-bottom:10px">${p.name}</h1>
+        <h1 style="font-size:26px;font-weight:800;color:#111827;line-height:1.2;margin-bottom:10px">${escapeHTML(p.name)}</h1>
         <p style="font-size:32px;font-weight:900;color:#ff6600;margin-bottom:6px">UGX ${Number(p.price).toLocaleString()}</p>
         <p style="font-size:13px;color:#6b7280;margin-bottom:18px">📍 ${seller.location || "Uganda"} · Posted ${p.createdAt ? new Date(p.createdAt.toDate()).toLocaleDateString() : "recently"}</p>
 
         <!-- Description -->
         <div style="background:#f9fafb;border-radius:12px;padding:16px;margin-bottom:20px">
           <h3 style="font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#374151;margin-bottom:8px">Description</h3>
-          <p style="font-size:14px;color:#4b5563;line-height:1.7">${p.description || "High quality product. Contact seller for more details."}</p>
+          <p style="font-size:14px;color:#4b5563;line-height:1.7">${escapeHTML(p.description) || "High quality product. Contact seller for more details."}</p>
         </div>
 
         <!-- Primary Actions -->
@@ -493,15 +493,15 @@ window.loadProductReviews = async function (productId) {
       html += `
         <div style="display:flex;gap:12px;padding:14px;background:white;border-radius:12px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
           <div style="width:40px;height:40px;border-radius:50%;background:#ff6600;color:white;font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            ${initial}
+            ${escapeHTML(initial)}
           </div>
           <div style="flex:1">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
-              <span style="font-weight:800;font-size:13px">${email.split("@")[0]}</span>
+              <span style="font-weight:800;font-size:13px">${escapeHTML(email.split("@")[0])}</span>
               <span style="font-size:13px">${stars}</span>
               <span style="font-size:12px;color:#ff6600;font-weight:700;margin-left:auto">${rating}/5</span>
             </div>
-            <p style="margin:0;font-size:14px;color:#374151;line-height:1.5">${text}</p>
+            <p style="margin:0;font-size:14px;color:#374151;line-height:1.5">${escapeHTML(text)}</p>
             ${date ? `<p style="margin:6px 0 0;font-size:11px;color:#adb5bd">${date}</p>` : ""}
           </div>
         </div>`;
