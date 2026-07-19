@@ -238,7 +238,7 @@ function renderShopProductsGrid(products) {
   loading="lazy"
 >
         <div class="product-info">
-          <div class="product-title">${p.name || "No name"}</div>
+          <div class="product-title">${escapeHTML(p.name) || "No name"}</div>
           <div class="product-price">
            UGX ${new Intl.NumberFormat().format(
   p.price || 0
@@ -310,7 +310,7 @@ const hoursEl = document.getElementById("business-hours");
 nameEl.textContent = shop.name || "ZiBuy Shop";
 
 metaEl.innerHTML = `
-  📍 ${shop.location || "Uganda"}
+  📍 ${escapeHTML(shop.location) || "Uganda"}
   ${shop.isVerified ? " • ✅ Verified Seller" : ""}
 `;
 
@@ -358,25 +358,25 @@ if (descEl) {
 // Location
 if (locationEl) {
   locationEl.innerHTML =
-    `📍 ${shop.location || "Uganda"}`;
+    `📍 ${escapeHTML(shop.location) || "Uganda"}`;
 }
 
 // Email
 if (contactEl) {
   contactEl.innerHTML =
-    `📧 ${shop.email || "Not provided"}`;
+    `📧 ${escapeHTML(shop.email) || "Not provided"}`;
 }
 
 // Phone
 if (phoneEl) {
   phoneEl.innerHTML =
-    `📞 ${shop.phone || "Not provided"}`;
+    `📞 ${escapeHTML(shop.phone) || "Not provided"}`;
 }
 
 // WhatsApp
 if (whatsappEl) {
   whatsappEl.innerHTML =
-    `📱 ${shop.whatsapp || shop.phone || "Not provided"}`;
+    `📱 ${escapeHTML(shop.whatsapp || shop.phone) || "Not provided"}`;
 }
 
 // Categories
@@ -400,7 +400,7 @@ if (categoriesEl) {
               margin:4px;
             "
           >
-            ${cat}
+            ${escapeHTML(cat)}
           </span>
         `).join("")
       : "No categories specified";
@@ -420,11 +420,11 @@ if (hoursEl && shop.businessHours) {
             padding:6px 0;
             border-bottom:1px solid #f3f4f6;
           ">
-            <span>${day}</span>
+            <span>${escapeHTML(day)}</span>
             <span>
               ${hours.closed
                 ? "Closed"
-                : `${hours.open} - ${hours.close}`}
+                : `${escapeHTML(hours.open)} - ${escapeHTML(hours.close)}`}
             </span>
           </div>
         `;
@@ -467,8 +467,8 @@ async function loadSellerReviews() {
       <div style="color:#ff6600; font-weight:700;">
         ${renderStars(review.rating)}
       </div>
-      <p>${review.text}</p>
-      <small>${review.reviewerEmail || "Anonymous"}</small>
+      <p>${escapeHTML(review.text)}</p>
+      <small>${escapeHTML(review.reviewerEmail) || "Anonymous"}</small>
     </div>
   `).join("");
 }
