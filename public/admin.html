@@ -274,6 +274,19 @@
       .kpi-value { font-size: 18px; }
       .admin-topbar span { display: none; }
     }
+
+
+    .zb-action-cell {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.zb-action-cell .action-btn,
+.zb-action-cell a {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
   </style>
 </head>
 <body>
@@ -485,11 +498,18 @@
       <div class="admin-card">
         <table class="data-table">
           <thead>
-            <tr>
-              <th>Email</th><th>Plan</th><th>Ads</th>
-              <th>Verified</th><th>Status</th><th>Plan</th><th>Buyer Rating</th><th>Trust Score</th><th>Action</th>
-            </tr>
-          </thead>
+  <tr>
+    <th>Email</th>
+    <th>Plan</th>
+    <th>Ads</th>
+    <th>Verified</th>
+    <th>Status</th>
+    <th>Buyer Rating</th>
+    <th>Trust Score</th>
+    <th>Change Plan</th>
+    <th>Action</th>
+  </tr>
+</thead>
           <tbody id="users-table-body">
             <tr class="empty-row"><td colspan="10">Loading…</td></tr>
           </tbody>
