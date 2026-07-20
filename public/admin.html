@@ -397,6 +397,11 @@
   <span class="nav-icon">🚨</span> Disputes
 </button>
 
+<button class="admin-nav-item"
+  onclick="window.showSection('plansettings', this);loadPlanSettings()">
+  <span class="nav-icon">💰</span> Plan Settings
+</button>
+
   </aside>
 
   <!-- ── MAIN ── -->
@@ -1139,6 +1144,60 @@ Separate paragraphs with a blank line."
           class="search-input" style="resize:vertical"
           placeholder="ZiBuy is undergoing scheduled maintenance. We'll be back shortly."></textarea>
       </div>
+
+     <div class="admin-section" id="section-plansettings">
+  <h2 style="font-size:20px;font-weight:800;margin-bottom:6px">💰 Plan Settings</h2>
+  <p style="font-size:13px;color:var(--gray);margin-bottom:16px" id="ps-last-saved">Never edited — showing built-in defaults</p>
+
+  <div style="background:#fff4ee;border:1.5px solid #ffd9bf;border-radius:12px;padding:14px;margin-bottom:20px;font-size:13px;color:#92400e">
+    ⚠️ Changes here take effect live, immediately, for every user — no redeploy needed. Set "unlimited" (text) for Max Ads on Gold, or a number for any plan.
+  </div>
+
+  <div class="admin-card">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Plan</th><th>Max Ads</th><th>Boosts / Month</th><th>Max Images</th><th>Ad Duration (days)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>🆓 Free</td>
+          <td><input id="ps-free-maxads" type="text" class="plan-select" style="max-width:90px"></td>
+          <td><input id="ps-free-boosts" type="number" class="plan-select" style="max-width:80px"></td>
+          <td><input id="ps-free-images" type="number" class="plan-select" style="max-width:80px"></td>
+          <td><input id="ps-free-days" type="number" class="plan-select" style="max-width:80px"></td>
+        </tr>
+        <tr>
+          <td>🥉 Bronze</td>
+          <td><input id="ps-bronze-maxads" type="text" class="plan-select" style="max-width:90px"></td>
+          <td><input id="ps-bronze-boosts" type="number" class="plan-select" style="max-width:80px"></td>
+          <td><input id="ps-bronze-images" type="number" class="plan-select" style="max-width:80px"></td>
+          <td><input id="ps-bronze-days" type="number" class="plan-select" style="max-width:80px"></td>
+        </tr>
+        <tr>
+          <td>🥈 Silver</td>
+          <td><input id="ps-silver-maxads" type="text" class="plan-select" style="max-width:90px"></td>
+          <td><input id="ps-silver-boosts" type="number" class="plan-select" style="max-width:80px"></td>
+          <td><input id="ps-silver-images" type="number" class="plan-select" style="max-width:80px"></td>
+          <td><input id="ps-silver-days" type="number" class="plan-select" style="max-width:80px"></td>
+        </tr>
+        <tr>
+          <td>🥇 Gold</td>
+          <td><input id="ps-gold-maxads" type="text" class="plan-select" style="max-width:90px" placeholder="unlimited"></td>
+          <td><input id="ps-gold-boosts" type="number" class="plan-select" style="max-width:80px"></td>
+          <td><input id="ps-gold-images" type="number" class="plan-select" style="max-width:80px"></td>
+          <td><input id="ps-gold-days" type="number" class="plan-select" style="max-width:80px"></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <button id="ps-save-btn" onclick="savePlanSettings()"
+      style="margin-top:16px;background:#ff6600;color:white;border:none;padding:12px 24px;border-radius:10px;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit;width:100%">
+      💾 Save Plan Settings
+    </button>
+  </div>
+</div>
 
       <div class="admin-card">
         <h2>📥 Export Data</h2>
