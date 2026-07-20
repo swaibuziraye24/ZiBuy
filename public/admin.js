@@ -7,6 +7,22 @@ import {
   getDoc, query, where, updateDoc, deleteDoc, orderBy, limit, addDoc, setDoc
 } from "./firebase.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+
+// ==========================================
+// Escape HTML (XSS Protection)
+// ==========================================
+function escapeHTML(value) {
+  if (value === null || value === undefined) return "";
+
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 const PLAN_LIMITS = {
   free: {
     maxAds: 3,
