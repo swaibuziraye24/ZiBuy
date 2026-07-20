@@ -238,7 +238,7 @@ function renderUsers(users) {
   if (!tbody) return;
 
   if (users.length === 0) {
-    tbody.innerHTML = `<tr class="empty-row"><td colspan="10">No users found</td></tr>`;
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="9">No users found</td></tr>`;
     return;
   }
 
@@ -253,15 +253,15 @@ function renderUsers(users) {
         <td><span class="plan-chip chip-${plan}">${planEmoji(plan)} ${plan}</span></td>
         <td id="ads-count-${u.id}">—</td>
         <td>${verified}</td>
-        <td>${u.buyerRating ? `⭐ ${u.buyerRating} (${u.buyerRatingCount || 0})` : "—"}</td>
-        <td>
-          ${u.trustTier ? `${u.trustScore} <span style="text-transform:capitalize;color:#6b7280;font-size:11px">(${u.trustTier})</span>` : "—"}
-          <button onclick="adminForceTrustRecalc('${u.id}')" style="background:none;border:none;cursor:pointer;font-size:12px;margin-left:4px" title="Recalculate now">🔄</button>
-        </td>
         <td>
           <span class="plan-chip ${u.banned ? 'chip-expired' : 'chip-approved'}">
             ${banned}
           </span>
+        </td>
+        <td>${u.buyerRating ? `⭐ ${u.buyerRating} (${u.buyerRatingCount || 0})` : "—"}</td>
+        <td>
+          ${u.trustTier ? `${u.trustScore} <span style="text-transform:capitalize;color:#6b7280;font-size:11px">(${u.trustTier})</span>` : "—"}
+          <button onclick="adminForceTrustRecalc('${u.id}')" style="background:none;border:none;cursor:pointer;font-size:12px;margin-left:4px" title="Recalculate now">🔄</button>
         </td>
         <td>
           <select class="plan-select" onchange="changeUserPlan('${u.id}', this.value)">
@@ -272,7 +272,7 @@ function renderUsers(users) {
             <option value="gold"   ${plan==="gold"   ?"selected":""}>🥇 Gold</option>
           </select>
         </td>
-        <td style="display:flex;gap:6px;flex-wrap:wrap">
+        <td class="zb-action-cell">
           ${u.banned
             ? `<button class="action-btn btn-unban" onclick="toggleBan('${u.id}', false)">Unban</button>`
             : `<button class="action-btn btn-ban"   onclick="toggleBan('${u.id}', true)">Ban</button>`}
@@ -290,21 +290,21 @@ function renderUsers(users) {
             onclick="adminViewUserOrders('${u.id}','${u.email}')">
             🛍️ Orders
           </button>
-
           <button class="action-btn" style="background:${u.adminNotes ? '#fef3c7' : '#f3f4f6'};color:${u.adminNotes ? '#92400e' : '#6b7280'};border:none;padding:6px 10px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer"
             onclick="viewUserNotes('${u.id}', '${(u.adminNotes||'').replace(/'/g,"\\'")}')">
             📝 Notes${u.adminNotes ? ' ●' : ''}
           </button>
-      
           <button class="action-btn" style="background:#f3e8ff;color:#7e22ce;border:none;padding:6px 10px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer"
             onclick="adminForceExpireAd('${u.id}')">
             🕒 Force Expire
           </button>
+
         </td>
       </tr>`;
   }).join("");
 
-  // Load ad counts async
+   // Load ad counts async
+
   users.forEach(u => loadUserAdCount(u.id));
 }
 
