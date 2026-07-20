@@ -331,9 +331,12 @@ window.changeUserPlan = async function(userId, newPlan) {
   if (!confirm(`Change this user's plan to ${newPlan.toUpperCase()}?`)) return;
 
   try {
-    const limits  = PLAN_LIMITS[newPlan];
+    const configSnap = await getDoc(doc(db, "plan_config", "current"));
+    const configured  = configSnap.exists() ? configSnap.data()[newPlan] : null;
+    const adDays      = configured?.adDays || PLAN_LIMITS[newPlan]?.adDays || 30;
+
     const endDate = new Date();
-    endDate.setDate(endDate.getDate() + 30);
+    endDate.setDate(endDate.getDate() + adDays);
 
     // Expire old active plan
     const oldSnap = await getDocs(query(
@@ -434,9 +437,12 @@ function renderSubs(subs) {
 
 window.activateSub = async function(subId, userId, plan) {
   try {
-    const limits  = PLAN_LIMITS[plan] || PLAN_LIMITS.free;
+    const configSnap = await getDoc(doc(db, "plan_config", "current"));
+    const configured  = configSnap.exists() ? configSnap.data()[plan] : null;
+    const adDays      = configured?.adDays || PLAN_LIMITS[plan]?.adDays || 30;
+
     const endDate = new Date();
-    endDate.setDate(endDate.getDate() + 30);
+    endDate.setDate(endDate.getDate() + adDays);
 
     await updateDoc(doc(db, "business_accounts", subId), {
       status:        "active",
@@ -2976,5 +2982,76 @@ window.viewUserNotes = async function(userId, currentNotes) {
     loadUsers();
   } catch(e) {
     showToast("Failed: " + e.message, "error");
+  }
+};
+
+
+// ══════════════════════════════════════════════
+//  PLAN SETTINGS — genuine admin-editable limits
+// ══════════════════════════════════════════════
+window.loadPlanSettings = async function() {
+  try {
+    const snap = await getDoc(doc(db, "plan_config", "current"));
+    const saved = snap.exists() ? snap.data() : {};
+
+    // Fallback defaults if nothing saved yet — matches plans-data.js
+    const defaults = {
+      free:   { maxAds: 3,  boosts: 0,  images: 3,  adDays: 30  },
+      bronze: { maxAds: 15, boosts: 2,  images: 5,  adDays: 60  },
+      silver: { maxAds: 50, boosts: 8,  images: 8,  adDays: 90  },
+      gold:   { maxAds: "unlimited", boosts: 25, images: 15, adDays: 180 }
+    };
+
+    ["free", "bronze", "silver", "gold"].forEach(planId => {
+      const vals = saved[planId] || defaults[planId];
+      const maxAdsEl = document.getElementById(`ps-${planId}-maxads`);
+      const boostsEl = document.getElementById(`ps-${planId}-boosts`);
+      const imagesEl = document.getElementById(`ps-${planId}-images`);
+      const daysEl   = document.getElementById(`ps-${planId}-days`);
+      if (maxAdsEl) maxAdsEl.value = vals.maxAds;
+      if (boostsEl) boostsEl.value = vals.boosts;
+      if (imagesEl) imagesEl.value = vals.images;
+      if (daysEl)   daysEl.value   = vals.adDays;
+    });
+
+    const savedAt = document.getElementById("ps-last-saved");
+    if (savedAt && saved.updatedAt) {
+      savedAt.textContent = "Last updated: " + fmtDate(saved.updatedAt);
+    }
+
+  } catch(e) {
+    showToast("Failed to load plan settings: " + e.message, "error");
+  }
+};
+
+window.savePlanSettings = async function() {
+  const btn = document.getElementById("ps-save-btn");
+  if (btn) { btn.textContent = "Saving..."; btn.disabled = true; }
+
+  try {
+    const config = {};
+
+    ["free", "bronze", "silver", "gold"].forEach(planId => {
+      const maxAdsRaw = document.getElementById(`ps-${planId}-maxads`)?.value.trim();
+      config[planId] = {
+        maxAds:  maxAdsRaw === "" || maxAdsRaw?.toLowerCase() === "unlimited" ? "unlimited" : Number(maxAdsRaw),
+        boosts:  Number(document.getElementById(`ps-${planId}-boosts`)?.value || 0),
+        images:  Number(document.getElementById(`ps-${planId}-images`)?.value || 1),
+        adDays:  Number(document.getElementById(`ps-${planId}-days`)?.value || 30)
+      };
+    });
+
+    config.updatedAt = new Date();
+    config.updatedBy = ADMIN_EMAIL;
+
+    await setDoc(doc(db, "plan_config", "current"), config);
+
+    showToast("✅ Plan limits saved — live across the platform now", "success");
+    loadPlanSettings();
+
+  } catch(e) {
+    showToast("Failed to save: " + e.message, "error");
+  } finally {
+    if (btn) { btn.textContent = "💾 Save Plan Settings"; btn.disabled = false; }
   }
 };
