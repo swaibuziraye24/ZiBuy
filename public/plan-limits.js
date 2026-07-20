@@ -4,15 +4,38 @@
 //  unlocks, matching business-plans.html table
 // ============================================
 
-import { db, auth, collection, getDocs, query, where } from "./firebase.js";
+import { db, auth, collection, getDocs, query, where, doc } from "./firebase.js";
+import { onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// Matches PLANS in business-plans.js + compare table
+// Matches PLANS in plans-data.js + compare table.
+// Live-synced from the SAME Firestore doc as plans-data.js, so a single
+// admin edit updates ad-posting limits AND boost limits together.
 export const PLAN_LIMITS = {
   free:   { maxAds: 3,        boosts: 0,  duration: 30,  maxImages: 3,  autoVerified: false },
   bronze: { maxAds: 15,       boosts: 2,  duration: 60,  maxImages: 5,  autoVerified: false },
   silver: { maxAds: 50,       boosts: 8,  duration: 90,  maxImages: 8,  autoVerified: true  },
   gold:   { maxAds: Infinity, boosts: 25, duration: 180, maxImages: 15, autoVerified: true  }
 };
+
+onSnapshot(doc(db, "plan_config", "current"), (snap) => {
+  if (!snap.exists()) return;
+  const data = snap.data();
+
+  ["free", "bronze", "silver", "gold"].forEach(planId => {
+    const override = data[planId];
+    if (!override) return;
+
+    // Note the field-name mapping: plans-data.js calls these
+    // "images"/"adDays", this file calls them "maxImages"/"duration"
+    if (override.maxAds != null)  PLAN_LIMITS[planId].maxAds     = override.maxAds === "unlimited" ? Infinity : Number(override.maxAds);
+    if (override.boosts != null)  PLAN_LIMITS[planId].boosts     = Number(override.boosts);
+    if (override.images != null)  PLAN_LIMITS[planId].maxImages  = Number(override.images);
+    if (override.adDays != null)  PLAN_LIMITS[planId].duration   = Number(override.adDays);
+    if (override.autoVerified != null) PLAN_LIMITS[planId].autoVerified = !!override.autoVerified;
+  });
+}, (err) => {
+  console.warn("plan_config sync failed in plan-limits.js:", err.message);
+});
 
 // ── Get current user's active plan id ──────────
 export async function getCurrentPlanId(uid) {
