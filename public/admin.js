@@ -75,10 +75,11 @@ let allUsers       = [];
 let allSubs        = [];
 let allBoosts      = [];
 let allAds         = [];
-let allOrders      = [];
+let allOrders       = [];
 let allPremiumAds  = [];
 let allVerifs      = [];
 let allReports     = [];
+let allJobAds      = [];
 
 // ── Auth guard ────────────────────────────────
 onAuthStateChanged(auth, async (user) => {
@@ -135,6 +136,16 @@ window.showSection = function(name, btn) {
 };
 
 // ── Load everything in parallel ───────────────
+async function loadOverviewExtras() {
+  try {
+    const jobsSnap = await getDocs(collection(db, "job_ads"));
+    allJobAds = jobsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch(e) {
+    console.warn("loadOverviewExtras:", e.message);
+    allJobAds = [];
+  }
+}
+
 async function loadAll() {
   await Promise.all([
     loadUsers(),
@@ -151,10 +162,12 @@ async function loadAll() {
     loadBroadcasts(),
     loadBlogAdmin(),
     loadCategorySponsorsAdmin(),
-    loadAutoRenewRequests(),
-    loadPinRequestsAdmin()
+    loadPinRequestsAdmin(),
+    loadOverviewExtras()
   ]);
   renderOverview();
+  checkSystemHealth();
+  checkFraudAlerts();
 }
 
 // ══════════════════════════════════════════════
@@ -170,6 +183,20 @@ function renderOverview() {
   document.getElementById("kpi-ads").textContent     = activeAds;
   document.getElementById("kpi-boosts").textContent  = pendingBoosts;
   document.getElementById("kpi-orders").textContent  = allOrders.length;
+
+  // Revenue — sum of amounts actually approved/active, not just requested
+  const boostRevenue   = allBoosts.filter(b => b.status === "approved").reduce((s,b) => s + Number(b.price||0), 0);
+  const subRevenue     = allSubs.filter(s => s.status === "active").reduce((s,sub) => s + Number(sub.price||0), 0);
+  const premiumRevenue = allPremiumAds.reduce((s,p) => s + Number(p.price||0), 0);
+  const totalRevenue   = boostRevenue + subRevenue + premiumRevenue;
+  const kpiRevenue = document.getElementById("kpi-revenue");
+  if (kpiRevenue) kpiRevenue.textContent = "UGX " + totalRevenue.toLocaleString();
+
+  const kpiVerifs = document.getElementById("kpi-verifications");
+  if (kpiVerifs) kpiVerifs.textContent = allVerifs.filter(v => v.status === "approved").length;
+
+  const kpiJobs = document.getElementById("kpi-jobads");
+  if (kpiJobs) kpiJobs.textContent = allJobAds.filter(j => j.status === "active").length;
 
   const pending = document.getElementById("pending-actions");
 
@@ -262,6 +289,11 @@ function renderUsers(users) {
           <button class="action-btn" style="background:#dcfce7;color:#166534;border:none;padding:6px 10px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer"
             onclick="adminViewUserOrders('${u.id}','${u.email}')">
             🛍️ Orders
+          </button>
+
+          <button class="action-btn" style="background:${u.adminNotes ? '#fef3c7' : '#f3f4f6'};color:${u.adminNotes ? '#92400e' : '#6b7280'};border:none;padding:6px 10px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer"
+            onclick="viewUserNotes('${u.id}', '${(u.adminNotes||'').replace(/'/g,"\\'")}')">
+            📝 Notes${u.adminNotes ? ' ●' : ''}
           </button>
       
           <button class="action-btn" style="background:#f3e8ff;color:#7e22ce;border:none;padding:6px 10px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer"
@@ -2849,6 +2881,100 @@ window.adminForceTrustRecalc = async function(userId) {
     showToast("Trust score recalculated ✅", "success");
     loadUsers();
   } catch (e) {
+    showToast("Failed: " + e.message, "error");
+  }
+};
+
+
+
+async function checkSystemHealth() {
+  const el = document.getElementById("system-health");
+  if (!el) return;
+
+  el.innerHTML = `<p style="color:var(--gray)">Checking...</p>`;
+  const results = [];
+
+  // Firestore — a real timed read, not a guess
+  try {
+    const start = performance.now();
+    await getDocs(query(collection(db, "users"), limit(1)));
+    const ms = Math.round(performance.now() - start);
+    results.push(`<p>Firestore: ✅ Online <span style="color:#9ca3af;font-size:11px">(${ms}ms)</span></p>`);
+  } catch(e) {
+    results.push(`<p>Firestore: ❌ Error — ${e.message}</p>`);
+  }
+
+  // Cloud Functions — inferred from whether one has logged activity recently
+  try {
+    const snap = await getDocs(query(collection(db, "function_logs"), orderBy("createdAt","desc"), limit(1)));
+    if (!snap.empty) {
+      const lastTime = snap.docs[0].data().createdAt?.toDate?.();
+      const hoursAgo = lastTime ? Math.round((Date.now() - lastTime.getTime()) / 3600000) : null;
+      const healthy = hoursAgo !== null && hoursAgo < 48;
+      results.push(`<p>Cloud Functions: ${healthy ? "✅ Active" : "⚠️ No recent activity"} <span style="color:#9ca3af;font-size:11px">(last log ${hoursAgo ?? "—"}h ago)</span></p>`);
+    } else {
+      results.push(`<p>Cloud Functions: ⚠️ No logs found yet</p>`);
+    }
+  } catch(e) {
+    results.push(`<p>Cloud Functions: ❓ Unable to check</p>`);
+  }
+
+  // Storage — no reliable client-side check exists, so say so honestly
+  results.push(`<p>Storage: ❓ Not actively monitored <span style="color:#9ca3af;font-size:11px">(check Firebase Console → Storage)</span></p>`);
+
+  el.innerHTML = results.join("");
+}
+
+
+async function checkFraudAlerts() {
+  const el = document.getElementById("fraud-alerts");
+  if (!el) return;
+
+  const alerts = [];
+
+  // Sellers with 3+ unresolved reports
+  const reportCounts = {};
+  allReports.filter(r => r.status !== "resolved").forEach(r => {
+    const key = r.sellerName || r.productId || "unknown";
+    reportCounts[key] = (reportCounts[key] || 0) + 1;
+  });
+  Object.entries(reportCounts).filter(([,c]) => c >= 3).forEach(([name,c]) => {
+    alerts.push(`<p style="color:#991b1b">🚨 "${escapeHTML(name)}" has ${c} open reports — review recommended</p>`);
+  });
+
+  // Disputes open longer than 48 hours — nobody should sit unresolved this long
+  try {
+    const snap = await getDocs(query(collection(db, "disputes"), where("status","==","open")));
+    const cutoff = Date.now() - 48*3600000;
+    snap.forEach(d => {
+      const data = d.data();
+      const created = data.createdAt?.toDate?.()?.getTime();
+      if (created && created < cutoff) {
+        alerts.push(`<p style="color:#92400e">⏰ Dispute on "${escapeHTML(data.productName||"an order")}" open 48+ hours — needs attention</p>`);
+      }
+    });
+  } catch(e) {}
+
+  // Banned users whose ads are still live — a real data inconsistency to catch
+  const bannedIds = allUsers.filter(u => u.banned).map(u => u.id);
+  if (bannedIds.length && allAds.length) {
+    allAds.filter(a => a.status === "active" && bannedIds.includes(a.userId))
+      .forEach(a => alerts.push(`<p style="color:#991b1b">⚠️ Banned user still has an active ad: "${escapeHTML(a.name)}"</p>`));
+  }
+
+  el.innerHTML = alerts.length ? alerts.join("") : `<p style="color:#16a34a">✅ No fraud signals detected</p>`;
+}
+
+
+
+window.viewUserNotes = async function(userId, currentNotes) {
+  const notes = prompt("Admin notes for this user (only visible to admins — never shown to the user):", currentNotes || "");
+  if (notes === null) return;
+  try {
+    await updateDoc(doc(db, "users", userId), { adminNotes: notes });
+    showToast("Notes saved", "success");
+    loadUsers();
+  } catch(e) {
     showToast("Failed: " + e.message, "error");
   }
 };
