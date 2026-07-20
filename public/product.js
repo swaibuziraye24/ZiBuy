@@ -25,6 +25,17 @@ import "./phone-verify.js";
 import { renderTrustBadge } from "./trust-badge.js";
 
 
+function escapeHTML(value) {
+  if (value === null || value === undefined) return "";
+
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 // ── Smart back button ─────────────────────────
 window.goBackToHome = function() {
   try {
