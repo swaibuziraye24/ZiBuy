@@ -23,6 +23,18 @@ captureReferralCode(); // runs immediately on every page load
 
 import { getDistricts, getSubLocations } from "./uganda-locations.js";
 
+
+function escapeHTML(value) {
+  if (value === null || value === undefined) return "";
+
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function categoryEmoji(cat) {
   const map = {
     phones: "📱",
