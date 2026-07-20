@@ -1695,118 +1695,37 @@ async function loadAnalytics() {
         </div>
       </div>
 
-      <div style="background:white;border-radius:14px;padding:18px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:16px">
-
-    <div style="
-        display:flex;
-        flex-wrap:wrap;
-        gap:10px;
-        justify-content:space-between;
-        align-items:center;
-        margin-bottom:14px;
-    ">
-        <h3 style="
-            margin:0;
-            font-size:14px;
-            font-weight:800;
-        ">
-            📋 Full Ad Performance
-        </h3>
-
-        <button
-            onclick="exportAnalyticsCSV()"
-            style="
-                background:#ff6600;
-                color:white;
-                border:none;
-                padding:8px 14px;
-                border-radius:8px;
-                font-size:12px;
-                font-weight:800;
-                cursor:pointer;
-                white-space:nowrap;
-            ">
-            ⬇️ Export CSV
-        </button>
-    </div>
-
-    <div class="zb-table-wrap">
-
-        <table style="
-            border-collapse:collapse;
-            min-width:900px;
-            width:100%;
-            font-size:13px;
-        ">
-
-            <thead>
-
-                <tr style="background:#f9fafb">
-
-                    <th style="padding:10px;text-align:left">Ad Name</th>
-
-                    <th style="padding:10px;text-align:left">Category</th>
-
-                    <th style="padding:10px;text-align:left">Price</th>
-
-                    <th style="padding:10px;text-align:left">Views</th>
-
-                    <th style="padding:10px;text-align:left">Status</th>
-
-                    <th style="padding:10px;text-align:left">Boosted</th>
-
-                </tr>
-
-            </thead>
-
-            <tbody>
-
-                ${ads.map(a => `
-                    <tr style="border-bottom:1px solid #eee">
-
-                        <td style="padding:10px;white-space:nowrap;">
-                            ${a.name || "—"}
-                        </td>
-
-                        <td style="padding:10px;white-space:nowrap;">
-                            ${a.category || "—"}
-                        </td>
-
-                        <td style="padding:10px;white-space:nowrap;color:#ff6600;font-weight:700;">
-                            UGX ${Number(a.price||0).toLocaleString()}
-                        </td>
-
-                        <td style="padding:10px;white-space:nowrap;">
-                            ${a.views||0}
-                        </td>
-
-                        <td style="padding:10px;white-space:nowrap;">
-                            <span style="
-                                padding:4px 8px;
-                                border-radius:20px;
-                                font-size:11px;
-                                font-weight:700;
-                                background:${a.status==="active" ? "#dcfce7" : "#fee2e2"};
-                                color:${a.status==="active" ? "#166534" : "#991b1b"};
-                            ">
-                                ${a.status || "active"}
-                            </span>
-                        </td>
-
-                        <td style="padding:10px;white-space:nowrap;">
-                            ${a.isPremium ? "⭐ Yes" : "—"}
-                        </td>
-
-                    </tr>
-                `).join("")}
-
-            </tbody>
-
+      <div style="background:white;border-radius:14px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,0.06);margin-bottom:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <h3 style="font-size:14px;font-weight:800;margin:0">📋 Full Ad Performance</h3>
+          <button onclick="exportAnalyticsCSV()" style="background:#ff6600;color:white;border:none;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer">⬇️ Export CSV</button>
+        </div>
+        <div class="zb-table-wrap">
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead>
+            <tr style="background:#f9fafb">
+              <th style="padding:10px;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;border-bottom:2px solid #e5e7eb">Ad Name</th>
+              <th style="padding:10px;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;border-bottom:2px solid #e5e7eb">Category</th>
+              <th style="padding:10px;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;border-bottom:2px solid #e5e7eb">Price</th>
+              <th style="padding:10px;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;border-bottom:2px solid #e5e7eb">Views</th>
+              <th style="padding:10px;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;border-bottom:2px solid #e5e7eb">Status</th>
+              <th style="padding:10px;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;border-bottom:2px solid #e5e7eb">Boosted</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${ads.map(a => `
+              <tr style="border-bottom:1px solid #f0f0f0">
+                <td style="padding:10px;font-weight:600;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.name || "—"}</td>
+                <td style="padding:10px;color:#6b7280">${a.category || "—"}</td>
+                <td style="padding:10px;color:#ff6600;font-weight:800">UGX ${Number(a.price||0).toLocaleString()}</td>
+                <td style="padding:10px;font-weight:700">${a.views || 0}</td>
+                <td style="padding:10px"><span style="padding:3px 8px;border-radius:20px;font-size:11px;font-weight:800;background:${a.status==='active'?'#dcfce7':'#fee2e2'};color:${a.status==='active'?'#166534':'#991b1b'}">${a.status||"active"}</span></td>
+                <td style="padding:10px">${a.isPremium ? "⭐ Yes" : "—"}</td>
+              </tr>`).join("")}
+          </tbody>
         </table>
-
-    </div>
-
-</div>
+        </div>
+      </div>
     `;
 
     // Store for CSV export
