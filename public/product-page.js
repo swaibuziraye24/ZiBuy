@@ -12,6 +12,7 @@ import "./app.js";
 import "./report-seller.js";
 import "./phone-verify.js";
 import { renderTrustBadge } from "./trust-badge.js";
+import { renderEarnedBadge } from "./earned-badge.js";
 
 let currentUser = null;
 
