@@ -363,12 +363,17 @@ window.changeUserPlan = async function(userId, newPlan) {
       });
     }
 
+    const shouldBeVerified = newPlan === "silver" || newPlan === "gold";
+
     // Update user doc
     await updateDoc(doc(db, "users", userId), {
       plan:             newPlan,
-      isSellerVerified: newPlan === "silver" || newPlan === "gold",
+      isSellerVerified: shouldBeVerified,
       planUpdatedAt:    new Date()
     });
+
+    // Sync the ACTUAL verification record every badge-checking function reads
+    await syncPlanVerification(userId, shouldBeVerified, newPlan);
 
     showToast(`Plan changed to ${newPlan} ✅`, "success");
     loadUsers();
@@ -451,12 +456,16 @@ window.activateSub = async function(subId, userId, plan) {
       endDate
     });
 
+    const shouldBeVerified = plan === "silver" || plan === "gold";
+
     await updateDoc(doc(db, "users", userId), {
       plan,
-      isSellerVerified: plan === "silver" || plan === "gold",
+      isSellerVerified: shouldBeVerified,
       planUpdatedAt:    new Date()
     }).catch(() => {});
 
+    // Sync the ACTUAL verification record every badge-checking function reads
+    await syncPlanVerification(userId, shouldBeVerified, plan);
     // Notify user that subscription was approved
 await addDoc(collection(db, "notifications"), {
   userId,
@@ -3055,3 +3064,63 @@ window.savePlanSettings = async function() {
     if (btn) { btn.textContent = "💾 Save Plan Settings"; btn.disabled = false; }
   }
 };
+
+
+// ══════════════════════════════════════════════
+//  SYNC PLAN-BASED VERIFICATION → seller_verifications
+//  This is the collection every badge display actually
+//  reads from (product.js, shop.js, user-profile.js) —
+//  not users.isSellerVerified, which is display-only.
+// ══════════════════════════════════════════════
+async function syncPlanVerification(userId, shouldBeVerified, plan) {
+  try {
+    const existingSnap = await getDocs(query(
+      collection(db, "seller_verifications"),
+      where("userId", "==", userId)
+    ));
+
+    if (shouldBeVerified) {
+      if (!existingSnap.empty) {
+        // Already has a verification record — just make sure it's approved
+        const existing = existingSnap.docs[0];
+        if (existing.data().status !== "approved") {
+          await updateDoc(doc(db, "seller_verifications", existing.id), {
+            status:      "approved",
+            approvedAt:  new Date(),
+            approvedVia: `${plan}_subscription`
+          });
+        }
+      } else {
+        // No record at all yet — create one representing plan-based verification
+        const userSnap = await getDoc(doc(db, "users", userId));
+        const userData = userSnap.exists() ? userSnap.data() : {};
+
+        await addDoc(collection(db, "seller_verifications"), {
+          userId,
+          email:        userData.email || "",
+          fullName:     userData.displayName || (userData.email || "").split("@")[0],
+          businessName: "",
+          phone:        userData.phone || "",
+          location:     userData.location || "",
+          status:       "approved",
+          approvedAt:   new Date(),
+          approvedVia:  `${plan}_subscription`,
+          createdAt:    new Date()
+        });
+      }
+    } else {
+      // Plan downgraded below Silver — only revoke verification that
+      // came FROM a plan, never touch a manually ID-verified seller
+      if (!existingSnap.empty) {
+        const existing = existingSnap.docs[0];
+        if (existing.data().approvedVia?.endsWith("_subscription")) {
+          await updateDoc(doc(db, "seller_verifications", existing.id), {
+            status: "expired"
+          });
+        }
+      }
+    }
+  } catch (e) {
+    console.warn("syncPlanVerification:", e.message);
+  }
+}
