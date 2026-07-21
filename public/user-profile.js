@@ -2,6 +2,8 @@ import { db, auth, collection, getDocs, query, where, doc, getDoc, updateDoc, ad
 import "./report-seller.js";
 import { renderTrustBadge } from "./trust-badge.js";
 import { renderEarnedBadge } from "./earned-badge.js";
+import { renderResponseBadge } from "./response-badge.js";
+import { renderEarnedBadge } from "./earned-badge.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const params = new URLSearchParams(window.location.search);
@@ -80,6 +82,8 @@ async function loadProfile() {
     }
 
     renderTrustBadge(userId, "profile-trust-badge");
+    renderEarnedBadge(userId, "profile-earned-badge");
+    renderResponseBadge(userId, "profile-response-badge");
 
     // Plan badge
     try {
