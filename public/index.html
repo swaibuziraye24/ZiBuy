@@ -883,6 +883,18 @@
 <!-- ══ CATEGORY SPONSORS CAROUSEL (below banner) ══ -->
 <div id="sponsor-carousel-slot" style="display:none;padding:0 20px;margin-bottom:16px"></div>
 
+<!-- ══ RECENTLY VIEWED ══ -->
+<section id="recently-viewed-section" style="display:none;padding:0 20px 8px">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+    <h2 style="font-size:18px;font-weight:800;margin:0;font-family:'Syne',sans-serif">🕒 Recently Viewed</h2>
+    <a href="javascript:void(0)" onclick="if(confirm('Clear your recently viewed history?')){clearRecentlyViewed();document.getElementById('recently-viewed-section').style.display='none'}"
+      style="font-size:12px;font-weight:700;color:#9ca3af;text-decoration:none">Clear</a>
+  </div>
+  <div id="recently-viewed-row"
+    style="display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling:touch;padding-bottom:4px"></div>
+</section>
+
 <!-- ══ FEATURED SHOPS ══ -->
 <section class="featured-shops-section" id="featured-shops-section" style="display:none;padding:0 20px 8px">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
@@ -1593,8 +1605,15 @@ window.setActiveCard = function(el) {
 
 <script type="module" src="app.js"></script>
 <script type="module" src="saved-searches.js"></script>
-<script type="module" src="error-logger.js"></script>
 <script type="module" src="notifications-setup.js"></script>
+<script type="module">
+  import { renderRecentlyViewed, clearRecentlyViewed } from "./recently-viewed.js";
+  window.clearRecentlyViewed = clearRecentlyViewed;
+  window.addEventListener("load", () => {
+    setTimeout(() => renderRecentlyViewed("recently-viewed-section", "recently-viewed-row"), 900);
+  });
+</script>
+<script type="module" src="error-logger.js"></script>
 <script type="module" src="nav.js"></script>
 <script type="module" src="install-btn.js"></script>
 
