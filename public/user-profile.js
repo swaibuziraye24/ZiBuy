@@ -1,6 +1,7 @@
 import { db, auth, collection, getDocs, query, where, doc, getDoc, updateDoc, addDoc } from "./firebase.js";
 import "./report-seller.js";
 import { renderTrustBadge } from "./trust-badge.js";
+import { renderEarnedBadge } from "./earned-badge.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const params = new URLSearchParams(window.location.search);
