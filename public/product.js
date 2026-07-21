@@ -25,6 +25,7 @@ import "./phone-verify.js";
 import { renderTrustBadge } from "./trust-badge.js";
 import { renderEarnedBadge } from "./earned-badge.js";
 import { renderResponseBadge } from "./response-badge.js";
+import { trackProductView } from "./recently-viewed.js";
 
 function escapeHTML(value) {
   if (value === null || value === undefined) return "";
@@ -183,6 +184,8 @@ async function loadProduct() {
     await updateDoc(doc(db, "products", id), {
       views: increment(1)
     });
+
+    trackProductView(id);
 
     const images = Array.isArray(p.images) ? p.images : [];
     const seller = p.seller || {};
