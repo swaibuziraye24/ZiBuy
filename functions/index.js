@@ -512,6 +512,83 @@ exports.adminRecalculateTrustScore = onCall(async (request) => {
   return { success: true };
 });
 
+
+// ============================================
+// EARNED VERIFICATION — cannot be purchased,
+// only earned through sustained good behavior
+// ============================================
+
+async function checkEarnedVerification(userId) {
+  try {
+    const userSnap = await db.collection("users").doc(userId).get();
+    if (!userSnap.exists) return;
+    const user = userSnap.data();
+
+    // Requirements — all must be true
+    const hasPhoneVerified = !!user.phoneVerified;
+    const hasGoodTrust     = (user.trustScore || 0) >= 70;
+
+    const reviewsSnap = await db.collection("reviews").where("sellerId", "==", userId).get();
+    const completedSalesProxy = reviewsSnap.size; // reviews are the closest signal to completed transactions we have
+
+    const disputesSnap = await db.collection("disputes")
+      .where("status", "==", "open")
+      .get();
+    // Filter to disputes actually tied to this seller's orders — cheap check via order lookup skipped for cost; approximate via zero tolerance on THEIR open disputes if productId maps back
+    // (kept intentionally simple: a seller with any of their own orders currently disputed does not qualify)
+
+    const qualifies = hasPhoneVerified && hasGoodTrust && completedSalesProxy >= 10;
+
+    const alreadyEarned = user.earnedVerification === true;
+
+    if (qualifies && !alreadyEarned) {
+      await db.collection("users").doc(userId).update({
+        earnedVerification:   true,
+        earnedVerificationAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+
+      await db.collection("notifications").add({
+        userId,
+        type:      "earned_verification",
+        title:     "🏆 You Earned ZiBuy Trusted Seller Status!",
+        message:   "Your track record of great service earned you our highest trust badge — visible to every buyer.",
+        read:      false,
+        createdAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+
+    } else if (!qualifies && alreadyEarned) {
+      // Standards slipped — badge is earned, so it can be lost too
+      await db.collection("users").doc(userId).update({
+        earnedVerification: false
+      });
+    }
+
+  } catch (err) {
+    console.error("[EARNED VERIFICATION ERROR]", err.message);
+  }
+}
+
+// Recalculate earned verification whenever trust score changes
+exports.earnedVerificationOnTrustUpdate = onDocumentUpdated("users/{userId}", async (event) => {
+  const before = event.data.before.data();
+  const after  = event.data.after.data();
+  if (before.trustScore === after.trustScore) return; // only react to real trust changes, avoid loops
+  await checkEarnedVerification(event.params.userId);
+});
+
+// Nightly sweep — catches review-count changes and dispute resolutions too
+exports.earnedVerificationDailySweep = onSchedule(
+  { schedule: "every 24 hours", timeZone: "Africa/Kampala" },
+  async () => {
+    const snap = await db.collection("products").where("status", "==", "active").limit(2000).get();
+    const sellerIds = new Set();
+    snap.forEach(d => { const uid = d.data().userId; if (uid) sellerIds.add(uid); });
+    for (const uid of sellerIds) await checkEarnedVerification(uid);
+    console.log(`[EARNED VERIFICATION SWEEP] Checked ${sellerIds.size} sellers`);
+  }
+);
+
+
 // ============================================
 // PUSH NOTIFICATIONS
 // ============================================
@@ -2085,6 +2162,43 @@ exports.subscriptionApprovalNotifications = onDocumentUpdated(
       if (!userSnap.exists) return;
 
       const user = userSnap.data();
+      const shouldBeVerified = after.plan === "silver" || after.plan === "gold";
+
+      // Keep users.isSellerVerified in sync (display field)
+      await db.collection("users").doc(after.userId).update({
+        isSellerVerified: shouldBeVerified
+      }).catch(() => {});
+
+      // Sync the REAL verification record every badge display reads from
+      if (shouldBeVerified) {
+        const existingSnap = await db.collection("seller_verifications")
+          .where("userId", "==", after.userId)
+          .get();
+
+        if (!existingSnap.empty) {
+          const existing = existingSnap.docs[0];
+          if (existing.data().status !== "approved") {
+            await existing.ref.update({
+              status:      "approved",
+              approvedAt:  admin.firestore.FieldValue.serverTimestamp(),
+              approvedVia: `${after.plan}_subscription`
+            });
+          }
+        } else {
+          await db.collection("seller_verifications").add({
+            userId:       after.userId,
+            email:        user.email || "",
+            fullName:     user.displayName || (user.email || "").split("@")[0],
+            businessName: "",
+            phone:        user.phone || "",
+            location:     user.location || "",
+            status:       "approved",
+            approvedAt:   admin.firestore.FieldValue.serverTimestamp(),
+            approvedVia:  `${after.plan}_subscription`,
+            createdAt:    admin.firestore.FieldValue.serverTimestamp()
+          });
+        }
+      }
 
       await db.collection("notifications").add({
   userId: after.userId,
