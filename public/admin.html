@@ -415,6 +415,11 @@
   <span class="nav-icon">💰</span> Plan Settings
 </button>
 
+<button class="admin-nav-item"
+  onclick="window.showSection('devconsole', this);loadClientErrors()">
+  <span class="nav-icon">🐛</span> Dev Console
+</button>
+
   </aside>
 
   <!-- ── MAIN ── -->
@@ -1177,6 +1182,29 @@ Separate paragraphs with a blank line."
       </div>
     </div>
     <!-- ══ end section-system ══ -->
+
+    <div class="admin-section" id="section-devconsole">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+    <h2 style="font-size:20px;font-weight:800;margin:0">🐛 Developer Console</h2>
+    <button onclick="clearOldErrors()"
+      style="background:#f3f4f6;border:none;padding:8px 16px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer">
+      🗑️ Clear Old
+    </button>
+  </div>
+  <div style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:12px;padding:14px;margin-bottom:16px;font-size:13px;color:#1e40af">
+    Real JavaScript errors happening on real users' devices, captured automatically — grouped by error + page, most frequent first.
+  </div>
+  <div class="admin-card">
+    <table class="data-table">
+      <thead>
+        <tr><th>Error</th><th>Page</th><th>Source</th><th>Count</th><th>User</th><th>Last Seen</th></tr>
+      </thead>
+      <tbody id="errors-table-body">
+        <tr class="empty-row"><td colspan="6">Loading…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
 
     <div class="admin-section" id="section-plansettings">
   <h2 style="font-size:20px;font-weight:800;margin-bottom:6px">💰 Plan Settings</h2>
