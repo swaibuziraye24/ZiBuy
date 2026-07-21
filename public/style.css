@@ -21,6 +21,17 @@
   --font-head:  'Syne', sans-serif;
 }
 
+/* ============================================
+   DISABLE ACCIDENTAL PULL-TO-REFRESH
+   Stops the browser's native "swipe down at top
+   of page = reload" gesture from firing by mistake
+   while scrolling — does NOT affect normal scrolling,
+   only the overscroll bounce/refresh behavior.
+   ============================================ */
+html, body {
+  overscroll-behavior-y: contain;
+}
+
 /* ---- Reset ---- */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
