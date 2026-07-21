@@ -59,23 +59,41 @@ body{
 /* ================= SHOPS GRID ================= */
 
 .shops-grid{
-  padding:20px;
+  padding:14px;
   display:grid;
-  grid-template-columns:
-  repeat(auto-fit,minmax(260px,1fr));
-  gap:18px;
+  grid-template-columns: repeat(2, 1fr);
+  gap:14px;
+}
+
+@media (min-width: 640px) {
+  .shops-grid{
+    padding:20px;
+    grid-template-columns: repeat(3, 1fr);
+    gap:18px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .shops-grid{
+    grid-template-columns: repeat(4, 1fr);
+  }
 }
 
 /* ================= SHOP CARD ================= */
 
 .shop-card{
   background:white;
-  border-radius:16px;
-  padding:20px;
+  border-radius:14px;
+  padding:14px;
   box-shadow:0 2px 10px rgba(0,0,0,0.08);
   cursor:pointer;
   transition:0.2s;
   border:1px solid #eee;
+  min-width:0;
+}
+
+@media (min-width: 640px) {
+  .shop-card{ padding:20px; }
 }
 
 .shop-card:hover{
@@ -86,23 +104,28 @@ body{
 .shop-top{
   display:flex;
   align-items:center;
-  gap:12px;
+  gap:10px;
+  min-width:0;
 }
 
 /* SHOP AVATAR */
 
 .shop-avatar{
-  width:60px;
-  height:60px;
+  width:44px;
+  height:44px;
   border-radius:50%;
   background:#ff6600;
   color:white;
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:24px;
+  font-size:18px;
   font-weight:800;
   flex-shrink:0;
+}
+
+@media (min-width: 640px) {
+  .shop-avatar{ width:60px; height:60px; font-size:24px; }
 }
 
 /* SHOP INFO */
@@ -112,31 +135,46 @@ body{
 }
 
 .shop-name{
-  font-size:20px;
+  font-size:15px;
   font-weight:800;
   color:#ff6600;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
 }
 
 .shop-meta{
-  margin-top:8px;
+  margin-top:6px;
   color:#666;
-  font-size:14px;
+  font-size:12px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+@media (min-width: 640px) {
+  .shop-name{ font-size:20px; white-space:normal; }
+  .shop-meta{ font-size:14px; white-space:normal; }
 }
 
 /* BUTTON */
 
 .shop-btn{
-  margin-top:18px;
+  margin-top:12px;
   width:100%;
   background:#ff6600;
   color:white;
   border:none;
-  padding:13px;
-  border-radius:12px;
+  padding:10px;
+  border-radius:10px;
   font-weight:700;
   cursor:pointer;
-  font-size:15px;
+  font-size:12px;
   transition:0.2s;
+}
+
+@media (min-width: 640px) {
+  .shop-btn{ margin-top:18px; padding:13px; border-radius:12px; font-size:15px; }
 }
 
 .shop-btn:hover{
