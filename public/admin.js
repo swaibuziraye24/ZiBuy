@@ -3124,3 +3124,69 @@ async function syncPlanVerification(userId, shouldBeVerified, plan) {
     console.warn("syncPlanVerification:", e.message);
   }
 }
+
+
+// ══════════════════════════════════════════════
+//  DEVELOPER CONSOLE — real client-side errors
+// ══════════════════════════════════════════════
+window.loadClientErrors = async function() {
+  const tbody = document.getElementById("errors-table-body");
+  if (!tbody) return;
+
+  try {
+    const snap = await getDocs(query(
+      collection(db, "client_errors"),
+      orderBy("createdAt", "desc"),
+      limit(150)
+    ));
+
+    const errors = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    if (errors.length === 0) {
+      tbody.innerHTML = `<tr class="empty-row"><td colspan="6">✅ No errors logged</td></tr>`;
+      return;
+    }
+
+    // Group identical errors together so 40 copies of the same bug
+    // shows as "1 error × 40 occurrences" instead of drowning the list
+    const grouped = {};
+    errors.forEach(e => {
+      const key = `${e.message}::${e.page}`;
+      if (!grouped[key]) grouped[key] = { ...e, count: 0, lastSeen: e.createdAt };
+      grouped[key].count++;
+    });
+
+    const groupedList = Object.values(grouped).sort((a, b) => b.count - a.count);
+
+    tbody.innerHTML = groupedList.map(e => `
+      <tr>
+        <td style="font-size:12px;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#991b1b;font-weight:700">${escapeHTML(e.message)}</td>
+        <td style="font-size:11px">${escapeHTML(e.page)}</td>
+        <td style="font-size:11px">${escapeHTML(e.source)}</td>
+        <td style="text-align:center"><span class="plan-chip chip-rejected">${e.count}×</span></td>
+        <td style="font-size:11px">${escapeHTML(e.userEmail)}</td>
+        <td style="font-size:11px">${fmtDate(e.lastSeen)}</td>
+      </tr>
+    `).join("");
+
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="6" style="color:red">Failed to load: ${e.message}</td></tr>`;
+  }
+};
+
+window.clearOldErrors = async function() {
+  if (!confirm("Clear all logged errors older than 14 days?")) return;
+  try {
+    const snap = await getDocs(collection(db, "client_errors"));
+    const cutoff = Date.now() - 14 * 86400000;
+    const toDelete = snap.docs.filter(d => {
+      const t = d.data().createdAt?.toDate?.()?.getTime();
+      return t && t < cutoff;
+    });
+    await Promise.all(toDelete.map(d => deleteDoc(doc(db, "client_errors", d.id))));
+    showToast(`Cleared ${toDelete.length} old error logs`, "info");
+    loadClientErrors();
+  } catch(e) {
+    showToast("Failed", "error");
+  }
+};
