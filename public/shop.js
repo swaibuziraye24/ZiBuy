@@ -21,7 +21,7 @@ import "./buyer-ratings.js";
 import { renderTrustBadge } from "./trust-badge.js";
 import { renderEarnedBadge } from "./earned-badge.js";
 import { renderResponseBadge } from "./response-badge.js";
-import { renderEarnedBadge } from "./earned-badge.js";
+
 
 import { onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
