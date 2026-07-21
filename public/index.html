@@ -756,6 +756,13 @@
 </head>
 <body>
 
+  <script>
+  // Prevent the browser from auto-restoring old scroll positions on
+  // back/forward navigation — every "Home" entry should start at top
+  if ("scrollRestoration" in history) {
+    history.scrollRestoration = "manual";
+  }
+</script>
   
 
 <!-- ══ NEW TOPBAR ══ -->
