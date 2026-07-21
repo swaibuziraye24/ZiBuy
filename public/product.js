@@ -38,20 +38,10 @@ function escapeHTML(value) {
 
 // ── Smart back button ─────────────────────────
 window.goBackToHome = function() {
-  try {
-    const referrer = document.referrer;
-    // Came from anywhere on ZiBuy itself — safe to use browser back
-    const cameFromZiBuy = referrer && referrer.includes(window.location.host);
-
-    if (cameFromZiBuy && window.history.length > 1) {
-      history.back();
-    } else {
-      window.location.href = "index.html";
-    }
-  } catch (err) {
-    // A malformed referrer must never break the back button
-    window.location.href = "index.html";
-  }
+  // Always a fresh navigation to the homepage — never real browser
+  // back/forward, which restores the exact old scroll position and
+  // can land the user far down the page instead of at the top
+  window.location.href = "index.html";
 };
 
 let currentUser = null;
