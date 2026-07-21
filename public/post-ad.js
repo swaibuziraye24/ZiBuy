@@ -155,6 +155,74 @@ onAuthStateChanged(auth, (user) => {
   console.log("✅ User logged in as:", user.email);
 });
 
+
+// ── Compress images client-side before upload — the single biggest
+// win for slow networks, since a 6MB photo becomes ~300-600KB ──
+async function compressImage(file, maxWidth = 1280, quality = 0.72) {
+  if (file.size < 200 * 1024) return file; // already small — skip
+
+  return new Promise((resolve) => {
+    const img = new Image();
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob((blob) => {
+          if (!blob) { resolve(file); return; }
+          resolve(new File([blob], file.name, { type: "image/jpeg", lastModified: Date.now() }));
+        }, "image/jpeg", quality);
+      };
+      img.onerror = () => resolve(file); // fall back to original, never block the user
+      img.src = e.target.result;
+    };
+    reader.onerror = () => resolve(file);
+    reader.readAsDataURL(file);
+  });
+}
+
+// ── Retry any upload/save operation, with a per-attempt timeout AND
+// instant resume the moment the connection returns — instead of
+// blindly waiting a fixed delay while offline ──
+async function withRetry(operation, { maxTries = 6, timeoutMs = 45000, baseDelay = 2000, maxDelay = 15000, onStatus } = {}) {
+  let attempt = 0;
+  while (attempt < maxTries) {
+    try {
+      return await Promise.race([
+        operation(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("Upload timed out — connection too slow")), timeoutMs))
+      ]);
+    } catch (err) {
+      attempt++;
+      if (attempt >= maxTries) throw err;
+
+      const wait = Math.min(baseDelay * Math.pow(2, attempt - 1), maxDelay);
+      if (onStatus) onStatus(attempt, maxTries, wait);
+
+      if (!navigator.onLine) {
+        // Offline — wait for the browser's 'online' event so we resume
+        // the instant connection returns, not on a blind guess-timer
+        await new Promise((resolve) => {
+          const handler = () => { window.removeEventListener("online", handler); resolve(); };
+          window.addEventListener("online", handler);
+          setTimeout(resolve, wait); // safety fallback if 'online' never fires
+        });
+      } else {
+        await new Promise(r => setTimeout(r, wait));
+      }
+    }
+  }
+}
+
 // ============================================
 // CATEGORY SELECTION
 // ============================================
@@ -2376,24 +2444,25 @@ function toggleVideoUpload(category) {
 // IMAGE UPLOAD
 // ============================================
 
-window.handleImageUpload = function(event) {
+window.handleImageUpload = async function(event) {
 
   const files = Array.from(event.target.files || []);
-
   if (!files.length) return;
 
-  // Slice to max 5
-  uploadedImages = files.slice(0, 5);
+  const previewContainer = document.getElementById("image-preview-container");
+  previewContainer.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#6b7280;font-size:13px;padding:20px">📦 Optimizing photos for upload...</p>`;
+
+  const rawFiles = files.slice(0, 5);
+
+  // Compress every selected image before storing — this is what makes
+  // slow-network uploads actually finish instead of timing out
+  uploadedImages = await Promise.all(rawFiles.map(f => compressImage(f)));
 
   const imageCountEl = document.getElementById("image-count");
   if (imageCountEl) imageCountEl.textContent = uploadedImages.length;
 
-  const previewContainer =
-    document.getElementById("image-preview-container");
-
   previewContainer.innerHTML = "";
 
-  // Use Promise-based reading so all images load reliably on mobile
   const readPromises = uploadedImages.map((file, index) => {
     return new Promise((resolve) => {
       const reader = new FileReader();
@@ -2408,7 +2477,6 @@ window.handleImageUpload = function(event) {
         img.alt   = `preview ${index + 1}`;
         img.style.cssText = "width:80px;height:80px;object-fit:cover;border-radius:10px;border:2px solid #e5e7eb;display:block";
 
-        // Cover badge on first image
         if (index === 0) {
           const badge = document.createElement("span");
           badge.textContent = "Cover";
@@ -2423,7 +2491,7 @@ window.handleImageUpload = function(event) {
 
       reader.onerror = function() {
         console.warn("Failed to read file:", file.name);
-        resolve(); // don't block others
+        resolve();
       };
 
       reader.readAsDataURL(file);
@@ -2431,10 +2499,7 @@ window.handleImageUpload = function(event) {
   });
 
   Promise.all(readPromises).then(() => {
-    // Scroll to preview so user sees the images
     previewContainer.scrollIntoView({ behavior: "smooth", block: "nearest" });
-
-    // Enable next button
     const step3Btn = document.getElementById("step3-next");
     if (step3Btn) step3Btn.disabled = false;
   });
@@ -2541,6 +2606,11 @@ window.submitAd = async function() {
     return;
   }
 
+  if (!navigator.onLine) {
+    alert("⚠️ You appear to be offline. Connect to the internet and try again — your details are saved as a draft so you won't lose anything.");
+    return;
+  }
+
   // ── 1. Check banned status ──────────────────
   let userDoc = null;
   try {
@@ -2615,7 +2685,7 @@ try {
     }
 
 
-    // ── 4. Upload images (with retry for slow network) ──
+    // ── 4. Upload images — compressed, timeout-guarded, resumes instantly on reconnect ──
     const imageUrls = [];
 
     for (let i = 0; i < uploadedImages.length; i++) {
@@ -2624,30 +2694,27 @@ try {
 
       if (btn) btn.textContent = `Uploading image ${i + 1} of ${uploadedImages.length}...`;
 
-      let uploaded  = false;
-      let imgTry    = 0;
-      const maxTries = 4;
-
-      while (!uploaded && imgTry < maxTries) {
-        try {
+      const url = await withRetry(
+        async () => {
           const storageRef = ref(storage, fileName);
           await uploadBytes(storageRef, file, {
             contentType:  file.type,
             cacheControl: "public, max-age=31536000"
           });
-          imageUrls.push(await getDownloadURL(storageRef));
-          uploaded = true;
-        } catch (uploadErr) {
-          imgTry++;
-          if (imgTry >= maxTries) {
-            throw new Error(`Image ${i + 1} failed after ${maxTries} attempts: ${uploadErr.message}`);
+          return getDownloadURL(storageRef);
+        },
+        {
+          maxTries: 6,
+          timeoutMs: 45000,
+          onStatus: (attempt, max, wait) => {
+            if (btn) btn.textContent = navigator.onLine
+              ? `Slow network — retrying image ${i + 1} (${attempt}/${max - 1})...`
+              : `Offline — will resume image ${i + 1} automatically when back online...`;
           }
-          // Exponential backoff: 2s → 4s → 8s
-          const wait = Math.pow(2, imgTry) * 1000;
-          if (btn) btn.textContent = `Slow network — retrying image ${i + 1} (${imgTry}/${maxTries - 1})...`;
-          await new Promise(r => setTimeout(r, wait));
         }
-      }
+      );
+
+      imageUrls.push(url);
     }
 
     // ── 5. Build product object ─────────────────
@@ -2699,24 +2766,21 @@ expiresAt.setDate(expiresAt.getDate() + adDays);
       videoUrl:  videoUrl || ""
     };
 
-    // ── 6. Save to Firestore (with retry for slow network) ──
+    // ── 6. Save to Firestore — same robust retry as images ──
     if (btn) btn.textContent = "Saving your ad...";
 
-    let docRef;
-    let saveTry    = 0;
-    const maxSaveTries = 4;
-
-    while (!docRef && saveTry < maxSaveTries) {
-      try {
-        docRef = await addDoc(collection(db, "products"), productData);
-      } catch (saveErr) {
-        saveTry++;
-        if (saveTry >= maxSaveTries) throw saveErr;
-        const wait = Math.pow(2, saveTry) * 1500; // 3s → 6s → 12s
-        if (btn) btn.textContent = `Network slow — retrying (${saveTry}/${maxSaveTries - 1})...`;
-        await new Promise(r => setTimeout(r, wait));
+    const docRef = await withRetry(
+      () => addDoc(collection(db, "products"), productData),
+      {
+        maxTries: 6,
+        timeoutMs: 30000,
+        onStatus: (attempt, max, wait) => {
+          if (btn) btn.textContent = navigator.onLine
+            ? `Network slow — retrying save (${attempt}/${max - 1})...`
+            : `Offline — will save automatically once you're back online...`;
+        }
       }
-    }
+    );
 
 
     // Clear draft — ad posted successfully
