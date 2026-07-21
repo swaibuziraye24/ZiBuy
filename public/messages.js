@@ -58,6 +58,30 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
+
+async function trackSellerResponse(sellerEmail, buyerEmail, conversationStartTime) {
+  try {
+    const { getDoc, setDoc, doc: fdoc } = await import("./firebase.js");
+    const sellerSnap = await getDocs(query(collection(db, "users"), where("email", "==", sellerEmail)));
+    if (sellerSnap.empty) return;
+
+    const sellerId = sellerSnap.docs[0].id;
+    const responseMs = Date.now() - conversationStartTime;
+
+    const statsRef = fdoc(db, "response_stats", sellerId);
+    const statsSnap = await getDoc(statsRef);
+    const current = statsSnap.exists() ? statsSnap.data() : { totalResponses: 0, totalMs: 0, totalConvos: 0 };
+
+    await setDoc(statsRef, {
+      totalResponses: (current.totalResponses || 0) + 1,
+      totalMs:        (current.totalMs || 0) + responseMs,
+      totalConvos:    current.totalConvos || 0,
+      updatedAt:      new Date()
+    }, { merge: true });
+
+  } catch (e) { console.warn("trackSellerResponse:", e.message); }
+}
+
 // ============================================
 // CONVERSATIONS LIST — live, reorders and
 // updates instantly as new messages arrive
@@ -273,6 +297,36 @@ window.sendMessage = async function() {
   const text  = input.value.trim();
   if (!text) return;
 
+  // If this is the FIRST reply from the seller in this thread, record
+  // how long it took — this is what powers the response-time badge
+  if (!window._firstReplyTracked?.[activeConversation]) {
+    const q = query(
+      collection(db, "messages"),
+      where("participants", "array-contains", currentUser.email)
+    );
+    const snap = await getDocs(q);
+    let earliestBuyerMsg = null;
+    let sellerAlreadyReplied = false;
+
+    snap.forEach(d => {
+      const m = d.data();
+      if (!m.participants.includes(activeConversation)) return;
+      if (m.senderEmail === activeConversation) {
+        const t = m.timestamp?.toDate?.() || new Date(m.timestamp);
+        if (!earliestBuyerMsg || t < earliestBuyerMsg) earliestBuyerMsg = t;
+      } else if (m.senderEmail === currentUser.email) {
+        sellerAlreadyReplied = true;
+      }
+    });
+
+    if (earliestBuyerMsg && !sellerAlreadyReplied) {
+      trackSellerResponse(currentUser.email, activeConversation, earliestBuyerMsg.getTime());
+    }
+
+    window._firstReplyTracked = window._firstReplyTracked || {};
+    window._firstReplyTracked[activeConversation] = true;
+  }
+
   input.value = "";
   input.focus();
 
@@ -340,6 +394,18 @@ export async function startConversation(recipientEmail, productId, productName) 
   }
 
   try {
+    // Track total conversations started so response RATE can be calculated,
+    // not just response speed
+    const { getDoc, setDoc, doc: fdoc } = await import("./firebase.js");
+    const sellerSnap = await getDocs(query(collection(db, "users"), where("email", "==", recipientEmail)));
+    if (!sellerSnap.empty) {
+      const sellerId  = sellerSnap.docs[0].id;
+      const statsRef  = fdoc(db, "response_stats", sellerId);
+      const statsSnap = await getDoc(statsRef);
+      const current   = statsSnap.exists() ? statsSnap.data() : { totalResponses: 0, totalMs: 0, totalConvos: 0 };
+      await setDoc(statsRef, { totalConvos: (current.totalConvos || 0) + 1 }, { merge: true });
+    }
+
     await addDoc(collection(db, "messages"), {
       participants:    [currentUser.email, recipientEmail],
       senderEmail:     currentUser.email,
