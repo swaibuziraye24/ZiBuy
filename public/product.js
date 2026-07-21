@@ -23,7 +23,8 @@ import "./app.js";
 import "./report-seller.js";
 import "./phone-verify.js";
 import { renderTrustBadge } from "./trust-badge.js";
-
+import { renderEarnedBadge } from "./earned-badge.js";
+import { renderResponseBadge } from "./response-badge.js";
 
 function escapeHTML(value) {
   if (value === null || value === undefined) return "";
@@ -337,6 +338,7 @@ document.head.appendChild(schemaTag);
         <!-- Seller Info -->
         <div class="seller-box" style="cursor:pointer" onclick="window.location.href='user-profile.html?id=${p.userId || ''}'">
           <div class="seller-avatar">${(seller.name || "Z")[0].toUpperCase()}</div>
+          <span id="seller-response-badge"></span>
           <div class="seller-info">
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">
              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
@@ -349,6 +351,7 @@ document.head.appendChild(schemaTag);
               <span id="seller-verified-badge" style="display:none;background:#10b981;color:white;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:800">✅ Verified</span>
               <span id="seller-phone-verified-badge" style="display:none;background:#3b82f6;color:white;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:800">📱 Phone Verified</span>
               <span id="seller-trust-badge"></span>
+              <span id="seller-earned-badge"></span>
             </div>
             <p style="margin:0;font-size:12px;color:#6b7280">📍 ${escapeHTML(seller.location) || "Uganda"} · <span id="seller-rating-text">Loading...</span></p>
             <p style="margin:3px 0 0;font-size:12px;color:#6b7280" id="seller-member-since"></p>
@@ -718,6 +721,8 @@ async function loadSellerRating(userId) {
   }
 
   renderTrustBadge(userId, "seller-trust-badge");
+  renderEarnedBadge(userId, "seller-earned-badge");
+  renderResponseBadge(userId, "seller-response-badge")
 }
 
 /* ============================================
