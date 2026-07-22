@@ -1456,6 +1456,11 @@ function _appendPage() {
             ⭐ Featured
           </div>
         ` : ""}
+        ${p.priceDropped ? `
+          <div style="position:absolute;bottom:8px;left:8px;background:#ef4444;color:white;font-size:10px;padding:4px 8px;border-radius:6px;font-weight:800;box-shadow:0 2px 6px rgba(239,68,68,.35)">
+            📉 -${p.priceDropPercent}%
+          </div>
+        ` : ""}
 
            ${(() => {
 
