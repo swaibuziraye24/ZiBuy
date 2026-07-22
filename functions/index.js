@@ -589,6 +589,102 @@ exports.earnedVerificationDailySweep = onSchedule(
 );
 
 
+
+// ============================================
+// PRICE DROP ALERTS — notifies buyers who liked
+// a product when the seller drops the price
+// ============================================
+
+exports.notifyPriceDrop = onDocumentUpdated("products/{productId}", async (event) => {
+  const before = event.data.before.data();
+  const after  = event.data.after.data();
+  const productId = event.params.productId;
+
+  if (!before || !after) return;
+  if (after.status !== "active") return;
+
+  const oldPrice = Number(before.price || 0);
+  const newPrice = Number(after.price || 0);
+
+  // Only real, meaningful drops — ignore price increases and rounding noise
+  if (!(oldPrice > 0) || !(newPrice < oldPrice)) return;
+  const dropPercent = Math.round(((oldPrice - newPrice) / oldPrice) * 100);
+  if (dropPercent < 3) return;
+
+  // Mark the product with a visible badge — shows to EVERYONE browsing,
+  // not just people who already liked it
+  try {
+    await event.data.after.ref.update({
+      priceDropped:     true,
+      priceDropPercent: dropPercent,
+      priceDropFrom:    oldPrice,
+      priceDropAt:      admin.firestore.FieldValue.serverTimestamp()
+    });
+  } catch (e) {
+    console.warn("[PRICE DROP] badge update failed:", e.message);
+  }
+
+  // Dedup — never re-notify for the exact same price point twice,
+  // even if the doc gets touched again for an unrelated field
+  const lockKey = `pricedrop_${productId}_${newPrice}`;
+  const locked = await logOnce(lockKey, { type: "price_drop_lock", productId, newPrice });
+  if (!locked) return;
+
+  const likesSnap = await db.collection("likes").where("productId", "==", productId).get();
+  if (likesSnap.empty) return;
+
+  const sellerId    = after.userId;
+  const productName = after.name || "An item you liked";
+  const savings     = oldPrice - newPrice;
+
+  const notifyPromises = [];
+  likesSnap.forEach(doc => {
+    const userId = doc.data().userId;
+    if (!userId || userId === sellerId) return; // never notify the seller about their own price change
+
+    notifyPromises.push(
+      db.collection("notifications").add({
+        userId,
+        type:      "price_drop",
+        title:     `📉 Price Drop: ${productName}`,
+        message:   `Now UGX ${newPrice.toLocaleString()} — save UGX ${savings.toLocaleString()} (${dropPercent}% off)!`,
+        relatedId: productId,
+        read:      false,
+        createdAt: admin.firestore.FieldValue.serverTimestamp()
+      })
+    );
+  });
+
+  await Promise.all(notifyPromises);
+  console.log(`[PRICE DROP] Notified ${notifyPromises.length} users for ${productId}`);
+});
+
+// Badges don't stay forever — clear them after 5 days so "Price Drop"
+// doesn't become a stale, meaningless label on old ads
+exports.expirePriceDropBadges = onSchedule(
+  { schedule: "every 24 hours", timeZone: "Africa/Kampala" },
+  async () => {
+    try {
+      const cutoff = admin.firestore.Timestamp.fromDate(new Date(Date.now() - 5 * 86400000));
+      const snap = await db.collection("products")
+        .where("priceDropped", "==", true)
+        .where("priceDropAt", "<=", cutoff)
+        .get();
+
+      if (snap.empty) return;
+
+      const batch = db.batch();
+      snap.forEach(d => batch.update(d.ref, { priceDropped: false }));
+      await batch.commit();
+
+      console.log(`[PRICE DROP] Expired badge on ${snap.size} products`);
+    } catch (err) {
+      console.error("[PRICE DROP EXPIRE ERROR]", err.message);
+    }
+  }
+);
+
+
 // ============================================
 // PUSH NOTIFICATIONS
 // ============================================
