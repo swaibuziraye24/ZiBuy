@@ -375,6 +375,12 @@ document.head.appendChild(schemaTag);
         <p class="product-cat" style="font-size:12px;font-weight:700;color:#ff6600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">${p.category || "Product"}</p>
         <h1 style="font-size:26px;font-weight:800;color:#111827;line-height:1.2;margin-bottom:10px">${escapeHTML(p.name)}</h1>
         <p style="font-size:32px;font-weight:900;color:#ff6600;margin-bottom:6px">UGX ${Number(p.price).toLocaleString()}</p>
+        ${p.priceDropped ? `
+          <div style="display:inline-flex;align-items:center;gap:6px;background:#fee2e2;color:#991b1b;
+            padding:6px 12px;border-radius:20px;font-size:12px;font-weight:800;margin-bottom:16px">
+            📉 Was UGX ${Number(p.priceDropFrom).toLocaleString()} — now ${p.priceDropPercent}% off
+          </div>
+        ` : ""}
         <p style="font-size:13px;color:#6b7280;margin-bottom:18px">📍 ${escapeHTML(seller.location) || "Uganda"} · Posted ${p.createdAt ? new Date(p.createdAt.toDate()).toLocaleDateString() : "recently"}</p>
 
         <!-- Description -->
