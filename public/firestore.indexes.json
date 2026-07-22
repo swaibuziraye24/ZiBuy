@@ -124,6 +124,18 @@
         { "fieldPath": "status", "order": "ASCENDING" }
       ]
     },
+
+    {
+  "collectionGroup": "products",
+  "queryScope": "COLLECTION",
+  "fields": [
+    { "fieldPath": "priceDropped", "order": "ASCENDING" },
+    { "fieldPath": "priceDropAt", "order": "ASCENDING" }
+  ]
+
+  },
+
+
     {
       "collectionGroup": "orders",
       "queryScope": "COLLECTION",
