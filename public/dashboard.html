@@ -130,9 +130,12 @@ table {
 
     <!-- MY ADS TAB -->
     <div class="dashboard-tab active" id="my-ads-tab">
-      <div class="tab-header">
-        <h2>📦 My Products</h2>
-        <a href="post-ad.html" class="btn btn-orange">+ Post New Ad</a>
+      <div class="tab-header" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <h2 style="margin:0">📦 My Products</h2>
+        <div style="display:flex;gap:8px;margin-left:auto">
+          <a href="post-ad.html" class="btn btn-orange">+ Post New Ad</a>
+          <a href="bulk-post.html" class="btn" style="background:#111827;color:white">📦 Bulk Post</a>
+        </div>
       </div>
       <div id="my-ads-list">
         <!-- Spinner shown until JS renders -->
