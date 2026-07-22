@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#ff6600">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>Bulk Post Ads — ZiBuy</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="/manifest.json">
+  <style>
+    .bulk-wrap { max-width: 900px; margin: 0 auto; padding: 20px 16px 100px; }
+    .bulk-header { margin-bottom: 20px; }
+    .bulk-header h1 { font-size: 22px; font-weight: 800; margin: 0 0 6px; color: #111827; }
+    .bulk-header p { color: #6b7280; font-size: 13px; margin: 0; }
+
+    .bulk-row {
+      background: white;
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+      position: relative;
+    }
+    .bulk-row-number {
+      position: absolute;
+      top: -10px;
+      left: 14px;
+      background: #ff6600;
+      color: white;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .bulk-row-remove {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: #fee2e2;
+      color: #ef4444;
+      border: none;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 800;
+    }
+    .bulk-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .bulk-grid input, .bulk-grid select, .bulk-grid textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 9px;
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+      box-sizing: border-box;
+      background: white;
+    }
+    .bulk-grid input:focus, .bulk-grid select:focus, .bulk-grid textarea:focus { border-color: #ff6600; }
+    .bulk-full { grid-column: 1 / -1; }
+    .bulk-label { font-size: 11px; font-weight: 800; color: #6b7280; text-transform: uppercase; letter-spacing: .4px; margin-bottom: 4px; display: block; }
+
+    .bulk-photo-picker {
+      border: 2px dashed #e5e7eb;
+      border-radius: 10px;
+      padding: 12px;
+      text-align: center;
+      cursor: pointer;
+      background: #fafafa;
+    }
+    .bulk-photo-picker:hover { border-color: #ff6600; background: #fff4ee; }
+    .bulk-photo-preview { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+    .bulk-photo-preview img { width: 52px; height: 52px; object-fit: cover; border-radius: 8px; border: 1.5px solid #e5e7eb; }
+
+    .bulk-actions-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: white;
+      border-top: 1.5px solid #e5e7eb;
+      padding: 12px 16px;
+      padding-bottom: max(12px, env(safe-area-inset-bottom));
+      display: flex;
+      gap: 10px;
+      z-index: 500;
+      box-shadow: 0 -4px 16px rgba(0,0,0,0.06);
+    }
+    .bulk-limit-note {
+      background: #fff4ee;
+      border: 1.5px solid #ffd9bf;
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 12px;
+      color: #92400e;
+      margin-bottom: 16px;
+    }
+
+    @media (max-width: 480px) {
+      .bulk-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="topbar">
+  <a href="dashboard.html"><h1 class="logo">Zi<span>Buy</span></h1></a>
+  <div class="topbar-actions" style="margin-left:auto">
+    <button class="btn btn-dark" onclick="window.location.href='dashboard.html'">← Dashboard</button>
+  </div>
+</header>
+
+<div class="bulk-wrap">
+
+  <div class="bulk-header">
+    <h1>📦 Bulk Post Ads</h1>
+    <p>Add multiple products at once — perfect for shops with many items to list.</p>
+  </div>
+
+  <div id="bulk-limit-note" class="bulk-limit-note" style="display:none"></div>
+
+  <div id="bulk-rows-container"></div>
+
+  <button id="add-row-btn" onclick="addBulkRow()"
+    style="width:100%;background:white;border:2px dashed #ff6600;color:#ff6600;
+    padding:14px;border-radius:12px;font-weight:800;font-size:14px;cursor:pointer;
+    font-family:inherit;margin-bottom:20px">
+    ➕ Add Another Product
+  </button>
+
+</div>
+
+<div class="bulk-actions-bar">
+  <button onclick="window.location.href='dashboard.html'"
+    style="flex:1;padding:14px;border-radius:12px;background:#f3f4f6;color:#374151;
+    border:none;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit">
+    Cancel
+  </button>
+  <button id="post-all-btn" onclick="postAllBulkAds()"
+    style="flex:2;padding:14px;border-radius:12px;background:#ff6600;color:white;
+    border:none;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit">
+    🚀 Post All Ads
+  </button>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+
+<script type="module" src="bulk-post.js"></script>
+<script type="module" src="notifications-setup.js"></script>
+<script type="module" src="nav.js"></script>
+</body>
+</html>
