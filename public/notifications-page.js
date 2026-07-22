@@ -73,7 +73,8 @@ function getIcon(type) {
     order: "📦",
     review: "⭐",
     ad_view: "👁️",
-    payment: "💳"
+    payment: "💳",
+    price_drop: "📉"
   };
   return icons[type] || "🔔";
 }
