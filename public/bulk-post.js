@@ -7,7 +7,7 @@ import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/fireba
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { storage } from "./firebase.js";
 import { getMyLimits, countActiveAds } from "./plan-limits.js";
-import { getDistricts } from "./uganda-locations.js";
+import { getDistricts, getSubLocations } from "./uganda-locations.js";
 
 function escapeHTML(str) {
   if (str == null) return "";
@@ -27,6 +27,7 @@ let currentUser = null;
 let remainingAdSlots = 0;
 let planId = "free";
 let rowCount = 0;
+let sellerDefaultPhone = "";
 const rowImages = {}; // rowId -> File[]
 
 onAuthStateChanged(auth, async (user) => {
@@ -40,6 +41,14 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 async function checkLimitsAndInit() {
+  // Pull the seller's saved phone so every bulk row prefills it —
+  // avoids retyping the same number 10+ times
+  try {
+    const { doc, getDoc } = await import("./firebase.js");
+    const userSnap = await getDoc(doc(db, "users", currentUser.uid));
+    if (userSnap.exists()) sellerDefaultPhone = userSnap.data().phone || "";
+  } catch (e) { /* not critical — field just starts blank */ }
+
   const limits = await getMyLimits(currentUser.uid);
   const activeCount = await countActiveAds(currentUser.uid);
   planId = limits.planId;
@@ -127,10 +136,22 @@ window.addBulkRow = function() {
 
       <div>
         <label class="bulk-label">District</label>
-        <select id="${rowId}-district">
+        <select id="${rowId}-district" onchange="onBulkDistrictChange('${rowId}')">
           <option value="">Select district</option>
           ${districts.map(d => `<option value="${d}">${d}</option>`).join("")}
         </select>
+      </div>
+
+      <div id="${rowId}-sublocation-wrap" style="display:none">
+        <label class="bulk-label">Town / Area</label>
+        <select id="${rowId}-sublocation">
+          <option value="">Select town/area</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="bulk-label">Phone / WhatsApp</label>
+        <input type="tel" id="${rowId}-phone" placeholder="256701234567" value="${sellerDefaultPhone}">
       </div>
 
       <div class="bulk-full">
@@ -142,6 +163,25 @@ window.addBulkRow = function() {
 
   container.appendChild(row);
   renumberRows();
+};
+
+window.onBulkDistrictChange = function(rowId) {
+  const district = document.getElementById(`${rowId}-district`)?.value;
+  const wrap     = document.getElementById(`${rowId}-sublocation-wrap`);
+  const select   = document.getElementById(`${rowId}-sublocation`);
+  if (!wrap || !select) return;
+
+  const subs = district ? getSubLocations(district) : [];
+
+  if (subs.length === 0) {
+    wrap.style.display = "none";
+    select.innerHTML = `<option value="">Select town/area</option>`;
+    return;
+  }
+
+  select.innerHTML = `<option value="">Select town/area</option>` +
+    subs.map(s => `<option value="${s}">${s}</option>`).join("");
+  wrap.style.display = "block";
 };
 
 window.removeBulkRow = function(rowId) {
@@ -245,10 +285,17 @@ window.postAllBulkAds = async function() {
     const name  = document.getElementById(`${rowId}-name`)?.value.trim();
     const price = document.getElementById(`${rowId}-price`)?.value;
     const district = document.getElementById(`${rowId}-district`)?.value;
+    const sublocation = document.getElementById(`${rowId}-sublocation`)?.value || "";
+    const phone = document.getElementById(`${rowId}-phone`)?.value.trim();
     const photos = rowImages[rowId] || [];
 
     if (!name || !price || !district) {
       alert(`Row ${Array.from(rows).indexOf(row) + 1}: please fill in name, price, and district.`);
+      row.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+    if (!phone) {
+      alert(`Row ${Array.from(rows).indexOf(row) + 1}: please add a phone number for buyers to contact.`);
       row.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
@@ -265,6 +312,8 @@ window.postAllBulkAds = async function() {
       category: document.getElementById(`${rowId}-category`)?.value,
       condition: document.getElementById(`${rowId}-condition`)?.value,
       district,
+      sublocation,
+      phone,
       description: document.getElementById(`${rowId}-desc`)?.value.trim(),
       photos
     });
@@ -300,6 +349,8 @@ window.postAllBulkAds = async function() {
         imageUrls.push(url);
       }
 
+      const fullLocation = item.sublocation ? `${item.sublocation}, ${item.district}` : item.district;
+
       await withRetry(() => addDoc(collection(db, "products"), {
         name:        item.name,
         price:       item.price,
@@ -307,7 +358,7 @@ window.postAllBulkAds = async function() {
         subcategory: "",
         condition:   item.condition,
         description: item.description || "",
-        location:    item.district,
+        location:    fullLocation,
         images:      imageUrls,
         userId:      currentUser.uid,
         userEmail:   currentUser.email,
@@ -319,8 +370,8 @@ window.postAllBulkAds = async function() {
         expiresAt,
         seller: {
           name:       currentUser.email.split("@")[0],
-          phone:      "",
-          location:   item.district,
+          phone:      item.phone,
+          location:   fullLocation,
           isVerified: false
         },
         details:    {},
