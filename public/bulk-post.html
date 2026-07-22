@@ -87,15 +87,21 @@
 
     .bulk-actions-bar {
       position: fixed;
-      bottom: 0; left: 0; right: 0;
+      bottom: 62px; /* sits directly above nav.js's fixed bottom nav bar */
+      left: 0; right: 0;
       background: white;
       border-top: 1.5px solid #e5e7eb;
       padding: 12px 16px;
-      padding-bottom: max(12px, env(safe-area-inset-bottom));
       display: flex;
       gap: 10px;
       z-index: 500;
       box-shadow: 0 -4px 16px rgba(0,0,0,0.06);
+    }
+
+    /* Give the page enough bottom breathing room to clear BOTH
+       fixed bars — the action buttons and the nav bar beneath them */
+    .bulk-wrap {
+      padding-bottom: 160px;
     }
     .bulk-limit-note {
       background: #fff4ee;
