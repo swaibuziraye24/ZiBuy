@@ -1658,8 +1658,12 @@ async function loadAnalytics() {
           </div>
         </div>
 
+        <div id="category-benchmark-container" style="margin-bottom:16px"></div>
+
         ${upgradePrompt("gold", "Unlock export to CSV, conversion insights & full performance history")}
       `;
+
+      await renderCategoryBenchmark(ads, "category-benchmark-container");
       return;
     }
 
@@ -1684,7 +1688,7 @@ async function loadAnalytics() {
         ${statCard("Boosted Ads",    boostedAds,                        "#b45309")}
       </div>
 
-      <div class="zb-two-col">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
         <div style="background:white;border-radius:14px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
           <h3 style="font-size:14px;font-weight:800;margin-bottom:14px">👁️ Top 10 Ads by Views</h3>
           ${topAds.map(a => barRow(a.name, a.views||0, totalViews||1, "#ff6600")).join("") || "<p style='color:#6b7280;font-size:13px'>No ads</p>"}
@@ -1695,11 +1699,15 @@ async function loadAnalytics() {
         </div>
       </div>
 
+      <div id="category-benchmark-container" style="margin-bottom:16px"></div>
+
       <div style="background:white;border-radius:14px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,0.06);margin-bottom:16px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
           <h3 style="font-size:14px;font-weight:800;margin:0">📋 Full Ad Performance</h3>
           <button onclick="exportAnalyticsCSV()" style="background:#ff6600;color:white;border:none;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer">⬇️ Export CSV</button>
         </div>
+
+
         <div class="zb-table-wrap">
         <table style="width:100%;border-collapse:collapse;font-size:13px">
           <thead>
@@ -1732,9 +1740,104 @@ async function loadAnalytics() {
     window._analyticsAds    = ads;
     window._analyticsOrders = orders;
 
+    await renderCategoryBenchmark(ads, "category-benchmark-container");
+
   } catch (e) {
     console.error(e);
     container.innerHTML = `<p style="color:red;text-align:center;padding:40px">Failed to load analytics</p>`;
+  }
+}
+
+
+// ── Category benchmark — compares THIS seller's ads against
+// platform-wide category averages (Silver + Gold only) ──
+async function renderCategoryBenchmark(ads, containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  const activeAds = ads.filter(a => a.status === "active");
+  if (activeAds.length === 0) {
+    container.innerHTML = "";
+    return;
+  }
+
+  // Group the seller's own ads by category
+  const byCategory = {};
+  activeAds.forEach(a => {
+    const cat = a.category || "Other";
+    if (!byCategory[cat]) byCategory[cat] = [];
+    byCategory[cat].push(a);
+  });
+
+  const categories = Object.keys(byCategory);
+
+  try {
+    const statsSnaps = await Promise.all(
+      categories.map(cat => getDoc(doc(db, "category_stats", cat)))
+    );
+
+    const rows = categories.map((cat, i) => {
+      const statsSnap = statsSnaps[i];
+      if (!statsSnap.exists()) return null; // not enough platform-wide data for this category yet
+
+      const stats = statsSnap.data();
+      const myAds = byCategory[cat];
+      const myAvgViews = myAds.reduce((s, a) => s + (a.views || 0), 0) / myAds.length;
+      const myAvgPrice = myAds.reduce((s, a) => s + (a.price || 0), 0) / myAds.length;
+
+      const viewsDiff = stats.avgViews > 0
+        ? Math.round(((myAvgViews - stats.avgViews) / stats.avgViews) * 100)
+        : 0;
+
+      const viewsColor = viewsDiff >= 0 ? "#10b981" : "#ef4444";
+      const viewsLabel = viewsDiff >= 0 ? `+${viewsDiff}% above average` : `${viewsDiff}% below average`;
+
+      const priceDiff = stats.avgPrice > 0
+        ? Math.round(((myAvgPrice - stats.avgPrice) / stats.avgPrice) * 100)
+        : 0;
+
+      let priceLabel, priceColor;
+      if (Math.abs(priceDiff) < 5) {
+        priceLabel = "In line with market price"; priceColor = "#6b7280";
+      } else if (priceDiff > 0) {
+        priceLabel = `${priceDiff}% above category average`; priceColor = "#f59e0b";
+      } else {
+        priceLabel = `${Math.abs(priceDiff)}% below category average`; priceColor = "#10b981";
+      }
+
+      return `
+        <div style="padding:14px;border:1.5px solid #f0f0f0;border-radius:12px;margin-bottom:10px">
+          <p style="margin:0 0 10px;font-weight:800;font-size:13px;color:#111827;text-transform:capitalize">
+            ${cat.replace(/-/g, " ")} <span style="color:#9ca3af;font-weight:600;font-size:11px">(${myAds.length} ad${myAds.length !== 1 ? "s" : ""})</span>
+          </p>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <span style="font-size:12px;color:#6b7280">👁️ Your avg views: <strong style="color:#111827">${Math.round(myAvgViews)}</strong> vs category avg <strong>${stats.avgViews}</strong></span>
+            <span style="font-size:11px;font-weight:800;color:${viewsColor}">${viewsLabel}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:12px;color:#6b7280">💰 Your avg price: <strong style="color:#111827">UGX ${Math.round(myAvgPrice).toLocaleString()}</strong> vs category avg <strong>UGX ${stats.avgPrice.toLocaleString()}</strong></span>
+            <span style="font-size:11px;font-weight:800;color:${priceColor}">${priceLabel}</span>
+          </div>
+        </div>
+      `;
+    }).filter(Boolean);
+
+    if (rows.length === 0) {
+      container.innerHTML = "";
+      return;
+    }
+
+    container.innerHTML = `
+      <div style="background:white;border-radius:14px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
+        <h3 style="font-size:14px;font-weight:800;margin-bottom:4px">📊 How You Compare to the Market</h3>
+        <p style="font-size:12px;color:#9ca3af;margin-bottom:14px">Benchmarked against all active ZiBuy sellers in each category</p>
+        ${rows.join("")}
+      </div>
+    `;
+
+  } catch (e) {
+    console.warn("renderCategoryBenchmark:", e.message);
+    container.innerHTML = "";
   }
 }
 
