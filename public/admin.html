@@ -420,6 +420,11 @@
   <span class="nav-icon">🐛</span> Dev Console
 </button>
 
+<button class="admin-nav-item"
+  onclick="window.showSection('shops', this);loadShopsAdmin()">
+  <span class="nav-icon">🏪</span> Shops
+</button>
+
   </aside>
 
   <!-- ── MAIN ── -->
@@ -1200,6 +1205,23 @@ Separate paragraphs with a blank line."
         <tr><th>Error</th><th>Page</th><th>Source</th><th>Count</th><th>User</th><th>Last Seen</th></tr>
       </thead>
       <tbody id="errors-table-body">
+        <tr class="empty-row"><td colspan="6">Loading…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+<div class="admin-section" id="section-shops">
+  <h2 style="font-size:20px;font-weight:800;margin-bottom:16px">🏪 Shops</h2>
+  <input class="search-input" type="text" id="shops-search"
+    placeholder="Search by shop name…" oninput="filterShopsAdmin()">
+  <div class="admin-card">
+    <table class="data-table">
+      <thead>
+        <tr><th>Name</th><th>Location</th><th>Plan</th><th>Verified</th><th>Featured</th><th>Actions</th></tr>
+      </thead>
+      <tbody id="shops-table-body">
         <tr class="empty-row"><td colspan="6">Loading…</td></tr>
       </tbody>
     </table>
