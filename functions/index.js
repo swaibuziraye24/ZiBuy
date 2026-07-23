@@ -2674,3 +2674,78 @@ exports.notifyAdminOnDispute = onDocumentCreated("disputes/{id}", async (event) 
     { orderId: dispute.orderId }
   );
 });
+
+
+// ============================================
+// FULL ACCOUNT DELETION — admin-triggered,
+// removes Firebase Auth login too (only the
+// Admin SDK, server-side, can do this part)
+// ============================================
+
+exports.adminDeleteUserAccount = onCall(async (request) => {
+  const callerUid = request.auth?.uid;
+  if (!callerUid) throw new HttpsError("unauthenticated", "Login required");
+
+  const callerSnap = await db.collection("users").doc(callerUid).get();
+  if (callerSnap.data()?.email !== "swaibuziraye22@gmail.com") {
+    throw new HttpsError("permission-denied", "Admin only");
+  }
+
+  const targetUid = request.data?.userId;
+  if (!targetUid) throw new HttpsError("invalid-argument", "userId required");
+
+  const results = { firestoreDeleted: false, authDeleted: false, errors: [] };
+
+  // ── 1. Delete all their Firestore data ──
+  try {
+    const collectionsToClean = [
+      { name: "products",          field: "userId" },
+      { name: "boost_requests",    field: "userId" },
+      { name: "pin_requests",      field: "userId" },
+      { name: "cv_boosts",         field: "userId" },
+      { name: "auto_renewals",     field: "userId" },
+      { name: "business_accounts", field: "userId" },
+      { name: "seller_verifications", field: "userId" },
+      { name: "reviews",           field: "sellerId" },
+      { name: "buyer_ratings",     field: "buyerId" },
+      { name: "saved_searches",    field: "userId" },
+      { name: "response_stats",    field: null } // doc ID IS the userId
+    ];
+
+    for (const col of collectionsToClean) {
+      if (col.field === null) {
+        await db.collection(col.name).doc(targetUid).delete().catch(() => {});
+        continue;
+      }
+      const snap = await db.collection(col.name).where(col.field, "==", targetUid).get();
+      const batch = db.batch();
+      snap.forEach(d => batch.delete(d.ref));
+      if (!snap.empty) await batch.commit();
+    }
+
+    // Shop docs — ID is usually the userId itself
+    await db.collection("shops").doc(targetUid).delete().catch(() => {});
+    await db.collection("business_profiles").doc(targetUid).delete().catch(() => {});
+
+    // The user document itself, last
+    await db.collection("users").doc(targetUid).delete();
+
+    results.firestoreDeleted = true;
+  } catch (err) {
+    results.errors.push(`Firestore cleanup: ${err.message}`);
+  }
+
+  // ── 2. Delete the actual Auth login — this is the part the
+  //      browser could never do, only the Admin SDK can ──
+  try {
+    await admin.auth().deleteUser(targetUid);
+    results.authDeleted = true;
+  } catch (err) {
+    // User may already be gone from Auth, or never existed there — not fatal
+    results.errors.push(`Auth deletion: ${err.message}`);
+  }
+
+  await auditLog("ADMIN_DELETED_USER", "admin", `Fully deleted user ${targetUid}`);
+
+  return results;
+});
