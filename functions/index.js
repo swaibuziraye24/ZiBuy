@@ -685,6 +685,58 @@ exports.expirePriceDropBadges = onSchedule(
 );
 
 
+
+// ============================================
+// CATEGORY BENCHMARK STATS — powers "vs category
+// average" comparisons in Silver/Gold analytics
+// ============================================
+
+exports.computeCategoryStats = onSchedule(
+  { schedule: "every 24 hours", timeZone: "Africa/Kampala" },
+  async () => {
+    try {
+      const snap = await db.collection("products")
+        .where("status", "==", "active")
+        .get();
+
+      const grouped = {};
+
+      snap.forEach(doc => {
+        const p = doc.data();
+        const cat = p.category;
+        if (!cat) return;
+
+        if (!grouped[cat]) {
+          grouped[cat] = { totalViews: 0, totalPrice: 0, totalLikes: 0, count: 0 };
+        }
+        grouped[cat].totalViews += Number(p.views || 0);
+        grouped[cat].totalPrice += Number(p.price || 0);
+        grouped[cat].totalLikes += Number(p.likes || 0);
+        grouped[cat].count++;
+      });
+
+      const batch = db.batch();
+
+      Object.entries(grouped).forEach(([cat, stats]) => {
+        const ref = db.collection("category_stats").doc(cat);
+        batch.set(ref, {
+          avgViews:   stats.count > 0 ? Math.round(stats.totalViews / stats.count) : 0,
+          avgPrice:   stats.count > 0 ? Math.round(stats.totalPrice / stats.count) : 0,
+          avgLikes:   stats.count > 0 ? Math.round((stats.totalLikes / stats.count) * 10) / 10 : 0,
+          activeAds:  stats.count,
+          updatedAt:  admin.firestore.FieldValue.serverTimestamp()
+        });
+      });
+
+      await batch.commit();
+      console.log(`[CATEGORY STATS] Updated ${Object.keys(grouped).length} categories`);
+    } catch (err) {
+      console.error("[CATEGORY STATS ERROR]", err.message);
+    }
+  }
+);
+
+
 // ============================================
 // PUSH NOTIFICATIONS
 // ============================================
