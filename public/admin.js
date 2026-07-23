@@ -294,6 +294,8 @@ function renderUsers(users) {
             onclick="viewUserNotes('${u.id}', '${(u.adminNotes||'').replace(/'/g,"\\'")}')">
             📝 Notes${u.adminNotes ? ' ●' : ''}
           </button>
+          <button class="action-btn btn-reject" onclick="adminDeleteUser('${u.id}','${(u.email||'this user').replace(/'/g,"\\'")}')">🗑️ Delete</button>
+        
           <button class="action-btn" style="background:#f3e8ff;color:#7e22ce;border:none;padding:6px 10px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer"
             onclick="adminForceExpireAd('${u.id}')">
             🕒 Force Expire
@@ -3223,7 +3225,10 @@ function renderShopsAdmin(shops) {
     <tr>
       <td style="font-weight:700">${escapeHTML(s.name) || "Unnamed Shop"}</td>
       <td style="font-size:12px">${escapeHTML(s.location) || "—"}</td>
-      <td><span class="plan-chip chip-${s.plan || 'free'}">${(s.plan || "free").toUpperCase()}</span></td>
+      <td>
+        <span class="plan-chip chip-${s.plan || 'free'}">${(s.plan || "free").toUpperCase()}</span>
+        ${s.suspended ? `<br><span class="plan-chip chip-rejected" style="margin-top:4px">⏸️ Suspended</span>` : ""}
+      </td>
       <td>${s.isVerified ? "✅" : "—"}</td>
       <td>
         <span class="plan-chip ${s.adminFeatured ? 'chip-approved' : 'chip-free'}">
@@ -3235,8 +3240,13 @@ function renderShopsAdmin(shops) {
           style="background:#f3f4f6;color:#111827;padding:6px 10px;border-radius:7px;font-size:11px;font-weight:700;text-decoration:none">View</a>
         <button class="action-btn ${s.adminFeatured ? 'btn-reject' : 'btn-approve'}"
           onclick="toggleShopFeature('${s.id}', ${!s.adminFeatured})">
-          ${s.adminFeatured ? "✗ Unfeature" : "⭐ Feature on Homepage"}
+          ${s.adminFeatured ? "✗ Unfeature" : "⭐ Feature"}
         </button>
+        <button class="action-btn" style="background:${s.suspended ? '#dcfce7' : '#fef3c7'};color:${s.suspended ? '#166534' : '#92400e'}"
+          onclick="toggleShopSuspend('${s.id}', ${!s.suspended})">
+          ${s.suspended ? "▶️ Unsuspend" : "⏸️ Suspend"}
+        </button>
+        <button class="action-btn btn-reject" onclick="adminDeleteShop('${s.id}','${(s.name||'this shop').replace(/'/g,"\\'")}')">🗑️ Delete</button>
       </td>
     </tr>`).join("");
 }
@@ -3252,6 +3262,104 @@ window.toggleShopFeature = async function(shopId, featured) {
     await updateDoc(doc(db, "shops", shopId), { adminFeatured: featured });
     showToast(featured ? "Shop featured on homepage ✅" : "Shop unfeatured", "success");
     loadShopsAdmin();
+  } catch(e) {
+    showToast("Failed: " + e.message, "error");
+  }
+};
+
+
+window.toggleShopSuspend = async function(shopId, suspend) {
+  const msg = suspend
+    ? "Suspend this shop? It will be hidden from all buyers immediately, but the seller's account and products stay intact — you can unsuspend anytime."
+    : "Unsuspend this shop? It becomes visible to buyers again immediately.";
+  if (!confirm(msg)) return;
+
+  try {
+    await updateDoc(doc(db, "shops", shopId), {
+      suspended:   suspend,
+      suspendedAt: suspend ? new Date() : null
+    });
+
+    // Also pull all of this shop's products offline while suspended —
+    // otherwise the shop page is hidden but items still show in search
+    const shopDoc = await getDoc(doc(db, "shops", shopId));
+    const ownerId = shopDoc.exists() ? (shopDoc.data().ownerId || shopId) : shopId;
+
+    const productsSnap = await getDocs(query(
+      collection(db, "products"),
+      where("userId", "==", ownerId),
+      where("status", "==", suspend ? "active" : "suspended_with_shop")
+    ));
+
+    const batchPromises = productsSnap.docs.map(d =>
+      updateDoc(doc(db, "products", d.id), {
+        status: suspend ? "suspended_with_shop" : "active"
+      })
+    );
+    await Promise.all(batchPromises);
+
+    showToast(suspend ? "Shop suspended — hidden from buyers" : "Shop reinstated", suspend ? "error" : "success");
+    loadShopsAdmin();
+  } catch(e) {
+    showToast("Failed: " + e.message, "error");
+  }
+};
+
+window.adminDeleteShop = async function(shopId, shopName) {
+  if (!confirm(`Permanently delete "${shopName}"? This removes the shop page and cannot be undone. Their products and account are NOT deleted — only the shop storefront itself.`)) return;
+
+  try {
+    await deleteDoc(doc(db, "shops", shopId));
+    // Also clean up the parallel business_profiles doc if it exists (some shops use either collection)
+    await deleteDoc(doc(db, "business_profiles", shopId)).catch(() => {});
+
+    showToast("Shop deleted", "info");
+    loadShopsAdmin();
+  } catch(e) {
+    showToast("Failed: " + e.message, "error");
+  }
+};
+
+
+window.adminDeleteUser = async function(userId, userEmail) {
+  const step1 = confirm(`Permanently delete ${userEmail}?\n\nThis removes their account, all products, boost requests, and subscriptions. This CANNOT be undone.`);
+  if (!step1) return;
+
+  const typed = prompt(`Type the user's email to confirm deletion:\n\n${userEmail}`);
+  if (typed !== userEmail) {
+    if (typed !== null) alert("Email didn't match — deletion cancelled for safety.");
+    return;
+  }
+
+  try {
+    // Delete their products
+    const adsSnap = await getDocs(query(collection(db, "products"), where("userId", "==", userId)));
+    await Promise.all(adsSnap.docs.map(d => deleteDoc(doc(db, "products", d.id))));
+
+    // Delete boost requests
+    const boostSnap = await getDocs(query(collection(db, "boost_requests"), where("userId", "==", userId)));
+    await Promise.all(boostSnap.docs.map(d => deleteDoc(doc(db, "boost_requests", d.id))));
+
+    // Delete subscriptions
+    const subSnap = await getDocs(query(collection(db, "business_accounts"), where("userId", "==", userId)));
+    await Promise.all(subSnap.docs.map(d => deleteDoc(doc(db, "business_accounts", d.id))));
+
+    // Delete their shop, if any
+    await deleteDoc(doc(db, "shops", userId)).catch(() => {});
+    await deleteDoc(doc(db, "business_profiles", userId)).catch(() => {});
+
+    // Delete the user document itself
+    await deleteDoc(doc(db, "users", userId));
+
+    // Note: this does NOT delete their Firebase Auth login — that requires
+    // the Admin SDK server-side and can't be done from the browser. Their
+    // account data is fully gone, but they could still technically log in
+    // to an empty account. For full removal, delete the Auth user from the
+    // Firebase Console → Authentication tab as well.
+
+    showToast(`${userEmail} deleted from database`, "info");
+    loadUsers();
+
   } catch(e) {
     showToast("Failed: " + e.message, "error");
   }
