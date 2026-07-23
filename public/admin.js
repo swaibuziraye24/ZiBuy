@@ -3190,3 +3190,69 @@ window.clearOldErrors = async function() {
     showToast("Failed", "error");
   }
 };
+
+
+// ══════════════════════════════════════════════
+//  SHOPS
+// ══════════════════════════════════════════════
+let allShops = [];
+
+window.loadShopsAdmin = async function() {
+  const tbody = document.getElementById("shops-table-body");
+  if (!tbody) return;
+
+  try {
+    const snap = await getDocs(collection(db, "shops"));
+    allShops = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderShopsAdmin(allShops);
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="6" style="color:red;padding:20px">Failed: ${e.message}</td></tr>`;
+  }
+};
+
+function renderShopsAdmin(shops) {
+  const tbody = document.getElementById("shops-table-body");
+  if (!tbody) return;
+
+  if (shops.length === 0) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="6">No shops created yet</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = shops.map(s => `
+    <tr>
+      <td style="font-weight:700">${escapeHTML(s.name) || "Unnamed Shop"}</td>
+      <td style="font-size:12px">${escapeHTML(s.location) || "—"}</td>
+      <td><span class="plan-chip chip-${s.plan || 'free'}">${(s.plan || "free").toUpperCase()}</span></td>
+      <td>${s.isVerified ? "✅" : "—"}</td>
+      <td>
+        <span class="plan-chip ${s.adminFeatured ? 'chip-approved' : 'chip-free'}">
+          ${s.adminFeatured ? "⭐ Featured" : "Not featured"}
+        </span>
+      </td>
+      <td style="display:flex;gap:6px;flex-wrap:wrap">
+        <a href="shop.html?seller=${s.id}" target="_blank"
+          style="background:#f3f4f6;color:#111827;padding:6px 10px;border-radius:7px;font-size:11px;font-weight:700;text-decoration:none">View</a>
+        <button class="action-btn ${s.adminFeatured ? 'btn-reject' : 'btn-approve'}"
+          onclick="toggleShopFeature('${s.id}', ${!s.adminFeatured})">
+          ${s.adminFeatured ? "✗ Unfeature" : "⭐ Feature on Homepage"}
+        </button>
+      </td>
+    </tr>`).join("");
+}
+
+window.filterShopsAdmin = function() {
+  const q = document.getElementById("shops-search")?.value.toLowerCase() || "";
+  const filtered = allShops.filter(s => (s.name || "").toLowerCase().includes(q));
+  renderShopsAdmin(filtered);
+};
+
+window.toggleShopFeature = async function(shopId, featured) {
+  try {
+    await updateDoc(doc(db, "shops", shopId), { adminFeatured: featured });
+    showToast(featured ? "Shop featured on homepage ✅" : "Shop unfeatured", "success");
+    loadShopsAdmin();
+  } catch(e) {
+    showToast("Failed: " + e.message, "error");
+  }
+};
