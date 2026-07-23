@@ -3322,7 +3322,7 @@ window.adminDeleteShop = async function(shopId, shopName) {
 
 
 window.adminDeleteUser = async function(userId, userEmail) {
-  const step1 = confirm(`Permanently delete ${userEmail}?\n\nThis removes their account, all products, boost requests, and subscriptions. This CANNOT be undone.`);
+  const step1 = confirm(`Permanently delete ${userEmail}?\n\nThis removes their account, login, all products, boost requests, and subscriptions. This CANNOT be undone.`);
   if (!step1) return;
 
   const typed = prompt(`Type the user's email to confirm deletion:\n\n${userEmail}`);
@@ -3332,32 +3332,16 @@ window.adminDeleteUser = async function(userId, userEmail) {
   }
 
   try {
-    // Delete their products
-    const adsSnap = await getDocs(query(collection(db, "products"), where("userId", "==", userId)));
-    await Promise.all(adsSnap.docs.map(d => deleteDoc(doc(db, "products", d.id))));
+    const { getFunctions, httpsCallable } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js");
+    const fn = httpsCallable(getFunctions(), "adminDeleteUserAccount");
+    const result = await fn({ userId });
 
-    // Delete boost requests
-    const boostSnap = await getDocs(query(collection(db, "boost_requests"), where("userId", "==", userId)));
-    await Promise.all(boostSnap.docs.map(d => deleteDoc(doc(db, "boost_requests", d.id))));
-
-    // Delete subscriptions
-    const subSnap = await getDocs(query(collection(db, "business_accounts"), where("userId", "==", userId)));
-    await Promise.all(subSnap.docs.map(d => deleteDoc(doc(db, "business_accounts", d.id))));
-
-    // Delete their shop, if any
-    await deleteDoc(doc(db, "shops", userId)).catch(() => {});
-    await deleteDoc(doc(db, "business_profiles", userId)).catch(() => {});
-
-    // Delete the user document itself
-    await deleteDoc(doc(db, "users", userId));
-
-    // Note: this does NOT delete their Firebase Auth login — that requires
-    // the Admin SDK server-side and can't be done from the browser. Their
-    // account data is fully gone, but they could still technically log in
-    // to an empty account. For full removal, delete the Auth user from the
-    // Firebase Console → Authentication tab as well.
-
-    showToast(`${userEmail} deleted from database`, "info");
+    const data = result.data;
+    if (data.errors && data.errors.length > 0) {
+      showToast(`Deleted with warnings: ${data.errors.join("; ")}`, "info");
+    } else {
+      showToast(`${userEmail} fully deleted — data and login both removed`, "success");
+    }
     loadUsers();
 
   } catch(e) {
