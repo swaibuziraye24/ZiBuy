@@ -652,19 +652,26 @@ async function loadFeaturedShops() {
   if (!section || !container) return;
 
   try {
-    const snap = await getDocs(query(
-      collection(db, "shops"),
-      where("plan", "in", ["gold", "silver"])
-    ));
+    const [planSnap, featuredSnap] = await Promise.all([
+      getDocs(query(collection(db, "shops"), where("plan", "in", ["gold", "silver"]))),
+      getDocs(query(collection(db, "shops"), where("adminFeatured", "==", true)))
+    ]);
 
-    if (snap.empty) {
+    const merged = new Map();
+    planSnap.forEach(d => merged.set(d.id, { id: d.id, ...d.data() }));
+    featuredSnap.forEach(d => merged.set(d.id, { id: d.id, ...d.data() })); // admin-featured wins if overlapping
+
+    if (merged.size === 0) {
       section.style.display = "none";
       return;
     }
 
-    const shops = snap.docs
-      .map(d => ({ id: d.id, ...d.data() }))
-      .sort((a, b) => (b.plan === "gold" ? 1 : 0) - (a.plan === "gold" ? 1 : 0))
+    const shops = Array.from(merged.values())
+      .sort((a, b) => {
+        // Admin-featured shops always lead, then Gold, then Silver
+        if (!!b.adminFeatured !== !!a.adminFeatured) return (b.adminFeatured ? 1 : 0) - (a.adminFeatured ? 1 : 0);
+        return (b.plan === "gold" ? 1 : 0) - (a.plan === "gold" ? 1 : 0);
+      })
       .slice(0, 10);
 
     section.style.display = "block";
@@ -677,7 +684,7 @@ async function loadFeaturedShops() {
         <div class="shop-card-body">
           <h4>${escapeHTML(s.name) || "ZiBuy Shop"} ${s.isVerified ? "✅" : ""}</h4>
           <p class="shop-card-loc">📍 ${escapeHTML(s.location) || "Uganda"}</p>
-          <span class="shop-card-plan plan-${s.plan}">${s.plan === "gold" ? "🥇 Gold Seller" : "🥈 Silver Seller"}</span>
+          <span class="shop-card-plan plan-${s.plan}">${s.adminFeatured ? "⭐ Featured" : s.plan === "gold" ? "🥇 Gold Seller" : "🥈 Silver Seller"}</span>
         </div>
       </div>
     `).join("");
