@@ -11,7 +11,8 @@ import {
   query,
   where,
   updateDoc,
-  doc
+  doc,
+  getDoc
 } from "./firebase.js";
 
 import {
@@ -100,35 +101,21 @@ onAuthStateChanged(auth, async(user) => {
 // ============================================
 
 export async function fetchUserPlan(userId) {
-
   try {
+    // Reads the PUBLIC users.plan mirror instead of the restricted
+    // business_accounts collection — avoids exposing anyone's payment
+    // references/transaction IDs to public visitors, while still working
+    // correctly whether the viewer is the account owner or a stranger.
+    const snap = await getDoc(doc(db, "users", userId));
+    if (!snap.exists()) return PLANS.free;
 
-    const snapshot = await getDocs(
-      query(
-        collection(db, "business_accounts"),
-        where("userId", "==", userId),
-        where("status", "==", "active")
-      )
-    );
+    const planId = snap.data().plan || "free";
+    return PLANS[planId] || PLANS.free;
 
-    if (snapshot.empty) {
-      return PLANS.free;
-    }
-
-    const data = snapshot.docs[0].data();
-
-    return PLANS[data.plan] || PLANS.free;
-
-  }
-
-  catch (err) {
-
+  } catch (err) {
     console.error("fetchUserPlan error:", err);
-
     return PLANS.free;
-
   }
-
 }
 
 // ============================================
