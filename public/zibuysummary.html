@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ZiBuy Uganda — Platform Overview</title>
+<style>
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    color: #1f2430;
+    font-size: 12.5px;
+    line-height: 1.55;
+  }
+  .page {
+    width: 210mm;
+    min-height: 297mm;
+    padding: 16mm 18mm;
+    page-break-after: always;
+    position: relative;
+  }
+  .page:last-child { page-break-after: avoid; }
+
+  /* ---------- COVER ---------- */
+  .cover {
+    background: linear-gradient(155deg, #ff6600 0%, #ff8a3d 55%, #ffb066 100%);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 22mm 20mm;
+  }
+  .cover .brand { font-size: 40px; font-weight: 800; letter-spacing: -1px; }
+  .cover .brand span { color: #111827; }
+  .cover .flag { font-size: 15px; opacity: .9; margin-top: 4px; }
+  .cover .mid { margin-top: 60px; }
+  .cover .mid h1 {
+    font-size: 34px;
+    font-weight: 800;
+    line-height: 1.2;
+    max-width: 130mm;
+  }
+  .cover .mid p {
+    margin-top: 14px;
+    font-size: 15px;
+    max-width: 120mm;
+    opacity: .95;
+  }
+  .cover .stat-row {
+    margin-top: 40px;
+    display: flex;
+    gap: 14px;
+  }
+  .cover .stat-pill {
+    background: rgba(255,255,255,.18);
+    border: 1px solid rgba(255,255,255,.35);
+    border-radius: 12px;
+    padding: 12px 18px;
+  }
+  .cover .stat-pill strong { display: block; font-size: 18px; }
+  .cover .stat-pill span { font-size: 10.5px; opacity: .85; }
+  .cover .footer-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-top: 1px solid rgba(255,255,255,.4);
+    padding-top: 14px;
+    font-size: 11px;
+  }
+
+  /* ---------- HEADER BAR (inner pages) ---------- */
+  .hbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #ff6600;
+    margin-bottom: 18px;
+  }
+  .hbar .logo { font-weight: 800; font-size: 14px; color: #ff6600; }
+  .hbar .logo span { color: #111827; }
+  .hbar .tag { font-size: 10px; color: #9ca3af; text-transform: uppercase; letter-spacing: .6px; }
+
+  .section-title {
+    font-size: 21px;
+    font-weight: 800;
+    color: #111827;
+    margin-bottom: 4px;
+  }
+  .section-sub {
+    font-size: 12px;
+    color: #6b7280;
+    margin-bottom: 18px;
+  }
+
+  .feat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .feat-card {
+    background: #f9fafb;
+    border: 1px solid #eef0f2;
+    border-left: 3px solid #ff6600;
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+  .feat-card h4 {
+    font-size: 12px;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 3px;
+  }
+  .feat-card p {
+    font-size: 10.6px;
+    color: #55606e;
+    line-height: 1.45;
+  }
+  .feat-card .icon { font-size: 15px; margin-right: 5px; }
+
+  .full-card {
+    background: #f9fafb;
+    border: 1px solid #eef0f2;
+    border-left: 3px solid #ff6600;
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+  }
+  .full-card h4 { font-size: 12.5px; font-weight: 700; color: #111827; margin-bottom: 3px; }
+  .full-card p { font-size: 11px; color: #55606e; }
+
+  .badge-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+  .pill {
+    display: inline-block;
+    font-size: 9.5px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 20px;
+    background: #fff4ee;
+    color: #ff6600;
+  }
+  .pill.blue { background: #eff6ff; color: #1e40af; }
+  .pill.green { background: #f0fdf4; color: #166534; }
+  .pill.purple { background: #f5f3ff; color: #5b21b6; }
+  .pill.gold { background: #fffbeb; color: #b45309; }
+
+  .num-list { counter-reset: item; }
+  .num-list .row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+    align-items: flex-start;
+  }
+  .num-list .n {
+    counter-increment: item;
+    background: #ff6600;
+    color: #fff;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    font-size: 10px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .num-list .row h4 { font-size: 12px; font-weight: 700; color: #111827; }
+  .num-list .row p { font-size: 10.6px; color: #55606e; margin-top: 2px; }
+
+  .rev-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 6px;
+  }
+  .rev-table th {
+    text-align: left;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    color: #9ca3af;
+    padding: 8px 10px;
+    border-bottom: 2px solid #eef0f2;
+  }
+  .rev-table td {
+    font-size: 11px;
+    padding: 9px 10px;
+    border-bottom: 1px solid #f1f2f4;
+    color: #374151;
+  }
+  .rev-table td.stream { font-weight: 700; color: #111827; }
+
+  .sponsor-box {
+    background: linear-gradient(135deg, #fff4ee, #fffaf3);
+    border: 1.5px solid #ffd9bf;
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin-top: 14px;
+  }
+  .sponsor-box h4 { color: #ff6600; font-size: 13px; margin-bottom: 6px; }
+  .sponsor-box p { font-size: 11px; color: #7c4a1e; line-height: 1.5; }
+
+  .footer-note {
+    position: absolute;
+    bottom: 12mm;
+    left: 18mm;
+    right: 18mm;
+    display: flex;
+    justify-content: space-between;
+    font-size: 9px;
+    color: #b0b4ba;
+    border-top: 1px solid #eef0f2;
+    padding-top: 8px;
+  }
+
+  .closing {
+    background: #111827;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 30mm 20mm;
+  }
+  .closing .brand { font-size: 30px; font-weight: 800; }
+  .closing .brand span { color: #ff6600; }
+  .closing h2 { font-size: 20px; margin-top: 18px; font-weight: 700; }
+  .closing p { font-size: 12px; opacity: .8; margin-top: 10px; max-width: 120mm; }
+  .closing .contact { margin-top: 34px; font-size: 12px; }
+  .closing .contact div { margin-bottom: 6px; }
+  .closing .divider { width: 60px; height: 3px; background: #ff6600; margin: 22px 0; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- ============ COVER ============ -->
+<div class="page cover">
+  <div>
+    <div class="brand">Zi<span style="color:#111827">Buy</span></div>
+    <div class="flag">Uganda's Online Marketplace 🇺🇬</div>
+  </div>
+
+  <div class="mid">
+    <h1>Platform Overview &amp; Partnership Opportunities</h1>
+    <p>A complete look at what ZiBuy offers buyers, sellers, and partners — built as a modern, trust-first alternative to Uganda's classifieds marketplaces.</p>
+
+    <div class="stat-row">
+      <div class="stat-pill"><strong>24+</strong><span>Categories</span></div>
+      <div class="stat-pill"><strong>Live</strong><span>Real-Time Chat</span></div>
+      <div class="stat-pill"><strong>MTN / Airtel</strong><span>Mobile Money Ready</span></div>
+      <div class="stat-pill"><strong>PWA</strong><span>Installable App</span></div>
+    </div>
+  </div>
+
+  <div class="footer-line">
+    <span>zibuy.ug &nbsp;·&nbsp; zibuy-5deae.web.app</span>
+    <span>Prepared for Partners &amp; Sponsors</span>
+  </div>
+</div>
+
+<!-- ============ ABOUT ============ -->
+<div class="page">
+  <div class="hbar">
+    <div class="logo">Zi<span>Buy</span></div>
+    <div class="tag">Platform Overview</div>
+  </div>
+
+  <div class="section-title">What Is ZiBuy?</div>
+  <div class="section-sub">Uganda's growing online marketplace for buying and selling anything</div>
+
+  <p style="font-size:12px;color:#374151;line-height:1.7;margin-bottom:20px">
+    ZiBuy is a mobile-first classifieds marketplace built for Uganda — connecting buyers and sellers across
+    phones, electronics, vehicles, property, fashion, jobs, services, agriculture, and more. It combines the
+    familiar, no-friction listing experience Ugandans already know from classifieds apps with modern trust and
+    safety systems, real-time communication, and tools that help serious sellers grow — all built around
+    Mobile Money, the way Ugandans actually pay for things.
+  </p>
+
+  <div class="feat-grid">
+    <div class="feat-card">
+      <h4><span class="icon">📱</span>Mobile-First &amp; Installable</h4>
+      <p>Works as a full Progressive Web App — installs to the home screen like a native app, with offline support built in.</p>
+    </div>
+    <div class="feat-card">
+      <h4><span class="icon">🛡️</span>Trust-First by Design</h4>
+      <p>Phone verification, seller trust scores, two-way ratings, and dispute resolution — not bolted on, built into the core.</p>
+    </div>
+    <div class="feat-card">
+      <h4><span class="icon">💬</span>Real Conversations</h4>
+      <p>Live, instant messaging between buyers and sellers with read receipts — no refreshing, no waiting.</p>
+    </div>
+    <div class="feat-card">
+      <h4><span class="icon">💰</span>Built for Mobile Money</h4>
+      <p>Every payment flow — subscriptions, boosts, checkout — is built natively around MTN and Airtel Mobile Money.</p>
+    </div>
+  </div>
+
+  <div class="footer-note"><span>ZiBuy Uganda</span><span>Page 2</span></div>
+</div>
+
+<!-- ============ CORE MARKETPLACE ============ -->
+<div class="page">
+  <div class="hbar">
+    <div class="logo">Zi<span>Buy</span></div>
+    <div class="tag">Core Marketplace</div>
+  </div>
+
+  <div class="section-title">Core Marketplace Features</div>
+  <div class="section-sub">Everything a buyer or seller needs to list, find, and transact</div>
+
+  <div class="feat-grid">
+    <div class="feat-card"><h4><span class="icon">🗂️</span>24+ Categories</h4><p>Phones, Electronics, Vehicles, Property, Fashion, Jobs, Services, Agriculture, Animals, Babies &amp; Kids, and more — each with tailored listing fields.</p></div>
+    <div class="feat-card"><h4><span class="icon">📝</span>Smart Listing Forms</h4><p>Category-specific fields (e.g. mileage &amp; fuel type for cars, RAM &amp; storage for phones) so listings are detailed and searchable.</p></div>
+    <div class="feat-card"><h4><span class="icon">🔍</span>Powerful Search &amp; Filters</h4><p>Filter by price, location, category, and date posted — with instant full-screen search and quick-category browsing.</p></div>
+    <div class="feat-card"><h4><span class="icon">📦</span>Bulk Ad Posting</h4><p>Sellers with many products can list several ads in one streamlined flow instead of repeating the process one by one.</p></div>
+    <div class="feat-card"><h4><span class="icon">🕒</span>Recently Viewed</h4><p>Buyers automatically see products they've browsed before, right on the homepage — no account required to work.</p></div>
+    <div class="feat-card"><h4><span class="icon">🔔</span>Saved Search Alerts</h4><p>Buyers save a search once and get notified the instant a new matching listing goes live.</p></div>
+    <div class="feat-card"><h4><span class="icon">❤️</span>Wishlist &amp; Likes</h4><p>Save favourite listings and revisit them anytime from a personal wishlist.</p></div>
+    <div class="feat-card"><h4><span class="icon">📉</span>Price Drop Alerts</h4><p>Buyers who liked a product are notified automatically when the seller drops the price — with a visible discount badge shown to everyone.</p></div>
+  </div>
+
+  <div class="footer-note"><span>ZiBuy Uganda</span><span>Page 3</span></div>
+</div>
+
+<!-- ============ TRUST & SAFETY ============ -->
+<div class="page">
+  <div class="hbar">
+    <div class="logo">Zi<span>Buy</span></div>
+    <div class="tag">Trust &amp; Safety</div>
+  </div>
+
+  <div class="section-title">Trust &amp; Safety Systems</div>
+  <div class="section-sub">The systems that make ZiBuy feel safe to buy and sell on</div>
+
+  <div class="full-card">
+    <h4>📱 Phone (OTP) Verification</h4>
+    <p>Sellers verify their real phone number via a one-time SMS code before earning a "Phone Verified" badge — reducing fake accounts.</p>
+  </div>
+  <div class="full-card">
+    <h4>⭐ Trust Score System</h4>
+    <p>Every seller has a live-calculated Trust Score (0–100) based on verification status, review history, and account tenure — displayed as New, Bronze, Silver, Gold, or Elite trust tiers.</p>
+    <div class="badge-row">
+      <span class="pill">🌱 New Seller</span><span class="pill gold">🥇 Gold Trust</span><span class="pill purple">💎 Elite Trust</span>
+    </div>
+  </div>
+  <div class="full-card">
+    <h4>🏆 Earned "Trusted Seller" Badge</h4>
+    <p>A top-tier badge that cannot be purchased at any price — earned only through a genuine track record of verified reviews and sustained trust, and automatically lost if standards slip.</p>
+  </div>
+  <div class="full-card">
+    <h4>🙋 Two-Way Ratings</h4>
+    <p>Buyers rate sellers, and sellers rate buyers — a rare feature that builds accountability on both sides of every transaction.</p>
+  </div>
+  <div class="full-card">
+    <h4>💬 Response Time &amp; Reply Rate</h4>
+    <p>Sellers display a live "usually replies within X" badge and response-rate percentage — the same trust signal used by Airbnb and Etsy.</p>
+  </div>
+  <div class="full-card">
+    <h4>🚩 Instant Reporting</h4>
+    <p>Any buyer can report a seller directly from a product page — the report is logged and simultaneously escalated to admin via WhatsApp for fast action.</p>
+  </div>
+  <div class="full-card">
+    <h4>🛡️ ZiBuy Protect &amp; Dispute Resolution</h4>
+    <p>An optional buyer-protection fee on checkout requires the buyer to confirm receipt before an order is considered complete — with a built-in dispute system if something goes wrong, reviewed by admin.</p>
+  </div>
+
+  <div class="footer-note"><span>ZiBuy Uganda</span><span>Page 4</span></div>
+</div>
+
+<!-- ============ SELLER GROWTH TOOLS ============ -->
+<div class="page">
+  <div class="hbar">
+    <div class="logo">Zi<span>Buy</span></div>
+    <div class="tag">Seller Growth Tools</div>
+  </div>
+
+  <div class="section-title">Tools That Help Sellers Grow</div>
+  <div class="section-sub">Built to turn casual sellers into serious, repeat businesses on ZiBuy</div>
+
+  <div class="num-list">
+    <div class="row"><div class="n">1</div><div><h4>Boosted &amp; Pinned Ads</h4><p>Sellers can boost a listing for 7, 14, or 30 days to feature it prominently, or "Pin to Top" for a short, cheap visibility burst — both paid via Mobile Money.</p></div></div>
+    <div class="row"><div class="n">2</div><div><h4>Auto-Renew Subscriptions</h4><p>Ads that would otherwise expire can auto-renew every 30 days, so active sellers never lose their listing to inactivity.</p></div></div>
+    <div class="row"><div class="n">3</div><div><h4>Custom Seller Storefronts</h4><p>Every seller gets a branded shop page with logo, banner, description, business hours, categories, and a live product grid.</p></div></div>
+    <div class="row"><div class="n">4</div><div><h4>Tiered Business Plans</h4><p>Free, Bronze, Silver, and Gold plans scale ad limits, monthly boosts, image counts, and ad duration — with Silver &amp; Gold including automatic seller verification.</p></div></div>
+    <div class="row"><div class="n">5</div><div><h4>Seller Analytics Dashboard</h4><p>Views, revenue, and top-performing ads — with Silver/Gold sellers unlocking category benchmarking that compares their performance directly against the marketplace average.</p></div></div>
+    <div class="row"><div class="n">6</div><div><h4>Referral Program</h4><p>Sellers earn free ad boosts by referring new users who go on to post their first ad — a built-in, self-sustaining growth loop.</p></div></div>
+    <div class="row"><div class="n">7</div><div><h4>CV Boost for Job Seekers</h4><p>Job-seeking users can pin their listing to the top of the Seeking Work category so employers see them first.</p></div></div>
+  </div>
+
+  <div class="footer-note"><span>ZiBuy Uganda</span><span>Page 5</span></div>
+</div>
+
+<!-- ============ ADMIN & PLATFORM CONTROL ============ -->
+<div class="page">
+  <div class="hbar">
+    <div class="logo">Zi<span>Buy</span></div>
+    <div class="tag">Platform Control</div>
+  </div>
+
+  <div class="section-title">Admin &amp; Platform Control</div>
+  <div class="section-sub">A fully built operations console — not just a storefront</div>
+
+  <p style="font-size:11.5px;color:#374151;margin-bottom:14px">
+    ZiBuy is run through a complete internal admin panel that gives full, real-time oversight and control of
+    every part of the platform — built for serious day-to-day operation, not a demo.
+  </p>
+
+  <div class="feat-grid">
+    <div class="feat-card"><h4>👥 Users, Ads &amp; Orders</h4><p>Full moderation over every user, listing, and order — including ban, suspend, edit, and full account deletion.</p></div>
+    <div class="feat-card"><h4>🏪 Shops Directory</h4><p>See every shop on the platform, manually feature any shop on the homepage, or suspend one instantly.</p></div>
+    <div class="feat-card"><h4>🚨 Live Alerts &amp; Activity Log</h4><p>A real-time feed of every order, payment, review, and report — plus a full history log of platform-wide activity.</p></div>
+    <div class="feat-card"><h4>🐛 Developer Error Console</h4><p>Real client-side errors are captured automatically and surfaced to the admin — issues are visible the moment they happen.</p></div>
+    <div class="feat-card"><h4>⚠️ Fraud Signal Detection</h4><p>Automatic flags for sellers with repeated open reports, long-unresolved disputes, or policy inconsistencies.</p></div>
+    <div class="feat-card"><h4>🛠️ Maintenance Mode</h4><p>The whole platform can be put into a controlled maintenance state in one click during major updates.</p></div>
+    <div class="feat-card"><h4>💰 Live-Editable Plan Pricing</h4><p>Subscription limits and pricing can be changed instantly from the admin panel — no code changes or redeploy required.</p></div>
+    <div class="feat-card"><h4>📣 Broadcast &amp; Blog System</h4><p>Push announcements to every user at once, and publish blog content directly from the admin panel.</p></div>
+  </div>
+
+  <div class="footer-note"><span>ZiBuy Uganda</span><span>Page 6</span></div>
+</div>
+
+<!-- ============ MONETIZATION & SPONSORSHIP ============ -->
+<div class="page">
+  <div class="hbar">
+    <div class="logo">Zi<span>Buy</span></div>
+    <div class="tag">Monetization &amp; Partnerships</div>
+  </div>
+
+  <div class="section-title">Revenue Streams &amp; Partnership Opportunities</div>
+  <div class="section-sub">How ZiBuy makes money — and how a sponsor fits in</div>
+
+  <table class="rev-table">
+    <tr><th>Revenue Stream</th><th>How It Works</th></tr>
+    <tr><td class="stream">Subscription Plans</td><td>Bronze, Silver &amp; Gold monthly plans for serious sellers, paid via Mobile Money.</td></tr>
+    <tr><td class="stream">Ad Boosts &amp; Pins</td><td>Sellers pay to feature listings for a set number of days, or pin to the very top.</td></tr>
+    <tr><td class="stream">Auto-Renew Fees</td><td>A small recurring fee keeps a seller's ad permanently active without manual reposting.</td></tr>
+    <tr><td class="stream">ZiBuy Protect Fee</td><td>An optional buyer-protection fee applied at checkout for extra peace of mind.</td></tr>
+    <tr><td class="stream">Banner Advertising</td><td>Rotating homepage banner slots sold directly to advertisers.</td></tr>
+    <tr><td class="stream">Category Sponsorship</td><td>A brand can exclusively sponsor an entire category (e.g. Electronics, Vehicles) — one sponsor at a time, prominently displayed.</td></tr>
+  </table>
+
+  <div class="sponsor-box">
+    <h4>🤝 A Direct Fit for Sponsors</h4>
+    <p>
+      ZiBuy's <strong>Banner Advertising</strong> and <strong>Category Sponsorship</strong> systems are built
+      specifically for brand partners — a sponsor's name and logo can appear directly on the homepage banner
+      rotation, or as the exclusive sponsor of a high-traffic category like Phones, Electronics, or Vehicles,
+      with impressions and clicks tracked automatically. This isn't a proposal — it's a feature that's already
+      live and ready to activate.
+    </p>
+  </div>
+
+  <div class="footer-note"><span>ZiBuy Uganda</span><span>Page 7</span></div>
+</div>
+
+<!-- ============ CLOSING ============ -->
+<div class="page closing">
+  <div class="brand">Zi<span>Buy</span></div>
+  <div class="divider"></div>
+  <h2>Uganda's Marketplace, Built Right</h2>
+  <p>
+    ZiBuy combines a familiar, easy classifieds experience with real trust systems, live communication,
+    and serious operational infrastructure — built for Ugandans, around Mobile Money, from the ground up.
+  </p>
+
+  <div class="contact">
+    <div>🌐 zibuy-5deae.web.app</div>
+    <div>📱 WhatsApp: +256 790 548 910</div>
+    <div>✉️ swaibuziraye22@gmail.com</div>
+  </div>
+</div>
+
+</body>
+</html>
