@@ -341,16 +341,50 @@ function setupAuthStateListener() {
         .then(({ setDoc, doc, getDoc }) => {
           const ref = doc(db, "users", user.uid);
           getDoc(ref).then(snap => {
+
             if (!snap.exists()) {
-              setDoc(ref, {
-                email:            user.email,
+              // Brand new account — regardless of whether they signed up
+              // via email, Google, or phone number
+              const newUserDoc = {
+                email:            user.email || null,
                 uid:              user.uid,
                 plan:             "free",
                 accountType:      "normal",
                 isSellerVerified: false,
                 banned:           false,
                 createdAt:        new Date()
-              });
+              };
+
+              // Phone sign-in — Firebase already verified this number via SMS,
+              // so it's safe to mark it verified immediately
+              if (user.phoneNumber) {
+                newUserDoc.phone         = user.phoneNumber.replace(/^\+/, "");
+                newUserDoc.phoneVerified = true;
+              }
+
+              // Google sign-in — carry over their name/photo if provided
+              if (user.displayName) newUserDoc.displayName = user.displayName;
+              if (user.photoURL)    newUserDoc.photoURL    = user.photoURL;
+
+              setDoc(ref, newUserDoc);
+
+            } else {
+              // Existing account, but signed in via a NEW method this time
+              // (e.g. already had an email account, just used Google for the
+              // first time) — backfill anything useful that isn't saved yet
+              const existing = snap.data();
+              const updates  = {};
+
+              if (user.phoneNumber && !existing.phone) {
+                updates.phone         = user.phoneNumber.replace(/^\+/, "");
+                updates.phoneVerified = true;
+              }
+              if (user.displayName && !existing.displayName) updates.displayName = user.displayName;
+              if (user.photoURL && !existing.photoURL)       updates.photoURL    = user.photoURL;
+
+              if (Object.keys(updates).length > 0) {
+                setDoc(ref, updates, { merge: true });
+              }
             }
           });
         });
@@ -2583,6 +2617,127 @@ window.openAuthModal = function() {
 window.closeAuthModal = function() {
   const modal = document.getElementById("auth-modal");
   if (modal) modal.classList.remove("open");
+};
+
+
+
+window.signInWithGoogle = async function() {
+  try {
+    const { GoogleAuthProvider, signInWithPopup } =
+      await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js");
+
+    const provider = new GoogleAuthProvider();
+    await signInWithPopup(auth, provider);
+
+    closeAuthModal();
+    showToast("✅ Signed in with Google!");
+
+  } catch (err) {
+    if (err.code === "auth/popup-closed-by-user" || err.code === "auth/cancelled-popup-request") {
+      return; // user just closed the popup — not an error worth showing
+    }
+    if (err.code === "auth/operation-not-allowed") {
+      alert("Google sign-in isn't enabled yet. (Admin: enable it in Firebase Console → Authentication → Sign-in method)");
+      return;
+    }
+    console.error("Google sign-in error:", err);
+    alert("❌ Google sign-in failed: " + err.message);
+  }
+};
+
+
+let _recaptchaVerifier   = null;
+let _phoneConfirmResult  = null;
+
+window.togglePhoneAuth = function() {
+  const section = document.getElementById("phone-auth-section");
+  if (!section) return;
+  section.style.display = section.style.display === "none" ? "block" : "none";
+};
+
+window.sendPhoneSignInCode = async function() {
+  const input = document.getElementById("phone-auth-number");
+  let raw = input?.value.trim().replace(/\D/g, "") || "";
+
+  if (raw.length < 9) {
+    alert("Enter a valid phone number");
+    return;
+  }
+
+  // Normalize to +256... regardless of how the user typed it
+  if (raw.startsWith("0")) raw = raw.slice(1);
+  if (!raw.startsWith("256")) raw = "256" + raw;
+  const fullPhone = "+" + raw;
+
+  const btn = document.getElementById("phone-send-code-btn");
+  if (btn) { btn.textContent = "Sending..."; btn.disabled = true; }
+
+  try {
+    const { RecaptchaVerifier, signInWithPhoneNumber } =
+      await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js");
+
+    if (!_recaptchaVerifier) {
+      _recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", { size: "invisible" });
+    }
+
+    _phoneConfirmResult = await signInWithPhoneNumber(auth, fullPhone, _recaptchaVerifier);
+
+    document.getElementById("phone-auth-step1").style.display = "none";
+    document.getElementById("phone-auth-step2").style.display = "block";
+    document.getElementById("phone-auth-sent-to").textContent = fullPhone;
+    document.getElementById("phone-auth-code")?.focus();
+
+  } catch (err) {
+    console.error("Phone sign-in send error:", err);
+    if (err.code === "auth/operation-not-allowed") {
+      alert("Phone sign-in isn't enabled yet. (Admin: enable it in Firebase Console → Authentication → Sign-in method)");
+    } else if (err.code === "auth/invalid-phone-number") {
+      alert("That phone number doesn't look valid. Try again.");
+    } else {
+      alert("Failed to send code: " + err.message);
+    }
+    // Reset recaptcha so the next attempt gets a fresh widget
+    _recaptchaVerifier = null;
+  } finally {
+    if (btn) { btn.textContent = "Send Code"; btn.disabled = false; }
+  }
+};
+
+window.confirmPhoneSignInCode = async function() {
+  const codeInput = document.getElementById("phone-auth-code");
+  const code = codeInput?.value.trim();
+
+  if (!code || code.length !== 6) {
+    alert("Enter the 6-digit code");
+    return;
+  }
+  if (!_phoneConfirmResult) {
+    alert("Please request a code first");
+    return;
+  }
+
+  const btn = document.getElementById("phone-verify-code-btn");
+  if (btn) { btn.textContent = "Verifying..."; btn.disabled = true; }
+
+  try {
+    await _phoneConfirmResult.confirm(code);
+
+    closeAuthModal();
+    showToast("✅ Signed in with phone number!");
+
+    // Reset the phone auth UI for next time
+    document.getElementById("phone-auth-step1").style.display = "block";
+    document.getElementById("phone-auth-step2").style.display = "none";
+    document.getElementById("phone-auth-section").style.display = "none";
+    if (codeInput) codeInput.value = "";
+    _phoneConfirmResult = null;
+
+  } catch (err) {
+    console.error("Phone code confirm error:", err);
+    alert("❌ Incorrect code. Please check and try again.");
+  } finally {
+    if (btn) { btn.textContent = "Verify & Continue"; btn.disabled = false; }
+  }
 };
 
 
