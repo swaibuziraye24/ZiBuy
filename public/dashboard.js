@@ -30,12 +30,17 @@ onAuthStateChanged(auth, (user) => {
   currentUser = user;
   debug("Auth state changed. User:", user?.email);
   if (!user) {
-    // Give it 3 seconds before redirecting — secure browsers are slow to resolve auth
+    // Short grace period — Firebase resolving a persisted session is
+    // normally near-instant; this just avoids a false-negative flicker
     setTimeout(() => {
       if (!currentUser) {
-        window.location.href = "index.html";
+        const tab = new URLSearchParams(window.location.search).get("tab");
+        try {
+          sessionStorage.setItem("zibuy_post_login_redirect", tab ? `dashboard.html?tab=${tab}` : "dashboard.html");
+        } catch(e) {}
+        window.location.href = "index.html?auth=1";
       }
-    }, 3000);
+    }, 1200);
     return;
   }
   loadDashboard();
