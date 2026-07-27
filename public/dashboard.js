@@ -70,6 +70,7 @@ async function loadDashboard() {
   }
   
   debug("Calling switchTab with:", tab);
+  loadAttentionWidget();
   await switchTab(tab);
 }
 
@@ -2503,3 +2504,41 @@ window.applyCredit = async function(creditId, productId, productName, btnEl) {
     }, 2000);
   }
 };
+
+
+// ============================================
+// NEEDS YOUR ATTENTION — seller-facing pending
+// action summary, shown at the top of My Ads
+// ============================================
+async function loadAttentionWidget() {
+  if (!currentUser) return;
+  const container = document.getElementById("attention-widget");
+  if (!container) return;
+
+  try {
+    const [boostsSnap, verifSnap, subSnap, disputesSnap] = await Promise.all([
+      getDocs(query(collection(db, "boost_requests"), where("userId", "==", currentUser.uid), where("status", "==", "pending"))),
+      getDocs(query(collection(db, "seller_verifications"), where("userId", "==", currentUser.uid), where("status", "==", "pending"))),
+      getDocs(query(collection(db, "business_accounts"), where("userId", "==", currentUser.uid), where("status", "==", "pending_payment"))),
+      getDocs(query(collection(db, "orders"), where("userEmail", "==", currentUser.email), where("disputeStatus", "==", "open")))
+    ]);
+
+    const items = [];
+    if (boostsSnap.size > 0)   items.push({ icon: "⭐", text: `${boostsSnap.size} boost request${boostsSnap.size > 1 ? "s" : ""} awaiting admin approval`, color: "#f59e0b" });
+    if (verifSnap.size > 0)    items.push({ icon: "✅", text: `Seller verification pending review`, color: "#3b82f6" });
+    if (subSnap.size > 0)      items.push({ icon: "💼", text: `Subscription payment awaiting confirmation`, color: "#8b5cf6" });
+    if (disputesSnap.size > 0) items.push({ icon: "🚨", text: `${disputesSnap.size} order dispute${disputesSnap.size > 1 ? "s" : ""} in review`, color: "#ef4444" });
+
+    if (items.length === 0) { container.innerHTML = ""; container.style.display = "none"; return; }
+
+    container.style.display = "block";
+    container.innerHTML = `
+      <div style="background:#fffbeb;border:1.5px solid #fde68a;border-radius:14px;padding:16px;margin-bottom:16px">
+        <p style="margin:0 0 10px;font-weight:800;font-size:13px;color:#92400e">⏳ Needs Your Attention</p>
+        ${items.map(i => `
+          <div style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:12.5px;color:#374151">
+            <span>${i.icon}</span><span>${i.text}</span>
+          </div>`).join("")}
+      </div>`;
+  } catch (e) { console.warn("loadAttentionWidget:", e.message); }
+}
