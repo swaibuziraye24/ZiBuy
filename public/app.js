@@ -2606,6 +2606,7 @@ window.customerLogin = async function() {
     await signInWithEmailAndPassword(auth, email, password);
     closeAuthModal();
     showToast("✅ Logged in successfully!");
+    redirectAfterLogin();
   } catch (err) {
     const msgs = {
       "auth/user-not-found":  "No account with that email",
@@ -2628,7 +2629,15 @@ window.closeAuthModal = function() {
   if (modal) modal.classList.remove("open");
 };
 
-
+function redirectAfterLogin() {
+  try {
+    const dest = sessionStorage.getItem("zibuy_post_login_redirect");
+    if (dest) {
+      sessionStorage.removeItem("zibuy_post_login_redirect");
+      window.location.href = dest;
+    }
+  } catch (e) {}
+}
 
 window.signInWithGoogle = async function() {
   try {
@@ -2649,6 +2658,7 @@ window.signInWithGoogle = async function() {
     if (data.status === "ok") {
       closeAuthModal();
       showToast("✅ Signed in with Google!");
+      redirectAfterLogin();
 
     } else if (data.status === "existing_account_found") {
       // Switch into the REAL account this Google sign-in belongs to
@@ -2656,6 +2666,7 @@ window.signInWithGoogle = async function() {
       await signInWithCustomToken(auth, data.customToken);
       closeAuthModal();
       showToast("✅ Signed in with Google!");
+      redirectAfterLogin();
 
     } else {
       // No account exists for this Google email at all
@@ -2777,6 +2788,7 @@ window.confirmPhoneSignInCode = async function() {
       closeAuthModal();
       showToast("✅ Signed in with phone number!");
       resetPhoneUI();
+      redirectAfterLogin();
 
     } else if (data.status === "existing_account_found") {
       await signOut(auth);
@@ -2784,6 +2796,7 @@ window.confirmPhoneSignInCode = async function() {
       closeAuthModal();
       showToast("✅ Signed in with phone number!");
       resetPhoneUI();
+      redirectAfterLogin();
 
     } else {
       await signOut(auth);
@@ -2859,6 +2872,7 @@ window.customerRegister = async function() {
 
     alert("✅ Account created! You're now logged in.");
     closeAuthModal();
+    redirectAfterLogin();
   } catch (err) {
     alert("❌ " + err.message);
   }
