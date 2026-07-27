@@ -337,6 +337,14 @@ function setupAuthStateListener() {
       // Ensure referral code exists for every logged-in user
       ensureReferralCode(user.uid);
 
+      // Only auto-create/backfill a user doc for EMAIL/PASSWORD sign-ins.
+      // Google and Phone sign-in are login-only — account existence and
+      // creation for those is handled explicitly by signInWithGoogle() /
+      // confirmPhoneSignInCode() via the linkLoginToExistingAccount
+      // Cloud Function, so this generic listener must not race it.
+      const isPasswordProvider = user.providerData.some(p => p.providerId === "password");
+
+      if (isPasswordProvider) {
       import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js")
         .then(({ setDoc, doc, getDoc }) => {
           const ref = doc(db, "users", user.uid);
@@ -388,6 +396,7 @@ function setupAuthStateListener() {
             }
           });
         });
+      }
     }
 
     const ADMIN_EMAIL = "swaibuziraye22@gmail.com";
@@ -2623,18 +2632,41 @@ window.closeAuthModal = function() {
 
 window.signInWithGoogle = async function() {
   try {
-    const { GoogleAuthProvider, signInWithPopup } =
+    const { GoogleAuthProvider, signInWithPopup, signInWithCustomToken, signOut } =
       await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js");
+    const { getFunctions, httpsCallable } =
+      await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js");
 
     const provider = new GoogleAuthProvider();
     await signInWithPopup(auth, provider);
 
-    closeAuthModal();
-    showToast("✅ Signed in with Google!");
+    // Google sign-in is LOGIN ONLY — check whether this is really an
+    // existing ZiBuy account before letting them in
+    const fn     = httpsCallable(getFunctions(), "linkLoginToExistingAccount");
+    const result = await fn();
+    const data   = result.data;
+
+    if (data.status === "ok") {
+      closeAuthModal();
+      showToast("✅ Signed in with Google!");
+
+    } else if (data.status === "existing_account_found") {
+      // Switch into the REAL account this Google sign-in belongs to
+      await signOut(auth);
+      await signInWithCustomToken(auth, data.customToken);
+      closeAuthModal();
+      showToast("✅ Signed in with Google!");
+
+    } else {
+      // No account exists for this Google email at all
+      await signOut(auth);
+      alert("No ZiBuy account found for this Google account.\n\nPlease create an account first using your email, phone number and password — then you'll be able to log in with Google.");
+      toggleRegister(true);
+    }
 
   } catch (err) {
     if (err.code === "auth/popup-closed-by-user" || err.code === "auth/cancelled-popup-request") {
-      return; // user just closed the popup — not an error worth showing
+      return;
     }
     if (err.code === "auth/operation-not-allowed") {
       alert("Google sign-in isn't enabled yet. (Admin: enable it in Firebase Console → Authentication → Sign-in method)");
@@ -2722,15 +2754,43 @@ window.confirmPhoneSignInCode = async function() {
   try {
     await _phoneConfirmResult.confirm(code);
 
-    closeAuthModal();
-    showToast("✅ Signed in with phone number!");
+    const { signInWithCustomToken, signOut } =
+      await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js");
+    const { getFunctions, httpsCallable } =
+      await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js");
 
-    // Reset the phone auth UI for next time
-    document.getElementById("phone-auth-step1").style.display = "block";
-    document.getElementById("phone-auth-step2").style.display = "none";
-    document.getElementById("phone-auth-section").style.display = "none";
-    if (codeInput) codeInput.value = "";
-    _phoneConfirmResult = null;
+    // Phone sign-in is LOGIN ONLY — check whether this number belongs
+    // to an existing ZiBuy account before letting them in
+    const fn     = httpsCallable(getFunctions(), "linkLoginToExistingAccount");
+    const result = await fn();
+    const data   = result.data;
+
+    const resetPhoneUI = () => {
+      document.getElementById("phone-auth-step1").style.display = "block";
+      document.getElementById("phone-auth-step2").style.display = "none";
+      document.getElementById("phone-auth-section").style.display = "none";
+      if (codeInput) codeInput.value = "";
+      _phoneConfirmResult = null;
+    };
+
+    if (data.status === "ok") {
+      closeAuthModal();
+      showToast("✅ Signed in with phone number!");
+      resetPhoneUI();
+
+    } else if (data.status === "existing_account_found") {
+      await signOut(auth);
+      await signInWithCustomToken(auth, data.customToken);
+      closeAuthModal();
+      showToast("✅ Signed in with phone number!");
+      resetPhoneUI();
+
+    } else {
+      await signOut(auth);
+      resetPhoneUI();
+      alert("No ZiBuy account found with this phone number.\n\nPlease create an account first using your email, phone number and password — then you'll be able to log in with just your phone.");
+      toggleRegister(true);
+    }
 
   } catch (err) {
     console.error("Phone code confirm error:", err);
