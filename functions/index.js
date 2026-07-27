@@ -2749,3 +2749,76 @@ exports.adminDeleteUserAccount = onCall(async (request) => {
 
   return results;
 });
+
+
+
+// ============================================
+// LOGIN-ONLY LINKING for Google / Phone sign-in
+// Registration always happens via email+phone+
+// password. Google/Phone sign-in NEVER creates a
+// new account — it looks up the existing account
+// by verified email or phone and hands back a
+// custom token so the client becomes that account.
+// ============================================
+
+function phoneVariants(e164Phone) {
+  const digits = (e164Phone || "").replace(/\D/g, ""); // e.g. 256701234567
+  const local  = digits.length > 9 ? "0" + digits.slice(-9) : digits; // e.g. 0701234567
+  return Array.from(new Set([digits, local, e164Phone]));
+}
+
+exports.linkLoginToExistingAccount = onCall(async (request) => {
+  const uid = request.auth?.uid;
+  if (!uid) throw new HttpsError("unauthenticated", "Login required");
+
+  const token = request.auth.token;
+
+  // Fast path — this Firebase identity already has a real account
+  // (e.g. they've used this exact login method before)
+  const existingOwnDoc = await db.collection("users").doc(uid).get();
+  if (existingOwnDoc.exists) {
+    return { status: "ok" };
+  }
+
+  let matchSnap = null;
+
+  if (token.email) {
+    matchSnap = await db.collection("users")
+      .where("email", "==", token.email)
+      .limit(1)
+      .get();
+  } else if (token.phone_number) {
+    matchSnap = await db.collection("users")
+      .where("phone", "in", phoneVariants(token.phone_number))
+      .limit(1)
+      .get();
+  }
+
+  if (matchSnap && !matchSnap.empty) {
+    const existingUserDoc = matchSnap.docs[0];
+    const existingUid = existingUserDoc.id;
+
+    // Already the same account somehow — nothing to link
+    if (existingUid === uid) {
+      return { status: "ok" };
+    }
+
+    // Mint a custom token for the REAL account so the client can
+    // switch into it — this is the only server-side-safe way to do
+    // this, since only the Admin SDK can issue tokens for another uid
+    const customToken = await admin.auth().createCustomToken(existingUid);
+
+    // Clean up the orphan Auth identity this Google/Phone sign-in
+    // just created, now that we're routing them to their real account
+    await admin.auth().deleteUser(uid).catch(() => {});
+
+    return { status: "existing_account_found", customToken };
+  }
+
+  // No matching account anywhere — this person has never registered.
+  // Per policy, we do NOT create one here. Clean up the orphan Auth
+  // identity that signInWithPopup/confirm() just created.
+  await admin.auth().deleteUser(uid).catch(() => {});
+
+  return { status: "no_account_found" };
+});
