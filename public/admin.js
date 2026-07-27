@@ -168,6 +168,7 @@ async function loadAll() {
   renderOverview();
   checkSystemHealth();
   checkFraudAlerts();
+  loadGrowthSnapshot();
 }
 
 // ══════════════════════════════════════════════
@@ -3349,3 +3350,59 @@ window.adminDeleteUser = async function(userId, userEmail) {
   }
 };
 
+
+// ══════════════════════════════════════════════
+//  WEEKLY GROWTH SNAPSHOT
+// ══════════════════════════════════════════════
+async function loadGrowthSnapshot() {
+  const container = document.getElementById("growth-snapshot");
+  if (!container) return;
+
+  try {
+    const now = Date.now();
+    const weekAgo    = now - 7 * 86400000;
+    const twoWeeksAgo = now - 14 * 86400000;
+
+    const usersThisWeek = allUsers.filter(u => (u.createdAt?.toDate?.()?.getTime() || 0) >= weekAgo).length;
+    const usersLastWeek = allUsers.filter(u => {
+      const t = u.createdAt?.toDate?.()?.getTime() || 0;
+      return t >= twoWeeksAgo && t < weekAgo;
+    }).length;
+
+    const ordersThisWeek = allOrders.filter(o => (o.createdAt?.toDate?.()?.getTime() || 0) >= weekAgo).length;
+    const ordersLastWeek = allOrders.filter(o => {
+      const t = o.createdAt?.toDate?.()?.getTime() || 0;
+      return t >= twoWeeksAgo && t < weekAgo;
+    }).length;
+
+    const catCounts = {};
+    allOrders.filter(o => (o.createdAt?.toDate?.()?.getTime() || 0) >= weekAgo).forEach(o => {
+      (o.items || []).forEach(i => { if (i.category) catCounts[i.category] = (catCounts[i.category]||0)+1; });
+      if (o.productId && !o.items) catCounts["single-item orders"] = (catCounts["single-item orders"]||0)+1;
+    });
+    const topCats = Object.entries(catCounts).sort((a,b)=>b[1]-a[1]).slice(0,3);
+
+    function trendArrow(curr, prev) {
+      if (prev === 0) return curr > 0 ? `<span style="color:#16a34a">▲ new</span>` : "";
+      const pct = Math.round(((curr - prev) / prev) * 100);
+      return pct >= 0 ? `<span style="color:#16a34a">▲ ${pct}%</span>` : `<span style="color:#ef4444">▼ ${Math.abs(pct)}%</span>`;
+    }
+
+    container.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div style="background:#f9fafb;border-radius:10px;padding:14px">
+          <p style="font-size:11px;color:#6b7280;font-weight:700;text-transform:uppercase">New Users (7d)</p>
+          <p style="font-size:22px;font-weight:900;color:#111827;margin:4px 0">${usersThisWeek} ${trendArrow(usersThisWeek, usersLastWeek)}</p>
+        </div>
+        <div style="background:#f9fafb;border-radius:10px;padding:14px">
+          <p style="font-size:11px;color:#6b7280;font-weight:700;text-transform:uppercase">Orders (7d)</p>
+          <p style="font-size:22px;font-weight:900;color:#111827;margin:4px 0">${ordersThisWeek} ${trendArrow(ordersThisWeek, ordersLastWeek)}</p>
+        </div>
+      </div>
+      ${topCats.length > 0 ? `
+        <p style="font-size:12px;font-weight:800;color:#374151;margin-bottom:6px">🏆 Top Categories This Week</p>
+        ${topCats.map(([c,n],i) => `<p style="font-size:12px;color:#6b7280;margin:3px 0">${i+1}. ${c} — ${n} order${n>1?"s":""}</p>`).join("")}
+      ` : `<p style="font-size:12px;color:#9ca3af">No orders yet this week</p>`}
+    `;
+  } catch (e) { console.warn("loadGrowthSnapshot:", e.message); }
+}
