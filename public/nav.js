@@ -9,6 +9,47 @@
   const page = location.pathname.split("/").pop() || "index.html";
   const isHome = page === "index.html" || page === "";
 
+  // ── Track real login state so protected buttons never guess ──
+  let _navCurrentUser = null;
+  let _navAuthReady   = false;
+  let _authWaiters    = [];
+
+  import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js").then(({ getAuth, onAuthStateChanged }) => {
+    const authInstance = getAuth();
+    onAuthStateChanged(authInstance, (user) => {
+      _navCurrentUser = user;
+      _navAuthReady   = true;
+      _authWaiters.forEach(fn => fn(user));
+      _authWaiters = [];
+    });
+  }).catch(() => { _navAuthReady = true; });
+
+  window.goToProtectedPage = function(url) {
+    const proceed = (user) => {
+      if (user) {
+        window.location.href = url;
+        return;
+      }
+      try { sessionStorage.setItem("zibuy_post_login_redirect", url); } catch(e) {}
+
+      if (typeof window.openAuthModal === "function") {
+        window.openAuthModal();
+      } else {
+        // This page doesn't carry the login modal — send them
+        // to the homepage, which will open it automatically
+        window.location.href = "index.html?auth=1";
+      }
+    };
+
+    if (_navAuthReady) {
+      proceed(_navCurrentUser);
+    } else {
+      _authWaiters.push(proceed);
+      // Safety net in case the auth listener is unusually slow
+      setTimeout(() => { if (!_navAuthReady) { _navAuthReady = true; proceed(_navCurrentUser); } }, 2500);
+    }
+  };
+
   // ── Bottom Nav ──────────────────────────────
   const nav = document.createElement("nav");
   nav.className = "zibuy-bottom-nav";
@@ -32,7 +73,7 @@
     </button>
 
     <button class="zbn-item ${page==='dashboard.html' && location.search.includes('wishlist') ?'active':''}"
-      onclick="window.location.href='dashboard.html?tab=wishlist'">
+      onclick="window.goToProtectedPage('dashboard.html?tab=wishlist')">
       <span class="zbn-icon">❤️</span>
       <span class="zbn-label">Wishlist</span>
     </button>
@@ -45,7 +86,7 @@
     </button>
 
     <button class="zbn-item ${page==='dashboard.html' && !location.search.includes('wishlist') ?'active':''}"
-      onclick="window.location.href='dashboard.html'">
+      onclick="window.goToProtectedPage('dashboard.html')">
       <span class="zbn-icon">👤</span>
       <span class="zbn-label">Dashboard</span>
     </button>
