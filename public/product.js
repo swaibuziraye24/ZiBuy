@@ -10,6 +10,7 @@ import {
   updateDoc,
   increment,
   addDoc,
+  deleteDoc,
   getDocs,
   query,
   where
@@ -48,8 +49,28 @@ window.goBackToHome = function() {
 
 let currentUser = null;
 
+function getCurrentUserOnce() {
+  return new Promise((resolve) => {
+    const unsub = onAuthStateChanged(auth, (u) => { unsub(); resolve(u); });
+  });
+}
+
+async function syncLikeButtonState(productId) {
+  if (!auth.currentUser || !productId) return;
+  try {
+    const existing = await getDocs(query(
+      collection(db, "likes"),
+      where("userId", "==", auth.currentUser.uid),
+      where("productId", "==", productId)
+    ));
+    const btn = document.getElementById("like-btn");
+    if (btn && !existing.empty) btn.textContent = "❤️";
+  } catch (e) { /* silent */ }
+}
+
 onAuthStateChanged(auth, (user) => {
   currentUser = user;
+  syncLikeButtonState(id);
 });
 
 const params = new URLSearchParams(window.location.search);
@@ -181,6 +202,32 @@ async function loadProduct() {
 
     const p = snap.data();
 
+    // ── Expired-ad visibility gate — only the owner or admin may
+    // view an expired ad directly; everyone else sees a clear
+    // "no longer available" message instead of the full listing ──
+    const computedExpired = p.status === "expired" ||
+      (p.expiresAt && (p.expiresAt.toDate ? p.expiresAt.toDate() : new Date(p.expiresAt)) < new Date());
+
+    let viewerIsOwnerOrAdmin = false;
+
+    if (computedExpired) {
+      const viewer = await getCurrentUserOnce();
+      const isOwner = viewer && viewer.uid === p.userId;
+      const isAdmin = viewer && viewer.email === "swaibuziraye22@gmail.com";
+      viewerIsOwnerOrAdmin = isOwner || isAdmin;
+
+      if (!viewerIsOwnerOrAdmin) {
+        grid.innerHTML = `
+          <div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:#6b7280">
+            <p style="font-size:48px;margin-bottom:16px">⏰</p>
+            <p style="font-size:18px;font-weight:700;color:#111827">This ad is no longer available</p>
+            <p style="font-size:13px;margin-top:6px">It may have expired or been taken down by the seller.</p>
+            <a href="index.html" style="color:#ff6600;font-weight:700;display:inline-block;margin-top:14px">← Back to listings</a>
+          </div>`;
+        return;
+      }
+    }
+
     await updateDoc(doc(db, "products", id), {
       views: increment(1)
     });
@@ -311,8 +358,6 @@ document.head.appendChild(schemaTag);
       </div>`;
 
     const likes = p.likes || 0;
-    const likedIds = JSON.parse(localStorage.getItem("zibuy-likes") || "[]");
-    const alreadyLiked = likedIds.includes(snap.id);
 
     grid.innerHTML = `
       <!-- Images -->
@@ -321,7 +366,7 @@ document.head.appendChild(schemaTag);
           <img id="main-img" class="main-img" src="${images[0] || ''}" alt="${p.name}" style="width:100%;height:380px;object-fit:cover;border-radius:14px;background:#f3f4f6">
           <button id="like-btn" onclick="toggleLike('${snap.id}')"
             style="position:absolute;top:14px;right:14px;background:white;border:none;border-radius:50%;width:44px;height:44px;font-size:20px;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center;transition:.2s">
-            ${alreadyLiked ? "❤️" : "🤍"}
+            🤍
           </button>
           <span id="like-count" style="position:absolute;bottom:14px;left:14px;background:rgba(0,0,0,0.6);color:white;font-size:13px;font-weight:700;padding:5px 12px;border-radius:20px">
             ❤️ ${likes} likes
@@ -442,6 +487,13 @@ document.head.appendChild(schemaTag);
       active = index;
       document.getElementById("main-img").src = images[index];
     };
+
+    if (computedExpired && viewerIsOwnerOrAdmin) {
+      const banner = document.createElement("div");
+      banner.style.cssText = "grid-column:1/-1;background:#fef3c7;border:1.5px solid #fde68a;border-radius:12px;padding:12px 16px;margin-bottom:14px;font-size:13px;color:#92400e";
+      banner.innerHTML = `⏰ <strong>This ad has expired.</strong> It's hidden from buyers — only you (and admin) can see this page. Reactivate it from your <a href="dashboard.html?tab=my-ads" style="color:#92400e;text-decoration:underline;font-weight:700">dashboard</a>.`;
+      grid.parentElement.insertBefore(banner, grid);
+    }
 
     loadProductReviews(id);
     loadRelatedProducts(p.category, id);
@@ -595,7 +647,15 @@ async function loadRelatedProducts(category, currentProductId) {
     const related = snap.docs
       .map(d => ({ id: d.id, ...d.data() }))
       .filter(p => p.id !== currentProductId)
-      .sort(() => Math.random() - 0.5) // shuffle for variety
+      .filter(p => {
+        if (p.status === "expired") return false;
+        if (p.expiresAt) {
+          const exp = p.expiresAt.toDate ? p.expiresAt.toDate() : new Date(p.expiresAt);
+          if (exp < new Date()) return false;
+        }
+        return true;
+      })
+      .sort(() => Math.random() - 0.5)
       .slice(0, 6);
 
     if (related.length === 0) return;
@@ -746,40 +806,50 @@ async function loadSellerRating(userId) {
    LIKE / UNLIKE
 ============================================ */
 window.toggleLike = async function (productId) {
-  const likedIds = JSON.parse(localStorage.getItem("zibuy-likes") || "[]");
-  const btn       = document.getElementById("like-btn");
-  const countEl   = document.getElementById("like-count");
+  if (!auth.currentUser) {
+    alert("Login to save to wishlist");
+    return;
+  }
+
+  const uid     = auth.currentUser.uid;
+  const btn     = document.getElementById("like-btn");
+  const countEl = document.getElementById("like-count");
 
   try {
-    const { doc, getDoc, updateDoc, increment } = await import("./firebase.js");
-    const { db } = await import("./firebase.js");
-
     const ref  = doc(db, "products", productId);
     const snap = await getDoc(ref);
     if (!snap.exists()) return;
 
-    const alreadyLiked = likedIds.includes(productId);
-    const delta        = alreadyLiked ? -1 : 1;
+    const currentLikes = snap.data().likes || 0;
 
-    await updateDoc(ref, { likes: increment(delta) });
+    const existing = await getDocs(query(
+      collection(db, "likes"),
+      where("userId", "==", uid),
+      where("productId", "==", productId)
+    ));
 
-    const newLikes = Math.max(0, (snap.data().likes || 0) + delta);
-
-    if (alreadyLiked) {
-      const updated = likedIds.filter(id => id !== productId);
-      localStorage.setItem("zibuy-likes", JSON.stringify(updated));
+    if (!existing.empty) {
+      for (const d of existing.docs) {
+        await deleteDoc(doc(db, "likes", d.id));
+      }
+      await updateDoc(ref, { likes: increment(-1) });
       if (btn) btn.textContent = "🤍";
+      if (countEl) countEl.textContent = `❤️ ${Math.max(0, currentLikes - 1)} likes`;
+
     } else {
-      likedIds.push(productId);
-      localStorage.setItem("zibuy-likes", JSON.stringify(likedIds));
+      await addDoc(collection(db, "likes"), {
+        userId: uid,
+        productId,
+        createdAt: new Date()
+      });
+      await updateDoc(ref, { likes: increment(1) });
       if (btn) {
         btn.textContent = "❤️";
         btn.style.transform = "scale(1.4)";
         setTimeout(() => btn.style.transform = "scale(1)", 300);
       }
+      if (countEl) countEl.textContent = `❤️ ${currentLikes + 1} likes`;
     }
-
-    if (countEl) countEl.textContent = `❤️ ${newLikes} likes`;
 
   } catch (err) {
     console.error("Like error:", err);
