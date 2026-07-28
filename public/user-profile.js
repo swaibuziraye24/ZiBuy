@@ -14,6 +14,11 @@ if (!userId && !email) {
   window.location.href = "index.html";
 }
 
+function escapeHTML(str) {
+  if (str == null) return "";
+  return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+}
+
 async function loadProfile() {
   try {
     let userEmail = email;
@@ -23,42 +28,44 @@ async function loadProfile() {
       const userSnap = await getDoc(doc(db, "users", userId));
       if (userSnap.exists()) {
         userData = userSnap.data();
-        userEmail = userData.email;
+        userEmail = userData.email || userEmail;
       }
     }
 
+    const now = new Date();
+
     const [productsSnap, reviewsSnap, verificationSnap] = await Promise.all([
-      getDocs(query(
-        collection(db, "products"),
-        where("userId", "==", userId),
-        where("status", "==", "active")
-      )),
-      getDocs(query(
-        collection(db, "reviews"),
-        where("sellerId", "==", userId)
-      )),
-      getDocs(query(
-        collection(db, "seller_verifications"),
-        where("userId", "==", userId)
-      ))
+      getDocs(query(collection(db, "products"), where("userId", "==", userId), where("status", "==", "active"))),
+      getDocs(query(collection(db, "reviews"), where("sellerId", "==", userId))),
+      getDocs(query(collection(db, "seller_verifications"), where("userId", "==", userId)))
     ]);
 
-    const products = productsSnap.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+    // Same visibility rule as browse/search/shop — expired ads never
+    // show on a public profile, only in the owner's own dashboard
+    const products = productsSnap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .filter(p => {
+        if (p.status === "expired") return false;
+        if (p.expiresAt) {
+          const exp = p.expiresAt.toDate ? p.expiresAt.toDate() : new Date(p.expiresAt);
+          if (exp < now) return false;
+        }
+        return true;
+      });
 
-    const reviews = reviewsSnap.docs.map(doc => doc.data());
+    const reviews = reviewsSnap.docs.map(d => d.data());
     const avgRating = reviews.length > 0
       ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
       : 0;
 
-    const isVerified    = !verificationSnap.empty &&
-                          verificationSnap.docs[0].data().status === "approved";
-    const phoneVerified = userData?.phoneVerified === true;
+    const isVerified = !verificationSnap.empty && verificationSnap.docs[0].data().status === "approved";
 
-    const sellerName     = products.length > 0 ? products[0].seller?.name     || "Seller" : "Seller";
-    const sellerLocation = products.length > 0 ? products[0].seller?.location || "Uganda" : "Uganda";
+    // Read identity fields from users/{userId} — this is what
+    // dashboard.js's Edit Profile actually saves to. Falls back to a
+    // product's embedded seller info only if the users doc has nothing.
+    const sellerName     = userData?.displayName || (products.length > 0 ? products[0].seller?.name : null) || userEmail?.split("@")[0] || "Seller";
+    const sellerLocation = userData?.location    || (products.length > 0 ? products[0].seller?.location : null) || "Uganda";
+    const sellerBio      = userData?.bio && userData.bio.trim() ? userData.bio : "No bio yet";
 
     document.getElementById("profile-name").textContent     = sellerName + (isVerified ? " ✅" : "");
     document.getElementById("profile-location").textContent = "📍 " + sellerLocation;
@@ -67,64 +74,67 @@ async function loadProfile() {
     document.getElementById("stat-reviews").textContent     = reviews.length;
     document.getElementById("stat-rating").textContent      = avgRating;
 
+    const bioEl = document.getElementById("profile-bio");
+    if (bioEl) bioEl.textContent = sellerBio;
+
+    const memberSinceEl = document.getElementById("stat-joined");
+    if (memberSinceEl) {
+      const joinDate = userData?.createdAt?.toDate?.();
+      memberSinceEl.textContent = joinDate
+        ? joinDate.toLocaleDateString("en-UG", { month: "long", year: "numeric" })
+        : "—";
+    }
+
     if (isVerified) {
       document.getElementById("profile-verified").style.display = "inline-block";
       const avatarEl = document.getElementById("profile-avatar");
       if (avatarEl) {
-        avatarEl.style.background  = "linear-gradient(135deg, #10b981, #059669)";
-        avatarEl.style.boxShadow   = "0 0 12px rgba(16, 185, 129, 0.3)";
+        avatarEl.style.background = "linear-gradient(135deg, #10b981, #059669)";
+        avatarEl.style.boxShadow  = "0 0 12px rgba(16, 185, 129, 0.3)";
       }
     }
 
-    if (phoneVerified) {
+    if (userData?.phoneVerified) {
       const badge = document.getElementById("phone-verified-badge");
       if (badge) badge.style.display = "inline-flex";
     }
 
-    renderTrustBadge(userId, "profile-trust-badge");
-    renderEarnedBadge(userId, "profile-earned-badge");
-    renderResponseBadge(userId, "profile-response-badge");
+    if (typeof renderTrustBadge === "function")    renderTrustBadge(userId, "profile-trust-badge");
+    if (typeof renderEarnedBadge === "function")   renderEarnedBadge(userId, "profile-earned-badge");
+    if (typeof renderResponseBadge === "function") renderResponseBadge(userId, "profile-response-badge");
 
-    // Plan badge
     try {
       const { fetchUserPlan } = await import("./business-plans.js");
       const plan = await fetchUserPlan(userId);
       if (plan.id !== "free") {
         const badge  = document.getElementById("profile-plan-badge");
-        const styles = {
-          bronze: "background:#fef3c7;color:#92400e",
-          silver: "background:#f1f5f9;color:#475569",
-          gold:   "background:#fffbeb;color:#b45309"
-        };
-        badge.setAttribute("style",
-          `display:inline-block;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:800;${styles[plan.id] || ""}`
-        );
-        badge.textContent = `${plan.icon} ${plan.name}`;
+        const styles = { bronze: "background:#fef3c7;color:#92400e", silver: "background:#f1f5f9;color:#475569", gold: "background:#fffbeb;color:#b45309" };
+        if (badge) {
+          badge.setAttribute("style", `display:inline-block;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:800;${styles[plan.id] || ""}`);
+          badge.textContent = `${plan.icon} ${plan.name}`;
+        }
       }
     } catch (e) { console.warn(e); }
 
-    // Set contact info
-    window.sellerPhone = products.length > 0 ? products[0].seller?.phone : "";
+    window.sellerPhone = userData?.phone || (products.length > 0 ? products[0].seller?.phone : "");
     window.sellerEmail = userEmail;
     window.sellerName  = sellerName;
 
-    // Render products
     const productsContainer = document.getElementById("seller-products");
     if (products.length === 0) {
-      productsContainer.innerHTML = "<p style='color:#6b7280'>No products yet</p>";
+      productsContainer.innerHTML = "<p style='color:#6b7280;grid-column:1/-1'>No active products right now</p>";
     } else {
-      productsContainer.innerHTML = products.slice(0, 6).map(p => `
+      productsContainer.innerHTML = products.map(p => `
         <div class="profile-product-card" onclick="window.location.href='product.html?id=${p.id}'">
-          <img src="${p.images?.[0] || 'https://zibuy-5deae.web.app/icons/icon-512.png/100'}" alt="${p.name}">
+          <img src="${p.images?.[0] || 'https://zibuy-5deae.web.app/icons/icon-512.png/100'}" alt="${escapeHTML(p.name)}">
           <div>
-            <h4>${p.name}</h4>
+            <h4>${escapeHTML(p.name)}</h4>
             <p style="color:#ff6600;font-weight:700">UGX ${Number(p.price).toLocaleString()}</p>
           </div>
         </div>
       `).join("");
     }
 
-    // Render reviews
     const reviewsContainer = document.getElementById("seller-reviews");
     if (reviews.length === 0) {
       reviewsContainer.innerHTML = "<p style='color:#6b7280'>No reviews yet</p>";
@@ -132,8 +142,8 @@ async function loadProfile() {
       reviewsContainer.innerHTML = reviews.slice(0, 5).map(r => `
         <div style="padding:14px;background:#f9fafb;border-radius:10px;border-left:4px solid #ff6600">
           <p style="margin:0;font-weight:700">${"⭐".repeat(r.rating)}</p>
-          <p style="margin:6px 0 0;color:#6b7280;font-size:13px">${r.text || r.reviewText || "—"}</p>
-          <p style="margin:6px 0 0;font-size:11px;color:#adb5bd">${r.reviewerEmail} • ${new Date(r.createdAt.toDate()).toLocaleDateString()}</p>
+          <p style="margin:6px 0 0;color:#6b7280;font-size:13px">${escapeHTML(r.text || r.reviewText)}</p>
+          <p style="margin:6px 0 0;font-size:11px;color:#adb5bd">${escapeHTML(r.reviewerEmail)} • ${new Date(r.createdAt.toDate()).toLocaleDateString()}</p>
         </div>
       `).join("");
     }
