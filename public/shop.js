@@ -8,7 +8,9 @@ import {
   doc,
   query,
   getDoc,
-  where
+  where,
+  updateDoc,
+  increment
 } from "./firebase.js";
 
 import {
@@ -101,12 +103,16 @@ async function loadShop() {
     );
 
     const products = [];
+    const now = new Date();
 
     snapshot.forEach((docSnap) => {
-      products.push({
-        id: docSnap.id,
-        ...docSnap.data()
-      });
+      const data = docSnap.data();
+      if (data.status === "expired") return;
+      if (data.expiresAt) {
+        const exp = data.expiresAt.toDate ? data.expiresAt.toDate() : new Date(data.expiresAt);
+        if (exp < now) return;
+      }
+      products.push({ id: docSnap.id, ...data });
     });
 
     _shopAllProducts = products;
@@ -240,20 +246,18 @@ function renderShopProductsGrid(products) {
   }
 
   container.innerHTML = products.map((p) => `
-      <div
-  class="product-card"
-  onclick="
-    window.location.href=
-    'product.html?id=${p.id}'
-  "
->
+      <div class="product-card" style="position:relative" onclick="window.location.href='product.html?id=${p.id}'">
+        <button onclick="event.stopPropagation();toggleShopLike('${p.id}',this)"
+          style="position:absolute;top:8px;right:8px;z-index:5;background:white;border:none;width:30px;height:30px;
+          border-radius:50%;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+          box-shadow:0 2px 8px rgba(0,0,0,.15)">🤍</button>
         <img
   src="${
     p.images?.length
       ? p.images[0]
       : 'https://zibuy-5deae.web.app/icons/icon-512.png/400x300?text=ZiBuy'
   }"
-  alt="${p.name || ''}"
+  alt="${escapeHTML(p.name) || ''}"
   loading="lazy"
 >
         <div class="product-info">
@@ -726,3 +730,29 @@ async function checkBeforePosting() {
 
   return true;
 }
+
+
+window.toggleShopLike = async function(productId, btnEl) {
+  if (!auth.currentUser) { alert("Login to save to wishlist"); return; }
+  const uid = auth.currentUser.uid;
+
+  try {
+    const existing = await getDocs(query(
+      collection(db, "likes"),
+      where("userId", "==", uid),
+      where("productId", "==", productId)
+    ));
+
+    if (!existing.empty) {
+      for (const d of existing.docs) await deleteDoc(doc(db, "likes", d.id));
+      await updateDoc(doc(db, "products", productId), { likes: increment(-1) });
+      if (btnEl) btnEl.textContent = "🤍";
+    } else {
+      await addDoc(collection(db, "likes"), { userId: uid, productId, createdAt: new Date() });
+      await updateDoc(doc(db, "products", productId), { likes: increment(1) });
+      if (btnEl) btnEl.textContent = "❤️";
+    }
+  } catch (err) {
+    console.error("toggleShopLike:", err);
+  }
+};
