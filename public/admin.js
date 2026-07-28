@@ -922,7 +922,7 @@ async function loadAds() {
     const snap = await getDocs(collection(db, "products"));
     allAds = snap.docs.map(d => ({ id: d.id, ...d.data() }))
                       .sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
-    renderAdsTable(allAds);
+    applyAdsFilters();
   } catch (e) { console.error(e); }
 }
 
@@ -931,11 +931,16 @@ function renderAdsTable(ads) {
   if (!tbody) return;
 
   if (ads.length === 0) {
-    tbody.innerHTML = `<tr class="empty-row"><td colspan="7">No ads</td></tr>`;
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="7">No ads match this filter</td></tr>`;
     return;
   }
 
-  tbody.innerHTML = ads.map(a => `
+  tbody.innerHTML = ads.map(a => {
+    const effStatus = getAdEffectiveStatus(a);
+    const chip  = effStatus === "expired" ? "chip-expired" : effStatus === "sold" ? "chip-rejected" : "chip-approved";
+    const label = effStatus === "expired" ? "⏰ expired" : effStatus === "sold" ? "❌ sold" : "✅ active";
+
+    return `
     <tr>
       <td>
         <img src="${a.images?.[0] || ''}" alt=""
@@ -944,30 +949,86 @@ function renderAdsTable(ads) {
       <td style="font-weight:700;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(a.name)}</td>
       <td style="color:var(--orange);font-weight:800">UGX ${Number(a.price||0).toLocaleString()}</td>
       <td style="font-size:12px">${escapeHTML(a.userEmail) || "—"}</td>
-      <td><span class="plan-chip ${chipClass(a.status)}">${a.status || "active"}</span></td>
+      <td><span class="plan-chip ${chip}">${label}</span></td>
       <td style="font-size:12px">${fmtDate(a.expiresAt)}</td>
       <td style="display:flex;gap:6px;flex-wrap:wrap">
         <button class="action-btn btn-approve" onclick="adminEditAd('${a.id}')">✏️ Edit</button>
-        <button class="action-btn" style="background:#dbeafe;color:#1e40af;border:none;padding:6px 10px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer"
-          onclick="adminToggleAdStatus('${a.id}','${a.status}')">
-          ${a.status === "active" ? "📦 Mark Sold" : "♻️ Restore"}
-        </button>
-        <button class="action-btn" style="background:#fff4ee;color:#ff6600;border:none;padding:6px 10px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer"
-          onclick="grantFreeBoost('${a.id}','${(a.name||"").replace(/'/g,"\\'")}')">⭐ Free Boost</button>
-        <button class="action-btn" style="background:#ede9fe;color:#5b21b6;border:none;padding:6px 10px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer"
-          onclick="grantFreePin('${a.id}')">📍 Free Pin</button>
+        ${effStatus === "expired" ? `
+          <button class="action-btn" style="background:#dcfce7;color:#166534;border:none;padding:6px 10px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer"
+            onclick="adminReactivateAd('${a.id}')">🔄 Reactivate</button>
+        ` : `
+          <button class="action-btn" style="background:#dbeafe;color:#1e40af;border:none;padding:6px 10px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer"
+            onclick="adminToggleAdStatus('${a.id}','${a.status}')">
+            ${a.status === "active" ? "📦 Mark Sold" : "♻️ Restore"}
+          </button>
+          <button class="action-btn" style="background:#fff4ee;color:#ff6600;border:none;padding:6px 10px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer"
+            onclick="grantFreeBoost('${a.id}','${(a.name||"").replace(/'/g,"\\'")}')">⭐ Free Boost</button>
+          <button class="action-btn" style="background:#ede9fe;color:#5b21b6;border:none;padding:6px 10px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer"
+            onclick="grantFreePin('${a.id}')">📍 Free Pin</button>
+        `}
         <button class="action-btn btn-reject" onclick="adminDeleteAd('${a.id}')">🗑️ Delete</button>
       </td>
-    </tr>`).join("");
+    </tr>`;
+  }).join("");
 }
 
+let currentAdsStatusFilter = "all";
+
+function isAdExpiredAdmin(a) {
+  if (a.status !== "active") return false;
+  const exp = a.expiresAt?.toDate ? a.expiresAt.toDate() : (a.expiresAt ? new Date(a.expiresAt) : null);
+  return exp ? exp < new Date() : false;
+}
+
+function getAdEffectiveStatus(a) {
+  if (a.status === "sold") return "sold";
+  if (a.status === "expired" || isAdExpiredAdmin(a)) return "expired";
+  return "active";
+}
+
+window.filterAdsByStatus = function(status) {
+  currentAdsStatusFilter = status;
+  document.querySelectorAll(".ads-status-filter-btn").forEach(b => b.classList.remove("active-filter"));
+  document.querySelector(`.ads-status-filter-btn[data-status="${status}"]`)?.classList.add("active-filter");
+  applyAdsFilters();
+};
+
 window.filterAds = function() {
-  const q = document.getElementById("ads-search").value.toLowerCase();
-  const filtered = allAds.filter(a =>
+  applyAdsFilters();
+};
+
+function applyAdsFilters() {
+  const q = (document.getElementById("ads-search")?.value || "").toLowerCase();
+  let filtered = allAds.filter(a =>
     (a.name || "").toLowerCase().includes(q) ||
     (a.userEmail || "").toLowerCase().includes(q)
   );
+  if (currentAdsStatusFilter !== "all") {
+    filtered = filtered.filter(a => getAdEffectiveStatus(a) === currentAdsStatusFilter);
+  }
   renderAdsTable(filtered);
+}
+
+window.adminReactivateAd = async function(productId) {
+  const days = prompt("Reactivate this ad for how many days?", "30");
+  if (!days) return;
+
+  try {
+    const newExpiresAt = new Date();
+    newExpiresAt.setDate(newExpiresAt.getDate() + Number(days));
+
+    await updateDoc(doc(db, "products", productId), {
+      status:         "active",
+      expiresAt:      newExpiresAt,
+      reactivatedAt:  new Date(),
+      reactivatedBy:  "admin"
+    });
+
+    showToast(`✅ Ad reactivated for ${days} days`, "success");
+    loadAds();
+  } catch(e) {
+    showToast("Failed: " + e.message, "error");
+  }
 };
 
 window.adminDeleteAd = async function(adId) {
