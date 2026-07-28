@@ -684,7 +684,59 @@ exports.expirePriceDropBadges = onSchedule(
   }
 );
 
+// ============================================
+// EXPIRE REGULAR ADS — flips status to "expired"
+// once expiresAt passes. Skips ads with autoRenew
+// ON, since processAutoRenewals handles those.
+// ============================================
 
+exports.expireOldAds = onSchedule(
+  { schedule: "every 24 hours", timeZone: "Africa/Kampala" },
+  async () => {
+    try {
+      const now  = admin.firestore.Timestamp.now();
+      const snap = await db.collection("products")
+        .where("status", "==", "active")
+        .where("expiresAt", "<=", now)
+        .get();
+
+      if (snap.empty) { console.log("[AD EXPIRY] Nothing to expire"); return; }
+
+      const batch    = db.batch();
+      const toNotify = [];
+
+      snap.forEach(docSnap => {
+        const p = docSnap.data();
+        if (p.autoRenew === true) return; // let processAutoRenewals handle these
+
+        batch.update(docSnap.ref, {
+          status:    "expired",
+          expiredAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+        toNotify.push({ id: docSnap.id, ...p });
+      });
+
+      await batch.commit();
+
+      for (const p of toNotify) {
+        if (!p.userId) continue;
+        await db.collection("notifications").add({
+          userId:    p.userId,
+          type:      "ad_expired",
+          title:     "⏰ Your ad has expired",
+          message:   `"${p.name}" is no longer visible to buyers. Reactivate it anytime from My Ads.`,
+          relatedId: p.id,
+          read:      false,
+          createdAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+      }
+
+      console.log(`[AD EXPIRY] Expired ${toNotify.length} ads`);
+    } catch (err) {
+      console.error("[AD EXPIRY ERROR]", err.message);
+    }
+  }
+);
 
 // ============================================
 // CATEGORY BENCHMARK STATS — powers "vs category
