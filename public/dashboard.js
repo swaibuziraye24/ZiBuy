@@ -227,6 +227,48 @@ async function loadWishlist() {
   }
 }
 
+function escHTML(str) {
+  if (str == null) return "";
+  return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+}
+
+// Computed client-side so the badge is accurate immediately, even
+// before the once-a-day expireOldAds Cloud Function has run
+function isAdExpired(p) {
+  if (p.status !== "active") return false;
+  const exp = p.expiresAt?.toDate ? p.expiresAt.toDate() : (p.expiresAt ? new Date(p.expiresAt) : null);
+  return exp ? exp < new Date() : false;
+}
+
+window.reactivateAd = async function(productId) {
+  if (!confirm("Reactivate this ad? It will become visible to buyers again.")) return;
+
+  try {
+    const { getMyLimits } = await import("./plan-limits.js");
+    const limits = await getMyLimits(currentUser.uid);
+
+    const newExpiresAt = new Date();
+    newExpiresAt.setDate(newExpiresAt.getDate() + (limits.duration || 30));
+
+    await updateDoc(doc(db, "products", productId), {
+      status:         "active",
+      expiresAt:      newExpiresAt,
+      reactivatedAt:  new Date()
+    });
+
+    const toast = document.createElement("div");
+    toast.className   = "toast success";
+    toast.textContent = "✅ Ad reactivated!";
+    document.getElementById("toast-container")?.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+
+    loadMyProducts();
+  } catch (err) {
+    console.error("reactivateAd error:", err);
+    alert("❌ Failed to reactivate: " + err.message);
+  }
+};
+
 // ============================================
 // LOAD MY PRODUCTS
 // ============================================
@@ -295,30 +337,42 @@ window.loadMyProducts = async function () {
 
     debug("Rendering", products.length, "products...");
     
-    container.innerHTML = products.map(p => `
+    container.innerHTML = products.map(p => {
+      const expiredNow = p.status === "expired" || isAdExpired(p);
+      const soldNow     = p.status === "sold";
+
+      let statusClass = "active", statusLabel = "✅ Active";
+      if (soldNow)         { statusClass = "sold";    statusLabel = "❌ Sold"; }
+      else if (expiredNow) { statusClass = "expired"; statusLabel = "⏰ Expired"; }
+
+      return `
       <div class="ad-item">
         <div class="ad-item-image">
           <img 
             src="${p.images?.[0] || 'https://zibuy-5deae.web.app/icons/icon-512.png/100'}" 
-            alt="${p.name}"
+            alt="${escHTML(p.name)}"
             onerror="this.src='https://zibuy-5deae.web.app/icons/icon-512.png/100?text=No+Image'"
             style="width:100%;height:100%;object-fit:cover"
           >
-          <span class="ad-status-badge ${p.status === 'active' ? 'active' : 'sold'}">
-            ${p.status === 'active' ? '✅ Active' : '❌ Sold'}
-          </span>
+          <span class="ad-status-badge ${statusClass}">${statusLabel}</span>
         </div>
         <div class="ad-item-info">
-          <h3>${p.name}</h3>
+          <h3>${escHTML(p.name)}</h3>
           <p class="ad-price">UGX ${Number(p.price).toLocaleString()}</p>
-          <p class="ad-meta">📍 ${p.location} · 👁️ ${p.views || 0} views</p>
+          <p class="ad-meta">📍 ${escHTML(p.location)} · 👁️ ${p.views || 0} views</p>
           <p class="ad-meta">📅 Posted: ${new Date(p.createdAt?.toDate?.() || p.createdAt).toLocaleDateString()}</p>
-          
-          <div class="ad-actions">
-              <button class="btn btn-sm btn-edit" onclick="editProduct('${p.id}')">✏️ Edit</button>
-              <button class="btn btn-sm btn-sold" onclick="markSold('${p.id}')">✓ Sold</button>
+          ${expiredNow ? `<p class="ad-meta" style="color:#ef4444;font-weight:700">⏰ Hidden from buyers — reactivate to make it visible again</p>` : ""}
 
-              ${p.category === "seeking-work"
+          <div class="ad-actions">
+          ${expiredNow ? `
+              <button class="btn btn-sm" style="background:#10b981;color:white;border:none;border-radius:8px" onclick="reactivateAd('${p.id}')">🔄 Reactivate</button>
+              <button class="btn btn-sm btn-edit" onclick="editProduct('${p.id}')">✏️ Edit</button>
+              <button class="btn btn-sm btn-delete" onclick="deleteProduct('${p.id}')">🗑️ Delete</button>
+          ` : `
+              <button class="btn btn-sm btn-edit" onclick="editProduct('${p.id}')">✏️ Edit</button>
+              ${!soldNow ? `<button class="btn btn-sm btn-sold" onclick="markSold('${p.id}')">✓ Sold</button>` : ""}
+
+              ${!soldNow ? (p.category === "seeking-work"
                 ? `<button class="btn btn-sm"
                     style="background:#1e40af;color:white;border:none;cursor:pointer;border-radius:8px"
                     onclick="boostCV('${p.id}','${p.name.replace(/'/g,"\\'")}')">
@@ -333,22 +387,20 @@ window.loadMyProducts = async function () {
                       onclick="boostFromDashboard('${p.id}','${p.name.replace(/'/g,"\\'")}')">
                       ⭐ Boost
                     </button>`
-              }
+              ) : ""}
      
-               ${!p.autoRenew ? `
+               ${!soldNow && !p.autoRenew ? `
   <button class="btn-sm"
     style="background:#dbeafe;color:#1e40af;border:none;border-radius:8px;font-weight:700"
     onclick="openAutoRenewModal('${p.id}','${p.name.replace(/'/g,"\\'")}')">
     🔄 Auto-Renew
-  </button>`
-:
-`
+  </button>` : !soldNow ? `
   <span style="background:#dcfce7;color:#16a34a;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:700">
     🔄 Auto-Renewing
   </span>
-`}
+` : ""}
 
-              ${p.pinnedUntil && p.pinnedUntil.toDate?.() > new Date()
+              ${!soldNow ? (p.pinnedUntil && p.pinnedUntil.toDate?.() > new Date()
                 ? `<button class="btn btn-sm"
                     style="background:#8b5cf6;color:white;border:none;cursor:default;border-radius:8px">
                     📍 Pinned
@@ -358,13 +410,15 @@ window.loadMyProducts = async function () {
                     onclick="pinToTop('${p.id}','${p.name.replace(/'/g,"\\'")}')">
                     📍 Pin to Top
                   </button>`
-              }
+              ) : ""}
 
               <button class="btn btn-sm btn-delete" onclick="deleteProduct('${p.id}')">🗑️ Delete</button>
+          `}
             </div>
         </div>
       </div>
-    `).join("");
+    `;
+    }).join("");
 
 
     container.style.display = "flex";
