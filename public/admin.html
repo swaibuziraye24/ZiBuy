@@ -287,6 +287,8 @@
   flex-shrink: 0;
   white-space: nowrap;
 }
+
+.ads-status-filter-btn.active-filter { outline: 2px solid #ff6600; outline-offset: 1px; }
   </style>
 </head>
 <body>
@@ -572,6 +574,12 @@
     <!-- ══ ALL ADS ══ -->
     <div class="admin-section" id="section-ads">
       <h2 style="font-size:20px;font-weight:800;margin-bottom:16px">📦 All Ads</h2>
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+        <button class="action-btn ads-status-filter-btn active-filter" data-status="all" onclick="filterAdsByStatus('all')" style="background:#f3f4f6;color:#374151">All</button>
+        <button class="action-btn ads-status-filter-btn" data-status="active" onclick="filterAdsByStatus('active')" style="background:#dcfce7;color:#166534">✅ Active</button>
+        <button class="action-btn ads-status-filter-btn" data-status="expired" onclick="filterAdsByStatus('expired')" style="background:#fef3c7;color:#92400e">⏰ Expired</button>
+        <button class="action-btn ads-status-filter-btn" data-status="sold" onclick="filterAdsByStatus('sold')" style="background:#fee2e2;color:#991b1b">❌ Sold</button>
+      </div>
       <input class="search-input" type="text" id="ads-search"
         placeholder="Search ads…" oninput="filterAds()">
       <div class="admin-card">
