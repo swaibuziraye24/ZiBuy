@@ -655,7 +655,11 @@ async function fetchAndCacheProducts(isBackground) {
       return product;
     });
 
-    allProducts = products.sort((a, b) => b.rankScore - a.rankScore);
+    // Buyers/public browsing must never see expired ads — only the
+    // owner (My Ads) or admin (admin panel) can see those, elsewhere
+    const visibleProducts = products.filter(p => p.status !== "expired");
+
+    allProducts = visibleProducts.sort((a, b) => b.rankScore - a.rankScore);
     window.allProducts = allProducts;
     filteredProducts = [...allProducts];
 
@@ -3110,6 +3114,10 @@ window.runOverlaySearch = function(query) {
               <img src="${img}" alt="${p.name}"
                 onerror="this.src='https://via.placeholder.com/200?text=No+Image'"
                 style="width:100%;aspect-ratio:1/1;object-fit:cover">
+              <button onclick="event.stopPropagation();toggleLike('${p.id}',this)"
+                style="position:absolute;top:6px;left:6px;z-index:5;background:white;border:none;
+                width:26px;height:26px;border-radius:50%;font-size:12px;cursor:pointer;
+                display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.15)">🤍</button>
               ${p.isPremium ? `
                 <div style="position:absolute;top:6px;right:6px;
                   background:linear-gradient(135deg,#ff6600,#ff9900);
