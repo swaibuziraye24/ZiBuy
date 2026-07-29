@@ -34,20 +34,32 @@
 #analytics-container {
   width: 100%;
   max-width: 100%;
-  overflow-x: auto;
+  overflow-x: hidden;
   box-sizing: border-box;
 }
 
-#analytics-container * {
+/* Constrain everything EXCEPT the scrollable table wrapper — capping
+   the table itself to 100% was silently preventing any horizontal
+   scroll from ever being possible, on any screen size */
+#analytics-container > div,
+#analytics-container p,
+#analytics-container h3,
+#analytics-container button {
   max-width: 100%;
   box-sizing: border-box;
 }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  display: block;
+#analytics-container .zb-table-wrap {
+  max-width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+#analytics-container .zb-table-wrap table {
+  max-width: none;
+  width: max-content;
+  min-width: 100%;
+  border-collapse: collapse;
   white-space: nowrap;
 }
 
