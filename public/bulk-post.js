@@ -28,7 +28,100 @@ let remainingAdSlots = 0;
 let planId = "free";
 let rowCount = 0;
 let sellerDefaultPhone = "";
-const rowImages = {}; // rowId -> File[]
+const rowImages   = {}; // rowId -> File[]  (never saved to draft — can't serialize Files)
+const postedRows  = new Set(); // rowIds already successfully saved to Firestore this session
+
+const DRAFT_KEY = "zibuy_bulk_draft";
+
+function saveBulkDraft() {
+  try {
+    const rows = Array.from(document.querySelectorAll(".bulk-row")).map(row => {
+      const rowId = row.id;
+      return {
+        rowId,
+        name:        document.getElementById(`${rowId}-name`)?.value        || "",
+        price:       document.getElementById(`${rowId}-price`)?.value       || "",
+        category:    document.getElementById(`${rowId}-category`)?.value    || "",
+        condition:   document.getElementById(`${rowId}-condition`)?.value   || "",
+        district:    document.getElementById(`${rowId}-district`)?.value    || "",
+        sublocation: document.getElementById(`${rowId}-sublocation`)?.value || "",
+        phone:       document.getElementById(`${rowId}-phone`)?.value       || "",
+        desc:        document.getElementById(`${rowId}-desc`)?.value        || "",
+        posted:      postedRows.has(rowId)
+      };
+    });
+    localStorage.setItem(DRAFT_KEY, JSON.stringify({ rows, savedAt: Date.now() }));
+  } catch (e) { /* storage full — not critical, just skip saving this time */ }
+}
+
+function restoreBulkDraftIfAny() {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) return false;
+    const draft = JSON.parse(raw);
+
+    // Discard stale drafts older than 24h
+    if (!draft.savedAt || Date.now() - draft.savedAt > 86400000) {
+      localStorage.removeItem(DRAFT_KEY);
+      return false;
+    }
+    if (!draft.rows || draft.rows.length === 0) return false;
+
+    const container = document.getElementById("bulk-rows-container");
+    container.innerHTML = "";
+
+    draft.rows.forEach(saved => {
+      addBulkRow(saved.rowId); // reuse the same rowId so postedRows tracking lines up
+      const rowId = saved.rowId;
+
+      const setVal = (suffix, val) => {
+        const el = document.getElementById(`${rowId}${suffix}`);
+        if (el && val) el.value = val;
+      };
+      setVal("-name", saved.name);
+      setVal("-price", saved.price);
+      setVal("-category", saved.category);
+      setVal("-condition", saved.condition);
+      setVal("-district", saved.district);
+      setVal("-phone", saved.phone);
+      setVal("-desc", saved.desc);
+
+      if (saved.district) {
+        onBulkDistrictChange(rowId);
+        setTimeout(() => setVal("-sublocation", saved.sublocation), 100);
+      }
+
+      if (saved.posted) {
+        postedRows.add(rowId);
+        markRowAsPosted(rowId);
+      }
+    });
+
+    // Banner explaining what happened
+    const banner = document.createElement("div");
+    banner.style.cssText = "background:#fff4ee;border:1.5px solid #ffd9bf;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:12.5px;color:#92400e";
+    banner.innerHTML = `📋 <strong>Draft restored</strong> — your unsaved products were recovered. ${draft.rows.filter(r=>r.posted).length > 0 ? "Rows already posted are marked ✅ and won't be re-submitted." : ""} <button onclick="clearBulkDraft()" style="background:none;border:none;color:#92400e;text-decoration:underline;font-weight:700;cursor:pointer;font-family:inherit;margin-left:6px">Clear draft</button>`;
+    document.getElementById("bulk-rows-container").before(banner);
+
+    return true;
+  } catch (e) { return false; }
+}
+
+window.clearBulkDraft = function() {
+  localStorage.removeItem(DRAFT_KEY);
+  location.reload();
+};
+
+function markRowAsPosted(rowId) {
+  const row = document.getElementById(rowId);
+  if (!row) return;
+  row.style.opacity = "0.6";
+  row.style.pointerEvents = "none";
+  const badge = document.createElement("div");
+  badge.style.cssText = "position:absolute;top:-10px;right:14px;background:#10b981;color:white;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:800";
+  badge.textContent = "✅ Posted";
+  row.appendChild(badge);
+}
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
@@ -38,6 +131,16 @@ onAuthStateChanged(auth, async (user) => {
   }
   currentUser = user;
   await checkLimitsAndInit();
+});
+
+// Warn before an accidental refresh/close if there's unsaved work
+window.addEventListener("beforeunload", (e) => {
+  const hasContent = document.querySelectorAll(".bulk-row").length > 0;
+  if (hasContent) {
+    saveBulkDraft();
+    e.preventDefault();
+    e.returnValue = "";
+  }
 });
 
 async function checkLimitsAndInit() {
@@ -69,24 +172,33 @@ async function checkLimitsAndInit() {
       : `📊 You can post up to <strong>${remainingAdSlots}</strong> more ad${remainingAdSlots !== 1 ? "s" : ""} on your <strong>${planId.toUpperCase()}</strong> plan.`;
   }
 
-  // Start with 3 empty rows to get sellers going quickly
-  addBulkRow();
-  addBulkRow();
-  addBulkRow();
+  // Restore any unsaved work first — only start with fresh empty
+  // rows if there was nothing to recover
+  const restored = restoreBulkDraftIfAny();
+  if (!restored) {
+    addBulkRow();
+    addBulkRow();
+    addBulkRow();
+  }
 }
 
-window.addBulkRow = function() {
+window.addBulkRow = function(existingRowId) {
   const container = document.getElementById("bulk-rows-container");
   if (!container) return;
 
   const currentRows = container.querySelectorAll(".bulk-row").length;
-  if (currentRows >= remainingAdSlots) {
+  if (!existingRowId && currentRows >= remainingAdSlots) {
     alert(`You can only add ${remainingAdSlots} more ad${remainingAdSlots !== 1 ? "s" : ""} on your ${planId.toUpperCase()} plan.`);
     return;
   }
 
-  rowCount++;
-  const rowId = `row-${rowCount}`;
+  let rowId;
+  if (existingRowId) {
+    rowId = existingRowId; // reused during draft restore, keeps ids stable
+  } else {
+    rowCount++;
+    rowId = `row-${rowCount}`;
+  }
   rowImages[rowId] = [];
 
   const districts = getDistricts();
@@ -163,6 +275,10 @@ window.addBulkRow = function() {
 
   container.appendChild(row);
   renumberRows();
+
+  // Auto-save the draft as the seller types — debounced lightly via blur
+  row.addEventListener("change", saveBulkDraft);
+  row.addEventListener("blur", saveBulkDraft, true);
 };
 
 window.onBulkDistrictChange = function(rowId) {
@@ -278,10 +394,11 @@ window.postAllBulkAds = async function() {
     return;
   }
 
-  // Validate every row before uploading anything
   const rowData = [];
   for (const row of rows) {
     const rowId = row.id;
+    if (postedRows.has(rowId)) continue; // already posted in a previous attempt — skip silently
+
     const name  = document.getElementById(`${rowId}-name`)?.value.trim();
     const price = document.getElementById(`${rowId}-price`)?.value;
     const district = document.getElementById(`${rowId}-district`)?.value;
@@ -305,18 +422,12 @@ window.postAllBulkAds = async function() {
       return;
     }
 
-    rowData.push({
-      rowId,
-      name,
-      price: Number(price),
-      category: document.getElementById(`${rowId}-category`)?.value,
-      condition: document.getElementById(`${rowId}-condition`)?.value,
-      district,
-      sublocation,
-      phone,
-      description: document.getElementById(`${rowId}-desc`)?.value.trim(),
-      photos
-    });
+    rowData.push({ rowId, name, price: Number(price), category: document.getElementById(`${rowId}-category`)?.value, condition: document.getElementById(`${rowId}-condition`)?.value, district, sublocation, phone, description: document.getElementById(`${rowId}-desc`)?.value.trim(), photos });
+  }
+
+  if (rowData.length === 0) {
+    alert("All products in this batch are already posted ✅");
+    return;
   }
 
   const btn = document.getElementById("post-all-btn");
@@ -332,57 +443,48 @@ window.postAllBulkAds = async function() {
 
   for (let i = 0; i < rowData.length; i++) {
     const item = rowData[i];
+    const rowEl = document.getElementById(item.rowId);
+    setRowStatus(item.rowId, "posting", `Posting ${i + 1} of ${rowData.length}...`);
     btn.textContent = `Posting ${i + 1} of ${rowData.length}: ${item.name.slice(0, 20)}...`;
 
     try {
-      const compressed = await Promise.all(item.photos.map(f => compressImage(f)));
+      const compressed = await Promise.all(item.photos.map(f => compressImage(f, 900, 0.62))); // smaller/lower quality specifically for bulk — many images at once
       const imageUrls = [];
 
       for (let p = 0; p < compressed.length; p++) {
         const file = compressed[p];
         const fileName = `products/${currentUser.uid}/${Date.now()}-${i}-${p}-${file.name}`;
+        setRowStatus(item.rowId, "posting", `Uploading photo ${p + 1}/${compressed.length}...`);
         const url = await withRetry(async () => {
           const storageRef = ref(storage, fileName);
           await uploadBytes(storageRef, file, { contentType: file.type });
           return getDownloadURL(storageRef);
-        });
+        }, { maxTries: 3, timeoutMs: 25000, baseDelay: 1500 }); // tighter than single post-ad — a stuck row in a batch of 10 shouldn't eat 5+ minutes alone
         imageUrls.push(url);
       }
 
       const fullLocation = item.sublocation ? `${item.sublocation}, ${item.district}` : item.district;
 
       await withRetry(() => addDoc(collection(db, "products"), {
-        name:        item.name,
-        price:       item.price,
-        category:    item.category,
-        subcategory: "",
-        condition:   item.condition,
-        description: item.description || "",
-        location:    fullLocation,
-        images:      imageUrls,
-        userId:      currentUser.uid,
-        userEmail:   currentUser.email,
-        status:      "active",
-        views:       0,
+        name: item.name, price: item.price, category: item.category, subcategory: "",
+        condition: item.condition, description: item.description || "", location: fullLocation,
+        images: imageUrls, userId: currentUser.uid, userEmail: currentUser.email,
+        status: "active", views: 0,
         boost: { boosted: false, startDate: null, endDate: null, type: null },
-        createdAt:   new Date(),
-        updatedAt:   new Date(),
-        expiresAt,
-        seller: {
-          name:       currentUser.email.split("@")[0],
-          phone:      item.phone,
-          location:   fullLocation,
-          isVerified: false
-        },
-        details:    {},
-        postedViaBulk: true
-      }));
+        createdAt: new Date(), updatedAt: new Date(), expiresAt,
+        seller: { name: currentUser.email.split("@")[0], phone: item.phone, location: fullLocation, isVerified: false },
+        details: {}, postedViaBulk: true
+      }), { maxTries: 3, timeoutMs: 20000, baseDelay: 1500 });
 
       posted++;
+      postedRows.add(item.rowId);
+      setRowStatus(item.rowId, "success", "✅ Posted successfully");
+      saveBulkDraft(); // checkpoint immediately — a refresh now won't lose this row
 
     } catch (err) {
       console.error(`Bulk post failed for row ${i}:`, err);
       failed++;
+      setRowStatus(item.rowId, "error", "❌ Failed — network issue. Will retry if you click Post All again.");
     }
   }
 
@@ -393,10 +495,31 @@ window.postAllBulkAds = async function() {
   btn.disabled = false;
 
   if (failed === 0) {
+    localStorage.removeItem(DRAFT_KEY);
     alert(`✅ All ${posted} ads posted successfully!`);
+    window.location.href = "dashboard.html?tab=my-ads";
   } else {
-    alert(`✅ ${posted} ads posted. ⚠️ ${failed} failed — check your connection and try posting those individually.`);
+    alert(`✅ ${posted} ads posted. ⚠️ ${failed} failed — their rows are marked below. Fix your connection and tap "Post All Ads" again; successful rows won't be re-submitted.`);
+  }
+};
+
+function setRowStatus(rowId, state, text) {
+  const row = document.getElementById(rowId);
+  if (!row) return;
+
+  let statusEl = row.querySelector(".bulk-row-status");
+  if (!statusEl) {
+    statusEl = document.createElement("div");
+    statusEl.className = "bulk-row-status";
+    statusEl.style.cssText = "margin-top:10px;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:700";
+    row.appendChild(statusEl);
   }
 
-  window.location.href = "dashboard.html?tab=my-ads";
-};
+  const styles = {
+    posting: "background:#eff6ff;color:#1e40af",
+    success: "background:#f0fdf4;color:#166534",
+    error:   "background:#fef2f2;color:#991b1b"
+  };
+  statusEl.setAttribute("style", `margin-top:10px;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:700;${styles[state] || ""}`);
+  statusEl.textContent = text;
+}
