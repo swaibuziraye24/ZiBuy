@@ -227,6 +227,20 @@ async function loadWishlist() {
   }
 }
 
+// Safe for embedding inside onclick="fn('...')" — handles backslashes,
+// single quotes (breaks the JS string) AND double quotes (breaks the
+// surrounding HTML attribute) — the .replace(/'/g,"\\'") pattern used
+// everywhere else in this file only handled the first case, which is
+// exactly what caused the "missing )" syntax errors and the boost/pin
+// "already chosen" bug whenever a product name had a " in it.
+function jsAttr(str) {
+  return String(str ?? "")
+    .replace(/\\/g, "\\\\")
+    .replace(/'/g, "\\'")
+    .replace(/"/g, "&quot;")
+    .replace(/\n/g, " ");
+}
+
 function escHTML(str) {
   if (str == null) return "";
   return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
@@ -375,7 +389,7 @@ window.loadMyProducts = async function () {
               ${!soldNow ? (p.category === "seeking-work"
                 ? `<button class="btn btn-sm"
                     style="background:#1e40af;color:white;border:none;cursor:pointer;border-radius:8px"
-                    onclick="boostCV('${p.id}','${p.name.replace(/'/g,"\\'")}')">
+                    onclick="boostCV('${p.id}','${jsAttr(p.name)}')">
                     📌 Boost CV
                   </button>`
                 : p.isPremium
@@ -384,7 +398,7 @@ window.loadMyProducts = async function () {
                       ✅ Featured
                     </button>`
                   : `<button class="btn btn-sm btn-featured"
-                      onclick="boostFromDashboard('${p.id}','${p.name.replace(/'/g,"\\'")}')">
+                      onclick="boostFromDashboard('${p.id}','${jsAttr(p.name)}')">
                       ⭐ Boost
                     </button>`
               ) : ""}
@@ -392,7 +406,7 @@ window.loadMyProducts = async function () {
                ${!soldNow && !p.autoRenew ? `
   <button class="btn-sm"
     style="background:#dbeafe;color:#1e40af;border:none;border-radius:8px;font-weight:700"
-    onclick="openAutoRenewModal('${p.id}','${p.name.replace(/'/g,"\\'")}')">
+    onclick="openAutoRenewModal('${p.id}','${jsAttr(p.name)}')">
     🔄 Auto-Renew
   </button>` : !soldNow ? `
   <span style="background:#dcfce7;color:#16a34a;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:700">
@@ -407,7 +421,7 @@ window.loadMyProducts = async function () {
                   </button>`
                 : `<button class="btn btn-sm"
                     style="background:#fff4ee;color:#8b5cf6;border:1.5px solid #8b5cf6;cursor:pointer;border-radius:8px"
-                    onclick="pinToTop('${p.id}','${p.name.replace(/'/g,"\\'")}')">
+                    onclick="pinToTop('${p.id}','${jsAttr(p.name)}')">
                     📍 Pin to Top
                   </button>`
               ) : ""}
@@ -455,6 +469,12 @@ window.boostFromDashboard = async function(productId, productName) {
     return;
   }
 
+  // Store context on window instead of re-embedding productName into
+  // a second onclick string inside the modal — that double-templating
+  // was the actual cause of the "missing )" bug and the plan-selection
+  // silently failing.
+  window._boostContext = { productId, productName };
+
   const modal = document.createElement("div");
   modal.className = "modal open";
   modal.id = "boost-modal-" + productId;
@@ -462,34 +482,34 @@ window.boostFromDashboard = async function(productId, productName) {
     <div class="modal-box" style="max-width:480px">
       <div class="modal-header">
         <h2>⭐ Boost Your Ad</h2>
-        <button class="modal-close" onclick="document.getElementById('boost-modal-${productId}')?.remove()">×</button>
+        <button class="modal-close" onclick="document.getElementById('boost-modal-${jsAttr(productId)}')?.remove()">×</button>
       </div>
       
-      <p style="color:#6b7280;margin-bottom:20px;font-size:15px">Make <strong>${productName}</strong> stand out and reach more buyers!</p>
+      <p style="color:#6b7280;margin-bottom:20px;font-size:15px">Make <strong>${escHTML(productName)}</strong> stand out and reach more buyers!</p>
 
       <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px">
-        <div class="boost-option" onclick="selectBoostPlan(this, '${productId}', '${productName}', 7, 5000)">
+        <div class="boost-option" onclick="selectBoostPlan(this, 7, 5000)">
           <div>
             <p style="margin:0;font-weight:700;font-size:16px">7 Days</p>
             <p style="margin:6px 0 0;color:#6b7280;font-size:14px">UGX 5,000</p>
           </div>
-          <input type="radio" name="boost-plan-${productId}">
+          <input type="radio" name="boost-plan-radio">
         </div>
 
-        <div class="boost-option" onclick="selectBoostPlan(this, '${productId}', '${productName}', 14, 8000)">
+        <div class="boost-option" onclick="selectBoostPlan(this, 14, 8000)">
           <div>
             <p style="margin:0;font-weight:700;font-size:16px">14 Days</p>
             <p style="margin:6px 0 0;color:#6b7280;font-size:14px">UGX 8,000</p>
           </div>
-          <input type="radio" name="boost-plan-${productId}">
+          <input type="radio" name="boost-plan-radio">
         </div>
 
-        <div class="boost-option" onclick="selectBoostPlan(this, '${productId}', '${productName}', 30, 15000)">
+        <div class="boost-option" onclick="selectBoostPlan(this, 30, 15000)">
           <div>
             <p style="margin:0;font-weight:700;font-size:16px">30 Days</p>
             <p style="margin:6px 0 0;color:#6b7280;font-size:14px">UGX 15,000</p>
           </div>
-          <input type="radio" name="boost-plan-${productId}">
+          <input type="radio" name="boost-plan-radio">
         </div>
       </div>
 
@@ -500,10 +520,10 @@ window.boostFromDashboard = async function(productId, productName) {
   document.body.appendChild(modal);
 };
 
-window.selectBoostPlan = function(el, productId, productName, days, price) {
-  document.querySelectorAll(`input[name="boost-plan-${productId}"]`).forEach(r => r.checked = false);
+window.selectBoostPlan = function(el, days, price) {
+  document.querySelectorAll(`input[name="boost-plan-radio"]`).forEach(r => r.checked = false);
   el.querySelector("input").checked = true;
-  window.selectedBoostPlan = { productId, productName, days, price };
+  window.selectedBoostPlan = { ...window._boostContext, days, price };
 };
 
 window.proceedToPayment = async function() {
@@ -592,7 +612,7 @@ window.proceedToPayment = async function() {
       </div>
 
       <div style="display:flex;flex-direction:column;gap:10px">
-        <button id="dash-boost-submit-btn" onclick="submitDashboardBoost('${productId}', '${productName}', ${days}, ${price}, '${paymentRef}', this)"
+        <button id="dash-boost-submit-btn" onclick="submitDashboardBoost('${jsAttr(productId)}', '${jsAttr(productName)}', ${days}, ${price}, '${jsAttr(paymentRef)}', this)"
           style="background:#ff6600;color:white;border:none;padding:14px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;width:100%">
           📲 Send Reference to Admin WhatsApp
         </button>
@@ -709,6 +729,8 @@ window.submitDashboardBoost = async function(productId, productName, days, price
 window.pinToTop = function(productId, productName) {
   if (!currentUser) { alert("Please login first"); return; }
 
+  window._pinContext = { productId, productName };
+
   const modal = document.createElement("div");
   modal.className = "modal open";
   modal.id = "pin-modal-" + productId;
@@ -716,28 +738,28 @@ window.pinToTop = function(productId, productName) {
     <div class="modal-box" style="max-width:440px">
       <div class="modal-header">
         <h2>📍 Pin to Top</h2>
-        <button class="modal-close" onclick="document.getElementById('pin-modal-${productId}')?.remove()">×</button>
+        <button class="modal-close" onclick="document.getElementById('pin-modal-${jsAttr(productId)}')?.remove()">×</button>
       </div>
 
       <p style="color:#6b7280;margin-bottom:18px;font-size:14px">
-        Instantly place <strong>${productName}</strong> at the very top of
+        Instantly place <strong>${escHTML(productName)}</strong> at the very top of
         ALL search results — even above regular boosted ads — for a short burst of maximum visibility.
       </p>
 
       <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px">
-        <div class="boost-option" onclick="selectPinPlan(this,'${productId}','${productName}',24,3000)">
+        <div class="boost-option" onclick="selectPinPlan(this,24,3000)">
           <div>
             <p style="margin:0;font-weight:800;font-size:15px">⚡ 24 Hours</p>
             <p style="margin:4px 0 0;color:#6b7280;font-size:13px">UGX 3,000 — Quick visibility spike</p>
           </div>
-          <input type="radio" name="pin-plan-${productId}">
+          <input type="radio" name="pin-plan-radio">
         </div>
-        <div class="boost-option" onclick="selectPinPlan(this,'${productId}','${productName}',48,5000)">
+        <div class="boost-option" onclick="selectPinPlan(this,48,5000)">
           <div>
             <p style="margin:0;font-weight:800;font-size:15px">⚡⚡ 48 Hours</p>
             <p style="margin:4px 0 0;color:#6b7280;font-size:13px">UGX 5,000 — Best value</p>
           </div>
-          <input type="radio" name="pin-plan-${productId}">
+          <input type="radio" name="pin-plan-radio">
         </div>
       </div>
 
@@ -756,10 +778,10 @@ window.pinToTop = function(productId, productName) {
   document.body.appendChild(modal);
 };
 
-window.selectPinPlan = function(el, productId, productName, hours, price) {
-  document.querySelectorAll(`input[name="pin-plan-${productId}"]`).forEach(r => r.checked = false);
+window.selectPinPlan = function(el, hours, price) {
+  document.querySelectorAll(`input[name="pin-plan-radio"]`).forEach(r => r.checked = false);
   el.querySelector("input").checked = true;
-  window.selectedPinPlan = { productId, productName, hours, price };
+  window.selectedPinPlan = { ...window._pinContext, hours, price };
 };
 
 window.proceedToPinPayment = function() {
@@ -828,7 +850,7 @@ window.proceedToPinPayment = function() {
       </div>
 
       <button id="pin-submit-btn"
-        onclick="submitPinRequest('${productId}','${productName}',${hours},${price},'${paymentRef}',this)"
+        onclick="submitPinRequest('${jsAttr(productId)}','${jsAttr(productName)}',${hours},${price},'${jsAttr(paymentRef)}',this)"
         style="background:#8b5cf6;color:white;border:none;padding:14px;border-radius:12px;
         font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;width:100%">
         📲 Send Reference to Admin WhatsApp
@@ -916,7 +938,7 @@ window.boostCV = function(productId, productName) {
       </div>
 
       <p style="color:#6b7280;font-size:14px;margin-bottom:16px;line-height:1.6">
-        Pin <strong>${productName}</strong> to the top of the
+        Pin <strong>${escHTML(productName)}</strong> to the top of the
         Seeking Work section — employers see you first!
       </p>
 
