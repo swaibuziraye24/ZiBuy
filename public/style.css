@@ -2132,57 +2132,7 @@ footer {
    DASHBOARD ANALYTICS & PROFILE — responsive grids
    ============================================ */
 
-.zb-stats-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-  margin-bottom: 20px;
-}
-@media (min-width: 640px) {
-  .zb-stats-grid { grid-template-columns: repeat(3, 1fr); }
-}
-@media (min-width: 1024px) {
-  .zb-stats-grid { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
-}
 
-.zb-two-col {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 14px;
-  margin-bottom: 16px;
-}
-@media (min-width: 768px) {
-  .zb-two-col { grid-template-columns: 1fr 1fr; }
-}
-
-.zb-table-wrap {
-  width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
-.zb-table-wrap table {
-  width: max-content;
-  min-width: 100%;
-}
-
-.zb-profile-header {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  flex-wrap: wrap;
-}
-@media (max-width: 480px) {
-  .zb-profile-header {
-    flex-direction: column;
-    align-items: flex-start;
-    text-align: left;
-  }
-  .zb-profile-header > a {
-    width: 100%;
-    text-align: center;
-    box-sizing: border-box;
-  }
-}
 
 .zb-row-flex {
   display: flex;
@@ -8467,4 +8417,104 @@ body {
   width: 100% !important;
   height: 100px !important;
   border-radius: 10px !important;
+}
+
+
+/* ============================================
+   ZIBUY DASHBOARD — RESPONSIVE HELPER CLASSES
+   (canonical version — replaces any earlier
+   partial versions of these same class names)
+   ============================================ */
+
+.zb-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
+@media (min-width: 640px) {
+  .zb-stats-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (min-width: 1024px) {
+  .zb-stats-grid { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
+}
+
+.zb-two-col {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  margin-bottom: 16px;
+  width: 100%;
+  box-sizing: border-box;
+}
+@media (min-width: 768px) {
+  .zb-two-col { grid-template-columns: 1fr 1fr; }
+}
+
+.zb-table-wrap {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.zb-table-wrap table {
+  width: max-content;
+  min-width: 100%;
+}
+
+.zb-profile-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  width: 100%;
+  box-sizing: border-box;
+}
+@media (max-width: 768px) {
+  .zb-profile-header {
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+  }
+  .zb-profile-header > a {
+    width: 100%;
+    text-align: center;
+    box-sizing: border-box;
+  }
+  .zb-profile-header > div:nth-child(2) {
+    width: 100%;
+  }
+}
+
+.zb-row-flex {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+.zb-row-flex > div {
+  min-width: 0;
+  overflow: hidden;
+}
+.zb-row-flex img {
+  flex-shrink: 0;
+}
+
+/* Belt-and-braces: nothing inside these dashboard tabs can ever force
+   the page wider than the screen, regardless of long ad names, long
+   category labels, or any element missing min-width:0 individually */
+#myprofile-container,
+#analytics-container {
+  overflow-x: hidden;
+  width: 100%;
+  box-sizing: border-box;
+}
+#myprofile-container *,
+#analytics-container > div:not(.zb-table-wrap) * {
+  min-width: 0;
+  word-break: break-word;
 }
