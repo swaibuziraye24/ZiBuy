@@ -2,7 +2,7 @@
 //   ZiBuy — Bulk Ad Posting
 // ============================================
 
-import { db, auth, collection, addDoc } from "./firebase.js";
+import { db, auth, collection, addDoc, doc, setDoc } from "./firebase.js";
 import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { storage } from "./firebase.js";
@@ -362,7 +362,7 @@ async function compressImage(file, maxWidth = 1100, quality = 0.7) {
   });
 }
 
-async function withRetry(operation, { maxTries = 5, timeoutMs = 40000, baseDelay = 2000 } = {}) {
+async function withRetry(operation, { maxTries = 2, timeoutMs = 15000, baseDelay = 1500 } = {}) {
   let attempt = 0;
   while (attempt < maxTries) {
     try {
@@ -397,7 +397,7 @@ window.postAllBulkAds = async function() {
   const rowData = [];
   for (const row of rows) {
     const rowId = row.id;
-    if (postedRows.has(rowId)) continue; // already posted in a previous attempt — skip silently
+    if (postedRows.has(rowId)) continue;
 
     const name  = document.getElementById(`${rowId}-name`)?.value.trim();
     const price = document.getElementById(`${rowId}-price`)?.value;
@@ -443,49 +443,32 @@ window.postAllBulkAds = async function() {
 
   for (let i = 0; i < rowData.length; i++) {
     const item = rowData[i];
-    const rowEl = document.getElementById(item.rowId);
-    setRowStatus(item.rowId, "posting", `Posting ${i + 1} of ${rowData.length}...`);
     btn.textContent = `Posting ${i + 1} of ${rowData.length}: ${item.name.slice(0, 20)}...`;
+    addSkipButton(item.rowId);
 
     try {
-      const compressed = await Promise.all(item.photos.map(f => compressImage(f, 900, 0.62))); // smaller/lower quality specifically for bulk — many images at once
-      const imageUrls = [];
-
-      for (let p = 0; p < compressed.length; p++) {
-        const file = compressed[p];
-        const fileName = `products/${currentUser.uid}/${Date.now()}-${i}-${p}-${file.name}`;
-        setRowStatus(item.rowId, "posting", `Uploading photo ${p + 1}/${compressed.length}...`);
-        const url = await withRetry(async () => {
-          const storageRef = ref(storage, fileName);
-          await uploadBytes(storageRef, file, { contentType: file.type });
-          return getDownloadURL(storageRef);
-        }, { maxTries: 3, timeoutMs: 25000, baseDelay: 1500 }); // tighter than single post-ad — a stuck row in a batch of 10 shouldn't eat 5+ minutes alone
-        imageUrls.push(url);
-      }
-
-      const fullLocation = item.sublocation ? `${item.sublocation}, ${item.district}` : item.district;
-
-      await withRetry(() => addDoc(collection(db, "products"), {
-        name: item.name, price: item.price, category: item.category, subcategory: "",
-        condition: item.condition, description: item.description || "", location: fullLocation,
-        images: imageUrls, userId: currentUser.uid, userEmail: currentUser.email,
-        status: "active", views: 0,
-        boost: { boosted: false, startDate: null, endDate: null, type: null },
-        createdAt: new Date(), updatedAt: new Date(), expiresAt,
-        seller: { name: currentUser.email.split("@")[0], phone: item.phone, location: fullLocation, isVerified: false },
-        details: {}, postedViaBulk: true
-      }), { maxTries: 3, timeoutMs: 20000, baseDelay: 1500 });
-
+      await Promise.race([
+        processOneRow(item, i, rowData.length, expiresAt),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("row-timeout")), 75000))
+      ]);
       posted++;
       postedRows.add(item.rowId);
       setRowStatus(item.rowId, "success", "✅ Posted successfully");
-      saveBulkDraft(); // checkpoint immediately — a refresh now won't lose this row
+      saveBulkDraft();
 
     } catch (err) {
-      console.error(`Bulk post failed for row ${i}:`, err);
       failed++;
-      setRowStatus(item.rowId, "error", "❌ Failed — network issue. Will retry if you click Post All again.");
+      const isTimeout = err.message === "row-timeout" || err.message === "row-skipped";
+      const label = err.message === "row-skipped"
+        ? "⏭️ Skipped — try posting this one separately"
+        : isTimeout
+          ? "⏱️ Timed out — network too slow for this row. Try again later."
+          : "❌ Failed — network issue.";
+      console.error(`Bulk post row ${i} issue:`, err);
+      setRowStatus(item.rowId, "error", label);
     }
+
+    removeSkipButton(item.rowId);
   }
 
   sessionStorage.removeItem("zibuy_products_cache");
@@ -499,9 +482,88 @@ window.postAllBulkAds = async function() {
     alert(`✅ All ${posted} ads posted successfully!`);
     window.location.href = "dashboard.html?tab=my-ads";
   } else {
-    alert(`✅ ${posted} ads posted. ⚠️ ${failed} failed — their rows are marked below. Fix your connection and tap "Post All Ads" again; successful rows won't be re-submitted.`);
+    alert(`✅ ${posted} ads posted. ⚠️ ${failed} had issues — check the notes on each row below. Fix your connection and tap "Post All Ads" again; already-posted rows are safe and won't be duplicated.`);
   }
 };
+
+async function processOneRow(item, index, total, expiresAt) {
+  const compressed = await Promise.all(item.photos.map(f => compressImage(f, 900, 0.62)));
+  const imageUrls = [];
+
+  for (let p = 0; p < compressed.length; p++) {
+    if (skipRequested.has(item.rowId)) throw new Error("row-skipped");
+
+    const file = compressed[p];
+    const fileName = `products/${currentUser.uid}/${Date.now()}-${index}-${p}-${file.name}`;
+    setRowStatus(item.rowId, "posting", `Uploading photo ${p + 1}/${compressed.length}...`);
+
+    const url = await withRetry(async () => {
+      const storageRef = ref(storage, fileName);
+      await uploadBytes(storageRef, file, { contentType: file.type });
+      return getDownloadURL(storageRef);
+    });
+    imageUrls.push(url);
+  }
+
+  if (skipRequested.has(item.rowId)) throw new Error("row-skipped");
+
+  const fullLocation = item.sublocation ? `${item.sublocation}, ${item.district}` : item.district;
+
+  // Fixed, pre-known document ID — a retry writes to the SAME document
+  // instead of creating a duplicate, even if a previous attempt actually
+  // succeeded server-side but the client never got confirmation
+  const productId = doc(collection(db, "products")).id;
+  setRowStatus(item.rowId, "posting", "Saving product...");
+
+  await withRetry(() => setDoc(doc(db, "products", productId), {
+    name: item.name, price: item.price, category: item.category, subcategory: "",
+    condition: item.condition, description: item.description || "", location: fullLocation,
+    images: imageUrls, userId: currentUser.uid, userEmail: currentUser.email,
+    status: "active", views: 0,
+    boost: { boosted: false, startDate: null, endDate: null, type: null },
+    createdAt: new Date(), updatedAt: new Date(), expiresAt,
+    seller: { name: currentUser.email.split("@")[0], phone: item.phone, location: fullLocation, isVerified: false },
+    details: {}, postedViaBulk: true
+  }));
+}
+
+const skipRequested = new Set();
+
+function addSkipButton(rowId) {
+  const row = document.getElementById(rowId);
+  if (!row || row.querySelector(".bulk-skip-btn")) return;
+  const btn = document.createElement("button");
+  btn.className = "bulk-skip-btn";
+  btn.textContent = "⏭️ Skip This Row";
+  btn.style.cssText = "margin-top:8px;background:#fff4ee;color:#ff6600;border:1.5px solid #ff6600;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit";
+  btn.onclick = () => skipRequested.add(rowId);
+  row.appendChild(btn);
+}
+
+function removeSkipButton(rowId) {
+  document.getElementById(rowId)?.querySelector(".bulk-skip-btn")?.remove();
+  skipRequested.delete(rowId);
+}
+
+function setRowStatus(rowId, state, text) {
+  const row = document.getElementById(rowId);
+  if (!row) return;
+
+  let statusEl = row.querySelector(".bulk-row-status");
+  if (!statusEl) {
+    statusEl = document.createElement("div");
+    statusEl.className = "bulk-row-status";
+    row.appendChild(statusEl);
+  }
+
+  const styles = {
+    posting: "background:#eff6ff;color:#1e40af",
+    success: "background:#f0fdf4;color:#166534",
+    error:   "background:#fef2f2;color:#991b1b"
+  };
+  statusEl.setAttribute("style", `margin-top:10px;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:700;${styles[state] || ""}`);
+  statusEl.textContent = text;
+}
 
 function setRowStatus(rowId, state, text) {
   const row = document.getElementById(rowId);
