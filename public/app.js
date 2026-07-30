@@ -2645,7 +2645,7 @@ function redirectAfterLogin() {
 
 window.signInWithGoogle = async function() {
   try {
-    const { GoogleAuthProvider, signInWithPopup, signInWithCustomToken, signOut } =
+    const { GoogleAuthProvider, signInWithPopup, signInWithCustomToken, signOut, deleteUser } =
       await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js");
     const { getFunctions, httpsCallable } =
       await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js");
@@ -2653,8 +2653,6 @@ window.signInWithGoogle = async function() {
     const provider = new GoogleAuthProvider();
     await signInWithPopup(auth, provider);
 
-    // Google sign-in is LOGIN ONLY — check whether this is really an
-    // existing ZiBuy account before letting them in
     const fn     = httpsCallable(getFunctions(), "linkLoginToExistingAccount");
     const result = await fn();
     const data   = result.data;
@@ -2665,7 +2663,6 @@ window.signInWithGoogle = async function() {
       redirectAfterLogin();
 
     } else if (data.status === "existing_account_found") {
-      // Switch into the REAL account this Google sign-in belongs to
       await signOut(auth);
       await signInWithCustomToken(auth, data.customToken);
       closeAuthModal();
@@ -2673,8 +2670,15 @@ window.signInWithGoogle = async function() {
       redirectAfterLogin();
 
     } else {
-      // No account exists for this Google email at all
-      await signOut(auth);
+      // No ZiBuy account matches this Google email — delete the
+      // temporary Auth identity Google just created instead of leaving
+      // it orphaned. An orphan sharing the same email as a real
+      // password account is exactly what can make future email/password
+      // logins behave unpredictably.
+      const orphan = auth.currentUser;
+      if (orphan) {
+        await deleteUser(orphan).catch(() => signOut(auth));
+      }
       alert("No ZiBuy account found for this Google account.\n\nPlease create an account first using your email, phone number and password — then you'll be able to log in with Google.");
       toggleRegister(true);
     }
@@ -2685,6 +2689,10 @@ window.signInWithGoogle = async function() {
     }
     if (err.code === "auth/operation-not-allowed") {
       alert("Google sign-in isn't enabled yet. (Admin: enable it in Firebase Console → Authentication → Sign-in method)");
+      return;
+    }
+    if (err.code === "auth/account-exists-with-different-credential") {
+      alert("This email is already registered with a password. Please log in with your email and password instead.");
       return;
     }
     console.error("Google sign-in error:", err);
@@ -2803,7 +2811,11 @@ window.confirmPhoneSignInCode = async function() {
       redirectAfterLogin();
 
     } else {
-      await signOut(auth);
+      const { deleteUser } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js");
+      const orphan = auth.currentUser;
+      if (orphan) {
+        await deleteUser(orphan).catch(() => signOut(auth));
+      }
       resetPhoneUI();
       alert("No ZiBuy account found with this phone number.\n\nPlease create an account first using your email, phone number and password — then you'll be able to log in with just your phone.");
       toggleRegister(true);
