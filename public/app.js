@@ -2645,116 +2645,42 @@ function redirectAfterLogin() {
 
 window.signInWithGoogle = async function() {
   try {
-    const { GoogleAuthProvider, signInWithPopup, signInWithCustomToken, signOut, deleteUser } =
+    const { GoogleAuthProvider, signInWithPopup, signOut } =
       await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js");
-    const { getFunctions, httpsCallable } =
-      await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js");
 
     const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
+    const result   = await signInWithPopup(auth, provider);
 
-    const fn     = httpsCallable(getFunctions(), "linkLoginToExistingAccount");
-    const result = await fn();
-    const data   = result.data;
+    // Check whether this identity has a real ZiBuy profile — if Firebase
+    // account linking (Step 2) is on and the email matches, this will
+    // already be the SAME uid as their real account, so this succeeds.
+    // Nothing here ever deletes or swaps any account.
+    const { doc, getDoc } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+    const userSnap = await getDoc(doc(db, "users", result.user.uid));
 
-    if (data.status === "ok") {
-      closeAuthModal();
-      showToast("✅ Signed in with Google!");
-      redirectAfterLogin();
-
-    } else if (data.status === "existing_account_found") {
+    if (!userSnap.exists()) {
       await signOut(auth);
-      await signInWithCustomToken(auth, data.customToken);
-      closeAuthModal();
-      showToast("✅ Signed in with Google!");
-      redirectAfterLogin();
-
-    } else {
-      // No ZiBuy account matches this Google email — delete the
-      // temporary Auth identity Google just created instead of leaving
-      // it orphaned. An orphan sharing the same email as a real
-      // password account is exactly what can make future email/password
-      // logins behave unpredictably.
-      const orphan = auth.currentUser;
-      if (orphan) {
-        await deleteUser(orphan).catch(() => signOut(auth));
-      }
-      alert("No ZiBuy account found for this Google account.\n\nPlease create an account first using your email, phone number and password — then you'll be able to log in with Google.");
+      alert("No ZiBuy account found for this Google login.\n\nPlease create an account first using your email, phone number and password.");
       toggleRegister(true);
-    }
-
-  } catch (err) {
-    if (err.code === "auth/popup-closed-by-user" || err.code === "auth/cancelled-popup-request") {
       return;
     }
+
+    closeAuthModal();
+    showToast("✅ Signed in with Google!");
+    redirectAfterLogin();
+
+  } catch (err) {
+    if (err.code === "auth/popup-closed-by-user" || err.code === "auth/cancelled-popup-request") return;
     if (err.code === "auth/operation-not-allowed") {
-      alert("Google sign-in isn't enabled yet. (Admin: enable it in Firebase Console → Authentication → Sign-in method)");
+      alert("Google sign-in isn't enabled yet.");
       return;
     }
     if (err.code === "auth/account-exists-with-different-credential") {
-      alert("This email is already registered with a password. Please log in with your email and password instead.");
+      alert("This email already has a ZiBuy account with a password. Please log in with your email and password instead.");
       return;
     }
     console.error("Google sign-in error:", err);
     alert("❌ Google sign-in failed: " + err.message);
-  }
-};
-
-
-let _recaptchaVerifier   = null;
-let _phoneConfirmResult  = null;
-
-window.togglePhoneAuth = function() {
-  const section = document.getElementById("phone-auth-section");
-  if (!section) return;
-  section.style.display = section.style.display === "none" ? "block" : "none";
-};
-
-window.sendPhoneSignInCode = async function() {
-  const input = document.getElementById("phone-auth-number");
-  let raw = input?.value.trim().replace(/\D/g, "") || "";
-
-  if (raw.length < 9) {
-    alert("Enter a valid phone number");
-    return;
-  }
-
-  // Normalize to +256... regardless of how the user typed it
-  if (raw.startsWith("0")) raw = raw.slice(1);
-  if (!raw.startsWith("256")) raw = "256" + raw;
-  const fullPhone = "+" + raw;
-
-  const btn = document.getElementById("phone-send-code-btn");
-  if (btn) { btn.textContent = "Sending..."; btn.disabled = true; }
-
-  try {
-    const { RecaptchaVerifier, signInWithPhoneNumber } =
-      await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js");
-
-    if (!_recaptchaVerifier) {
-      _recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", { size: "invisible" });
-    }
-
-    _phoneConfirmResult = await signInWithPhoneNumber(auth, fullPhone, _recaptchaVerifier);
-
-    document.getElementById("phone-auth-step1").style.display = "none";
-    document.getElementById("phone-auth-step2").style.display = "block";
-    document.getElementById("phone-auth-sent-to").textContent = fullPhone;
-    document.getElementById("phone-auth-code")?.focus();
-
-  } catch (err) {
-    console.error("Phone sign-in send error:", err);
-    if (err.code === "auth/operation-not-allowed") {
-      alert("Phone sign-in isn't enabled yet. (Admin: enable it in Firebase Console → Authentication → Sign-in method)");
-    } else if (err.code === "auth/invalid-phone-number") {
-      alert("That phone number doesn't look valid. Try again.");
-    } else {
-      alert("Failed to send code: " + err.message);
-    }
-    // Reset recaptcha so the next attempt gets a fresh widget
-    _recaptchaVerifier = null;
-  } finally {
-    if (btn) { btn.textContent = "Send Code"; btn.disabled = false; }
   }
 };
 
@@ -2774,52 +2700,33 @@ window.confirmPhoneSignInCode = async function() {
   const btn = document.getElementById("phone-verify-code-btn");
   if (btn) { btn.textContent = "Verifying..."; btn.disabled = true; }
 
+  const resetPhoneUI = () => {
+    document.getElementById("phone-auth-step1").style.display = "block";
+    document.getElementById("phone-auth-step2").style.display = "none";
+    document.getElementById("phone-auth-section").style.display = "none";
+    if (codeInput) codeInput.value = "";
+    _phoneConfirmResult = null;
+  };
+
   try {
-    await _phoneConfirmResult.confirm(code);
+    const result = await _phoneConfirmResult.confirm(code);
 
-    const { signInWithCustomToken, signOut } =
-      await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js");
-    const { getFunctions, httpsCallable } =
-      await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js");
+    const { doc, getDoc } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+    const userSnap = await getDoc(doc(db, "users", result.user.uid));
 
-    // Phone sign-in is LOGIN ONLY — check whether this number belongs
-    // to an existing ZiBuy account before letting them in
-    const fn     = httpsCallable(getFunctions(), "linkLoginToExistingAccount");
-    const result = await fn();
-    const data   = result.data;
-
-    const resetPhoneUI = () => {
-      document.getElementById("phone-auth-step1").style.display = "block";
-      document.getElementById("phone-auth-step2").style.display = "none";
-      document.getElementById("phone-auth-section").style.display = "none";
-      if (codeInput) codeInput.value = "";
-      _phoneConfirmResult = null;
-    };
-
-    if (data.status === "ok") {
-      closeAuthModal();
-      showToast("✅ Signed in with phone number!");
-      resetPhoneUI();
-      redirectAfterLogin();
-
-    } else if (data.status === "existing_account_found") {
+    if (!userSnap.exists()) {
+      const { signOut } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js");
       await signOut(auth);
-      await signInWithCustomToken(auth, data.customToken);
-      closeAuthModal();
-      showToast("✅ Signed in with phone number!");
       resetPhoneUI();
-      redirectAfterLogin();
-
-    } else {
-      const { deleteUser } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js");
-      const orphan = auth.currentUser;
-      if (orphan) {
-        await deleteUser(orphan).catch(() => signOut(auth));
-      }
-      resetPhoneUI();
-      alert("No ZiBuy account found with this phone number.\n\nPlease create an account first using your email, phone number and password — then you'll be able to log in with just your phone.");
+      alert("No ZiBuy account found with this phone number.\n\nPlease create an account first using your email, phone number and password.");
       toggleRegister(true);
+      return;
     }
+
+    closeAuthModal();
+    showToast("✅ Signed in with phone number!");
+    resetPhoneUI();
+    redirectAfterLogin();
 
   } catch (err) {
     console.error("Phone code confirm error:", err);
@@ -2828,7 +2735,6 @@ window.confirmPhoneSignInCode = async function() {
     if (btn) { btn.textContent = "Verify & Continue"; btn.disabled = false; }
   }
 };
-
 
 // ============================================
 // UPDATE customerRegister to use new fields
