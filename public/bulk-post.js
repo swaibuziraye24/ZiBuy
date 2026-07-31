@@ -545,25 +545,6 @@ function removeSkipButton(rowId) {
   skipRequested.delete(rowId);
 }
 
-function setRowStatus(rowId, state, text) {
-  const row = document.getElementById(rowId);
-  if (!row) return;
-
-  let statusEl = row.querySelector(".bulk-row-status");
-  if (!statusEl) {
-    statusEl = document.createElement("div");
-    statusEl.className = "bulk-row-status";
-    row.appendChild(statusEl);
-  }
-
-  const styles = {
-    posting: "background:#eff6ff;color:#1e40af",
-    success: "background:#f0fdf4;color:#166534",
-    error:   "background:#fef2f2;color:#991b1b"
-  };
-  statusEl.setAttribute("style", `margin-top:10px;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:700;${styles[state] || ""}`);
-  statusEl.textContent = text;
-}
 
 function setRowStatus(rowId, state, text) {
   const row = document.getElementById(rowId);
