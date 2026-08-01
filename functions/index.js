@@ -2633,6 +2633,8 @@ seoApp.get("/product/:id", async (req, res) => {
 <meta property="og:image" content="${image}" />
 <meta property="og:url" content="${url}" />
 
+<link rel="canonical" href="${url}" />
+
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="${title}" />
 <meta name="twitter:description" content="${description}" />
