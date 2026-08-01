@@ -130,7 +130,7 @@ async function sendEmail(to, subject, html) {
 
   try {
     await transporter.sendMail({
-      from: `"ZiBuy Uganda" <${process.env.GMAIL_EMAIL}>`,
+      from: `"ZiBuy by ZiTechnologies" <${process.env.GMAIL_EMAIL}>`,
       to,
       subject,
       html,
