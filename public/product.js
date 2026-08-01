@@ -363,7 +363,7 @@ document.head.appendChild(schemaTag);
       <!-- Images -->
       <div class="product-page-images">
         <div style="position:relative">
-          <img id="main-img" class="main-img" src="${images[0] || ''}" alt="${p.name}" style="width:100%;height:380px;object-fit:cover;border-radius:14px;background:#f3f4f6">
+          <img id="main-img" class="main-img" src="${images[0] || ''}" alt="${escapeHTML(p.name)}" onclick="openImageZoom()" style="width:100%;height:380px;object-fit:cover;border-radius:14px;background:#f3f4f6;cursor:zoom-in">
           <button id="like-btn" onclick="toggleLike('${snap.id}')"
             style="position:absolute;top:14px;right:14px;background:white;border:none;border-radius:50%;width:44px;height:44px;font-size:20px;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center;transition:.2s">
             🤍
@@ -486,6 +486,58 @@ document.head.appendChild(schemaTag);
     window.switchImage = function (index) {
       active = index;
       document.getElementById("main-img").src = images[index];
+    };
+
+    window.openImageZoom = function() {
+      const existing = document.getElementById("zoom-lightbox");
+      if (existing) existing.remove();
+
+      const overlay = document.createElement("div");
+      overlay.id = "zoom-lightbox";
+      overlay.style.cssText = `
+        position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:99999;
+        display:flex;align-items:center;justify-content:center;
+        touch-action:pinch-zoom;overflow:auto;
+      `;
+      overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+
+      overlay.innerHTML = `
+        <button onclick="document.getElementById('zoom-lightbox').remove()"
+          style="position:fixed;top:16px;right:16px;background:rgba(255,255,255,0.15);
+          color:white;border:none;width:40px;height:40px;border-radius:50%;
+          font-size:22px;cursor:pointer;z-index:2;display:flex;align-items:center;justify-content:center">×</button>
+
+        <div style="position:fixed;top:16px;left:16px;color:white;font-size:13px;
+          font-weight:700;background:rgba(255,255,255,0.15);padding:6px 12px;border-radius:20px;z-index:2">
+          ${active + 1} / ${images.length}
+        </div>
+
+        <img src="${images[active]}" alt="${escapeHTML(p.name)}"
+          style="max-width:95vw;max-height:90vh;object-fit:contain;border-radius:4px">
+
+        ${images.length > 1 ? `
+          <button onclick="event.stopPropagation();zoomPrev()"
+            style="position:fixed;left:12px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.15);
+            color:white;border:none;width:44px;height:44px;border-radius:50%;font-size:22px;cursor:pointer;z-index:2">‹</button>
+          <button onclick="event.stopPropagation();zoomNext()"
+            style="position:fixed;right:12px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.15);
+            color:white;border:none;width:44px;height:44px;border-radius:50%;font-size:22px;cursor:pointer;z-index:2">›</button>
+        ` : ""}
+      `;
+
+      document.body.appendChild(overlay);
+    };
+
+    window.zoomNext = function() {
+      active = (active + 1) % images.length;
+      switchImage(active);
+      openImageZoom();
+    };
+
+    window.zoomPrev = function() {
+      active = (active - 1 + images.length) % images.length;
+      switchImage(active);
+      openImageZoom();
     };
 
     if (computedExpired && viewerIsOwnerOrAdmin) {
