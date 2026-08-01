@@ -1,19 +1,517 @@
 rules_version = '2';
 
 service cloud.firestore {
+
   match /databases/{database}/documents {
 
-    // This rule allows anyone with your Firestore database reference to view, edit,
-    // and delete all data in your Firestore database. It is useful for getting
-    // started, but it is configured to expire after 30 days because it
-    // leaves your app open to attackers. At that time, all client
-    // requests to your Firestore database will be denied.
-    //
-    // Make sure to write security rules for your app before that time, or else
-    // all client requests to your Firestore database will be denied until you Update
-    // your rules
-    match /{document=**} {
-      allow read, write: if request.time < timestamp.date(2026, 6, 12);
+    /* ======================================================
+       PRODUCTS
+    ====================================================== */
+
+      match /products/{document=**} {
+
+  allow read: if true;
+
+  allow create: if request.auth != null;
+
+  allow update: if request.auth != null &&
+    (
+      request.auth.token.email == "swaibuziraye22@gmail.com"
+
+      ||
+
+      resource.data.userId == request.auth.uid
+
+      ||
+
+      request.resource.data.diff(resource.data)
+        .affectedKeys()
+        .hasOnly(["likes", "views", "orders"])
+    );
+
+  allow delete: if request.auth != null &&
+    (
+      request.auth.token.email == "swaibuziraye22@gmail.com"
+      ||
+      resource.data.userId == request.auth.uid
+    );
+}
+
+match /category_stats/{document=**} {
+  allow read: if true;
+  allow write: if false; // Admin SDK (Cloud Functions) bypasses this — client can never write
+}
+
+
+
+match /client_errors/{document=**} {
+  allow read: if request.auth.email == 'swaibuziraye22@gmail.com';
+  allow create: if true;  // any user's browser can log, even logged out
+  allow delete: if request.auth.email == 'swaibuziraye22@gmail.com';
+}
+
+       match /job_ads/{jobId} {
+  allow read: if true;
+  allow create: if request.auth != null;
+  allow update, delete: if request.auth != null
+    && request.auth.token.email == "swaibuziraye22@gmail.com";
+}
+
+match /whatsapp_reminders/{remId} {
+  allow read, write: if request.auth != null
+    && request.auth.token.email == "swaibuziraye22@gmail.com";
+}
+
+
+       match /category_sponsors/{id} {
+  allow read: if true;
+  allow write: if request.auth != null
+    && request.auth.token.email == "swaibuziraye22@gmail.com";
+}
+
+match /cv_boosts/{id} {
+  allow read: if request.auth != null
+    && request.auth.token.email == "swaibuziraye22@gmail.com";
+  allow create: if request.auth != null;
+}
+
+        match /blog_posts/{postId} {
+  allow read: if resource.data.status == "published" || 
+              (request.auth != null && request.auth.token.email == "swaibuziraye22@gmail.com");
+  allow write: if request.auth != null && request.auth.token.email == "swaibuziraye22@gmail.com";
+}
+
+
+     match /referrals/{id} {
+  allow read: if request.auth != null
+    && (request.auth.uid == resource.data.referrerId
+     || request.auth.uid == resource.data.referredId);
+  allow create: if request.auth != null;
+}
+
+match /boost_credits/{id} {
+  allow read: if request.auth != null
+    && request.auth.uid == resource.data.userId;
+  allow update: if request.auth != null
+    && request.auth.uid == resource.data.userId;
+  allow create: if request.auth != null;
+}
+     
+     
+     match /auto_renewals/{document=**} {
+  allow read: if request.auth != null;
+  allow create: if request.auth != null;
+  allow update: if request.auth.email == 'swaibuziraye22@gmail.com';
+}
+
+         match /pin_requests/{id} {
+  allow read: if request.auth != null
+    && (request.auth.uid == resource.data.userId
+     || request.auth.token.email == "swaibuziraye22@gmail.com");
+  allow create: if request.auth != null;
+  allow update: if request.auth != null
+    && request.auth.token.email == "swaibuziraye22@gmail.com";
+}
+
+    /* ======================================================
+       PREMIUM ADS
+    ====================================================== */
+
+    match /premium_ads/{document=**} {
+
+      allow read: if true;
+
+      allow create: if request.auth != null;
+
+      allow update: if request.auth != null
+        && (
+          request.auth.uid == resource.data.userId
+          || request.auth.token.email == 'swaibuziraye22@gmail.com'
+        );
+
+      allow delete: if request.auth != null
+        && request.auth.token.email == 'swaibuziraye22@gmail.com';
     }
+
+    /* ======================================================
+       USER PLANS / PLANS / SUBSCRIPTIONS
+    ====================================================== */
+
+    match /user_plans/{document=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null
+        && request.auth.uid == request.resource.data.userId
+        || request.auth.token.email == 'swaibuziraye22@gmail.com';
+    }
+
+    match /plans/{document=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null
+        && request.auth.uid == request.resource.data.userId
+        || request.auth.token.email == 'swaibuziraye22@gmail.com';
+    }
+
+    match /subscriptions/{document=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth.token.email == 'swaibuziraye22@gmail.com';
+    }
+     
+    match /shops/{shopId}/products/{productId} {
+  allow read: if true;
+  allow write: if request.auth != null;
+  
+  } 
+     match /plan_config/{document} {
+  allow read: if true;
+  allow write: if request.auth.email == 'swaibuziraye22@gmail.com';
+}
+    
+     match /broadcasts/{id} {
+  allow read: if true;
+  allow write: if request.auth != null
+    && request.auth.token.email == 'swaibuziraye22@gmail.com';
+}
+     match /system_config/{document=**} {
+  allow read: if true;
+  allow write: if request.auth.email == 'swaibuziraye22@gmail.com';
+}
+   
+     
+     match /saved_searches/{document=**} {
+  allow read: if false; // Cloud Functions (admin SDK) bypass this — client never needs to read others' searches directly except via query
+  allow read: if resource.data.userId == request.auth.uid;
+  allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+  allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
+}
+     
+    /* ======================================================
+       BUSINESS ACCOUNTS
+    ====================================================== */
+
+    match /business_accounts/{accountId} {
+
+      allow read: if request.auth != null
+        && (
+          request.auth.uid == resource.data.userId
+          || request.auth.token.email == 'swaibuziraye22@gmail.com'
+        );
+
+      allow create: if request.auth != null
+        && request.auth.uid == request.resource.data.userId;
+
+      allow update: if request.auth != null
+        && (
+          request.auth.uid == resource.data.userId
+          || request.auth.token.email == 'swaibuziraye22@gmail.com'
+        );
+
+      allow delete: if request.auth != null
+        && request.auth.uid == resource.data.userId;
+    }
+
+
+    /* ======================================================
+       SELLER VERIFICATIONS
+    ====================================================== */
+
+    match /seller_verifications/{document=**} {
+
+      allow read: if true;
+
+      allow create: if request.auth != null;
+
+      allow update: if request.auth != null
+        && (
+          request.auth.uid == resource.data.userId
+          || request.auth.token.email == 'swaibuziraye22@gmail.com'
+        );
+
+      allow delete: if request.auth.token.email == 'swaibuziraye22@gmail.com';
+    }
+
+    /* ======================================================
+       BUSINESS PROFILES
+    ====================================================== */
+
+    match /business_profiles/{profileId} {
+
+      allow read: if true;
+
+      allow create: if request.auth != null
+        && request.auth.uid == request.resource.data.userId;
+
+      allow update: if request.auth != null
+        && (
+          request.auth.uid == resource.data.userId
+          || request.auth.token.email == "swaibuziraye22@gmail.com"
+        );
+
+      allow delete: if request.auth != null
+        && (
+          request.auth.uid == resource.data.userId
+          || request.auth.token.email == "swaibuziraye22@gmail.com"
+        );
+    }
+
+    /* ======================================================
+       SHOPS
+    ====================================================== */
+
+   match /shops/{shopId} {
+
+  allow read: if true;
+
+  allow create: if request.auth != null
+    && request.auth.uid == request.resource.data.ownerId;
+
+  allow update: if request.auth != null
+    && (
+      request.auth.uid == resource.data.ownerId
+      || request.auth.token.email == 'swaibuziraye22@gmail.com'
+    );
+
+  allow delete: if request.auth != null
+    && (
+      request.auth.uid == resource.data.ownerId
+      || request.auth.token.email == 'swaibuziraye22@gmail.com'
+    );
+    
+    
+  allow create, update: if request.auth != null && request.auth.uid == resource.id;
+  
+  }
+
+
+    /* ======================================================
+       USERS
+    ====================================================== */
+
+    match /users/{userId} {
+  allow read: if true;
+
+  allow create: if request.auth != null && request.auth.uid == userId;
+
+  allow update: if request.auth != null
+    && (
+      request.auth.uid == userId
+      || request.auth.token.email == 'swaibuziraye22@gmail.com'
+      || request.resource.data.diff(resource.data).affectedKeys()
+           .hasOnly(['buyerRating', 'buyerRatingCount', 'phoneVerified', 'phone', 'phoneVerifiedAt'])
+    );
+
+  allow delete: if request.auth != null
+    && (
+      request.auth.uid == userId
+      || request.auth.token.email == 'swaibuziraye22@gmail.com'
+    );
+}
+
+
+
+        match /phone_otps/{userId} {
+  allow read, write: if false; // Cloud Functions only — admin SDK bypasses rules
+}
+
+
+         match /buyer_ratings/{document=**} {
+  allow read: if true;
+  allow create: if request.auth != null;
+}
+
+
+
+
+    /* ======================================================
+       ORDERS
+    ====================================================== */
+       match /orders/{orderId} {
+  allow read: if request.auth != null;
+
+  allow create: if true; // guest checkout via Buy Now is allowed
+
+  allow update: if request.auth != null
+    && (
+      request.auth.token.email == 'swaibuziraye22@gmail.com'
+      ||
+      (
+        resource.data.userEmail == request.auth.token.email &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['deliveryConfirmed','confirmedAt','autoConfirmed','disputeStatus','disputeReason','disputedAt','status','cancelledAt'])
+      )
+    );
+
+  allow delete: if request.auth != null
+    && request.auth.token.email == 'swaibuziraye22@gmail.com';
+}
+
+       match /disputes/{document=**} {
+  allow read: if request.auth != null;
+  allow create: if request.auth != null && request.resource.data.buyerUid == request.auth.uid;
+  allow update: if request.auth.email == 'swaibuziraye22@gmail.com';
+}
+
+
+    /* ======================================================
+       REVIEWS
+    ====================================================== */
+
+    match /reviews/{document=**} {
+
+      allow read: if true;
+
+      allow create: if request.auth != null;
+
+      allow delete: if request.auth.uid == resource.data.userId;
+    }
+    
+    
+    
+    match /likes/{likeId} {
+  allow read: if request.auth != null
+              && request.auth.uid == resource.data.userId;
+
+  allow create: if request.auth != null
+                && request.auth.uid == request.resource.data.userId;
+
+  allow delete: if request.auth != null
+                && request.auth.uid == resource.data.userId;
+}
+
+    /* ======================================================
+       MESSAGES
+    ====================================================== */
+
+match /messages/{messageId} {
+
+  allow read: if request.auth != null &&
+               request.auth.token.email in resource.data.participants;
+
+  allow create: if request.auth != null &&
+                 request.auth.token.email in request.resource.data.participants;
+
+  allow update: if request.auth != null &&
+                 request.auth.token.email in resource.data.participants &&
+                 request.resource.data.diff(resource.data)
+                   .affectedKeys()
+                   .hasOnly(["read","readAt"]);
+
+}
+
+    /* ======================================================
+       NOTIFICATIONS
+    ====================================================== */
+
+    match /notifications/{document=**} {
+
+      allow read, write:
+        if request.auth.uid == resource.data.userId;
+    }
+
+    /* ======================================================
+       BOOST REQUESTS
+    ====================================================== */
+
+       match /boost_requests/{id} {
+
+  allow read: if request.auth != null
+    && (
+      request.auth.uid == resource.data.userId
+      || request.auth.token.email == 'swaibuziraye22@gmail.com'
+    );
+
+  allow create: if request.auth != null;
+
+  allow update: if request.auth != null
+    && (
+      request.auth.uid == resource.data.userId
+      || request.auth.token.email == 'swaibuziraye22@gmail.com'
+    );
+
+  allow delete: if request.auth != null
+    && (
+      request.auth.uid == resource.data.userId
+      || request.auth.token.email == 'swaibuziraye22@gmail.com'
+    );
+}
+
+    /* ======================================================
+       ADS
+    ====================================================== */
+
+    match /ads/{adId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    /* ======================================================
+       VERIFICATIONS / ANALYTICS
+    ====================================================== */
+
+    match /verificationRequests/{docId} {
+      allow create: if request.auth != null;
+      allow read, update, delete: if request.auth.token.email == 'swaibuziraye22@gmail.com';
+    }
+
+    match /analytics/{docId} {
+      allow read, write: if request.auth.token.email == 'swaibuziraye22@gmail.com';
+    }
+
+    /* ======================================================
+       FEATURED ADS
+    ====================================================== */
+
+    match /featured_ads/{document=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth.token.email == 'swaibuziraye22@gmail.com';
+    }
+    
+    
+    
+    match /shop_followers/{followId} {
+
+  allow read: if true;
+
+  allow create: if request.auth != null;
+
+  allow delete: if request.auth != null
+    && request.auth.uid == resource.data.userId;
+
+  allow update: if false;
+}
+
+
+     match /banner_ads/{bannerId} {
+  allow read: if true;
+  allow create, delete: if request.auth != null
+    && request.auth.token.email == "swaibuziraye22@gmail.com";
+  allow update: if (request.auth != null
+    && request.auth.token.email == "swaibuziraye22@gmail.com")
+    || request.resource.data.diff(resource.data).affectedKeys()
+       .hasOnly(["impressions", "clicks"]);
+}
+
+match /reports/{document=**} {
+  allow read: if true;
+  allow create: if request.auth != null;
+  allow update: if request.auth.token.email == 'swaibuziraye22@gmail.com';
+  allow delete: if request.auth.token.email == 'swaibuziraye22@gmail.com';
+}
+
+match /response_stats/{userId} {
+  allow read: if true;
+  allow write: if request.auth != null;
+}
+
+
+    /* ======================================================
+       FINAL ADMIN OVERRIDE (KEEP LAST)
+    ====================================================== */
+
+    match /{document=**} {
+      allow read, write:
+        if request.auth != null
+        && request.auth.token.email == 'swaibuziraye22@gmail.com';
+    }
+
   }
 }
