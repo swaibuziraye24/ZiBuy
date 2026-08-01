@@ -1435,14 +1435,32 @@ async function loadBroadcasts() {
     }
 
     list.innerHTML = items.map(b => `
-      <div style="padding:12px;border-bottom:1px solid #f0f0f0">
-        <p style="font-weight:800;font-size:14px;margin:0 0 4px">🔥 ${escapeHTML(b.title)}</p>
-        <p style="font-size:13px;color:var(--gray);margin:0 0 4px">${escapeHTML(b.message)}</p>
-        <p style="font-size:11px;color:#adb5bd;margin:0">${fmtDate(b.createdAt)}</p>
+      <div style="padding:12px;border-bottom:1px solid #f0f0f0;display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+        <div style="flex:1">
+          <p style="font-weight:800;font-size:14px;margin:0 0 4px">🔥 ${escapeHTML(b.title)}</p>
+          <p style="font-size:13px;color:var(--gray);margin:0 0 4px">${escapeHTML(b.message)}</p>
+          <p style="font-size:11px;color:#adb5bd;margin:0">${fmtDate(b.createdAt)}</p>
+        </div>
+        <button onclick="deleteBroadcast('${b.id}')"
+          style="background:#fee2e2;color:#ef4444;border:none;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">
+          🗑️ Delete
+        </button>
       </div>
     `).join("");
   } catch (e) { console.warn(e); }
 }
+
+window.deleteBroadcast = async function(broadcastId) {
+  if (!confirm("Delete this broadcast? It will stop appearing on every page immediately.")) return;
+
+  try {
+    await deleteDoc(doc(db, "broadcasts", broadcastId));
+    showToast("Broadcast deleted ✅", "success");
+    loadBroadcasts();
+  } catch (e) {
+    showToast("Failed: " + e.message, "error");
+  }
+};
 
 
 // ══════════════════════════════════════════════
