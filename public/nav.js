@@ -94,6 +94,10 @@
   document.body.appendChild(nav);
 
   // ── Back button on inner pages ──────────────
+  // Uses the browser's REAL back navigation (same as the phone's own
+  // back gesture/button) instead of a hand-built history list — this
+  // avoids full page reloads on every tap, and can never point at a
+  // stale/wrong page since there's no manual list to go out of sync.
   if (!isHome && !document.getElementById("nav-back-btn")) {
     const topbar = document.querySelector(".topbar, .admin-topbar");
 
@@ -101,23 +105,14 @@
     back.id        = "nav-back-btn";
     back.innerHTML = `<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>`;
 
-    // Track navigation history in sessionStorage
-    const navStack = JSON.parse(sessionStorage.getItem("zibuy-nav") || "[]");
-    const thisPage = location.href;
-
-    if (navStack[navStack.length - 1] !== thisPage) {
-      navStack.push(thisPage);
-      sessionStorage.setItem("zibuy-nav", JSON.stringify(navStack));
-    }
-
     back.onclick = () => {
-      const stack = JSON.parse(sessionStorage.getItem("zibuy-nav") || "[]");
-      stack.pop(); // remove current
-      const prev = stack[stack.length - 1];
-      sessionStorage.setItem("zibuy-nav", JSON.stringify(stack));
+      // Only trust real browser history if we actually arrived here
+      // by clicking through the site itself — not via a shared link,
+      // bookmark, or notification tap, which have no real "back" to go to
+      const cameFromZiBuy = document.referrer && document.referrer.includes(window.location.host);
 
-      if (prev) {
-        window.location.href = prev;
+      if (cameFromZiBuy && window.history.length > 1) {
+        history.back();
       } else {
         window.location.href = "index.html";
       }
