@@ -67,8 +67,10 @@ function renderBlog() {
     featSlot.innerHTML = `
       <div class="blog-featured" onclick="window.location.href='blog-post.html?id=${featured.id}&slug=${createSlug(featured.title)}'">
         <div class="blog-featured-img">
-          <img src="${featured.coverImage || ''}" alt="${featured.title}"
-            onerror="this.src='https://zibuy-5deae.web.app/icons/icon-512.png/600x400?text=ZiBuy+Blog'">
+          ${featured.coverImage
+            ? `<img src="${featured.coverImage}" alt="${featured.title}" onerror="this.parentElement.innerHTML='<div style=&quot;height:100%;display:flex;align-items:center;justify-content:center;font-size:48px;background:linear-gradient(135deg,#ff6600,#ff9900)&quot;>📰</div>'">`
+            : `<div style="height:100%;display:flex;align-items:center;justify-content:center;font-size:48px;background:linear-gradient(135deg,#ff6600,#ff9900)">📰</div>`
+          }
         </div>
         <div class="blog-featured-body">
           <span class="blog-cat-badge">${CAT_LABELS[featured.category] || "Article"}</span>
@@ -95,8 +97,10 @@ function renderBlog() {
   grid.innerHTML = gridPosts.map(p => `
     <div class="blog-card" onclick="window.location.href='blog-post.html?id=${p.id}&slug=${createSlug(p.title)}'">
       <div class="blog-card-img">
-        <img src="${p.coverImage || ''}" alt="${p.title}"
-          onerror="this.src='https://zibuy-5deae.web.app/icons/icon-512.png/400x300?text=ZiBuy+Blog'">
+        ${p.coverImage
+          ? `<img src="${p.coverImage}" alt="${p.title}" onerror="this.parentElement.innerHTML='<div style=&quot;height:100%;display:flex;align-items:center;justify-content:center;font-size:32px;background:linear-gradient(135deg,#ff6600,#ff9900)&quot;>📰</div>'">`
+          : `<div style="height:100%;display:flex;align-items:center;justify-content:center;font-size:32px;background:linear-gradient(135deg,#ff6600,#ff9900)">📰</div>`
+        }
       </div>
       <div class="blog-card-body">
         <span class="blog-cat-badge">${CAT_LABELS[p.category] || "Article"}</span>
