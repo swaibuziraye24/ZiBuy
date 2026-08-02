@@ -124,28 +124,62 @@
 
     <div id="product-reviews" style="margin-bottom:24px"></div>
 
-    <div style="background:#f9fafb;border-radius:14px;padding:20px">
-      <h3 style="font-size:15px;font-weight:800;margin-bottom:14px">✍️ Write a Review</h3>
-      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-        <label style="flex:1;min-width:120px;display:flex;align-items:center;gap:8px;background:white;border:1.5px solid #e5e7eb;border-radius:10px;padding:10px 14px;cursor:pointer;font-size:14px;font-weight:700">
-          <input type="radio" name="star" value="5" checked style="accent-color:#ff6600"> ⭐⭐⭐⭐⭐
-        </label>
-        <label style="flex:1;min-width:120px;display:flex;align-items:center;gap:8px;background:white;border:1.5px solid #e5e7eb;border-radius:10px;padding:10px 14px;cursor:pointer;font-size:14px;font-weight:700">
-          <input type="radio" name="star" value="4" style="accent-color:#ff6600"> ⭐⭐⭐⭐
-        </label>
-        <label style="flex:1;min-width:120px;display:flex;align-items:center;gap:8px;background:white;border:1.5px solid #e5e7eb;border-radius:10px;padding:10px 14px;cursor:pointer;font-size:14px;font-weight:700">
-          <input type="radio" name="star" value="3" style="accent-color:#ff6600"> ⭐⭐⭐
-        </label>
-        <label style="flex:1;min-width:120px;display:flex;align-items:center;gap:8px;background:white;border:1.5px solid #e5e7eb;border-radius:10px;padding:10px 14px;cursor:pointer;font-size:14px;font-weight:700">
-          <input type="radio" name="star" value="2" style="accent-color:#ff6600"> ⭐⭐
-        </label>
-        <label style="flex:1;min-width:120px;display:flex;align-items:center;gap:8px;background:white;border:1.5px solid #e5e7eb;border-radius:10px;padding:10px 14px;cursor:pointer;font-size:14px;font-weight:700">
-          <input type="radio" name="star" value="1" style="accent-color:#ff6600"> ⭐
-        </label>
+    <div style="background:#f9fafb;border-radius:14px;padding:16px">
+
+      <!-- Collapsed by default — tap to expand -->
+      <button id="review-toggle-btn" onclick="toggleReviewForm()"
+        style="width:100%;background:white;border:1.5px solid #e5e7eb;border-radius:10px;padding:12px 14px;
+        display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-family:inherit">
+        <span style="font-size:14px;font-weight:800;color:#111827">✍️ Write a Review</span>
+        <span id="review-toggle-icon" style="font-size:13px;color:#9ca3af">Tap to rate ▾</span>
+      </button>
+
+      <div id="review-form-body" style="display:none;margin-top:14px">
+
+        <!-- Compact tap-to-select stars — hidden radios keep
+             submitProductReview() in product.js working unchanged -->
+        <div style="display:flex;justify-content:center;gap:6px;margin-bottom:14px" id="star-tap-row">
+          <span class="star-tap" data-value="1" onclick="setStarRating(1)" style="font-size:32px;cursor:pointer;color:#e5e7eb">★</span>
+          <span class="star-tap" data-value="2" onclick="setStarRating(2)" style="font-size:32px;cursor:pointer;color:#e5e7eb">★</span>
+          <span class="star-tap" data-value="3" onclick="setStarRating(3)" style="font-size:32px;cursor:pointer;color:#e5e7eb">★</span>
+          <span class="star-tap" data-value="4" onclick="setStarRating(4)" style="font-size:32px;cursor:pointer;color:#e5e7eb">★</span>
+          <span class="star-tap" data-value="5" onclick="setStarRating(5)" style="font-size:32px;cursor:pointer;color:#e5e7eb">★</span>
+        </div>
+
+        <div style="display:none">
+          <input type="radio" name="star" value="1">
+          <input type="radio" name="star" value="2">
+          <input type="radio" name="star" value="3">
+          <input type="radio" name="star" value="4">
+          <input type="radio" name="star" value="5" checked>
+        </div>
+
+        <textarea id="review-text" placeholder="Share your experience with this product..." rows="2" style="width:100%;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-family:inherit;margin-bottom:10px;resize:none;box-sizing:border-box;font-size:14px"></textarea>
+        <button onclick="submitProductReview()" style="background:#ff6600;color:white;border:none;padding:12px;border-radius:10px;font-weight:800;cursor:pointer;width:100%;font-size:14px;font-family:inherit">Post Review</button>
       </div>
-      <textarea id="review-text" placeholder="Share your experience with this product..." rows="3" style="width:100%;padding:12px;border:1.5px solid #e5e7eb;border-radius:10px;font-family:inherit;margin-bottom:10px;resize:none;box-sizing:border-box;font-size:14px"></textarea>
-      <button onclick="submitProductReview()" style="background:#ff6600;color:white;border:none;padding:13px;border-radius:10px;font-weight:800;cursor:pointer;width:100%;font-size:15px;font-family:inherit">Post Review</button>
     </div>
+
+    <script>
+      function toggleReviewForm() {
+        const body = document.getElementById("review-form-body");
+        const icon = document.getElementById("review-toggle-icon");
+        const isOpen = body.style.display === "block";
+        body.style.display = isOpen ? "none" : "block";
+        icon.textContent = isOpen ? "Tap to rate ▾" : "Close ▴";
+      }
+
+      function setStarRating(value) {
+        document.querySelectorAll("input[name='star']").forEach(r => {
+          r.checked = Number(r.value) === value;
+        });
+        document.querySelectorAll(".star-tap").forEach(s => {
+          s.style.color = Number(s.dataset.value) <= value ? "#ff6600" : "#e5e7eb";
+        });
+      }
+
+      // Default to 5 stars filled, matching the pre-checked radio above
+      document.addEventListener("DOMContentLoaded", () => setStarRating(5));
+    </script>
   </div>
 </div>
 
