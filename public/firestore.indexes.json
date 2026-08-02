@@ -144,6 +144,15 @@
   ]
 },
 
+    {
+  "collectionGroup": "blog_posts",
+  "queryScope": "COLLECTION",
+  "fields": [
+    { "fieldPath": "status", "order": "ASCENDING" },
+    { "fieldPath": "publishAt", "order": "ASCENDING" }
+  ]
+},
+
 
     {
       "collectionGroup": "orders",
