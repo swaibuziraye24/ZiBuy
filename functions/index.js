@@ -2668,6 +2668,41 @@ exports.productSeo = onRequest(seoApp);
 
 
 // ============================================
+// SCHEDULED BLOG PUBLISHING
+// Runs every 15 minutes, publishes any post
+// whose scheduled time has arrived
+// ============================================
+
+exports.publishScheduledBlogPosts = onSchedule(
+  { schedule: "every 15 minutes", timeZone: "Africa/Kampala" },
+  async () => {
+    try {
+      const now = admin.firestore.Timestamp.now();
+
+      const snap = await db.collection("blog_posts")
+        .where("status", "==", "scheduled")
+        .where("publishAt", "<=", now)
+        .get();
+
+      if (snap.empty) return;
+
+      const batch = db.batch();
+      snap.forEach(doc => {
+        batch.update(doc.ref, {
+          status: "published",
+          publishedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+      });
+
+      await batch.commit();
+      console.log(`[BLOG SCHEDULER] Published ${snap.size} post(s)`);
+    } catch (err) {
+      console.error("[BLOG SCHEDULER ERROR]", err.message);
+    }
+  }
+);
+
+// ============================================
 // ZIBUY PROTECT — auto-confirm & dispute alerts
 // ============================================
 
