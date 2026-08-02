@@ -2107,6 +2107,21 @@ window.saveBlogPost = async function(status) {
   .replace(/[^\w\s-]/g, "")
   .replace(/\s+/g, "-");
 
+let publishAt = null;
+
+if (status === "scheduled") {
+  const scheduleInput = document.getElementById("bp-schedule-date")?.value;
+  if (!scheduleInput) {
+    showToast("Pick a date and time to schedule for", "error");
+    return;
+  }
+  publishAt = new Date(scheduleInput);
+  if (publishAt <= new Date()) {
+    showToast("Scheduled time must be in the future", "error");
+    return;
+  }
+}
+
 const postData = {
   title,
   slug,
@@ -2116,19 +2131,20 @@ const postData = {
   content,
   coverImage,
   status,
+  publishAt,
   updatedAt: new Date()
 };
 
     if (editId) {
       await updateDoc(doc(db, "blog_posts", editId), postData);
-      showToast(status === "published" ? "✅ Post published!" : "💾 Draft saved", "success");
+      showToast(status === "published" ? "✅ Post published!" : status === "scheduled" ? "📅 Post scheduled!" : "💾 Draft saved", "success");
     } else {
       await addDoc(collection(db, "blog_posts"), {
         ...postData,
         views: 0,
         createdAt: new Date()
       });
-      showToast(status === "published" ? "🚀 Post published!" : "💾 Draft saved", "success");
+      showToast(status === "published" ? "🚀 Post published!" : status === "scheduled" ? "📅 Post scheduled!" : "💾 Draft saved", "success");
     }
 
     cancelBlogEdit();
@@ -2150,6 +2166,7 @@ window.cancelBlogEdit = function() {
   document.getElementById("bp-content").value     = "";
   document.getElementById("bp-author").value      = "ZiBuy Team";
   document.getElementById("bp-category").value    = "selling-tips";
+  document.getElementById("bp-schedule-date").value = "";
   document.getElementById("bp-cover-preview").innerHTML = "";
   document.getElementById("blog-form-title").textContent = "✍️ Write New Post";
   document.getElementById("bp-cancel-edit").style.display = "none";
@@ -2166,6 +2183,16 @@ window.editBlogPost = function(postId) {
   document.getElementById("bp-author").value   = post.author || "ZiBuy Team";
   document.getElementById("bp-excerpt").value  = post.excerpt || "";
   document.getElementById("bp-content").value  = post.content || "";
+
+  const scheduleEl = document.getElementById("bp-schedule-date");
+  if (scheduleEl) {
+    if (post.status === "scheduled" && post.publishAt) {
+      const d = post.publishAt.toDate ? post.publishAt.toDate() : new Date(post.publishAt);
+      scheduleEl.value = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    } else {
+      scheduleEl.value = "";
+    }
+  }
 
   if (post.coverImage) {
     document.getElementById("bp-cover-preview").innerHTML = `
@@ -2227,8 +2254,8 @@ window.loadBlogAdmin = async function() {
           <p style="margin:4px 0;font-size:12px;color:#6b7280">
             ${escapeHTML(p.category) || "—"} · by ${escapeHTML(p.author) || "ZiBuy Team"} · 👁️ ${p.views || 0} views
           </p>
-          <span class="plan-chip ${p.status === 'published' ? 'chip-approved' : 'chip-pending'}">
-            ${p.status === 'published' ? '✅ Published' : '📝 Draft'}
+          <span class="plan-chip ${p.status === 'published' ? 'chip-approved' : p.status === 'scheduled' ? 'chip-pending' : 'chip-free'}">
+            ${p.status === 'published' ? '✅ Published' : p.status === 'scheduled' ? `⏰ Scheduled — ${fmtDate(p.publishAt)}` : '📝 Draft'}
           </span>
         </div>
 
@@ -2236,7 +2263,7 @@ window.loadBlogAdmin = async function() {
           <button class="action-btn btn-approve" onclick="editBlogPost('${p.id}')">✏️ Edit</button>
           ${p.status === 'published'
             ? `<button class="action-btn btn-reject" onclick="toggleBlogStatus('${p.id}','draft')">📥 Unpublish</button>`
-            : `<button class="action-btn btn-approve" onclick="toggleBlogStatus('${p.id}','published')">🚀 Publish</button>`}
+            : `<button class="action-btn btn-approve" onclick="toggleBlogStatus('${p.id}','published')">🚀 Publish Now</button>`}
           <button class="action-btn btn-reject" onclick="deleteBlogPost('${p.id}')">🗑️ Delete</button>
         </div>
       </div>
