@@ -431,12 +431,18 @@ if (categoriesEl) {
       : "No categories specified";
 }
 
-// Business Hours
+// Business Hours — always displayed Monday through Sunday,
+// regardless of the order the data happens to be stored in
 if (hoursEl && shop.businessHours) {
 
+  const DAY_ORDER = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+
   hoursEl.innerHTML =
-    Object.entries(shop.businessHours)
-      .map(([day, hours]) => {
+    DAY_ORDER
+      .filter(day => shop.businessHours[day]) // skip any day with no data saved
+      .map(day => {
+
+        const hours = shop.businessHours[day];
 
         return `
           <div style="
