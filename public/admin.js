@@ -2335,6 +2335,365 @@ window.filterActivityLogs = function() {
 
 window.loadAdminLogs = loadAdminLogs;
 
+window.seedStarterBlogPosts = async function() {
+  if (!confirm("This creates 20 starter blog posts — 1 published immediately, 19 pre-scheduled every 3 days after that. Continue?")) return;
+
+  const btn = document.getElementById("seed-blog-btn");
+  if (btn) { btn.textContent = "Seeding..."; btn.disabled = true; }
+
+  const posts = [
+    { category: "selling-tips", title: "How to Take Photos That Actually Sell Your Product",
+      excerpt: "Good lighting and a clean background can double your views. Here's how to shoot photos buyers trust.",
+      content: `## Why Photos Matter More Than You Think
+
+On ZiBuy, your cover photo is the first thing a buyer sees in search results — before your price, before your title. A blurry or dark photo gets scrolled past in under a second.
+
+### 3 Quick Fixes
+
+- **Use natural light.** Shoot near a window during the day instead of using flash at night.
+- **Clean, plain background.** A cluttered background distracts from the product itself.
+- **Show it from multiple angles.** Front, back, close-up of any defects — buyers trust honesty.
+
+### One Simple Rule
+
+If you wouldn't stop scrolling for your own photo, a buyer won't either. Take 30 extra seconds — it's the cheapest way to sell faster.` },
+
+    { category: "selling-tips", title: "Pricing Your Items Right on ZiBuy",
+      excerpt: "Price too high and nobody clicks. Price too low and you lose money. Here's how to find the sweet spot.",
+      content: `## Start With Research, Not Guessing
+
+Before you price anything, search your exact item on ZiBuy and see what similar sellers are charging. If you have a Silver or Gold plan, your Analytics tab even shows you the category average directly.
+
+### A Simple Pricing Approach
+
+1. Find 3-5 similar listings
+2. Note the average price
+3. Price slightly below if your item has more wear, slightly above if it's in better condition or comes with extras
+
+### Don't Be Afraid to Adjust
+
+If a product sits with zero interest for a week, it's usually the price, not bad luck. Lowering it — and letting **Price Drop Alerts** notify buyers who already liked it — is often the fastest way to finally sell.` },
+
+    { category: "selling-tips", title: "Writing Descriptions Buyers Actually Trust",
+      excerpt: "Vague descriptions raise suspicion. Specific ones build confidence. Here's the difference.",
+      content: `## Buyers Read Between the Lines
+
+"Good condition, no issues" tells a buyer nothing — and on a marketplace, vague usually reads as hiding something.
+
+### What to Include Instead
+
+- **Exact condition**, including small flaws ("light scratch on the back, doesn't affect use")
+- **Why you're selling** (upgrading, moving, no longer needed) — it's a small trust signal
+- **What's included** (charger, box, accessories)
+
+### The Golden Rule
+
+Describe it the way you'd want it described if you were buying it. Honest listings get fewer questions in chat and close faster.` },
+
+    { category: "selling-tips", title: "Boost vs Pin to Top: Which One Should You Use?",
+      excerpt: "Both put your ad in front of more buyers — but for different situations. Here's how to choose.",
+      content: `## Two Tools, Two Jobs
+
+**Boost** keeps your ad featured for 7, 14, or 30 days — good for items you're in no rush to sell, where steady extra visibility matters most.
+
+**Pin to Top** places your ad above everyone else — including boosted ads — for a short 24–48 hour burst. It's built for urgency: a price drop you want everyone to see today, or clearing stock fast.
+
+### Quick Guide
+
+- Selling something over weeks? → **Boost**
+- Need it gone this weekend? → **Pin to Top**
+- Want both? Many sellers boost for the month, then pin during the final push.` },
+
+    { category: "selling-tips", title: "From One Ad to a Real Shop: When to Upgrade Your Plan",
+      excerpt: "Free is great to start. Here's how to know when it's time for Bronze, Silver, or Gold.",
+      content: `## Signs You've Outgrown Free
+
+If you're regularly hitting your ad limit, deleting old listings just to post new ones, that's your clearest signal — it's costing you sales, not just convenience.
+
+### What Upgrading Actually Unlocks
+
+- **More ad slots** — post your full catalog instead of a fraction of it
+- **Silver & Gold** include automatic seller verification — buyers see that badge instantly
+- **Analytics** — know exactly which products and categories are working
+
+### A Simple Test
+
+If the extra ad slots alone would let you post even 2-3 more items a month, the plan usually pays for itself in the first sale.` },
+
+    { category: "buying-guide", title: "How to Spot a Trustworthy Seller on ZiBuy",
+      excerpt: "Before you message a seller, these signals tell you a lot about who you're dealing with.",
+      content: `## Look Past the Product — Look at the Seller
+
+Every product page shows more than a price. Check the seller's badges before you commit.
+
+### What to Check
+
+- **Trust Score & Tier** — 🥇 Gold or 💎 Elite means a strong track record
+- **📱 Phone Verified** and **✅ Verified Seller** badges
+- **Response rate** — "usually replies within 1 hour" tells you they're active
+- **Star rating and review count** — a handful of genuine reviews beats zero
+
+### One More Tip
+
+A seller with a full shop page — logo, description, multiple listings — is almost always more established than a bare, single-ad account.` },
+
+    { category: "buying-guide", title: "Paying With MTN and Airtel Mobile Money on ZiBuy",
+      excerpt: "A simple walkthrough of how payment works when you tap Buy Now.",
+      content: `## It's Simpler Than It Looks
+
+When you tap **Buy Now**, ZiBuy shows you a merchant code (MTN) or number (Airtel) along with a unique order reference.
+
+### The Steps
+
+1. Dial the Mobile Money code shown on your screen
+2. Enter the exact amount displayed
+3. Enter your PIN to confirm
+4. Copy the transaction ID from your phone
+5. Paste it into ZiBuy and tap "I've Paid"
+
+Your reference and transaction ID are sent straight to the seller via WhatsApp — so they know it's really you, and can start preparing your order immediately.` },
+
+    { category: "buying-guide", title: "What Is ZiBuy Protect, and Should You Use It?",
+      excerpt: "A small optional fee that gives you a real say if something goes wrong with your order.",
+      content: `## The Short Version
+
+ZiBuy Protect adds a small fee at checkout. In exchange, your order isn't automatically considered "done" the moment you pay — **you** confirm it once the item actually arrives.
+
+### If Something's Wrong
+
+Instead of confirming, you tap **"Report a Problem"** right from your dashboard. Our team reviews it as a real dispute — not just a complaint lost in a chat.
+
+### When It's Worth It
+
+For low-value items from a seller you already trust, it's optional. For higher-value purchases, or a seller you're buying from for the first time, it's cheap peace of mind.` },
+
+    { category: "buying-guide", title: "Buying a Used Phone Safely in Uganda",
+      excerpt: "Phones are one of the most popular — and most risky — categories. Here's how to buy smart.",
+      content: `## Before You Pay
+
+Ask the seller directly: **is the phone unlocked, and does it have a receipt or proof of purchase?** A hesitant answer is worth noting.
+
+### Checklist Before Confirming
+
+- IMEI number matches what's on the box (ask for it)
+- Battery health, if the seller can share it
+- Screen, buttons, and charging port all tested on a call or video
+- Check the seller's Trust Score and reviews specifically for phone sales
+
+### Our Advice
+
+For phones especially, ZiBuy Protect is worth the small fee — it gives you a real window to confirm everything works before the order is final.` },
+
+    { category: "buying-guide", title: "How to Negotiate Politely and Still Get a Good Price",
+      excerpt: "You can absolutely negotiate on ZiBuy — here's how to do it in a way sellers actually respond to.",
+      content: `## Start the Conversation Right
+
+Messaging "is this your final price?" opens the door without pressuring anyone. Sellers respond far better to polite, direct questions than lowball offers with no context.
+
+### What Works
+
+- Mention *why* — "I found a similar one for less, could you match it?"
+- Offer to buy sooner or pay in full upfront as your leverage
+- Be willing to walk away respectfully if the answer is no
+
+### Remember
+
+A good rating from the seller matters to them too — buyers who negotiate respectfully tend to get better deals over time, not just once.` },
+
+    { category: "safety", title: "5 Red Flags to Watch For When Buying Online",
+      excerpt: "Most bad deals show warning signs early — if you know what to look for.",
+      content: `## Trust Your Gut, But Verify Too
+
+### The 5 Signs
+
+1. **Price far below market** — if it seems too good to be true, ask why directly
+2. **Seller avoids ZiBuy chat**, pushing you to WhatsApp immediately with no ad history
+3. **Refuses any form of verification** or gets defensive when asked simple questions
+4. **New account, zero reviews, high-value item** — not disqualifying alone, but worth extra caution
+5. **Pressure to pay instantly** with no room for questions
+
+### What To Do
+
+None of these alone mean a scam — but two or more together is a real reason to slow down, or simply choose a different seller with a stronger track record.` },
+
+    { category: "safety", title: "How ZiBuy's Trust Score Actually Works",
+      excerpt: "It's not random — here's exactly what goes into a seller's score, and why it matters.",
+      content: `## What Actually Feeds the Score
+
+A seller's Trust Score (0–100) is calculated from real, verifiable signals:
+
+- Phone verification status
+- ID verification approval
+- Average rating and number of genuine reviews
+- Buyer ratings received (yes, sellers can be rated too)
+- Account age
+
+### The Tiers
+
+🌱 New → 🥉 Bronze → 🥈 Silver → 🥇 Gold → 💎 Elite
+
+### Why It Can't Be Gamed
+
+The score recalculates automatically the moment any of these change — it can't be bought, and a seller who stops delivering good service will see their tier drop over time, not just rise once and stay there forever.` },
+
+    { category: "safety", title: "What to Do If a Deal Feels Wrong",
+      excerpt: "Trust your instincts — here's exactly what to do, step by step, if something feels off.",
+      content: `## Don't Ignore the Feeling
+
+If a conversation feels pressured, evasive, or just off, you're allowed to slow down or stop entirely — no explanation needed to the seller.
+
+### Your Options, In Order
+
+1. **Ask more questions** in ZiBuy chat — a genuine seller won't mind
+2. **Check their profile** — reviews, verification, response rate
+3. **Report the seller** directly from the product page if something feels genuinely wrong
+4. **If you already paid with ZiBuy Protect**, raise a dispute from your dashboard immediately
+
+### Remember
+
+Reporting doesn't require proof of a scam — flagging a bad feeling helps our team catch patterns before someone else gets hurt.` },
+
+    { category: "safety", title: "Meeting a Buyer or Seller in Person: A Safety Checklist",
+      excerpt: "For local pickups and cash deals, a few simple habits make a big difference.",
+      content: `## Before You Go
+
+- Meet in a public place — a mall, market, or busy street, never somewhere isolated
+- Tell a friend or family member where you're going, and roughly when you'll be back
+- If possible, meet during daylight hours
+
+### During the Meeting
+
+- Inspect the item fully before handing over payment
+- Count cash carefully, or confirm Mobile Money before parting with the item
+- Trust your instincts — if anything feels wrong, it's okay to leave
+
+### After
+
+A quick review of the seller or buyer — good or bad — helps the next person make a safer decision too.` },
+
+    { category: "news", title: "Introducing ZiBuy Protect: Buy With Confidence",
+      excerpt: "Our newest feature gives buyers real assurance on every purchase — here's how it works.",
+      content: `## A New Way to Buy Safely
+
+We've just launched **ZiBuy Protect** — an optional protection fee at checkout that puts real control in the buyer's hands.
+
+### How It Works
+
+Instead of an order being "done" the moment you pay, you confirm receipt yourself — or raise a dispute if something's wrong, reviewed directly by our team.
+
+### Why We Built It
+
+Trust is the biggest thing standing between a buyer and clicking "Buy Now." ZiBuy Protect is our answer — a real safety net, not just a promise.
+
+Look for the 🛡️ shield toggle the next time you check out.` },
+
+    { category: "news", title: "Real-Time Chat Has Arrived on ZiBuy",
+      excerpt: "No more refreshing to see if a seller replied. Messages now appear instantly.",
+      content: `## Faster Conversations, Faster Sales
+
+Messaging on ZiBuy just got a major upgrade — conversations now update **instantly**, with read receipts so you know the moment your message has been seen.
+
+### What's New
+
+- Messages appear live, no refresh needed
+- Blue double-checkmarks show when a message has been read
+- Your conversation list updates automatically as new messages arrive
+
+Faster replies mean faster deals — try it out in your Messages tab today.` },
+
+    { category: "news", title: "New: Compare Products Side by Side Before You Buy",
+      excerpt: "Torn between two similar listings? Now you can view them side by side before deciding.",
+      content: `## Decisions Made Easier
+
+Choosing between two or three similar products used to mean opening multiple tabs. Not anymore.
+
+### How to Use It
+
+From any product page, tap **"Compare"** on up to 3 related items — price, condition, and photos appear side by side instantly, right on your screen.
+
+### Why We Added This
+
+Buyers shouldn't have to choose blind. This feature is live now on every product page — look for the compare checkbox under "You Might Also Like."` },
+
+    { category: "success-stories", title: "From Side Hustle to Full-Time Shop: A ZiBuy Seller's Story",
+      excerpt: "What started as a way to clear out old clothes turned into a real business.",
+      content: `## Small Beginnings
+
+Like many sellers, it started with a handful of items posted just to make some quick cash. A few sales turned into steady demand.
+
+### The Turning Point
+
+Upgrading from Free to a paid plan meant posting more items at once — and unlocking a proper shop page gave the business a real identity buyers could recognize and return to.
+
+### The Lesson
+
+Consistency mattered more than any single boost or promotion. Regular posting, honest photos, and quick replies built the kind of reputation that keeps buyers coming back.` },
+
+    { category: "success-stories", title: "How One Kampala Electronics Seller Doubled Views With Boosts",
+      excerpt: "A simple change in strategy made a measurable difference in traffic.",
+      content: `## The Problem
+
+Ads were getting posted regularly, but views stayed flat — buried under newer listings within a day or two.
+
+### What Changed
+
+Switching to **Boost** on the top 3 best-performing items, rather than spreading a small budget thin across everything, made the real difference — those specific ads stayed visible for weeks instead of hours.
+
+### The Result
+
+Focused boosting on proven sellers, rather than boosting everything equally, turned out to be the more effective approach — a lesson worth trying for any seller with a mixed catalog.` },
+
+    { category: "success-stories", title: "Selling Farm Produce Online: A First-Time Seller's Experience",
+      excerpt: "Moving from selling only at the local market to reaching buyers across the region.",
+      content: `## Starting From Scratch
+
+Listing agricultural products for the first time meant learning what buyers actually wanted to see — clear photos of the produce itself, honest quantities, and real pickup locations.
+
+### What Worked
+
+Being upfront about harvest dates and freshness built trust quickly with first-time buyers — and positive reviews from those early sales made every listing afterward easier to sell.
+
+### Advice for Other First-Timers
+
+Don't wait for the "perfect" first listing. Post honestly, respond quickly, and let your reviews do the convincing over time.` }
+  ];
+
+  try {
+    const now = new Date();
+
+    for (let i = 0; i < posts.length; i++) {
+      const p = posts[i];
+      const slug = p.title.toLowerCase().trim().replace(/[^\w\s-]/g, "").replace(/\s+/g, "-");
+
+      const isFirst = i === 0;
+      const publishAt = new Date(now.getTime() + i * 3 * 86400000); // every 3 days apart
+
+      await addDoc(collection(db, "blog_posts"), {
+        title: p.title,
+        slug,
+        category: p.category,
+        author: "ZiBuy Team",
+        excerpt: p.excerpt,
+        content: p.content,
+        coverImage: "",
+        status: isFirst ? "published" : "scheduled",
+        publishAt: isFirst ? null : publishAt,
+        publishedAt: isFirst ? new Date() : null,
+        views: 0,
+        createdAt: new Date()
+      });
+    }
+
+    showToast(`✅ Seeded 20 posts — 1 live now, 19 scheduled every 3 days`, "success");
+    loadBlogAdmin();
+
+  } catch (err) {
+    console.error("seedStarterBlogPosts error:", err);
+    showToast("Failed: " + err.message, "error");
+  } finally {
+    if (btn) { btn.textContent = "🌱 Seed 20 Starter Posts"; btn.disabled = false; }
+  }
+};
 
 // ══════════════════════════════════════════════
 //  EDIT ANY AD (Admin)
