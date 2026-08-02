@@ -1066,13 +1066,20 @@ Separate paragraphs with a blank line."
       </div>
 
       <div class="admin-card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
           <h2 style="margin:0">All Posts</h2>
-          <button onclick="loadBlogAdmin()"
-            style="background:#f3f4f6;border:none;padding:6px 14px;border-radius:8px;
-            font-weight:700;font-size:12px;cursor:pointer;font-family:inherit">
-            🔄 Refresh
-          </button>
+          <div style="display:flex;gap:8px">
+            <button id="seed-blog-btn" onclick="seedStarterBlogPosts()"
+              style="background:#8b5cf6;color:white;border:none;padding:6px 14px;border-radius:8px;
+              font-weight:700;font-size:12px;cursor:pointer;font-family:inherit">
+              🌱 Seed 20 Starter Posts
+            </button>
+            <button onclick="loadBlogAdmin()"
+              style="background:#f3f4f6;border:none;padding:6px 14px;border-radius:8px;
+              font-weight:700;font-size:12px;cursor:pointer;font-family:inherit">
+              🔄 Refresh
+            </button>
+          </div>
         </div>
         <div id="blog-posts-list">
           <p style="color:var(--gray);font-size:13px">Click Refresh to load posts</p>
