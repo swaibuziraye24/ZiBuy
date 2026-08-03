@@ -301,8 +301,6 @@ window.filterShopProducts = function(query) {
 /* ---------------- SHOP HEADER (FIXED) ---------------- */
 async function loadShopHeader() {
 
-try {
-
   // Show a clear banner if this shop is currently on vacation
   if (shop.vacationMode) {
     const banner = document.createElement("div");
@@ -312,7 +310,9 @@ try {
     document.querySelector(".shop-header")?.after(banner);
   }
 
+try {
 
+  
 const shopDoc = await getDoc(
   doc(db, "shops", sellerId)
 );
