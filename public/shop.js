@@ -108,6 +108,7 @@ async function loadShop() {
     snapshot.forEach((docSnap) => {
       const data = docSnap.data();
       if (data.status === "expired") return;
+      if (data.vacationPaused) return;
       if (data.expiresAt) {
         const exp = data.expiresAt.toDate ? data.expiresAt.toDate() : new Date(data.expiresAt);
         if (exp < now) return;
@@ -301,6 +302,15 @@ window.filterShopProducts = function(query) {
 async function loadShopHeader() {
 
 try {
+
+  // Show a clear banner if this shop is currently on vacation
+  if (shop.vacationMode) {
+    const banner = document.createElement("div");
+    banner.style.cssText = `background:#fff4ee;border:1.5px solid #ffd9bf;color:#92400e;
+      font-size:13px;font-weight:700;text-align:center;padding:12px 16px;margin:0 0 12px`;
+    banner.textContent = "🏖️ This shop is currently on a break — check back soon!";
+    document.querySelector(".shop-header")?.after(banner);
+  }
 
 
 const shopDoc = await getDoc(
