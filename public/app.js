@@ -145,7 +145,10 @@ function initApp() {
 
   loadBannerAd();
   populateFilterDistricts();
-  loadFeaturedShops();
+  initDataSaverMode();
+  if (!isDataSaverOn()) {
+    loadFeaturedShops();
+  }
   loadCategorySponsors();
   
   }, 800);
@@ -495,6 +498,55 @@ async function loadUnreadNotifCount(uid) {
   }
 }
 
+
+// ============================================
+// DATA SAVER MODE
+// Skips image-heavy, non-essential sections
+// (Featured Shops, Buy Power banners) and adds
+// lazy-loading to product images
+// ============================================
+
+function isDataSaverOn() {
+  return localStorage.getItem("zibuy_data_saver") === "true";
+}
+
+function initDataSaverMode() {
+  const btn = document.getElementById("data-saver-btn");
+  if (!btn) return;
+
+  if (isDataSaverOn()) {
+    btn.classList.add("active");
+    showDataSaverBanner();
+  }
+}
+
+function showDataSaverBanner() {
+  if (document.getElementById("data-saver-banner-el")) return;
+  const grid = document.getElementById("products");
+  if (!grid) return;
+
+  const banner = document.createElement("div");
+  banner.id = "data-saver-banner-el";
+  banner.className = "data-saver-banner";
+  banner.textContent = "📶 Data Saver is ON — Featured Shops and extra banners are hidden to save your data";
+  grid.parentElement.insertBefore(banner, grid);
+}
+
+window.toggleDataSaver = function() {
+  const current = isDataSaverOn();
+  const next = !current;
+  localStorage.setItem("zibuy_data_saver", next ? "true" : "false");
+
+  const toast = document.createElement("div");
+  toast.style.cssText = `position:fixed;bottom:100px;left:50%;transform:translateX(-50%);
+    background:#111827;color:white;padding:12px 24px;border-radius:10px;font-weight:700;
+    font-size:13px;z-index:99999;box-shadow:0 4px 12px rgba(0,0,0,0.15)`;
+  toast.textContent = next ? "📶 Data Saver turned ON — reloading..." : "📶 Data Saver turned OFF — reloading...";
+  document.body.appendChild(toast);
+
+  setTimeout(() => window.location.reload(), 700);
+};
+
 // ============================================
 // LOGOUT
 // ============================================
@@ -656,8 +708,11 @@ async function fetchAndCacheProducts(isBackground) {
     });
 
     // Buyers/public browsing must never see expired ads — only the
-    // owner (My Ads) or admin (admin panel) can see those, elsewhere
-    const visibleProducts = products.filter(p => p.status !== "expired");
+    // owner (My Ads) or admin (admin panel) can see those, elsewhere.
+    // Vacation-paused listings are hidden the same way, but stay
+    // fully intact underneath — the seller just flips a switch to
+    // bring everything back exactly as it was.
+    const visibleProducts = products.filter(p => p.status !== "expired" && !p.vacationPaused);
 
     allProducts = visibleProducts.sort((a, b) => b.rankScore - a.rankScore);
     window.allProducts = allProducts;
@@ -891,7 +946,7 @@ ${badge}
   Compare
 </label>
 
-<img src="${img}" alt="${p.name}"
+<img src="${img}" alt="${p.name}" loading="lazy"
 onerror="this.src='https://zibuy-5deae.web.app/icons/icon-512.png/200?text=No+Image'"
 style="width:100%;height:150px;object-fit:cover">
 
@@ -1447,7 +1502,9 @@ const topTrending = trending.slice(0, 10);
   renderRow("🔥 Trending", topTrending);
 renderRow("🆕 New Arrivals", newArrivals);
 
-loadBuyPowerSection(usedProducts);
+if (!isDataSaverOn()) {
+  loadBuyPowerSection(usedProducts);
+}
 
   // ── Infinite scroll grid (below Trending & New Arrivals) ──
   const allSection = document.createElement("div");
@@ -3024,7 +3081,7 @@ window.runOverlaySearch = function(query) {
             onmouseover="this.style.borderColor='#ff6600'"
             onmouseout="this.style.borderColor='#f0f0f0'">
             <div style="position:relative">
-              <img src="${img}" alt="${p.name}"
+              <img src="${img}" alt="${p.name}" loading="lazy"
                 onerror="this.src='https://via.placeholder.com/200?text=No+Image'"
                 style="width:100%;aspect-ratio:1/1;object-fit:cover">
               <button onclick="event.stopPropagation();toggleLike('${p.id}',this)"
