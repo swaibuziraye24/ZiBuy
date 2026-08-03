@@ -886,6 +886,11 @@ ${badge}
 
 })()}
 
+<label onclick="event.stopPropagation()" style="position:absolute;top:8px;left:8px;z-index:20;background:white;border-radius:6px;padding:3px 6px;display:flex;align-items:center;gap:4px;font-size:9px;font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,0.15);cursor:pointer">
+  <input type="checkbox" onclick="event.stopPropagation();toggleCompareProduct('${p.id}','${(p.name||"").replace(/'/g,"\\'")}',${Number(p.price)||0},'${(img||"").replace(/'/g,"\\'")}','')" style="width:12px;height:12px;margin:0;accent-color:#ff6600">
+  Compare
+</label>
+
 <img src="${img}" alt="${p.name}"
 onerror="this.src='https://zibuy-5deae.web.app/icons/icon-512.png/200?text=No+Image'"
 style="width:100%;height:150px;object-fit:cover">
@@ -1395,6 +1400,11 @@ const topTrending = trending.slice(0, 10);
               UGX ${Number(p.price || 0).toLocaleString()}
             </p>
 
+            <label onclick="event.stopPropagation()" style="display:flex;align-items:center;gap:4px;font-size:9px;font-weight:700;color:#6b7280;margin-bottom:4px;cursor:pointer">
+              <input type="checkbox" onclick="event.stopPropagation();toggleCompareProduct('${p.id}','${(p.name||"").replace(/'/g,"\\'")}',${p.price||0},'${(p.images?.[0]||"").replace(/'/g,"\\'")}','')" style="width:11px;height:11px;margin:0;accent-color:#ff6600">
+              Compare
+            </label>
+
             <button onclick="event.stopPropagation();window.location.href='product.html?id=${p.id}'"
               style="width:100%;padding:6px;font-size:11px;background:#f68b1e;color:white;border:none;">
               View
@@ -1515,6 +1525,11 @@ function _appendPage() {
             📉 -${p.priceDropPercent}%
           </div>
         ` : ""}
+
+        <label onclick="event.stopPropagation()" style="position:absolute;top:6px;right:6px;z-index:5;background:white;border-radius:6px;padding:3px 6px;display:flex;align-items:center;gap:4px;font-size:9px;font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,0.15);cursor:pointer">
+          <input type="checkbox" onclick="event.stopPropagation();toggleCompareProduct('${p.id}','${(p.name||"").replace(/'/g,"\\'")}',${p.price||0},'${(p.images?.[0]||"").replace(/'/g,"\\'")}','${(p.condition||"").replace(/'/g,"\\'")}')" style="width:12px;height:12px;margin:0;accent-color:#ff6600">
+          Compare
+        </label>
 
            ${(() => {
 
@@ -3031,6 +3046,10 @@ window.runOverlaySearch = function(query) {
                 white-space:nowrap">${escapeHTML(p.name)}</h4>
               <p style="margin:0 0 5px;color:#ff6600;font-weight:900;
                 font-size:14px">UGX ${price}</p>
+              <label onclick="event.stopPropagation()" style="display:flex;align-items:center;gap:4px;font-size:9px;font-weight:700;color:#6b7280;margin-bottom:5px;cursor:pointer">
+                <input type="checkbox" onclick="event.stopPropagation();toggleCompareProduct('${p.id}','${(p.name||"").replace(/'/g,"\\'")}',${Number(p.price)||0},'${(img||"").replace(/'/g,"\\'")}','${(condition||"").replace(/'/g,"\\'")}')" style="width:11px;height:11px;margin:0;accent-color:#ff6600">
+                Compare
+              </label>
               <button style="width:100%;padding:7px;font-size:11px;
                 background:#ff6600;color:white;border:none;border-radius:7px;
                 font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:6px"
