@@ -71,6 +71,7 @@ async function loadDashboard() {
   
   debug("Calling switchTab with:", tab);
   loadAttentionWidget();
+  loadVacationStatus();
   await switchTab(tab);
 }
 
@@ -1386,7 +1387,75 @@ window.cancelMyOrder = async function(orderId, sellerPhone, productName) {
 // after a confirm/dispute action, instead of its own standalone widget
 window.refreshOrdersTab = loadMyOrders;
 
+// ============================================
+// VACATION MODE — pauses every active listing
+// without deleting or expiring anything
+// ============================================
 
+async function loadVacationStatus() {
+  if (!currentUser) return;
+  try {
+    const userSnap = await getDoc(doc(db, "users", currentUser.uid));
+    const isOnVacation = userSnap.exists() && userSnap.data().vacationMode === true;
+
+    const toggle = document.getElementById("vacation-toggle");
+    const statusText = document.getElementById("vacation-status-text");
+    if (toggle) toggle.checked = isOnVacation;
+    if (statusText) {
+      statusText.textContent = isOnVacation
+        ? "🏖️ Your shop is currently paused — all your active listings are hidden from buyers. Toggle off to bring them all back instantly."
+        : "Pause your entire shop with one tap — every active listing is hidden from buyers until you're back. Nothing is deleted.";
+    }
+  } catch (e) { console.warn("loadVacationStatus:", e.message); }
+}
+
+window.toggleVacationMode = async function() {
+  if (!currentUser) return;
+  const toggle = document.getElementById("vacation-toggle");
+  const turningOn = toggle.checked;
+
+  const confirmMsg = turningOn
+    ? "Pause your shop? All your active listings will be hidden from buyers until you turn this off."
+    : "Bring your shop back? All your paused listings will become visible to buyers again.";
+
+  if (!confirm(confirmMsg)) {
+    toggle.checked = !turningOn; // revert the click
+    return;
+  }
+
+  toggle.disabled = true;
+
+  try {
+    await updateDoc(doc(db, "users", currentUser.uid), { vacationMode: turningOn });
+
+    const snap = await getDocs(query(
+      collection(db, "products"),
+      where("userId", "==", currentUser.uid),
+      where("status", "==", "active")
+    ));
+
+    await Promise.all(snap.docs.map(d =>
+      updateDoc(doc(db, "products", d.id), { vacationPaused: turningOn })
+    ));
+
+    await loadVacationStatus();
+
+    const toast = document.createElement("div");
+    toast.className = "toast success";
+    toast.textContent = turningOn
+      ? `🏖️ Shop paused — ${snap.size} listing(s) hidden`
+      : `✅ Shop reactivated — ${snap.size} listing(s) visible again`;
+    document.getElementById("toast-container")?.appendChild(toast);
+    setTimeout(() => toast.remove(), 3500);
+
+  } catch (err) {
+    console.error("toggleVacationMode:", err);
+    alert("❌ Failed: " + err.message);
+    toggle.checked = !turningOn;
+  } finally {
+    toggle.disabled = false;
+  }
+};
 
 // ============================================
 // LOAD PROFILE SETTINGS (WITH DEBUGGING)
