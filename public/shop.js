@@ -251,6 +251,10 @@ function renderShopProductsGrid(products) {
           style="position:absolute;top:8px;right:8px;z-index:5;background:white;border:none;width:30px;height:30px;
           border-radius:50%;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;
           box-shadow:0 2px 8px rgba(0,0,0,.15)">🤍</button>
+        <label onclick="event.stopPropagation()" style="position:absolute;top:8px;left:8px;z-index:5;background:white;border-radius:6px;padding:3px 6px;display:flex;align-items:center;gap:4px;font-size:9px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.15);cursor:pointer">
+          <input type="checkbox" onclick="event.stopPropagation();toggleCompareProduct('${p.id}','${(p.name||"").replace(/'/g,"\\'")}',${Number(p.price)||0},'${(p.images?.[0]||"").replace(/'/g,"\\'")}','')" style="width:12px;height:12px;margin:0;accent-color:#ff6600">
+          Compare
+        </label>
         <img
   src="${
     p.images?.length
