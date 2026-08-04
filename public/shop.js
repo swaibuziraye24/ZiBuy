@@ -301,15 +301,6 @@ window.filterShopProducts = function(query) {
 /* ---------------- SHOP HEADER (FIXED) ---------------- */
 async function loadShopHeader() {
 
-  // Show a clear banner if this shop is currently on vacation
-  if (shop.vacationMode) {
-    const banner = document.createElement("div");
-    banner.style.cssText = `background:#fff4ee;border:1.5px solid #ffd9bf;color:#92400e;
-      font-size:13px;font-weight:700;text-align:center;padding:12px 16px;margin:0 0 12px`;
-    banner.textContent = "🏖️ This shop is currently on a break — check back soon!";
-    document.querySelector(".shop-header")?.after(banner);
-  }
-
 try {
 
   
@@ -322,6 +313,15 @@ if (!shopDoc.exists()) return;
 const shop = shopDoc.data();
 
 console.log("SHOP DATA:", shop);
+
+// Show a clear banner if this shop is currently on vacation
+if (shop.vacationMode) {
+  const banner = document.createElement("div");
+  banner.style.cssText = `background:#fff4ee;border:1.5px solid #ffd9bf;color:#92400e;
+    font-size:13px;font-weight:700;text-align:center;padding:12px 16px;margin:0 0 12px`;
+  banner.textContent = "🏖️ This shop is currently on a break — check back soon!";
+  document.querySelector(".shop-header")?.after(banner);
+}
 
 // Main Elements
 const nameEl = document.getElementById("shop-name");
