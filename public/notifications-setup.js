@@ -8,7 +8,7 @@
 import { db, auth } from "./firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import {
-  collection, addDoc, getDocs, doc, updateDoc,
+  collection, addDoc, getDocs, doc, updateDoc, getDoc,
   query, where, onSnapshot, orderBy
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
@@ -79,8 +79,22 @@ export function listenUnreadNotifications(userId) {
     where("read",   "==", false)
   );
 
-  return onSnapshot(q, (snap) => {
-    const count = snap.size;
+  // Maps a notification's "type" field to its matching preference key
+  const TYPE_TO_PREF = { message: "messages", order: "orders", price_drop: "priceDrops" };
+
+  return onSnapshot(q, async (snap) => {
+    let prefs = {};
+    try {
+      const userSnap = await getDoc(doc(db, "users", userId));
+      prefs = userSnap.exists() ? (userSnap.data().notificationPrefs || {}) : {};
+    } catch (e) { /* fail open — count everything if prefs can't be read */ }
+
+    const visibleDocs = snap.docs.filter(d => {
+      const prefKey = TYPE_TO_PREF[d.data().type];
+      return !prefKey || prefs[prefKey] !== false; // types with no matching pref always count
+    });
+
+    const count = visibleDocs.length;
 
     // Update notifications button badge
     const notifBtn = document.getElementById("notifications-btn");
@@ -99,6 +113,8 @@ export function listenUnreadNotifications(userId) {
 
     // Show browser notification for new ones (only if page is hidden)
     snap.docChanges().forEach((change) => {
+      const prefKey = TYPE_TO_PREF[change.doc.data().type];
+      if (prefKey && prefs[prefKey] === false) return; // respect preference here too
       if (change.type === "added" && document.hidden) {
         const n = change.doc.data();
         if (Notification.permission === "granted") {
@@ -136,13 +152,25 @@ export async function createNotification(userId, type, title, message, relatedId
 // ══════════════════════════════════════════════
 //  4. LISTEN TO BROADCASTS (best offers, deals)
 // ══════════════════════════════════════════════
-export function listenBroadcasts() {
+export function listenBroadcasts(currentUserId) {
   const q = query(
     collection(db, "broadcasts"),
     where("active", "==", true)
   );
 
-  return onSnapshot(q, (snap) => {
+  return onSnapshot(q, async (snap) => {
+    // Check the logged-in user's preference before showing anything —
+    // guests (no currentUserId) always see broadcasts, since they have
+    // no account/preferences to check against
+    if (currentUserId) {
+      try {
+        const { getDoc } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+        const userSnap = await getDoc(doc(db, "users", currentUserId));
+        const prefs = userSnap.exists() ? (userSnap.data().notificationPrefs || {}) : {};
+        if (prefs.broadcasts === false) return; // user turned this off — respect it
+      } catch (e) { /* if the check fails, fail open and still show it */ }
+    }
+
     snap.docChanges().forEach((change) => {
       if (change.type === "added") {
         const b = change.doc.data();
@@ -208,6 +236,7 @@ onAuthStateChanged(auth, (user) => {
     unsubNotif = listenUnreadNotifications(user.uid);
   }
 
-  // Broadcasts work for everyone (guests too)
-  unsubBroadcast = listenBroadcasts();
+  // Broadcasts work for everyone (guests too) — but logged-in
+  // users' preferences are now respected
+  unsubBroadcast = listenBroadcasts(user ? user.uid : null);
 });
