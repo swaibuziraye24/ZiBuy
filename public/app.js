@@ -149,6 +149,7 @@ function initApp() {
   if (!isDataSaverOn()) {
     loadFeaturedShops();
   }
+  loadRecentSoldTicker();
   loadCategorySponsors();
   
   }, 800);
@@ -3173,3 +3174,60 @@ window.escapeHTML = function(str) {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 };
+
+
+// ============================================
+// RECENTLY SOLD TICKER — homepage trust signal
+// ============================================
+
+async function loadRecentSoldTicker() {
+  const container = document.getElementById("recent-sold-ticker");
+  if (!container) return;
+
+  try {
+    const snap = await getDocs(query(
+      collection(db, "orders"),
+      orderBy("createdAt", "desc"),
+      limit(10)
+    ));
+
+    const items = snap.docs
+      .map(d => d.data())
+      .map(o => ({
+        name: o.productName || o.name || (o.items?.[0]?.name) || "an item",
+        location: o.customerLocation || "Uganda",
+        time: o.createdAt?.toDate?.() || new Date(o.createdAt)
+      }))
+      .filter(o => o.time);
+
+    if (items.length === 0) { container.style.display = "none"; return; }
+
+    function timeAgo(date) {
+      const mins = Math.floor((Date.now() - date.getTime()) / 60000);
+      if (mins < 1) return "just now";
+      if (mins < 60) return `${mins} min ago`;
+      const hrs = Math.floor(mins / 60);
+      if (hrs < 24) return `${hrs}h ago`;
+      return `${Math.floor(hrs / 24)}d ago`;
+    }
+
+    let idx = 0;
+    function renderCurrent() {
+      const item = items[idx];
+      container.innerHTML = `
+        <span style="font-size:13px">📦</span>
+        <span style="font-size:12px;font-weight:700;color:#166534">${escapeHTML(item.name)}</span>
+        <span style="font-size:11px;color:#6b7280">sold in ${escapeHTML(item.location)} · ${timeAgo(item.time)}</span>
+      `;
+      idx = (idx + 1) % items.length;
+    }
+
+    renderCurrent();
+    container.style.display = "flex";
+    setInterval(renderCurrent, 4000);
+
+  } catch (e) {
+    console.warn("loadRecentSoldTicker:", e.message);
+    container.style.display = "none";
+  }
+}
