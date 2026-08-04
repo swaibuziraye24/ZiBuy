@@ -3445,6 +3445,37 @@ async function checkFraudAlerts() {
       .forEach(a => alerts.push(`<p style="color:#991b1b">⚠️ Banned user still has an active ad: "${escapeHTML(a.name)}"</p>`));
   }
 
+  // Same phone number used across MULTIPLE different accounts —
+  // classic sign of one person running several fake seller profiles
+  const activeAds = allAds.filter(a => a.status === "active");
+  const phoneToUsers = {};
+  activeAds.forEach(a => {
+    const phone = (a.seller?.phone || "").replace(/\D/g, "");
+    if (!phone || phone.length < 9) return;
+    if (!phoneToUsers[phone]) phoneToUsers[phone] = new Set();
+    phoneToUsers[phone].add(a.userId);
+  });
+  Object.entries(phoneToUsers)
+    .filter(([, userSet]) => userSet.size >= 2)
+    .forEach(([phone, userSet]) => {
+      alerts.push(`<p style="color:#7c2d12">📞 Phone number ending ...${phone.slice(-4)} is used across ${userSet.size} different accounts — possible fake accounts</p>`);
+    });
+
+  // Near-identical listings (same title + same price) posted by
+  // DIFFERENT sellers — classic copy-paste scam pattern
+  const listingSignatures = {};
+  activeAds.forEach(a => {
+    const sig = `${(a.name || "").toLowerCase().trim()}::${a.price}`;
+    if (!listingSignatures[sig]) listingSignatures[sig] = new Set();
+    listingSignatures[sig].add(a.userId);
+  });
+  Object.entries(listingSignatures)
+    .filter(([, userSet]) => userSet.size >= 2)
+    .forEach(([sig, userSet]) => {
+      const title = sig.split("::")[0];
+      alerts.push(`<p style="color:#7c2d12">🔁 "${escapeHTML(title)}" posted identically by ${userSet.size} different sellers — possible duplicate/scam listing</p>`);
+    });
+
   el.innerHTML = alerts.length ? alerts.join("") : `<p style="color:#16a34a">✅ No fraud signals detected</p>`;
 }
 
