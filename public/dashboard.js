@@ -1458,6 +1458,80 @@ window.toggleVacationMode = async function() {
 };
 
 // ============================================
+// SHOP QR CODE
+// ============================================
+
+window.openShopQRModal = function() {
+  if (!currentUser) return;
+
+  const shopUrl = `${window.location.origin}/shop.html?seller=${currentUser.uid}`;
+  const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=280x280&margin=10&data=${encodeURIComponent(shopUrl)}`;
+
+  const modal = document.createElement("div");
+  modal.id = "shop-qr-modal";
+  modal.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:99999;
+    display:flex;align-items:center;justify-content:center;padding:16px`;
+  modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+
+  modal.innerHTML = `
+    <div style="background:white;border-radius:20px;padding:28px;max-width:360px;width:100%;text-align:center">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+        <h2 style="margin:0;font-size:17px;font-weight:800">📱 Your Shop QR Code</h2>
+        <button onclick="document.getElementById('shop-qr-modal').remove()"
+          style="background:#f3f4f6;border:none;width:30px;height:30px;border-radius:50%;font-size:16px;cursor:pointer">×</button>
+      </div>
+
+      <div style="background:#f9fafb;border-radius:16px;padding:20px;margin-bottom:16px">
+        <img id="shop-qr-img" src="${qrImageUrl}" alt="Shop QR Code" style="width:100%;max-width:240px;border-radius:8px">
+      </div>
+
+      <p style="font-size:11.5px;color:#9ca3af;margin-bottom:16px;word-break:break-all">${shopUrl}</p>
+
+      <div style="display:flex;gap:8px">
+        <button onclick="downloadShopQR('${shopUrl.replace(/'/g,"\\'")}')"
+          style="flex:1;background:#ff6600;color:white;border:none;padding:12px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit">
+          ⬇️ Download
+        </button>
+        <button onclick="copyShopLink('${shopUrl.replace(/'/g,"\\'")}')"
+          style="flex:1;background:#f3f4f6;color:#374151;border:none;padding:12px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit">
+          🔗 Copy Link
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+};
+
+window.downloadShopQR = async function(shopUrl) {
+  try {
+    const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=600x600&margin=10&data=${encodeURIComponent(shopUrl)}`;
+    const response = await fetch(qrImageUrl);
+    const blob = await response.blob();
+
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "zibuy-shop-qr-code.png";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  } catch (err) {
+    console.error("downloadShopQR:", err);
+    alert("Failed to download — try again, or right-click/long-press the QR code image to save it directly.");
+  }
+};
+
+window.copyShopLink = function(shopUrl) {
+  navigator.clipboard.writeText(shopUrl).then(() => {
+    const toast = document.createElement("div");
+    toast.className = "toast success";
+    toast.textContent = "🔗 Shop link copied!";
+    document.getElementById("toast-container")?.appendChild(toast);
+    setTimeout(() => toast.remove(), 2500);
+  }).catch(() => alert("Couldn't copy automatically — long-press the link text above to copy it manually."));
+};
+
+// ============================================
 // LOAD PROFILE SETTINGS (WITH DEBUGGING)
 // ============================================
 
