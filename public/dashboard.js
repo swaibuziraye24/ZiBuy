@@ -72,6 +72,7 @@ async function loadDashboard() {
   debug("Calling switchTab with:", tab);
   loadAttentionWidget();
   loadVacationStatus();
+  loadNotificationPrefs();
   await switchTab(tab);
 }
 
@@ -1529,6 +1530,59 @@ window.copyShopLink = function(shopUrl) {
     document.getElementById("toast-container")?.appendChild(toast);
     setTimeout(() => toast.remove(), 2500);
   }).catch(() => alert("Couldn't copy automatically — long-press the link text above to copy it manually."));
+};
+
+
+// ============================================
+// NOTIFICATION PREFERENCES
+// ============================================
+
+const NOTIF_PREF_OPTIONS = [
+  { key: "messages",   label: "💬 New Messages",       desc: "When someone messages you" },
+  { key: "priceDrops", label: "📉 Price Drop Alerts",   desc: "When a liked product gets cheaper" },
+  { key: "orders",     label: "📦 Order Updates",       desc: "Status changes on your orders" },
+  { key: "broadcasts", label: "🔥 Promotions & Deals",  desc: "Site-wide announcements and offers" }
+];
+
+async function loadNotificationPrefs() {
+  if (!currentUser) return;
+  const container = document.getElementById("notif-pref-rows");
+  if (!container) return;
+
+  try {
+    const userSnap = await getDoc(doc(db, "users", currentUser.uid));
+    const prefs = userSnap.exists() ? (userSnap.data().notificationPrefs || {}) : {};
+
+    container.innerHTML = NOTIF_PREF_OPTIONS.map(opt => {
+      const isOn = prefs[opt.key] !== false; // default ON unless explicitly turned off
+      return `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f3f4f6">
+          <div>
+            <p style="margin:0;font-weight:700;font-size:13px;color:#111827">${opt.label}</p>
+            <p style="margin:2px 0 0;font-size:11.5px;color:#9ca3af">${opt.desc}</p>
+          </div>
+          <label style="position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0">
+            <input type="checkbox" ${isOn ? "checked" : ""} onchange="updateNotifPref('${opt.key}', this.checked)" style="opacity:0;width:0;height:0">
+            <span style="position:absolute;cursor:pointer;inset:0;background:${isOn ? "#ff6600" : "#e5e7eb"};border-radius:24px;transition:.2s"></span>
+            <span style="position:absolute;height:18px;width:18px;left:${isOn ? "23px" : "3px"};bottom:3px;background:white;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2)"></span>
+          </label>
+        </div>`;
+    }).join("");
+
+  } catch (e) { console.warn("loadNotificationPrefs:", e.message); }
+}
+
+window.updateNotifPref = async function(key, value) {
+  if (!currentUser) return;
+  try {
+    await updateDoc(doc(db, "users", currentUser.uid), {
+      [`notificationPrefs.${key}`]: value
+    });
+    loadNotificationPrefs(); // refresh toggle colors
+  } catch (e) {
+    console.error("updateNotifPref:", e.message);
+    alert("Failed to save — try again");
+  }
 };
 
 // ============================================
