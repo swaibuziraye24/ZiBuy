@@ -156,7 +156,7 @@ export async function loadReferralStats(userId) {
 
 // ── Get shareable referral link ───────────────
 export function getReferralLink(referralCode) {
-  return `https://zibuy-5deae.web.app/index.html?ref=${referralCode}`;
+  return `https://zibuy.ziteche.com/index.html?ref=${referralCode}`;
 }
 
 // ── Apply a boost credit to a product ────────
