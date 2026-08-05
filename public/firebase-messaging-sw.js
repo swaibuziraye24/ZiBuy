@@ -34,7 +34,7 @@ messaging.onBackgroundMessage((payload) => {
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
-  const url = event.notification.data?.url || "https://zibuy-5deae.web.app";
+  const url = event.notification.data?.url || "https://zibuy.ziteche.com";
 
   event.waitUntil(
     clients.matchAll({ type: "window", includeUncontrolled: true })
