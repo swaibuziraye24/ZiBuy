@@ -207,7 +207,7 @@ async function loadWishlist() {
             style="background:white;border-radius:12px;overflow:hidden;
             box-shadow:0 2px 8px rgba(0,0,0,0.06);cursor:pointer">
             <img src="${p.images?.[0] || ''}" alt="${p.name}"
-              onerror="this.src='https://zibuy-5deae.web.app/icons/icon-512.png/200?text=No+Image'"
+              onerror="this.src='https://zibuy.ziteche.com/icons/icon-512.png/200?text=No+Image'"
               style="width:100%;height:140px;object-fit:cover">
             <div style="padding:10px">
               <p style="margin:0 0 4px;font-weight:700;font-size:13px;
@@ -365,9 +365,9 @@ window.loadMyProducts = async function () {
       <div class="ad-item">
         <div class="ad-item-image">
           <img 
-            src="${p.images?.[0] || 'https://zibuy-5deae.web.app/icons/icon-512.png/100'}" 
+            src="${p.images?.[0] || 'https://zibuy.ziteche.com/icons/icon-512.png/100'}" 
             alt="${escHTML(p.name)}"
-            onerror="this.src='https://zibuy-5deae.web.app/icons/icon-512.png/100?text=No+Image'"
+            onerror="this.src='https://zibuy.ziteche.com/icons/icon-512.png/100?text=No+Image'"
             style="width:100%;height:100%;object-fit:cover"
           >
           <span class="ad-status-badge ${statusClass}">${statusLabel}</span>
