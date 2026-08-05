@@ -1075,12 +1075,12 @@ exports.weeklyTopDeals = onSchedule(
 
       // ── 2. Build product cards HTML ──
       const productCardsHtml = products.map(p => {
-        const image    = p.images?.[0] || "https://zibuy-5deae.web.app/icons/icon-512.png";
+        const image    = p.images?.[0] || "https://zibuy.ziteche.com/icons/icon-512.png";
         const price    = Number(p.price || 0).toLocaleString();
         const name     = p.name || "Product";
         const category = (p.category || "").charAt(0).toUpperCase() + (p.category || "").slice(1);
         const location = p.seller?.location || p.location || "Uganda";
-        const link     = `https://zibuy-5deae.web.app/product.html?id=${p.id}`;
+        const link     = `https://zibuy.ziteche.com/product.html?id=${p.id}`;
 
         return `
           <div style="
@@ -1152,7 +1152,7 @@ exports.weeklyTopDeals = onSchedule(
             <p style="margin:0 0 10px;font-size:13px;color:#374151;font-weight:700">
               Want to see more deals?
             </p>
-            <a href="https://zibuy-5deae.web.app"
+            <a href="https://zibuy.ziteche.com"
               style="
                 background:#111827;
                 color:white;
@@ -1169,7 +1169,7 @@ exports.weeklyTopDeals = onSchedule(
 
           <p style="font-size:11px;color:#9ca3af;margin-top:20px;text-align:center">
             You're receiving this because you have a ZiBuy account.<br>
-            <a href="https://zibuy-5deae.web.app" style="color:#ff6600">Visit ZiBuy</a>
+            <a href="https://zibuy.ziteche.com" style="color:#ff6600">Visit ZiBuy</a>
           </p>
         `,
         "",
@@ -1418,7 +1418,7 @@ exports.aiRecommendations = onSchedule(
             <div style="margin:10px;padding:10px;border:1px solid #eee">
               <h3>${p.name}</h3>
               <p>UGX ${Number(p.price).toLocaleString()}</p>
-              <a href="https://zibuy-5deae.web.app/product.html?id=${p.id}">
+              <a href="https://zibuy.ziteche.com/product.html?id=${p.id}">
                 View Product
               </a>
             </div>
@@ -1433,7 +1433,7 @@ exports.aiRecommendations = onSchedule(
             "We found deals for you 🇺🇬",
             `<p>Hello ${user.email.split("@")[0]}</p>${html}`,
             "Shop Now",
-            "https://zibuy-5deae.web.app"
+            "https://zibuy.ziteche.com"
           )
         );
       }
@@ -1542,7 +1542,7 @@ await db.collection("whatsapp_reminders").add({
               `<p>Your ${planLabel} plan expires in <b>${daysLeft} day(s)</b>.</p>
                <p>Renew now to avoid losing benefits.</p>`,
               "Renew Now",
-              "https://zibuy-5deae.web.app/business-plans.html"
+              "https://zibuy.ziteche.com/business-plans.html"
             )
           );
         }
@@ -1763,7 +1763,7 @@ await db.collection("whatsapp_reminders").add({
               `<p>Your boost for <b>${productName}</b> expires in <b>${daysLeft} day(s)</b>.</p>
                <p>Boost again to stay at the top of search results.</p>`,
               "Re-Boost Now",
-              "https://zibuy-5deae.web.app/boost.html"
+              "https://zibuy.ziteche.com/boost.html"
             )
           );
         }
@@ -2478,7 +2478,7 @@ exports.blogSeo = onRequest(async (req, res) => {
 
     if (!matchedPost) {
       return res.redirect(
-        "https://zibuy-5deae.web.app/blog.html"
+        "https://zibuy.ziteche.com/blog.html"
       );
     }
 
@@ -2493,10 +2493,10 @@ exports.blogSeo = onRequest(async (req, res) => {
 
     const image =
       matchedPost.coverImage ||
-      "https://zibuy-5deae.web.app/icons/icon-512.png";
+      "https://zibuy.ziteche.com/icons/icon-512.png";
 
     const url =
-      `https://zibuy-5deae.web.app/blog/${slug}`;
+      `https://zibuy.ziteche.com/blog/${slug}`;
 
     res.status(200).send(`
 <!DOCTYPE html>
@@ -2519,7 +2519,7 @@ exports.blogSeo = onRequest(async (req, res) => {
 <meta name="twitter:image" content="${image}" />
 
 <meta http-equiv="refresh"
-content="0; url=https://zibuy-5deae.web.app/blog-post.html?id=${matchedPost.id}" />
+content="0; url=https://zibuy.ziteche.com/blog-post.html?id=${matchedPost.id}" />
 
 </head>
 
@@ -2534,7 +2534,7 @@ Redirecting...
     console.error(err);
 
     res.redirect(
-      "https://zibuy-5deae.web.app/blog.html"
+      "https://zibuy.ziteche.com/blog.html"
     );
   }
 });
@@ -2556,7 +2556,7 @@ seoApp.get("/product/:id", async (req, res) => {
 
     if (!snap.exists) {
       return res.redirect(
-        "https://zibuy-5deae.web.app"
+        "https://zibuy.ziteche.com"
       );
     }
 
@@ -2572,10 +2572,10 @@ seoApp.get("/product/:id", async (req, res) => {
     const image =
       (p.images && p.images[0])
         ? p.images[0]
-        : "https://zibuy-5deae.web.app/icons/icon-512.png";
+        : "https://zibuy.ziteche.com/icons/icon-512.png";
 
     const url =
-      `https://zibuy-5deae.web.app/product/${productId}`;
+      `https://zibuy.ziteche.com/product/${productId}`;
 
     const seller =
       p.seller?.name ||
@@ -2593,7 +2593,7 @@ seoApp.get("/product/:id", async (req, res) => {
       },
       offers: {
   "@type": "Offer",
-  url: `https://zibuy-5deae.web.app/product.html?id=${productId}`,
+  url: `https://zibuy.ziteche.com/product.html?id=${productId}`,
   priceCurrency: "UGX",
   price: p.price || 0,
   availability: "https://schema.org/InStock",
@@ -2645,7 +2645,7 @@ ${JSON.stringify(schema)}
 </script>
 
 <meta http-equiv="refresh"
-content="0; url=https://zibuy-5deae.web.app/product.html?id=${productId}" />
+content="0; url=https://zibuy.ziteche.com/product.html?id=${productId}" />
 
 </head>
 <body>
@@ -2659,7 +2659,7 @@ Redirecting...
     console.error(err);
 
     res.redirect(
-      "https://zibuy-5deae.web.app"
+      "https://zibuy.ziteche.com"
     );
   }
 });
