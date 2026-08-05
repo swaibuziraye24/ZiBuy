@@ -511,7 +511,7 @@ DEPLOYMENT
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Platform:              Firebase Hosting
-Project URL:           https://zibuy-5deae.web.app
+Project URL:           https://zibuy.ziteche.com
 Live Status:           ✅ DEPLOYED
 Custom Domain:         Not configured (available)
 SSL/TLS:               ✅ Automatic
