@@ -1360,7 +1360,7 @@ window.sendBroadcast = async function() {
       const waMsg = encodeURIComponent(
         `📢 *ZiBuy Update*\n\n` +
         `*${title}*\n\n${message}\n\n` +
-        `🔗 ${url !== "/" ? `https://zibuy-5deae.web.app${url}` : "https://zibuy-5deae.web.app"}`
+        `🔗 ${url !== "/" ? `https://zibuy.ziteche.com${url}` : "https://zibuy.ziteche.com"}`
       );
       // Opens WhatsApp with first user — admin can forward to others
       window.open(`https://wa.me/?text=${waMsg}`, "_blank");
