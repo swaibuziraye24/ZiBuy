@@ -126,7 +126,7 @@ async function loadProfile() {
     } else {
       productsContainer.innerHTML = products.map(p => `
         <div class="profile-product-card" onclick="window.location.href='product.html?id=${p.id}'">
-          <img src="${p.images?.[0] || 'https://zibuy-5deae.web.app/icons/icon-512.png/100'}" alt="${escapeHTML(p.name)}">
+          <img src="${p.images?.[0] || 'https://zibuy.ziteche.com/icons/icon-512.png/100'}" alt="${escapeHTML(p.name)}">
           <div>
             <h4>${escapeHTML(p.name)}</h4>
             <p style="color:#ff6600;font-weight:700">UGX ${Number(p.price).toLocaleString()}</p>
