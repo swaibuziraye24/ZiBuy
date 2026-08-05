@@ -2,4 +2,4 @@ User-agent: *
 
 Allow: /
 
-Sitemap: https://zibuy-5deae.web.app/sitemap.xml
+Sitemap: https://zibuy.ziteche.com/sitemap.xml
