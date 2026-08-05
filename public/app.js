@@ -1955,6 +1955,12 @@ window.filterCategory = function(category, el) {
 
   currentCategory = category;
   currentSubcategory = "all";
+ 
+
+  // Reset any leftover price filter from a previous category —
+  // a "200k+" filter from Phones shouldn't silently carry into Fashion
+  filterState.priceMin = 0;
+  filterState.priceMax = 99999999;
 
   document.querySelectorAll(".cat-btn").forEach(btn => {
     btn.classList.remove("active");
@@ -1962,11 +1968,17 @@ window.filterCategory = function(category, el) {
 
   if (el) el.classList.add("active");
 
+  renderPriceChips(category);
   window.renderProducts();
 };
 
 window.openSellerShop = function(userId) {
   window.location.href = `shop.html?seller=${userId}`;
+};
+
+window.clearPriceChips = function() {
+  const chipRow = document.getElementById("price-chip-row");
+  if (chipRow) chipRow.remove();
 };
 
 window.filterSubcategory = function(subcat) {
@@ -3231,3 +3243,90 @@ async function loadRecentSoldTicker() {
     container.style.display = "none";
   }
 }
+
+// ============================================
+// SIMILAR PRICE RANGE — quick filter chips,
+// tailored per category to typical Uganda pricing
+// ============================================
+
+const CATEGORY_PRICE_BANDS = {
+  phones:        [{ label: "Under 300k",  max: 300000 }, { label: "300k–800k", min: 300000, max: 800000 }, { label: "800k+", min: 800000 }],
+  electronics:   [{ label: "Under 200k",  max: 200000 }, { label: "200k–1M",   min: 200000, max: 1000000 }, { label: "1M+",   min: 1000000 }],
+  computers:     [{ label: "Under 500k",  max: 500000 }, { label: "500k–2M",   min: 500000, max: 2000000 }, { label: "2M+",   min: 2000000 }],
+  vehicles:      [{ label: "Under 5M",    max: 5000000 }, { label: "5M–20M",   min: 5000000, max: 20000000 }, { label: "20M+", min: 20000000 }],
+  property:      [{ label: "Under 50M",   max: 50000000 }, { label: "50M–200M", min: 50000000, max: 200000000 }, { label: "200M+", min: 200000000 }],
+  fashion:       [{ label: "Under 30k",   max: 30000 }, { label: "30k–100k",  min: 30000, max: 100000 }, { label: "100k+", min: 100000 }],
+  shoes:         [{ label: "Under 40k",   max: 40000 }, { label: "40k–120k",  min: 40000, max: 120000 }, { label: "120k+", min: 120000 }],
+  beauty:        [{ label: "Under 20k",   max: 20000 }, { label: "20k–60k",   min: 20000, max: 60000 }, { label: "60k+",  min: 60000 }],
+  watches:       [{ label: "Under 50k",   max: 50000 }, { label: "50k–200k",  min: 50000, max: 200000 }, { label: "200k+", min: 200000 }],
+  gaming:        [{ label: "Under 100k",  max: 100000 }, { label: "100k–500k", min: 100000, max: 500000 }, { label: "500k+", min: 500000 }],
+  home:          [{ label: "Under 50k",   max: 50000 }, { label: "50k–200k",  min: 50000, max: 200000 }, { label: "200k+", min: 200000 }],
+  animals:       [{ label: "Under 100k",  max: 100000 }, { label: "100k–500k", min: 100000, max: 500000 }, { label: "500k+", min: 500000 }],
+  agriculture:   [{ label: "Under 100k",  max: 100000 }, { label: "100k–1M",   min: 100000, max: 1000000 }, { label: "1M+",  min: 1000000 }],
+};
+
+// A sensible generic fallback for any category not explicitly mapped above
+const DEFAULT_PRICE_BANDS = [
+  { label: "Under 50k",  max: 50000 },
+  { label: "50k–200k",   min: 50000, max: 200000 },
+  { label: "200k+",      min: 200000 }
+];
+
+function renderPriceChips(category) {
+  let chipRow = document.getElementById("price-chip-row");
+  const productsEl = document.getElementById("products");
+  if (!productsEl) return;
+
+  if (!chipRow) {
+    chipRow = document.createElement("div");
+    chipRow.id = "price-chip-row";
+    chipRow.style.cssText = "display:flex;gap:8px;overflow-x:auto;padding:0 20px 12px;-webkit-overflow-scrolling:touch";
+    productsEl.parentElement.insertBefore(chipRow, productsEl);
+  }
+
+  const bands = CATEGORY_PRICE_BANDS[category] || DEFAULT_PRICE_BANDS;
+
+  const isActiveChip = (band) =>
+    filterState.priceMin === (band.min || 0) &&
+    filterState.priceMax === (band.max || 99999999);
+
+  const isAnyActive = filterState.priceMin === 0 && filterState.priceMax === 99999999;
+
+  chipRow.innerHTML = `
+    <button onclick="applyPriceChip(0, 99999999, this)"
+      style="flex-shrink:0;padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;
+      cursor:pointer;font-family:inherit;white-space:nowrap;
+      background:${isAnyActive ? "#ff6600" : "#f3f4f6"};color:${isAnyActive ? "white" : "#374151"};border:none">
+      Any Price
+    </button>
+    ${bands.map(b => `
+      <button onclick="applyPriceChip(${b.min || 0}, ${b.max || 99999999}, this)"
+        style="flex-shrink:0;padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;
+        cursor:pointer;font-family:inherit;white-space:nowrap;
+        background:${isActiveChip(b) ? "#ff6600" : "#f3f4f6"};color:${isActiveChip(b) ? "white" : "#374151"};border:none">
+        ${b.label}
+      </button>
+    `).join("")}
+  `;
+}
+
+window.applyPriceChip = function(min, max, el) {
+  filterState.priceMin = min;
+  filterState.priceMax = max;
+
+  // Keep the manual price inputs in the filter panel in sync too,
+  // so opening "More Filters" afterward shows the same values
+  const minEl = document.getElementById("price-min");
+  const maxEl = document.getElementById("price-max");
+  if (minEl) minEl.value = min || "";
+  if (maxEl) maxEl.value = max === 99999999 ? "" : max;
+
+  el.closest("#price-chip-row")?.querySelectorAll("button").forEach(b => {
+    b.style.background = "#f3f4f6";
+    b.style.color = "#374151";
+  });
+  el.style.background = "#ff6600";
+  el.style.color = "white";
+
+  window.renderProducts();
+};
