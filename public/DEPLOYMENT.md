@@ -55,7 +55,7 @@ When prompted:
 firebase deploy
 ```
 
-Your site will be live at: **https://zibuy-5deae.web.app**
+Your site will be live at: **https://zibuy.ziteche.com**
 
 ### STEP 7: Custom Domain (Optional)
 ```bash
@@ -139,4 +139,4 @@ VITE_FIREBASE_PROJECT_ID=zibuy-5deae
 
 ## Done! 🎉
 
-Visit: https://zibuy-5deae.web.app
+Visit: https://zibuy.ziteche.com
