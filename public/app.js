@@ -782,7 +782,7 @@ async function loadFeaturedShops() {
     container.innerHTML = shops.map(s => `
       <div class="shop-card" onclick="window.location.href='shop.html?seller=${s.ownerId || s.id}'">
         <div class="shop-card-banner" style="${s.bannerUrl ? `background-image:url('${s.bannerUrl}')` : ""}">
-          <img class="shop-card-logo" src="${s.logoUrl || 'https://zibuy-5deae.web.app/icons/icon-512.png/80?text=Zi'}" alt="${s.name || 'Shop'}">
+          <img class="shop-card-logo" src="${s.logoUrl || 'https://zibuy.ziteche.com/icons/icon-512.png/80?text=Zi'}" alt="${s.name || 'Shop'}">
         </div>
         <div class="shop-card-body">
           <h4>${escapeHTML(s.name) || "ZiBuy Shop"} ${s.isVerified ? "✅" : ""}</h4>
@@ -948,7 +948,7 @@ ${badge}
 </label>
 
 <img src="${img}" alt="${p.name}" loading="lazy"
-onerror="this.src='https://zibuy-5deae.web.app/icons/icon-512.png/200?text=No+Image'"
+onerror="this.src='https://zibuy.ziteche.com/icons/icon-512.png/200?text=No+Image'"
 style="width:100%;height:150px;object-fit:cover">
 
         <div style="padding:10px">
@@ -2239,7 +2239,7 @@ window.openProductModal = function(productId) {
     }
 
     // Fill data
-    modalImage.src = product.images?.[0] || "https://zibuy-5deae.web.app/icons/icon-512.png/300";
+    modalImage.src = product.images?.[0] || "https://zibuy.ziteche.com/icons/icon-512.png/300";
     modalName.textContent = product.name;
     modalPrice.textContent = `UGX ${Number(product.price).toLocaleString()}`;
     if (modalCat) modalCat.textContent = product.category || "Product";
