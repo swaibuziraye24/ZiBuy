@@ -207,7 +207,7 @@ window.submitVerification = async function() {
       `📄 *Documents:*\n` +
       `• ID: ${idDocURL ? "✅ Uploaded" : "❌ Missing"}\n` +
       `• License: ${licenseURL ? "✅ Uploaded" : "⚠️ Not provided"}\n\n` +
-      `🔗 Approve/Reject: https://zibuy-5deae.web.app/admin.html\n` +
+      `🔗 Approve/Reject: https://zibuy.ziteche.com/admin.html\n` +
       `🆔 Verification ID: ${docRef.id}`;
 
     // Open admin WhatsApp
