@@ -9,7 +9,7 @@ firebase login
 ## 3. Deploy
 firebase deploy
 
-## Done! Live at: https://zibuy-5deae.web.app
+## Done! Live at: https://zibuy.ziteche.com
 
 ---
 
