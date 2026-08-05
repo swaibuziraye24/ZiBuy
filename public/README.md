@@ -2,7 +2,7 @@ ZiBuy — Uganda Classifieds Marketplace
 
 A full-featured online classifieds marketplace for Uganda, built with vanilla JavaScript, HTML, CSS, and Firebase.
 
-**Live Demo:** https://zibuy-5deae.web.app
+**Live Demo:** https://zibuy.ziteche.com
 
 ---
 
@@ -157,7 +157,7 @@ firebase init hosting
 firebase deploy
 ```
 
-**Live at:** `https://zibuy-5deae.web.app`
+**Live at:** `https://zibuy.ziteche.com`
 
 ---
 
@@ -289,7 +289,7 @@ firebase deploy
 firebase open hosting
 ```
 
-**Your site will be live at:** `https://zibuy-5deae.web.app`
+**Your site will be live at:** `https://zibuy.ziteche.com`
 
 ### Custom Domain
 
