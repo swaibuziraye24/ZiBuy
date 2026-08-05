@@ -1,8 +1,8 @@
 # ZiBuy Uganda — Admin Reference Guide
 
 **A ZiTechnologies Company**
-Live site: `https://zibuy-5deae.web.app` (custom domain pending)
-Admin panel: `https://zibuy-5deae.web.app/admin.html`
+Live site: `https://zibuy.ziteche.com` (custom domain pending)
+Admin panel: `https://zibuy.ziteche.com/admin.html`
 
 This document is your complete reference for everything ZiBuy can do — as a buyer, a seller, and as the admin who runs the platform.
 
