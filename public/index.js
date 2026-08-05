@@ -51,7 +51,7 @@ function emailTemplate(title, body, ctaText, ctaUrl) {
           </div>` : ""}
       </div>
       <div style="padding:16px 24px;background:#f9fafb;border-top:1px solid #e5e7eb;text-align:center;font-size:12px;color:#6b7280">
-        © 2026 ZiBuy Uganda · <a href="https://zibuy-5deae.web.app" style="color:#ff6600">Visit ZiBuy</a>
+        © 2026 ZiBuy Uganda · <a href="https://zibuy.ziteche.com" style="color:#ff6600">Visit ZiBuy</a>
       </div>
     </div>
   `;
@@ -84,13 +84,13 @@ exports.sendPushOnNotification = regionalFunctions.firestore
       await admin.messaging().send({
         token,
         notification: { title: data.title || "ZiBuy", body: data.message || "" },
-        data: { type: data.type || "", url: data.url || "https://zibuy-5deae.web.app" },
+        data: { type: data.type || "", url: data.url || "https://zibuy.ziteche.com" },
         webpush: {
           notification: {
-            icon:  "https://zibuy-5deae.web.app/my_logo.png",
-            badge: "https://zibuy-5deae.web.app/my_logo.png"
+            icon:  "https://zibuy.ziteche.com/my_logo.png",
+            badge: "https://zibuy.ziteche.com/my_logo.png"
           },
-          fcmOptions: { link: data.url || "https://zibuy-5deae.web.app" }
+          fcmOptions: { link: data.url || "https://zibuy.ziteche.com" }
         }
       });
 
@@ -136,7 +136,7 @@ exports.onNewOrder = regionalFunctions.firestore
              <p><strong>Delivery to:</strong> ${order.customerLocation}</p>
              <p>We'll contact you shortly to arrange delivery.</p>`,
             "Track Your Order",
-            `https://zibuy-5deae.web.app/dashboard.html?tab=orders`
+            `https://zibuy.ziteche.com/dashboard.html?tab=orders`
           )
         );
       }
@@ -155,7 +155,7 @@ exports.onNewOrder = regionalFunctions.firestore
              <p><strong>Location:</strong> ${order.customerLocation}</p>
              <p><strong>Total:</strong> UGX ${Number(order.total).toLocaleString()}</p>`,
             "View in Dashboard",
-            `https://zibuy-5deae.web.app/dashboard.html?tab=orders`
+            `https://zibuy.ziteche.com/dashboard.html?tab=orders`
           )
         );
       }
@@ -213,7 +213,7 @@ exports.onNewMessage = regionalFunctions.firestore
           },
           webpush: {
             fcmOptions: {
-              link: `https://zibuy-5deae.web.app/messages.html?to=${msg.senderEmail}`
+              link: `https://zibuy.ziteche.com/messages.html?to=${msg.senderEmail}`
             }
           }
         });
@@ -256,7 +256,7 @@ exports.sendEmailBroadcast = regionalFunctions.firestore
             <h2 style="color:#111827;font-size:20px;margin:0 0 14px">${data.title}</h2>
             <p style="color:#374151;font-size:15px;line-height:1.8;margin:0 0 24px">${data.message}</p>
             <div style="text-align:center">
-              <a href="https://zibuy-5deae.web.app${data.url && data.url !== "/" ? data.url : ""}"
+              <a href="https://zibuy.ziteche.com${data.url && data.url !== "/" ? data.url : ""}"
                 style="background:#ff6600;color:white;padding:14px 32px;border-radius:10px;text-decoration:none;font-weight:700;font-size:15px;display:inline-block">
                 Visit ZiBuy →
               </a>
@@ -331,14 +331,14 @@ exports.onUserCreated = regionalFunctions.firestore
               <li>💼 <strong>Upgrade your plan</strong> for unlimited listings</li>
             </ul>
             <div style="text-align:center;margin-top:28px">
-              <a href="https://zibuy-5deae.web.app/post-ad.html"
+              <a href="https://zibuy.ziteche.com/post-ad.html"
                 style="background:#ff6600;color:white;padding:14px 32px;border-radius:10px;text-decoration:none;font-weight:700;font-size:15px;display:inline-block">
                 Post Your First Ad →
               </a>
             </div>
           </div>
           <div style="padding:16px;background:#f9fafb;text-align:center;font-size:12px;color:#6b7280">
-            © 2026 ZiBuy Uganda · <a href="https://zibuy-5deae.web.app" style="color:#ff6600">zibuy-5deae.web.app</a>
+            © 2026 ZiBuy Uganda · <a href="https://zibuy.ziteche.com" style="color:#ff6600">zibuy-5deae.web.app</a>
           </div>
         </div>
         `
@@ -387,7 +387,7 @@ exports.abandonedCartEmails = regionalFunctions.pubsub
              <ul>${itemList}</ul>
              <p>These items are popular and may sell out. Complete your order now!</p>`,
             "Complete Your Order",
-            "https://zibuy-5deae.web.app/payment.html"
+            "https://zibuy.ziteche.com/payment.html"
           )
         );
 
@@ -439,7 +439,7 @@ exports.weeklyTopDeals = regionalFunctions.pubsub
          <div style="text-align:center">${productCards}</div>
          <p style="margin-top:16px">Don't miss out — these deals won't last!</p>`,
         "Shop All Deals",
-        "https://zibuy-5deae.web.app"
+        "https://zibuy.ziteche.com"
       );
 
       await Promise.all(
@@ -644,7 +644,7 @@ exports.aiRecommendations = regionalFunctions.pubsub
           <div style="display:inline-block;width:44%;margin:8px 2%;vertical-align:top;background:#f9fafb;border-radius:8px;padding:10px">
             <p style="margin:0;font-weight:700;font-size:13px;color:#111827">${p.name}</p>
             <p style="margin:4px 0 0;color:#ff6600;font-weight:800;font-size:13px">UGX ${Number(p.price).toLocaleString()}</p>
-            <a href="https://zibuy-5deae.web.app/product.html?id=${p.id}"
+            <a href="https://zibuy.ziteche.com/product.html?id=${p.id}"
               style="display:inline-block;margin-top:6px;background:#ff6600;color:white;padding:6px 12px;border-radius:6px;text-decoration:none;font-size:12px;font-weight:700">
               View →
             </a>
@@ -659,7 +659,7 @@ exports.aiRecommendations = regionalFunctions.pubsub
             `<p>Hi ${user.email.split("@")[0]}, based on your activity here are some picks for you:</p>
              <div style="text-align:center">${cards}</div>`,
             "See More Deals",
-            "https://zibuy-5deae.web.app"
+            "https://zibuy.ziteche.com"
           )
         );
       }));
