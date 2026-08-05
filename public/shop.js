@@ -260,7 +260,7 @@ function renderShopProductsGrid(products) {
   src="${
     p.images?.length
       ? p.images[0]
-      : 'https://zibuy-5deae.web.app/icons/icon-512.png/400x300?text=ZiBuy'
+      : 'https://zibuy.ziteche.com/icons/icon-512.png/400x300?text=ZiBuy'
   }"
   alt="${escapeHTML(p.name) || ''}"
   loading="lazy"
