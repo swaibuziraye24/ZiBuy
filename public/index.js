@@ -338,7 +338,7 @@ exports.onUserCreated = regionalFunctions.firestore
             </div>
           </div>
           <div style="padding:16px;background:#f9fafb;text-align:center;font-size:12px;color:#6b7280">
-            © 2026 ZiBuy Uganda · <a href="https://zibuy.ziteche.com" style="color:#ff6600">zibuy-5deae.web.app</a>
+            © 2026 ZiBuy Uganda · <a href="https://zibuy.ziteche.com" style="color:#ff6600">zibuy.ziteche.com</a>
           </div>
         </div>
         `
