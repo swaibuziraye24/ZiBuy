@@ -1066,6 +1066,19 @@ console.log("PRODUCT UPDATED");
 // ============================================
 window.openBuyNow = function(productId, productName, price, sellerPhone, sellerName) {
 
+  // Buying requires an account — browsing and viewing stays fully open,
+  // but purchasing needs a real account so buyer ratings and ZiBuy
+  // Protect disputes have somewhere real to attach to
+  if (!auth.currentUser) {
+    if (typeof window.openAuthModal === "function") {
+      try { sessionStorage.setItem("zibuy_post_login_redirect", window.location.pathname + window.location.search); } catch(e) {}
+      window.openAuthModal();
+    } else {
+      alert("Please log in or create a free account to complete your purchase.");
+    }
+    return;
+  }
+
   const existing = document.getElementById("buy-now-modal");
   if (existing) existing.remove();
 
