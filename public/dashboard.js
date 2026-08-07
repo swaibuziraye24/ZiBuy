@@ -672,7 +672,6 @@ window.submitDashboardBoost = async function(productId, productName, days, price
 
     document.getElementById("dash-boost-payment-modal")?.remove();
 
-    // Open admin WhatsApp with full details
     const waMsg = encodeURIComponent(
       `Hello ZiBuy Admin 👋\n\n` +
       `I have paid to boost my ad.\n\n` +
@@ -686,15 +685,13 @@ window.submitDashboardBoost = async function(productId, productName, days, price
       `Please verify and activate my boost. Thank you! 🙏`
     );
 
-    window.open(`https://wa.me/256789157512?text=${waMsg}`, "_blank");
-
     // Success screen
     const successModal = document.createElement("div");
     successModal.className = "modal open";
     successModal.innerHTML = `
       <div class="modal-box" style="max-width:400px;text-align:center">
         <p style="font-size:52px;margin-bottom:12px">✅</p>
-        <h2 style="font-size:20px;font-weight:800;margin-bottom:8px">Reference Sent!</h2>
+        <h2 style="font-size:20px;font-weight:800;margin-bottom:8px">Reference Submitted!</h2>
         <div style="background:#f9fafb;border-radius:10px;padding:14px;margin-bottom:16px;text-align:left">
           <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px">
             <span style="color:#6b7280">Reference Code</span>
@@ -705,14 +702,18 @@ window.submitDashboardBoost = async function(productId, productName, days, price
             <strong style="color:#ff6600">${txnRef}</strong>
           </div>
         </div>
-        <p style="color:#6b7280;font-size:13px;margin-bottom:20px;line-height:1.6">
-          Admin will verify and activate your boost within <strong>1 hour</strong>. 
+        <p style="color:#6b7280;font-size:13px;margin-bottom:16px;line-height:1.6">
+          The ZiBuy team will verify and activate your boost within <strong>1 hour</strong>. 
           Your ad will show a ⭐ badge once active.
         </p>
         <button onclick="this.closest('.modal').remove();loadMyProducts()"
-          style="background:#ff6600;color:white;border:none;padding:14px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;width:100%">
+          style="background:#ff6600;color:white;border:none;padding:14px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;width:100%;margin-bottom:10px">
           Done →
         </button>
+        <a href="https://wa.me/256789157512?text=${waMsg}" target="_blank"
+          style="display:block;color:#6b7280;font-size:12.5px;text-decoration:underline">
+          Seeing a delay? Contact ZiBuy on WhatsApp
+        </a>
       </div>
     `;
     document.body.appendChild(successModal);
@@ -855,7 +856,7 @@ window.proceedToPinPayment = function() {
         onclick="submitPinRequest('${jsAttr(productId)}','${jsAttr(productName)}',${hours},${price},'${jsAttr(paymentRef)}',this)"
         style="background:#8b5cf6;color:white;border:none;padding:14px;border-radius:12px;
         font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;width:100%">
-        📲 Send Reference to Admin WhatsApp
+        ✅ Submit Payment Reference
       </button>
     </div>
   `;
@@ -904,20 +905,32 @@ window.submitPinRequest = async function(productId, productName, hours, price, p
       `• Email: *${currentUser.email}*\n\n` +
       `Please verify and pin my ad. Thank you! 🙏`
     );
-    window.open(`https://wa.me/256789157512?text=${waMsg}`, "_blank");
 
-    const toast = document.createElement("div");
-    toast.className   = "toast success";
-    toast.textContent = "✅ Pin request sent! Activates shortly.";
-    document.getElementById("toast-container")?.appendChild(toast);
-    setTimeout(() => toast.remove(), 4000);
-
-    loadMyProducts();
+    const successModal = document.createElement("div");
+    successModal.className = "modal open";
+    successModal.innerHTML = `
+      <div class="modal-box" style="max-width:380px;text-align:center">
+        <p style="font-size:48px;margin-bottom:10px">✅</p>
+        <h2 style="font-size:18px;font-weight:800;margin-bottom:14px">Pin Request Submitted!</h2>
+        <p style="color:#6b7280;font-size:13px;margin-bottom:16px;line-height:1.6">
+          The ZiBuy team will verify and pin your ad shortly.
+        </p>
+        <button onclick="this.closest('.modal').remove();loadMyProducts()"
+          style="background:#ff6600;color:white;border:none;padding:12px;border-radius:10px;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit;width:100%;margin-bottom:10px">
+          Done →
+        </button>
+        <a href="https://wa.me/256789157512?text=${waMsg}" target="_blank"
+          style="display:block;color:#6b7280;font-size:12px;text-decoration:underline">
+          Seeing a delay? Contact ZiBuy on WhatsApp
+        </a>
+      </div>
+    `;
+    document.body.appendChild(successModal);
 
   } catch (err) {
     console.error("Pin submit error:", err);
     alert("❌ Error: " + err.message);
-    if (btnEl) { btnEl.textContent = "📲 Send Reference to Admin WhatsApp"; btnEl.disabled = false; }
+    if (btnEl) { btnEl.textContent = "✅ Submit Payment Reference"; btnEl.disabled = false; }
   }
 };
 
