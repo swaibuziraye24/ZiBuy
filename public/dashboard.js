@@ -515,7 +515,7 @@ window.boostFromDashboard = async function(productId, productName) {
         </div>
       </div>
 
-      <button class="btn btn-orange" onclick="proceedToPayment()" style="width:100%;padding:14px;font-size:15px;font-weight:800">Pay via WhatsApp 💬</button>
+      <button class="btn btn-orange" onclick="proceedToPayment()" style="width:100%;padding:14px;font-size:15px;font-weight:800">✅ Submit Payment Reference</button>
     </div>
   `;
 
@@ -616,7 +616,7 @@ window.proceedToPayment = async function() {
       <div style="display:flex;flex-direction:column;gap:10px">
         <button id="dash-boost-submit-btn" onclick="submitDashboardBoost('${jsAttr(productId)}', '${jsAttr(productName)}', ${days}, ${price}, '${jsAttr(paymentRef)}', this)"
           style="background:#ff6600;color:white;border:none;padding:14px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;width:100%">
-          📲 Send Reference to Admin WhatsApp
+          ✅ Submit Payment Reference
         </button>
         <button onclick="document.getElementById('dash-boost-payment-modal').remove()"
           style="background:#f3f4f6;color:#6b7280;border:none;padding:12px;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;width:100%">
@@ -721,7 +721,7 @@ window.submitDashboardBoost = async function(productId, productName, days, price
   } catch (err) {
     console.error("Boost submit error:", err);
     alert("❌ Error: " + err.message);
-    btn.textContent = "📲 Send Reference to Admin WhatsApp";
+    btn.textContent = "✅ Submit Payment Reference";
     btn.disabled    = false;
   }
 };
@@ -774,7 +774,7 @@ window.pinToTop = function(productId, productName) {
 
       <button class="btn btn-orange" onclick="proceedToPinPayment()"
         style="width:100%;padding:14px;font-size:15px;font-weight:800;background:#8b5cf6">
-        Pay via WhatsApp 💬
+        Continue to Payment 💳
       </button>
     </div>
   `;
