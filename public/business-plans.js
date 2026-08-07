@@ -587,7 +587,7 @@ window.confirmPlanPayment = async function(subDocId, paymentRef, planId, planNam
     return;
   }
 
-  btn.textContent = "Opening WhatsApp...";
+  btn.textContent = "Submitting...";
   btn.disabled    = true;
 
   try {
@@ -601,7 +601,6 @@ window.confirmPlanPayment = async function(subDocId, paymentRef, planId, planNam
 
     document.getElementById("plan-payment-modal")?.remove();
 
-    // Build WhatsApp message with all details
     const waMsg = encodeURIComponent(
       `Hello ZiBuy Admin 👋\n\n` +
       `I have paid for a *${planName} Plan* upgrade.\n\n` +
@@ -614,10 +613,6 @@ window.confirmPlanPayment = async function(subDocId, paymentRef, planId, planNam
       `Please verify and activate my plan. Thank you! 🙏`
     );
 
-    // Open admin WhatsApp
-    window.open(`https://wa.me/256789157512?text=${waMsg}`, "_blank");
-
-    // Show success screen
     const successModal = document.createElement("div");
     successModal.style.cssText = `
       position:fixed;inset:0;background:rgba(0,0,0,0.65);
@@ -628,26 +623,30 @@ window.confirmPlanPayment = async function(subDocId, paymentRef, planId, planNam
       <div style="background:white;border-radius:20px;padding:32px;max-width:400px;width:100%;text-align:center">
         <p style="font-size:52px;margin-bottom:12px">✅</p>
         <h2 style="font-size:20px;font-weight:800;color:#111827;margin-bottom:8px">
-          Reference Sent!
+          Reference Submitted!
         </h2>
         <p style="color:#6b7280;font-size:14px;line-height:1.7;margin-bottom:12px">
           Your transaction reference<br>
           <strong style="color:#ff6600;font-size:18px;letter-spacing:1px">${txnRef}</strong><br>
-          has been sent to admin via WhatsApp.
+          has been recorded and sent to the ZiBuy team.
         </p>
         <div style="background:#f9fafb;border-radius:10px;padding:12px;margin-bottom:16px;font-size:13px;text-align:left">
           <p style="margin:0 0 6px;font-weight:800;color:#111827">What happens next:</p>
-          <p style="margin:0 0 4px;color:#374151">1. Admin verifies your Mobile Money payment</p>
+          <p style="margin:0 0 4px;color:#374151">1. We verify your Mobile Money payment</p>
           <p style="margin:0 0 4px;color:#374151">2. Your <strong>${planName}</strong> plan is activated</p>
           <p style="margin:0;color:#374151">3. You get a notification when it's live ✅</p>
         </div>
-        <p style="font-size:12px;color:#6b7280;margin-bottom:20px">
+        <p style="font-size:12px;color:#6b7280;margin-bottom:16px">
           ⏱️ Usually activated within <strong>1 hour</strong>
         </p>
         <button onclick="this.closest('div').parentElement.remove();window.location.reload()"
-          style="background:#ff6600;color:white;border:none;padding:14px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;width:100%">
+          style="background:#ff6600;color:white;border:none;padding:14px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;width:100%;margin-bottom:10px">
           Done →
         </button>
+        <a href="https://wa.me/256789157512?text=${waMsg}" target="_blank"
+          style="display:block;color:#6b7280;font-size:12px;text-decoration:underline">
+          Seeing a delay? Contact ZiBuy on WhatsApp
+        </a>
       </div>
     `;
     document.body.appendChild(successModal);
@@ -655,7 +654,7 @@ window.confirmPlanPayment = async function(subDocId, paymentRef, planId, planNam
   } catch (err) {
     console.error(err);
     alert("Failed. Please try again.");
-    btn.textContent = "📲 Send Reference to Admin WhatsApp";
+    btn.textContent = "✅ Submit Payment Reference";
     btn.disabled    = false;
   }
 };
