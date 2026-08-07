@@ -1059,7 +1059,6 @@ window.selectCVPlan = function(el, days, price) {
 
     document.getElementById("cv-boost-modal").remove();
 
-    // WhatsApp admin
     const waMsg = encodeURIComponent(
       `Hello ZiBuy Admin 👋\n\n` +
       `*CV Boost Request:*\n\n` +
@@ -1071,14 +1070,27 @@ window.selectCVPlan = function(el, days, price) {
       `📧 *Email:* ${currentUser.email}\n\n` +
       `Please verify and pin this CV to the top. Thank you!`
     );
-    window.open(`https://wa.me/256789157512?text=${waMsg}`, "_blank");
 
-    // Success toast
-    const toast = document.createElement("div");
-    toast.className   = "toast success";
-    toast.textContent = "✅ CV boost request sent! Activates within 1 hour.";
-    document.getElementById("toast-container")?.appendChild(toast);
-    setTimeout(() => toast.remove(), 4000);
+    const successModal = document.createElement("div");
+    successModal.className = "modal open";
+    successModal.innerHTML = `
+      <div class="modal-box" style="max-width:380px;text-align:center">
+        <p style="font-size:48px;margin-bottom:10px">✅</p>
+        <h2 style="font-size:18px;font-weight:800;margin-bottom:14px">Reference Submitted!</h2>
+        <p style="color:#6b7280;font-size:13px;margin-bottom:16px;line-height:1.6">
+          The ZiBuy team will verify and pin your CV within <strong>1 hour</strong>.
+        </p>
+        <button onclick="this.closest('.modal').remove()"
+          style="background:#ff6600;color:white;border:none;padding:12px;border-radius:10px;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit;width:100%;margin-bottom:10px">
+          Done →
+        </button>
+        <a href="https://wa.me/256789157512?text=${waMsg}" target="_blank"
+          style="display:block;color:#6b7280;font-size:12px;text-decoration:underline">
+          Seeing a delay? Contact ZiBuy on WhatsApp
+        </a>
+      </div>
+    `;
+    document.body.appendChild(successModal);
 
   } catch(err) {
     console.error(err);
