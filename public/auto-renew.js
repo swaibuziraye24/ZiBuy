@@ -65,7 +65,7 @@ window.openAutoRenewModal = function(productId, productName) {
 
       <button id="ar-submit-btn" onclick="requestAutoRenew('${productId}','${productName.replace(/'/g,"\\'")}','${orderRef}')"
         style="width:100%;background:#ff6600;color:white;border:none;padding:14px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit">
-        📲 I've Paid — Activate Auto-Renew
+        ✅ Submit Payment Reference
       </button>
       <p id="ar-error" style="color:#ef4444;font-size:13px;margin-top:10px;display:none"></p>
     </div>
@@ -118,19 +118,32 @@ window.requestAutoRenew = async function(productId, productName, orderRef) {
       `Please verify and activate auto-renew for this ad.`
     );
 
-    window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${waMsg}`, "_blank");
-
-    const toast = document.createElement("div");
-    toast.style.cssText = `position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#10b981;color:white;padding:12px 24px;border-radius:10px;font-weight:700;font-size:14px;z-index:99999;box-shadow:0 4px 12px rgba(0,0,0,0.15)`;
-    toast.textContent = "✅ Request sent! Admin will activate shortly.";
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 3500);
+    const successModal = document.createElement("div");
+    successModal.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px`;
+    successModal.innerHTML = `
+      <div style="background:white;border-radius:20px;padding:28px;max-width:380px;width:100%;text-align:center">
+        <p style="font-size:48px;margin-bottom:10px">✅</p>
+        <h2 style="font-size:18px;font-weight:800;margin-bottom:14px">Request Submitted!</h2>
+        <p style="color:#6b7280;font-size:13px;margin-bottom:16px;line-height:1.6">
+          The ZiBuy team will verify and activate auto-renew shortly.
+        </p>
+        <button onclick="this.closest('div').parentElement.remove()"
+          style="background:#ff6600;color:white;border:none;padding:12px;border-radius:10px;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit;width:100%;margin-bottom:10px">
+          Done →
+        </button>
+        <a href="https://wa.me/${ADMIN_WHATSAPP}?text=${waMsg}" target="_blank"
+          style="display:block;color:#6b7280;font-size:12px;text-decoration:underline">
+          Seeing a delay? Contact ZiBuy on WhatsApp
+        </a>
+      </div>
+    `;
+    document.body.appendChild(successModal);
 
   } catch (err) {
     console.error(err);
     if (errorEl) { errorEl.textContent = "Failed to submit. Try again."; errorEl.style.display = "block"; }
   } finally {
-    if (btn) { btn.textContent = "📲 I've Paid — Activate Auto-Renew"; btn.disabled = false; }
+    if (btn) { btn.textContent = "✅ Submit Payment Reference"; btn.disabled = false; }
   }
 };
 
