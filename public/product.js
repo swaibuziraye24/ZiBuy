@@ -1217,7 +1217,7 @@ window.openBuyNow = function(productId, productName, price, sellerPhone, sellerN
       <div style="display:flex;flex-direction:column;gap:10px">
         <button onclick="confirmBuyNow('${productId}','${productName.replace(/'/g,"\\'")}',${price},'${sellerPhone}','${orderRef}','${sellerName}')"
           style="background:#ff6600;color:white;border:none;padding:14px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;width:100%">
-          📲 I've Paid — Notify Seller on WhatsApp
+          ✅ Submit Payment Reference
         </button>
         <button onclick="document.getElementById('buy-now-modal').remove()"
           style="background:#f3f4f6;color:#6b7280;border:none;padding:12px;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;width:100%">
@@ -1328,14 +1328,12 @@ window.confirmBuyNow = async function(productId, productName, price, sellerPhone
       `Please confirm and arrange delivery. Thank you! 🙏`
     );
 
-    window.open(`https://wa.me/${waPhone}?text=${waMsg}`, "_blank");
-
     const success = document.createElement("div");
     success.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px`;
     success.innerHTML = `
       <div style="background:white;border-radius:20px;padding:32px;max-width:400px;width:100%;text-align:center">
         <p style="font-size:52px;margin-bottom:12px">✅</p>
-        <h2 style="font-size:20px;font-weight:800;margin-bottom:8px">Order Sent!</h2>
+        <h2 style="font-size:20px;font-weight:800;margin-bottom:8px">Order Submitted!</h2>
         <div style="background:#f9fafb;border-radius:10px;padding:14px;margin-bottom:16px;text-align:left">
           <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px">
             <span style="color:#6b7280">Order Ref</span>
@@ -1351,13 +1349,17 @@ window.confirmBuyNow = async function(productId, productName, price, sellerPhone
             🛡️ <strong>ZiBuy Protect active.</strong> Once your item arrives, confirm receipt in
             your dashboard's "My Orders" tab. If something's wrong, you can raise a dispute or cancel instead.
           </div>` : ""}
-        <p style="color:#6b7280;font-size:13px;margin-bottom:20px;line-height:1.6">
-          Your payment reference has been sent to the seller via WhatsApp along with your delivery details.
+        <p style="color:#6b7280;font-size:13px;margin-bottom:16px;line-height:1.6">
+          The seller has been notified and will confirm your order shortly.
         </p>
         <button onclick="this.closest('div').parentElement.remove();window.location.href='dashboard.html?tab=orders'"
-          style="background:#ff6600;color:white;border:none;padding:14px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;width:100%">
+          style="background:#ff6600;color:white;border:none;padding:14px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;width:100%;margin-bottom:10px">
           View My Orders →
         </button>
+        <a href="https://wa.me/${waPhone}?text=${waMsg}" target="_blank"
+          style="display:block;color:#6b7280;font-size:12.5px;text-decoration:underline">
+          Seeing a delay? Contact the seller on WhatsApp
+        </a>
       </div>
     `;
     document.body.appendChild(success);
