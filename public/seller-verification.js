@@ -148,7 +148,7 @@ window.submitVerification = async function() {
 
     if (!existing.empty) {
       alert("⏳ You already have a pending verification request.");
-      btn.textContent = "📲 Submit & Send Reference to Admin WhatsApp";
+      btn.textContent = "✅ Submit Payment Reference";
       btn.disabled    = false;
       return;
     }
@@ -249,7 +249,7 @@ window.submitVerification = async function() {
   } catch (err) {
     console.error("Verification error:", err);
     alert("❌ Submission failed: " + err.message);
-    btn.textContent = "📲 Submit & Send Reference to Admin WhatsApp";
+    btn.textContent = "✅ Submit Payment Reference";
     btn.disabled    = false;
   }
 };
