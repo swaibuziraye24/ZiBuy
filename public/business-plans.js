@@ -558,7 +558,7 @@ function showPlanPaymentInstructions(plan, price, subDocId) {
       <div style="display:flex;flex-direction:column;gap:10px">
         <button onclick="confirmPlanPayment('${subDocId}', '${ref}', '${plan.id}', '${plan.name}', ${price})"
           style="background:#ff6600;color:white;border:none;padding:14px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;width:100%">
-          📲 Send Reference to Admin WhatsApp
+          ✅ Submit Payment Reference
         </button>
         <button onclick="document.getElementById('plan-payment-modal').remove()"
           style="background:#f3f4f6;color:#6b7280;border:none;padding:12px;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;width:100%">
