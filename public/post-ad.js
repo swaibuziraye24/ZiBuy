@@ -2968,7 +2968,7 @@ function showBoostPrompt(productId, productName) {
       <div style="display:flex;flex-direction:column;gap:10px">
         <button id="request-boost-btn" onclick="requestBoost('${productId}')"
           style="display:none;background:#ff6600;color:white;border:none;padding:14px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;width:100%;transition:.2s">
-          📲 Send Reference to Admin WhatsApp
+          📲✅ Submit Payment Reference
         </button>
         <button onclick="skipBoost()"
           style="background:#f3f4f6;color:#6b7280;border:none;padding:12px;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;width:100%">
@@ -3101,7 +3101,7 @@ window.requestBoost = async function (productId) {
   } catch (err) {
     console.error("Boost request error:", err);
     alert("Failed to send request. Please try again.");
-    if (btn) { btn.textContent = "📲 Send Reference to Admin WhatsApp"; btn.disabled = false; }
+    if (btn) { btn.textContent = "✅ Submit Payment Reference"; btn.disabled = false; }
   }
 };
 /* ---- Success screen ---- */
