@@ -2911,3 +2911,49 @@ exports.linkLoginToExistingAccount = onCall(async (request) => {
 
   return { status: "no_account_found" };
 });
+
+
+// ============================================
+// NOTIFY ABOUT SIMILAR ITEMS — fires when a
+// seller posts a new product matching a category
+// someone requested alerts for
+// ============================================
+
+exports.notifySimilarItemAlerts = onDocumentCreated("products/{productId}", async (event) => {
+  const product = event.data.data();
+  const productId = event.params.productId;
+
+  if (!product || product.status !== "active" || !product.category) return;
+
+  try {
+    const alertsSnap = await db.collection("similar_item_alerts")
+      .where("category", "==", product.category)
+      .get();
+
+    if (alertsSnap.empty) return;
+
+    const notified = new Set();
+
+    for (const alertDoc of alertsSnap.docs) {
+      const alert = alertDoc.data();
+      if (alert.userId === product.userId) continue; // don't notify someone about their own new listing
+      if (notified.has(alert.userId)) continue;
+      notified.add(alert.userId);
+
+      await db.collection("notifications").add({
+        userId: alert.userId,
+        type: "similar_item",
+        title: "🔔 New item you might like",
+        message: `A new "${product.name}" just got posted — similar to something you were watching.`,
+        relatedId: productId,
+        read: false,
+        createdAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+
+      // Clean up the alert once fired — avoids re-notifying for every future post
+      await alertDoc.ref.delete();
+    }
+  } catch (err) {
+    console.error("[SIMILAR ITEM ALERT ERROR]", err.message);
+  }
+});
