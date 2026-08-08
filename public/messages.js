@@ -173,6 +173,7 @@ function renderConversationsList(convos) {
 // OPEN A CONVERSATION — live message stream
 // ============================================
 window.openConversation = async function(email) {
+  renderQuickReplies();
   if (unsubscribeMessages) { unsubscribeMessages(); unsubscribeMessages = null; }
 
   activeConversation = email;
@@ -423,3 +424,35 @@ export async function startConversation(recipientEmail, productId, productName) 
     alert("Failed to start conversation. Try again.");
   }
 }
+
+// ============================================
+// QUICK REPLY TEMPLATES
+// ============================================
+
+const QUICK_REPLIES = [
+  "✅ Yes, still available",
+  "💰 Price is negotiable",
+  "❌ Sorry, already sold",
+  "📦 Can deliver within 1-2 days",
+  "📍 Can meet in person to view it"
+];
+
+function renderQuickReplies() {
+  const row = document.getElementById("quick-reply-row");
+  if (!row) return;
+
+  row.innerHTML = QUICK_REPLIES.map(text => `
+    <button onclick="fillQuickReply('${text.replace(/'/g,"\\'")}')"
+      style="flex-shrink:0;padding:7px 12px;border-radius:20px;font-size:12px;font-weight:700;
+      background:#f3f4f6;color:#374151;border:none;cursor:pointer;white-space:nowrap;font-family:inherit">
+      ${text}
+    </button>
+  `).join("");
+}
+
+window.fillQuickReply = function(text) {
+  const input = document.getElementById("message-input");
+  if (!input) return;
+  input.value = text;
+  input.focus();
+};
