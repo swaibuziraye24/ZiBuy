@@ -150,6 +150,7 @@ function initApp() {
     loadFeaturedShops();
   }
   loadRecentSoldTicker();
+  loadDealsNearYou();
   loadCategorySponsors();
   
   }, 800);
@@ -3330,3 +3331,55 @@ window.applyPriceChip = function(min, max, el) {
 
   window.renderProducts();
 };
+
+// ============================================
+// DEALS NEAR YOU — location-aware homepage row
+// ============================================
+
+async function loadDealsNearYou() {
+  if (!auth.currentUser) return; // needs a saved profile location — guests skip this section
+
+  const section = document.getElementById("deals-near-you-section");
+  const row = document.getElementById("deals-near-you-row");
+  if (!section || !row) return;
+
+  try {
+    const userSnap = await getDoc(doc(db, "users", auth.currentUser.uid));
+    const userLocation = userSnap.exists() ? (userSnap.data().location || "") : "";
+    if (!userLocation) return; // nothing to match against
+
+    const locationKeyword = userLocation.split(",")[0].trim().toLowerCase();
+    if (!locationKeyword) return;
+
+    const matches = (window.allProducts || []).filter(p => {
+      const loc = (p.location || p.seller?.location || "").toLowerCase();
+      return loc.includes(locationKeyword) && p.status === "active";
+    }).slice(0, 10);
+
+    if (matches.length === 0) { section.style.display = "none"; return; }
+
+    section.style.display = "block";
+    row.innerHTML = matches.map(p => {
+      const img = p.images?.[0] || "";
+      const price = Number(p.price || 0).toLocaleString();
+      return `
+        <div onclick="window.location.href='product.html?id=${p.id}'"
+          style="flex:0 0 auto;width:140px;background:white;border-radius:12px;overflow:hidden;
+          box-shadow:0 2px 8px rgba(0,0,0,0.06);cursor:pointer;scroll-snap-align:start;border:1px solid #f0f0f0">
+          <img src="${img}" alt="${escapeHTML(p.name)}"
+            onerror="this.src='https://via.placeholder.com/140x120?text=ZiBuy'"
+            style="width:100%;height:120px;object-fit:cover;background:#f3f4f6">
+          <div style="padding:9px">
+            <p style="margin:0 0 4px;font-size:11px;font-weight:700;color:#111827;
+              overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(p.name)}</p>
+            <p style="margin:0;color:#ff6600;font-weight:900;font-size:13px">UGX ${price}</p>
+            <p style="margin:2px 0 0;font-size:9.5px;color:#9ca3af">📍 ${escapeHTML(p.location || p.seller?.location || "")}</p>
+          </div>
+        </div>`;
+    }).join("");
+
+  } catch (e) {
+    console.warn("loadDealsNearYou:", e.message);
+    section.style.display = "none";
+  }
+}
