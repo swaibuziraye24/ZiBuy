@@ -434,23 +434,35 @@ document.head.appendChild(schemaTag);
           <p style="font-size:14px;color:#4b5563;line-height:1.7">${escapeHTML(p.description) || "High quality product. Contact seller for more details."}</p>
         </div>
 
-        <!-- Primary Actions -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
-          <button onclick="addToCart('${p.name.replace(/'/g,"\\'")}', ${p.price}, '${images[0] || ""}')"
-            style="background:#ff6600;color:white;border:none;padding:15px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px">
-            🛒 Add to Cart
-          </button>
-          <button onclick="${p.userEmail === 'swaibuziraye22@gmail.com'
-            ? `openBuyNow('${snap.id}','${p.name.replace(/'/g,"\\'")}',${p.price},'${(seller.phone||"").replace(/\D/g,"")}','${seller.name||"Seller"}')`
-            : `buyNowWhatsApp('${p.name.replace(/'/g,"\\'")}',${p.price},'${(seller.phone||"").replace(/\D/g,"")}')`
-          }"
-            style="background:#111827;color:white;border:none;padding:15px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px">
-            ⚡ Buy Now
-          </button>
-        </div>
+        ${p.status === "sold" ? `
+          <!-- Sold — buying is disabled, offer to notify about similar items instead -->
+          <div style="background:#f3f4f6;border-radius:12px;padding:18px;margin-bottom:12px;text-align:center">
+            <p style="font-size:15px;font-weight:800;color:#6b7280;margin-bottom:4px">❌ This item has been sold</p>
+            <p style="font-size:12.5px;color:#9ca3af;margin-bottom:14px">It's no longer available for purchase</p>
+            <button id="notify-similar-btn" onclick="notifyAboutSimilar('${snap.id}','${p.category}','${p.userId}')"
+              style="background:#ff6600;color:white;border:none;padding:12px 20px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit">
+              🔔 Notify Me About Similar Items
+            </button>
+          </div>
+        ` : `
+          <!-- Primary Actions -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+            <button onclick="addToCart('${p.name.replace(/'/g,"\\'")}', ${p.price}, '${images[0] || ""}')"
+              style="background:#ff6600;color:white;border:none;padding:15px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px">
+              🛒 Add to Cart
+            </button>
+            <button onclick="${p.userEmail === 'swaibuziraye22@gmail.com'
+              ? `openBuyNow('${snap.id}','${p.name.replace(/'/g,"\\'")}',${p.price},'${(seller.phone||"").replace(/\D/g,"")}','${seller.name||"Seller"}')`
+              : `buyNowWhatsApp('${p.name.replace(/'/g,"\\'")}',${p.price},'${(seller.phone||"").replace(/\D/g,"")}')`
+            }"
+              style="background:#111827;color:white;border:none;padding:15px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px">
+              ⚡ Buy Now
+            </button>
+          </div>
 
-        <!-- Contact Buttons -->
-        ${contactHTML}
+          <!-- Contact Buttons -->
+          ${contactHTML}
+        `}
 
         <!-- Safety tip -->
         <div style="margin-top:14px;padding:14px 16px;background:#fffbeb;border:1px solid #fde68a;border-radius:12px;font-size:13px;color:#92400e;display:flex;gap:8px;align-items:flex-start">
@@ -1390,4 +1402,38 @@ window.buyNowWhatsApp = function(productName, price, sellerPhone) {
   window.open(`https://wa.me/${clean}?text=${msg}`, "_blank");
 };
 
+window.notifyAboutSimilar = async function(productId, category, sellerId) {
+  const btn = document.getElementById("notify-similar-btn");
 
+  if (!auth.currentUser) {
+    if (typeof window.openAuthModal === "function") {
+      try { sessionStorage.setItem("zibuy_post_login_redirect", window.location.pathname + window.location.search); } catch(e) {}
+      window.openAuthModal();
+    } else {
+      alert("Please log in to get notified");
+    }
+    return;
+  }
+
+  if (btn) { btn.textContent = "Saving..."; btn.disabled = true; }
+
+  try {
+    await addDoc(collection(db, "similar_item_alerts"), {
+      userId: auth.currentUser.uid,
+      userEmail: auth.currentUser.email,
+      soldProductId: productId,
+      category,
+      sellerId,
+      createdAt: new Date()
+    });
+
+    if (btn) {
+      btn.textContent = "✅ You'll be notified";
+      btn.style.background = "#10b981";
+    }
+  } catch (err) {
+    console.error("notifyAboutSimilar:", err);
+    if (btn) { btn.textContent = "🔔 Notify Me About Similar Items"; btn.disabled = false; }
+    alert("Failed to save — try again");
+  }
+};
