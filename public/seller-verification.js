@@ -210,9 +210,6 @@ window.submitVerification = async function() {
       `🔗 Approve/Reject: https://zibuy.ziteche.com/admin.html\n` +
       `🆔 Verification ID: ${docRef.id}`;
 
-    // Open admin WhatsApp
-    window.open(`https://wa.me/256789157512?text=${encodeURIComponent(waMsg)}`, "_blank");
-
     // Show success screen
     document.getElementById("verify-form-wrap").style.display = "none";
     const statusBox = document.getElementById("verification-status");
@@ -224,7 +221,7 @@ window.submitVerification = async function() {
           Verification Submitted!
         </h2>
         <p style="color:#166534;font-size:14px;margin:0 0 12px">
-          Your reference has been sent to admin via WhatsApp.
+          Your request and documents have been received by the ZiBuy team.
         </p>
         <div style="background:white;border-radius:10px;padding:14px;margin-bottom:16px;font-size:13px;text-align:left">
           <div style="display:flex;justify-content:space-between;margin-bottom:8px">
@@ -236,20 +233,24 @@ window.submitVerification = async function() {
             <strong style="color:#ff6600">${txnRef}</strong>
           </div>
         </div>
-        <p style="font-size:13px;color:#6b7280;margin-bottom:20px">
-          Admin will verify your payment and activate your badge within <strong>1 hour</strong>.
+        <p style="font-size:13px;color:#6b7280;margin-bottom:16px">
+          We'll verify your payment and activate your badge within <strong>1 hour</strong>.
         </p>
         <button onclick="window.location.href='dashboard.html'"
-          style="background:#ff6600;color:white;border:none;padding:14px 28px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit">
+          style="background:#ff6600;color:white;border:none;padding:14px 28px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;width:100%;margin-bottom:10px">
           Go to Dashboard →
         </button>
+        <a href="https://wa.me/256789157512?text=${encodeURIComponent(waMsg)}" target="_blank"
+          style="display:block;color:#6b7280;font-size:12px;text-decoration:underline">
+          Seeing a delay? Contact ZiBuy on WhatsApp
+        </a>
       </div>
     `;
 
   } catch (err) {
     console.error("Verification error:", err);
     alert("❌ Submission failed: " + err.message);
-    btn.textContent = "✅ Submit Payment Reference";
+    btn.textContent = "✅ Submit Verification";
     btn.disabled    = false;
   }
 };
