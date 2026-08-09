@@ -2132,11 +2132,12 @@ window.saveBlogPost = async function(status) {
     }
 
     if (_blogCoverFile) {
+      const compressedCover = await compressImageForUpload(_blogCoverFile);
       const { getStorage, ref, uploadBytes, getDownloadURL }
         = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js");
       const storage = getStorage();
-      const storageRef = ref(storage, `blog-covers/${Date.now()}-${_blogCoverFile.name}`);
-      await uploadBytes(storageRef, _blogCoverFile, { contentType: _blogCoverFile.type });
+      const storageRef = ref(storage, `blog-covers/${Date.now()}-${compressedCover.name}`);
+      await uploadBytes(storageRef, compressedCover, { contentType: compressedCover.type });
       coverImage = await getDownloadURL(storageRef);
     }
 
