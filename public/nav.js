@@ -90,8 +90,58 @@
       <span class="zbn-icon">👤</span>
       <span class="zbn-label">Dashboard</span>
     </button>
+
+    <button class="zbn-item" onclick="window.openMoreMenu()">
+      <span class="zbn-icon">☰</span>
+      <span class="zbn-label">More</span>
+    </button>
   `;
   document.body.appendChild(nav);
+
+  // ── "More" menu — reaches every secondary page from anywhere ──
+  window.openMoreMenu = function() {
+    const existing = document.getElementById("more-menu-sheet");
+    if (existing) { existing.remove(); return; }
+
+    const links = [
+      { icon: "ℹ️", label: "About ZiBuy", href: "about.html" },
+      { icon: "🛡️", label: "Safety Tips", href: "safety.html" },
+      { icon: "📢", label: "Advertise With Us", href: "advertise.html" },
+      { icon: "💼", label: "Post a Job", href: "post-ad.html?category=seeking-work" },
+      { icon: "❓", label: "FAQ", href: "faq.html" },
+      { icon: "📞", label: "Contact Us", href: "contact.html" },
+      { icon: "🚩", label: "Report Abuse", href: "report.html" },
+      { icon: "🆘", label: "Support", href: "support.html" },
+      { icon: "📄", label: "Terms & Conditions", href: "terms.html" },
+      { icon: "🔒", label: "Privacy Policy", href: "privacy.html" },
+    ];
+
+    const overlay = document.createElement("div");
+    overlay.id = "more-menu-sheet";
+    overlay.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;
+      display:flex;align-items:flex-end;justify-content:center`;
+    overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+
+    overlay.innerHTML = `
+      <div style="background:white;width:100%;max-width:520px;border-radius:20px 20px 0 0;
+        padding:10px 8px calc(16px + env(safe-area-inset-bottom));max-height:75vh;overflow-y:auto;
+        box-shadow:0 -4px 20px rgba(0,0,0,0.15)">
+        <div style="width:40px;height:4px;background:#e5e7eb;border-radius:4px;margin:6px auto 14px"></div>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;padding:0 8px">
+          ${links.map(l => `
+            <a href="${l.href}" style="display:flex;align-items:center;gap:10px;padding:14px 12px;
+              border-radius:12px;text-decoration:none;color:#111827;font-weight:700;font-size:13.5px;
+              background:#f9fafb">
+              <span style="font-size:18px">${l.icon}</span>
+              <span>${l.label}</span>
+            </a>
+          `).join("")}
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+  };
 
   // ── Back button on inner pages ──────────────
   // Uses the browser's REAL back navigation (same as the phone's own
