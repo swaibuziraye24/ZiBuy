@@ -223,6 +223,42 @@ function renderOverview() {
   `;
 }
 
+// ── Compress an image client-side before upload — critical for
+// mobile, where camera photos are often 10-20MB. This is the same
+// approach already used in post-ad.js and bulk-post.js. ──
+async function compressImageForUpload(file, maxWidth = 1280, quality = 0.75) {
+  if (file.size < 300 * 1024) return file; // already small — skip
+
+  return new Promise((resolve) => {
+    const img = new Image();
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob((blob) => {
+          if (!blob) { resolve(file); return; }
+          resolve(new File([blob], file.name, { type: "image/jpeg", lastModified: Date.now() }));
+        }, "image/jpeg", quality);
+      };
+      img.onerror = () => resolve(file);
+      img.src = e.target.result;
+    };
+    reader.onerror = () => resolve(file);
+    reader.readAsDataURL(file);
+  });
+}
+
+
 // ══════════════════════════════════════════════
 //  USERS & PLANS
 // ══════════════════════════════════════════════
@@ -1554,14 +1590,17 @@ window.addBanner = async function() {
   if (btn) { btn.textContent = "Uploading..."; btn.disabled = true; }
 
   try {
+    if (btn) btn.textContent = "Optimizing photo...";
+    const compressedFile = await compressImageForUpload(_bannerImageFile);
+
     // Import storage
     const { getStorage, ref, uploadBytes, getDownloadURL }
       = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js");
     const storage = getStorage();
 
-    // Upload image to Firebase Storage
-    const storageRef = ref(storage, `banner-ads/${Date.now()}-${_bannerImageFile.name}`);
-    await uploadBytes(storageRef, _bannerImageFile, { contentType: _bannerImageFile.type });
+    if (btn) btn.textContent = "Uploading...";
+    const storageRef = ref(storage, `banner-ads/${Date.now()}-${compressedFile.name}`);
+    await uploadBytes(storageRef, compressedFile, { contentType: compressedFile.type });
     const imageUrl = await getDownloadURL(storageRef);
 
     // Save to Firestore
