@@ -179,6 +179,37 @@
     }
   }
 
+  // ── Dark Mode toggle — reachable from every page ──
+  if (!document.getElementById("dark-mode-toggle-btn")) {
+    const applyDarkMode = (on) => {
+      document.documentElement.classList.toggle("zb-dark-mode", on);
+    };
+
+    const savedPref = localStorage.getItem("zibuy_dark_mode") === "true";
+    applyDarkMode(savedPref);
+
+    const darkBtn = document.createElement("button");
+    darkBtn.id = "dark-mode-toggle-btn";
+    darkBtn.title = "Toggle dark mode";
+    darkBtn.textContent = savedPref ? "☀️" : "🌙";
+
+    darkBtn.onclick = () => {
+      const nowOn = !document.documentElement.classList.contains("zb-dark-mode");
+      applyDarkMode(nowOn);
+      localStorage.setItem("zibuy_dark_mode", nowOn ? "true" : "false");
+      darkBtn.textContent = nowOn ? "☀️" : "🌙";
+    };
+
+    const topbarForDark = document.querySelector(".topbar, .admin-topbar, .zb-topbar");
+    if (topbarForDark) {
+      const actionsArea = topbarForDark.querySelector(".zb-topbar-right, .topbar-actions") || topbarForDark;
+      actionsArea.insertBefore(darkBtn, actionsArea.firstChild);
+    } else {
+      darkBtn.className = "zbn-dark-floating";
+      document.body.appendChild(darkBtn);
+    }
+  }
+
   // ── Cart badge sync ─────────────────────────
   function syncCartBadge() {
     const cart  = JSON.parse(localStorage.getItem("zibuy-cart") || "[]");
