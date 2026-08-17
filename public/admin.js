@@ -338,6 +338,11 @@ function renderUsers(users) {
             🕒 Force Expire
           </button>
 
+          <button class="action-btn" style="background:#e0f2fe;color:#0369a1;border:none;padding:6px 10px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer"
+            onclick="adminViewUserDoc('${u.id}')">
+            🗂️ Full Doc
+          </button>
+
         </td>
       </tr>`;
   }).join("");
@@ -3528,6 +3533,58 @@ window.viewUserNotes = async function(userId, currentNotes) {
     await updateDoc(doc(db, "users", userId), { adminNotes: notes });
     showToast("Notes saved", "success");
     loadUsers();
+  } catch(e) {
+    showToast("Failed: " + e.message, "error");
+  }
+};
+
+
+// ══════════════════════════════════════════════
+//  FULL USER DOCUMENT — raw Firestore record
+// ══════════════════════════════════════════════
+window.adminViewUserDoc = async function(userId) {
+  try {
+    const snap = await getDoc(doc(db, "users", userId));
+    if (!snap.exists()) {
+      showToast("User document not found", "error");
+      return;
+    }
+
+    const data = snap.data();
+    const fullDoc = { id: snap.id, ...data };
+    const jsonText = JSON.stringify(fullDoc, (key, value) => {
+      if (value && value.toDate) return value.toDate().toISOString();
+      return value;
+    }, 2);
+
+    const modal = document.createElement("div");
+    modal.id = "admin-user-doc-modal";
+    modal.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px`;
+    modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+    modal.innerHTML = `
+      <div style="background:white;border-radius:20px;padding:24px;max-width:640px;width:100%;max-height:90vh;overflow-y:auto">
+        <div style="display:flex;justify-content:space-between;margin-bottom:16px">
+          <h2 style="margin:0;font-size:16px;font-weight:800">🗂️ Full User Document</h2>
+          <button onclick="document.getElementById('admin-user-doc-modal').remove()"
+            style="background:#f3f4f6;border:none;width:32px;height:32px;border-radius:50%;font-size:18px;cursor:pointer">×</button>
+        </div>
+
+        <label style="display:block;font-size:11px;font-weight:800;color:#6b7280;text-transform:uppercase;margin-bottom:4px">User ID (Document ID)</label>
+        <div style="display:flex;gap:8px;margin-bottom:16px">
+          <input id="admin-user-doc-uid" readonly value="${snap.id}"
+            style="flex:1;padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;font-family:monospace;font-size:13px">
+          <button onclick="navigator.clipboard.writeText(document.getElementById('admin-user-doc-uid').value); showToast('User ID copied','success')"
+            style="background:#111827;color:white;border:none;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">Copy</button>
+        </div>
+
+        <label style="display:block;font-size:11px;font-weight:800;color:#6b7280;text-transform:uppercase;margin-bottom:4px">Full Document (Firestore)</label>
+        <textarea id="admin-user-doc-json" readonly rows="18"
+          style="width:100%;box-sizing:border-box;padding:10px;border:1px solid #e5e7eb;border-radius:8px;font-family:monospace;font-size:12px;white-space:pre;overflow:auto">${jsonText.replace(/</g,"&lt;")}</textarea>
+        <button onclick="navigator.clipboard.writeText(document.getElementById('admin-user-doc-json').value); showToast('Document copied','success')"
+          style="margin-top:8px;background:#e0f2fe;color:#0369a1;border:none;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">📋 Copy Full Document</button>
+      </div>
+    `;
+    document.body.appendChild(modal);
   } catch(e) {
     showToast("Failed: " + e.message, "error");
   }
