@@ -22,6 +22,11 @@ import { updateDoc } from "./firebase.js";
 
 import { getDistricts, getSubLocations } from "./uganda-locations.js";
 
+// ── Phone number validation — must be WhatsApp-ready (country code, no 0, no +) ──
+function isValidWhatsAppPhone(phone) {
+  return /^[1-9]\d{9,14}$/.test(phone);
+}
+
 // ── Searchable location picker ──────────────────
 function buildSearchableSelect({
   inputId, dropdownId, hiddenId, placeholder, options, onSelect
@@ -2225,12 +2230,18 @@ window.validateStep2 = function() {
   const desc     = descInput.value.trim();
   const price    = priceInput.value.trim();
   const district = document.getElementById("ad-district")?.value || "";
+  const phone    = document.getElementById("seller-phone")?.value.trim() || "";
+
+  const phoneValid = isValidWhatsAppPhone(phone);
+  const phoneError = document.getElementById("seller-phone-error");
+  if (phoneError) phoneError.style.display = (phone !== "" && !phoneValid) ? "block" : "none";
 
   const valid =
     title !== "" &&
     desc !== "" &&
     price !== "" &&
-    district !== "";
+    district !== "" &&
+    phoneValid;
 
   document.getElementById("step2-next").disabled = !valid;
 };
@@ -2251,7 +2262,7 @@ descInput.addEventListener("input", () => {
 priceInput.addEventListener("input",  () => { validateStep2(); saveDraft(); });
 document.getElementById("ad-district")?.addEventListener("change",    () => { validateStep2(); saveDraft(); });
 document.getElementById("ad-sublocation")?.addEventListener("change", () => { validateStep2(); saveDraft(); });
-
+document.getElementById("seller-phone")?.addEventListener("input", () => { validateStep2(); saveDraft(); });
 
 
 // ── Save draft to localStorage ──────────────────
@@ -2608,6 +2619,13 @@ window.submitAd = async function() {
 
   if (!navigator.onLine) {
     alert("⚠️ You appear to be offline. Connect to the internet and try again — your details are saved as a draft so you won't lose anything.");
+    return;
+  }
+
+  const sellerPhoneCheck = document.getElementById("seller-phone")?.value.trim() || "";
+  if (!isValidWhatsAppPhone(sellerPhoneCheck)) {
+    alert("⚠️ You must enter a valid phone number before posting. It must start with your country code — e.g. 256701234567 for Uganda. Do not start with 0 or +. This is how buyers reach you on WhatsApp.");
+    document.getElementById("seller-phone")?.focus();
     return;
   }
 
