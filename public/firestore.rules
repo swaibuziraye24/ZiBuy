@@ -4,6 +4,21 @@ service cloud.firestore {
 
   match /databases/{database}/documents {
 
+    // ── Multi-admin check: super-admin email OR listed in /admins/{uid} ──
+    function isAdmin() {
+      return request.auth != null &&
+        (
+          isAdmin()
+          ||
+          exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+        );
+    }
+
+    match /admins/{adminId} {
+      allow read: if isAdmin();
+      allow write: if request.auth != null && isAdmin();
+    }
+
     /* ======================================================
        PRODUCTS
     ====================================================== */
@@ -16,7 +31,7 @@ service cloud.firestore {
 
   allow update: if request.auth != null &&
     (
-      request.auth.token.email == "swaibuziraye22@gmail.com"
+      isAdmin()
 
       ||
 
@@ -31,7 +46,7 @@ service cloud.firestore {
 
   allow delete: if request.auth != null &&
     (
-      request.auth.token.email == "swaibuziraye22@gmail.com"
+      isAdmin()
       ||
       resource.data.userId == request.auth.uid
     );
@@ -45,40 +60,40 @@ match /category_stats/{document=**} {
 
 
 match /client_errors/{document=**} {
-  allow read: if request.auth.email == 'swaibuziraye22@gmail.com';
+  allow read: if isAdmin();
   allow create: if true;  // any user's browser can log, even logged out
-  allow delete: if request.auth.email == 'swaibuziraye22@gmail.com';
+  allow delete: if isAdmin();
 }
 
        match /job_ads/{jobId} {
   allow read: if true;
   allow create: if request.auth != null;
   allow update, delete: if request.auth != null
-    && request.auth.token.email == "swaibuziraye22@gmail.com";
+    && isAdmin();
 }
 
 match /whatsapp_reminders/{remId} {
   allow read, write: if request.auth != null
-    && request.auth.token.email == "swaibuziraye22@gmail.com";
+    && isAdmin();
 }
 
 
        match /category_sponsors/{id} {
   allow read: if true;
   allow write: if request.auth != null
-    && request.auth.token.email == "swaibuziraye22@gmail.com";
+    && isAdmin();
 }
 
 match /cv_boosts/{id} {
   allow read: if request.auth != null
-    && request.auth.token.email == "swaibuziraye22@gmail.com";
+    && isAdmin();
   allow create: if request.auth != null;
 }
 
         match /blog_posts/{postId} {
   allow read: if resource.data.status == "published" || 
-              (request.auth != null && request.auth.token.email == "swaibuziraye22@gmail.com");
-  allow write: if request.auth != null && request.auth.token.email == "swaibuziraye22@gmail.com";
+              (request.auth != null && isAdmin());
+  allow write: if request.auth != null && isAdmin();
 }
 
 
@@ -101,16 +116,16 @@ match /boost_credits/{id} {
      match /auto_renewals/{document=**} {
   allow read: if request.auth != null;
   allow create: if request.auth != null;
-  allow update: if request.auth.email == 'swaibuziraye22@gmail.com';
+  allow update: if isAdmin();
 }
 
          match /pin_requests/{id} {
   allow read: if request.auth != null
     && (request.auth.uid == resource.data.userId
-     || request.auth.token.email == "swaibuziraye22@gmail.com");
+     || isAdmin());
   allow create: if request.auth != null;
   allow update: if request.auth != null
-    && request.auth.token.email == "swaibuziraye22@gmail.com";
+    && isAdmin();
 }
 
     /* ======================================================
@@ -126,11 +141,11 @@ match /boost_credits/{id} {
       allow update: if request.auth != null
         && (
           request.auth.uid == resource.data.userId
-          || request.auth.token.email == 'swaibuziraye22@gmail.com'
+          || isAdmin()
         );
 
       allow delete: if request.auth != null
-        && request.auth.token.email == 'swaibuziraye22@gmail.com';
+        && isAdmin();
     }
 
     /* ======================================================
@@ -141,19 +156,19 @@ match /boost_credits/{id} {
       allow read: if request.auth != null;
       allow write: if request.auth != null
         && request.auth.uid == request.resource.data.userId
-        || request.auth.token.email == 'swaibuziraye22@gmail.com';
+        || isAdmin();
     }
 
     match /plans/{document=**} {
       allow read: if request.auth != null;
       allow write: if request.auth != null
         && request.auth.uid == request.resource.data.userId
-        || request.auth.token.email == 'swaibuziraye22@gmail.com';
+        || isAdmin();
     }
 
     match /subscriptions/{document=**} {
       allow read: if request.auth != null;
-      allow write: if request.auth.token.email == 'swaibuziraye22@gmail.com';
+      allow write: if isAdmin();
     }
      
     match /shops/{shopId}/products/{productId} {
@@ -163,17 +178,17 @@ match /boost_credits/{id} {
   } 
      match /plan_config/{document} {
   allow read: if true;
-  allow write: if request.auth.email == 'swaibuziraye22@gmail.com';
+  allow write: if isAdmin();
 }
     
      match /broadcasts/{id} {
   allow read: if true;
   allow write: if request.auth != null
-    && request.auth.token.email == 'swaibuziraye22@gmail.com';
+    && isAdmin();
 }
      match /system_config/{document=**} {
   allow read: if true;
-  allow write: if request.auth.email == 'swaibuziraye22@gmail.com';
+  allow write: if isAdmin();
 }
    
      
@@ -193,7 +208,7 @@ match /boost_credits/{id} {
       allow read: if request.auth != null
         && (
           request.auth.uid == resource.data.userId
-          || request.auth.token.email == 'swaibuziraye22@gmail.com'
+          || isAdmin()
         );
 
       allow create: if request.auth != null
@@ -202,7 +217,7 @@ match /boost_credits/{id} {
       allow update: if request.auth != null
         && (
           request.auth.uid == resource.data.userId
-          || request.auth.token.email == 'swaibuziraye22@gmail.com'
+          || isAdmin()
         );
 
       allow delete: if request.auth != null
@@ -223,10 +238,10 @@ match /boost_credits/{id} {
       allow update: if request.auth != null
         && (
           request.auth.uid == resource.data.userId
-          || request.auth.token.email == 'swaibuziraye22@gmail.com'
+          || isAdmin()
         );
 
-      allow delete: if request.auth.token.email == 'swaibuziraye22@gmail.com';
+      allow delete: if isAdmin();
     }
 
     /* ======================================================
@@ -243,13 +258,13 @@ match /boost_credits/{id} {
       allow update: if request.auth != null
         && (
           request.auth.uid == resource.data.userId
-          || request.auth.token.email == "swaibuziraye22@gmail.com"
+          || isAdmin()
         );
 
       allow delete: if request.auth != null
         && (
           request.auth.uid == resource.data.userId
-          || request.auth.token.email == "swaibuziraye22@gmail.com"
+          || isAdmin()
         );
     }
 
@@ -267,13 +282,13 @@ match /boost_credits/{id} {
   allow update: if request.auth != null
     && (
       request.auth.uid == resource.data.ownerId
-      || request.auth.token.email == 'swaibuziraye22@gmail.com'
+      || isAdmin()
     );
 
   allow delete: if request.auth != null
     && (
       request.auth.uid == resource.data.ownerId
-      || request.auth.token.email == 'swaibuziraye22@gmail.com'
+      || isAdmin()
     );
     
     
@@ -294,7 +309,7 @@ match /boost_credits/{id} {
   allow update: if request.auth != null
     && (
       request.auth.uid == userId
-      || request.auth.token.email == 'swaibuziraye22@gmail.com'
+      || isAdmin()
       || request.resource.data.diff(resource.data).affectedKeys()
            .hasOnly(['buyerRating', 'buyerRatingCount', 'phoneVerified', 'phone', 'phoneVerifiedAt'])
     );
@@ -302,7 +317,7 @@ match /boost_credits/{id} {
   allow delete: if request.auth != null
     && (
       request.auth.uid == userId
-      || request.auth.token.email == 'swaibuziraye22@gmail.com'
+      || isAdmin()
     );
 }
 
@@ -331,7 +346,7 @@ match /boost_credits/{id} {
 
   allow update: if request.auth != null
     && (
-      request.auth.token.email == 'swaibuziraye22@gmail.com'
+      isAdmin()
       ||
       (
         resource.data.userEmail == request.auth.token.email &&
@@ -341,13 +356,13 @@ match /boost_credits/{id} {
     );
 
   allow delete: if request.auth != null
-    && request.auth.token.email == 'swaibuziraye22@gmail.com';
+    && isAdmin();
 }
 
        match /disputes/{document=**} {
   allow read: if request.auth != null;
   allow create: if request.auth != null && request.resource.data.buyerUid == request.auth.uid;
-  allow update: if request.auth.email == 'swaibuziraye22@gmail.com';
+  allow update: if isAdmin();
 }
 
 
@@ -416,7 +431,7 @@ match /messages/{messageId} {
   allow read: if request.auth != null
     && (
       request.auth.uid == resource.data.userId
-      || request.auth.token.email == 'swaibuziraye22@gmail.com'
+      || isAdmin()
     );
 
   allow create: if request.auth != null;
@@ -424,13 +439,13 @@ match /messages/{messageId} {
   allow update: if request.auth != null
     && (
       request.auth.uid == resource.data.userId
-      || request.auth.token.email == 'swaibuziraye22@gmail.com'
+      || isAdmin()
     );
 
   allow delete: if request.auth != null
     && (
       request.auth.uid == resource.data.userId
-      || request.auth.token.email == 'swaibuziraye22@gmail.com'
+      || isAdmin()
     );
 }
 
@@ -449,11 +464,11 @@ match /messages/{messageId} {
 
     match /verificationRequests/{docId} {
       allow create: if request.auth != null;
-      allow read, update, delete: if request.auth.token.email == 'swaibuziraye22@gmail.com';
+      allow read, update, delete: if isAdmin();
     }
 
     match /analytics/{docId} {
-      allow read, write: if request.auth.token.email == 'swaibuziraye22@gmail.com';
+      allow read, write: if isAdmin();
     }
 
     /* ======================================================
@@ -462,7 +477,7 @@ match /messages/{messageId} {
 
     match /featured_ads/{document=**} {
       allow read: if request.auth != null;
-      allow write: if request.auth.token.email == 'swaibuziraye22@gmail.com';
+      allow write: if isAdmin();
     }
     
     
@@ -483,9 +498,9 @@ match /messages/{messageId} {
      match /banner_ads/{bannerId} {
   allow read: if true;
   allow create, delete: if request.auth != null
-    && request.auth.token.email == "swaibuziraye22@gmail.com";
+    && isAdmin();
   allow update: if (request.auth != null
-    && request.auth.token.email == "swaibuziraye22@gmail.com")
+    && isAdmin())
     || request.resource.data.diff(resource.data).affectedKeys()
        .hasOnly(["impressions", "clicks"]);
 }
@@ -493,8 +508,8 @@ match /messages/{messageId} {
 match /reports/{document=**} {
   allow read: if true;
   allow create: if request.auth != null;
-  allow update: if request.auth.token.email == 'swaibuziraye22@gmail.com';
-  allow delete: if request.auth.token.email == 'swaibuziraye22@gmail.com';
+  allow update: if isAdmin();
+  allow delete: if isAdmin();
 }
 
 match /response_stats/{userId} {
@@ -510,7 +525,7 @@ match /response_stats/{userId} {
     match /{document=**} {
       allow read, write:
         if request.auth != null
-        && request.auth.token.email == 'swaibuziraye22@gmail.com';
+        && isAdmin();
     }
 
   }
