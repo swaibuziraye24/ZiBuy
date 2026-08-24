@@ -1,13 +1,29 @@
-import { db, auth, collection, getDocs, updateDoc, doc, addDoc } from "./firebase.js";
+import { db, auth, collection, getDocs, updateDoc, doc, addDoc, getDoc } from "./firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const ADMIN_EMAIL = "swaibuziraye22@gmail.com";
 
-onAuthStateChanged(auth, (user) => {
-  if (!user || user.email !== ADMIN_EMAIL) {
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
     window.location.href = "index.html";
     return;
   }
+
+  let allowed = user.email === ADMIN_EMAIL;
+  if (!allowed) {
+    try {
+      const adminSnap = await getDoc(doc(db, "admins", user.uid));
+      allowed = adminSnap.exists();
+    } catch (e) {
+      allowed = false;
+    }
+  }
+
+  if (!allowed) {
+    window.location.href = "index.html";
+    return;
+  }
+
   loadRequests();
 });
 
