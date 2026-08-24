@@ -90,7 +90,17 @@ onAuthStateChanged(auth, async (user) => {
     return;
   }
 
-  if (user.email !== ADMIN_EMAIL) {
+  let allowed = user.email === ADMIN_EMAIL;
+  if (!allowed) {
+    try {
+      const adminSnap = await getDoc(doc(db, "admins", user.uid));
+      allowed = adminSnap.exists();
+    } catch (e) {
+      allowed = false;
+    }
+  }
+
+  if (!allowed) {
     alert("Access denied. Admins only.");
     await signOut(auth);
     window.location.href = "index.html";
@@ -105,6 +115,66 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 window.adminLogout = () => signOut(auth).then(() => window.location.href = "index.html");
+
+// ══════════════════════════════════════════════
+//  STAFF ACCESS — additional admins
+// ══════════════════════════════════════════════
+async function loadAdmins() {
+  try {
+    const snap = await getDocs(collection(db, "admins"));
+    const admins = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderAdmins(admins);
+  } catch (e) { console.error(e); }
+}
+
+function renderAdmins(admins) {
+  const tbody = document.getElementById("admins-table-body");
+  if (!tbody) return;
+
+  if (admins.length === 0) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="4">No additional admins yet</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = admins.map(a => `
+    <tr>
+      <td style="font-family:monospace;font-size:12px">${escapeHTML(a.id)}</td>
+      <td>${escapeHTML(a.email) || "—"}</td>
+      <td style="font-size:12px">${fmtDate(a.addedAt)}</td>
+      <td><button class="action-btn btn-reject" onclick="removeAdmin('${a.id}')">🗑️ Remove</button></td>
+    </tr>`).join("");
+}
+
+window.addAdmin = async function() {
+  const uid = document.getElementById("new-admin-uid")?.value.trim();
+  const email = document.getElementById("new-admin-email")?.value.trim();
+  if (!uid) { showToast("Paste the user's UID first", "info"); return; }
+
+  try {
+    await setDoc(doc(db, "admins", uid), {
+      email: email || "",
+      addedAt: new Date(),
+      addedBy: ADMIN_EMAIL
+    });
+    showToast("Admin added", "success");
+    document.getElementById("new-admin-uid").value = "";
+    document.getElementById("new-admin-email").value = "";
+    loadAdmins();
+  } catch (e) {
+    showToast("Failed: " + e.message, "error");
+  }
+};
+
+window.removeAdmin = async function(uid) {
+  if (!confirm("Remove this person's admin access?")) return;
+  try {
+    await deleteDoc(doc(db, "admins", uid));
+    showToast("Admin removed", "info");
+    loadAdmins();
+  } catch (e) {
+    showToast("Failed: " + e.message, "error");
+  }
+};
 
 
 window.showSection = function(name, btn) {
@@ -163,7 +233,8 @@ async function loadAll() {
     loadBlogAdmin(),
     loadCategorySponsorsAdmin(),
     loadPinRequestsAdmin(),
-    loadOverviewExtras()
+    loadOverviewExtras(),
+    loadAdmins()
   ]);
   renderOverview();
   checkSystemHealth();
