@@ -286,6 +286,7 @@ function renderUsers(users) {
 
     return `
       <tr>
+        <td><input type="checkbox" class="user-select-checkbox" value="${u.id}"></td>
         <td><span style="font-weight:700">${escapeHTML(u.email) || escapeHTML(u.id)}</span></td>
         <td><span class="plan-chip chip-${plan}">${planEmoji(plan)} ${plan}</span></td>
         <td id="ads-count-${u.id}">—</td>
@@ -436,6 +437,49 @@ window.toggleBan = async function(userId, ban) {
   } catch (e) {
     showToast("Failed", "error");
   }
+};
+
+window.toggleSelectAllUsers = function(checkbox) {
+  document.querySelectorAll(".user-select-checkbox").forEach(cb => cb.checked = checkbox.checked);
+};
+
+function getSelectedUserIds() {
+  return Array.from(document.querySelectorAll(".user-select-checkbox:checked")).map(cb => cb.value);
+}
+
+window.bulkBanUsers = async function(ban) {
+  const ids = getSelectedUserIds();
+  if (ids.length === 0) { showToast("No users selected", "info"); return; }
+  if (!confirm(`${ban ? "Ban" : "Unban"} ${ids.length} selected user(s)?`)) return;
+
+  for (const id of ids) {
+    try { await updateDoc(doc(db, "users", id), { banned: ban }); }
+    catch (e) { console.error(`Failed for ${id}:`, e); }
+  }
+  showToast(`${ban ? "Banned" : "Unbanned"} ${ids.length} user(s)`, ban ? "error" : "success");
+  loadUsers();
+};
+
+window.bulkDeleteUsers = async function() {
+  const ids = getSelectedUserIds();
+  if (ids.length === 0) { showToast("No users selected", "info"); return; }
+
+  const typed = prompt(`This will PERMANENTLY delete ${ids.length} user(s) — accounts, logins, products, and subscriptions. This CANNOT be undone.\n\nType DELETE to confirm:`);
+  if (typed !== "DELETE") {
+    if (typed !== null) alert("Confirmation didn't match — bulk deletion cancelled for safety.");
+    return;
+  }
+
+  const { getFunctions, httpsCallable } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js");
+  const fn = httpsCallable(getFunctions(), "adminDeleteUserAccount");
+
+  let succeeded = 0, failed = 0;
+  for (const id of ids) {
+    try { await fn({ userId: id }); succeeded++; }
+    catch (e) { failed++; console.error(`Failed to delete ${id}:`, e); }
+  }
+  showToast(`Deleted ${succeeded} user(s)${failed ? `, ${failed} failed` : ""}`, failed ? "info" : "success");
+  loadUsers();
 };
 
 // ══════════════════════════════════════════════
@@ -958,6 +1002,10 @@ window.rejectPin = async function(requestId) {
 // ══════════════════════════════════════════════
 //  ALL ADS
 // ══════════════════════════════════════════════
+function isValidWhatsAppPhoneAdmin(phone) {
+  return /^[1-9]\d{9,14}$/.test((phone || "").trim());
+}
+
 async function loadAds() {
   try {
     const snap = await getDocs(collection(db, "products"));
@@ -972,7 +1020,7 @@ function renderAdsTable(ads) {
   if (!tbody) return;
 
   if (ads.length === 0) {
-    tbody.innerHTML = `<tr class="empty-row"><td colspan="7">No ads match this filter</td></tr>`;
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="8">No ads match this filter</td></tr>`;
     return;
   }
 
@@ -980,6 +1028,7 @@ function renderAdsTable(ads) {
     const effStatus = getAdEffectiveStatus(a);
     const chip  = effStatus === "expired" ? "chip-expired" : effStatus === "sold" ? "chip-rejected" : "chip-approved";
     const label = effStatus === "expired" ? "⏰ expired" : effStatus === "sold" ? "❌ sold" : "✅ active";
+    const phoneOk = isValidWhatsAppPhoneAdmin(a.seller?.phone);
 
     return `
     <tr>
@@ -990,6 +1039,11 @@ function renderAdsTable(ads) {
       <td style="font-weight:700;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(a.name)}</td>
       <td style="color:var(--orange);font-weight:800">UGX ${Number(a.price||0).toLocaleString()}</td>
       <td style="font-size:12px">${escapeHTML(a.userEmail) || "—"}</td>
+      <td>
+        ${phoneOk
+          ? `<span class="plan-chip chip-approved" title="${escapeHTML(a.seller?.phone||'')}">✅ ${escapeHTML(a.seller?.phone||'')}</span>`
+          : `<span class="plan-chip chip-expired" title="Missing or invalid WhatsApp number">⚠️ ${a.seller?.phone ? escapeHTML(a.seller.phone) : "None"}</span>`}
+      </td>
       <td><span class="plan-chip ${chip}">${label}</span></td>
       <td style="font-size:12px">${fmtDate(a.expiresAt)}</td>
       <td style="display:flex;gap:6px;flex-wrap:wrap">
@@ -1044,7 +1098,9 @@ function applyAdsFilters() {
     (a.name || "").toLowerCase().includes(q) ||
     (a.userEmail || "").toLowerCase().includes(q)
   );
-  if (currentAdsStatusFilter !== "all") {
+  if (currentAdsStatusFilter === "badphone") {
+    filtered = filtered.filter(a => !isValidWhatsAppPhoneAdmin(a.seller?.phone));
+  } else if (currentAdsStatusFilter !== "all") {
     filtered = filtered.filter(a => getAdEffectiveStatus(a) === currentAdsStatusFilter);
   }
   renderAdsTable(filtered);
@@ -3588,6 +3644,13 @@ window.adminViewUserDoc = async function(userId) {
   } catch(e) {
     showToast("Failed: " + e.message, "error");
   }
+};
+
+window.jumpToUser = function() {
+  const uid = document.getElementById("jump-to-user-input")?.value.trim();
+  if (!uid) return;
+  window.showSection("users", document.querySelector('.admin-nav-item[data-section="users"]'));
+  adminViewUserDoc(uid);
 };
 
 
