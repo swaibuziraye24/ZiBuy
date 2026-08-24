@@ -4,9 +4,37 @@
 
 import {
   db, auth, collection, getDocs, doc,
-  getDoc, query, where, updateDoc, deleteDoc, orderBy, limit, addDoc, setDoc
+  getDoc, query, where,
+  updateDoc as _updateDoc,
+  deleteDoc as _deleteDoc,
+  addDoc as _addDoc,
+  setDoc as _setDoc,
+  orderBy, limit
 } from "./firebase.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+// ── Write interceptors: every admin write, anywhere in this file, is auto-logged ──
+async function updateDoc(ref, data) {
+  const result = await _updateDoc(ref, data);
+  logAdminAction("UPDATE", `${ref.path} — fields: ${Object.keys(data || {}).join(", ")}`);
+  return result;
+}
+async function addDoc(ref, data) {
+  const result = await _addDoc(ref, data);
+  logAdminAction("CREATE", result.path);
+  return result;
+}
+async function deleteDoc(ref) {
+  const result = await _deleteDoc(ref);
+  logAdminAction("DELETE", ref.path);
+  return result;
+}
+async function setDoc(ref, data, options) {
+  const result = await _setDoc(ref, data, options);
+  logAdminAction("SET", `${ref.path} — fields: ${Object.keys(data || {}).join(", ")}`);
+  return result;
+}
 import { onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 
@@ -74,7 +102,7 @@ const ADMIN_EMAIL = "swaibuziraye22@gmail.com"; // ← your admin email
 // ── Admin audit log — records every action taken by any admin ──
 async function logAdminAction(action, details) {
   try {
-    await addDoc(collection(db, "admin_action_logs"), {
+    await _addDoc(collection(db, "admin_action_logs"), {
       action,
       details: details || "",
       adminEmail: auth.currentUser?.email || "unknown",
@@ -200,7 +228,6 @@ window.removeAdmin = async function(uid) {
   if (!confirm("Remove this person's admin access?")) return;
   try {
     await deleteDoc(doc(db, "admins", uid));
-    logAdminAction("ADMIN_REMOVED", `Removed admin access from UID: ${uid}`);
     showToast("Admin removed", "info");
     loadAdmins();
   } catch (e) {
@@ -569,7 +596,6 @@ window.toggleBan = async function(userId, ban) {
   if (!confirm(`${ban ? "Ban" : "Unban"} this user?`)) return;
   try {
     await updateDoc(doc(db, "users", userId), { banned: ban });
-    logAdminAction(ban ? "USER_BANNED" : "USER_UNBANNED", `User ID: ${userId}`);
     showToast(ban ? "User banned" : "User unbanned", ban ? "error" : "success");
     loadUsers();
   } catch (e) {
@@ -594,7 +620,6 @@ window.bulkBanUsers = async function(ban) {
     try { await updateDoc(doc(db, "users", id), { banned: ban }); }
     catch (e) { console.error(`Failed for ${id}:`, e); }
   }
-  logAdminAction(ban ? "BULK_USER_BAN" : "BULK_USER_UNBAN", `${ids.length} user(s): ${ids.join(", ")}`);
   showToast(`${ban ? "Banned" : "Unbanned"} ${ids.length} user(s)`, ban ? "error" : "success");
   loadUsers();
 };
@@ -1272,7 +1297,6 @@ window.adminDeleteAd = async function(adId) {
   if (!confirm("Delete this ad permanently?")) return;
   try {
     await deleteDoc(doc(db, "products", adId));
-    logAdminAction("AD_DELETED", `Ad ID: ${adId}`);
     showToast("Ad deleted", "info");
     loadAds();
   } catch (e) { showToast("Failed", "error"); }
@@ -3604,6 +3628,7 @@ window.adminForceTrustRecalc = async function(userId) {
     const { getFunctions, httpsCallable } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js");
     const fn = httpsCallable(getFunctions(), "adminRecalculateTrustScore");
     await fn({ userId });
+    logAdminAction("TRUST_SCORE_RECALCULATED", `User ID: ${userId}`);
     showToast("Trust score recalculated ✅", "success");
     loadUsers();
   } catch (e) {
@@ -4134,6 +4159,8 @@ window.adminDeleteUser = async function(userId, userEmail) {
     const { getFunctions, httpsCallable } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js");
     const fn = httpsCallable(getFunctions(), "adminDeleteUserAccount");
     const result = await fn({ userId });
+
+    logAdminAction("USER_DELETED", `${userEmail} (UID: ${userId})`);
 
     const data = result.data;
     if (data.errors && data.errors.length > 0) {
