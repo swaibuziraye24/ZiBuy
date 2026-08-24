@@ -5,7 +5,8 @@ import {
   getDocs,
   updateDoc,
   deleteDoc,
-  doc
+  doc,
+  getDoc
 } from "./firebase.js";
 
 import {
@@ -16,7 +17,22 @@ const ADMIN_EMAIL = "swaibuziraye22@gmail.com";
 
 onAuthStateChanged(auth, async (user) => {
 
-  if (!user || user.email !== ADMIN_EMAIL) {
+  if (!user) {
+    window.location.href = "index.html";
+    return;
+  }
+
+  let allowed = user.email === ADMIN_EMAIL;
+  if (!allowed) {
+    try {
+      const adminSnap = await getDoc(doc(db, "admins", user.uid));
+      allowed = adminSnap.exists();
+    } catch (e) {
+      allowed = false;
+    }
+  }
+
+  if (!allowed) {
     window.location.href = "index.html";
     return;
   }
