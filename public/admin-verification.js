@@ -10,7 +10,8 @@ import {
   doc,
   updateDoc,
   query,
-  where
+  where,
+  getDoc
 } from "./firebase.js";
 
 import {
@@ -23,15 +24,24 @@ import {
 
 const ADMIN_EMAIL = "swaibuziraye22@gmail.com";
 
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
   if (!user) {
     window.location.href = "index.html";
     return;
   }
 
   const currentEmail = user.email?.trim().toLowerCase();
+  let allowed = currentEmail === ADMIN_EMAIL.toLowerCase();
+  if (!allowed) {
+    try {
+      const adminSnap = await getDoc(doc(db, "admins", user.uid));
+      allowed = adminSnap.exists();
+    } catch (e) {
+      allowed = false;
+    }
+  }
 
-  if (currentEmail !== ADMIN_EMAIL.toLowerCase()) {
+  if (!allowed) {
     window.location.href = "index.html";
     return;
   }
