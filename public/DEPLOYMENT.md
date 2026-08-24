@@ -119,7 +119,7 @@ service cloud.firestore {
 
     // Admin access
     match /{document=**} {
-      allow read, write: if request.auth.email == 'swaibuziraye22@gmail.com';
+      allow read, write: if isAdmin();
     }
   }
 }
