@@ -7,6 +7,7 @@ import {
   getDoc, query, where, updateDoc, deleteDoc, orderBy, limit, addDoc, setDoc
 } from "./firebase.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 
 // ==========================================
@@ -70,6 +71,21 @@ const PLAN_LIMITS = {
 
 const ADMIN_EMAIL = "swaibuziraye22@gmail.com"; // ← your admin email
 
+// ── Admin audit log — records every action taken by any admin ──
+async function logAdminAction(action, details) {
+  try {
+    await addDoc(collection(db, "admin_action_logs"), {
+      action,
+      details: details || "",
+      adminEmail: auth.currentUser?.email || "unknown",
+      adminUid: auth.currentUser?.uid || "",
+      createdAt: new Date()
+    });
+  } catch (e) {
+    console.error("Failed to log admin action:", e);
+  }
+}
+
 // ── Raw data caches ───────────────────────────
 let allUsers       = [];
 let allSubs        = [];
@@ -109,6 +125,20 @@ onAuthStateChanged(auth, async (user) => {
 
   if (emailDisplay) {
     emailDisplay.textContent = user.email;
+  }
+
+  const staffAccessNavBtn = document.getElementById("staff-access-nav-btn");
+  if (staffAccessNavBtn) {
+    staffAccessNavBtn.style.display = user.email === ADMIN_EMAIL ? "" : "none";
+  }
+
+  const auditLogNavBtn = document.getElementById("admin-audit-nav-btn");
+  if (auditLogNavBtn) {
+    auditLogNavBtn.style.display = user.email === ADMIN_EMAIL ? "" : "none";
+  }
+
+  if (user.email === ADMIN_EMAIL) {
+    startAdminAuditLogListener();
   }
 
   await loadAll();
@@ -170,12 +200,47 @@ window.removeAdmin = async function(uid) {
   if (!confirm("Remove this person's admin access?")) return;
   try {
     await deleteDoc(doc(db, "admins", uid));
+    logAdminAction("ADMIN_REMOVED", `Removed admin access from UID: ${uid}`);
     showToast("Admin removed", "info");
     loadAdmins();
   } catch (e) {
     showToast("Failed: " + e.message, "error");
   }
 };
+
+// ══════════════════════════════════════════════
+//  ADMIN AUDIT LOG — real-time, super-admin only
+// ══════════════════════════════════════════════
+function renderAdminAuditLog(logs) {
+  const tbody = document.getElementById("admin-audit-table-body");
+  if (!tbody) return;
+
+  if (logs.length === 0) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="4">No admin activity yet</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = logs.map(l => {
+    const date = l.createdAt?.toDate ? l.createdAt.toDate().toLocaleString() : (l.createdAt ? new Date(l.createdAt).toLocaleString() : "");
+    return `
+      <tr>
+        <td style="font-size:12px">${date}</td>
+        <td><span class="plan-chip chip-pending">${escapeHTML(l.action || "action")}</span></td>
+        <td style="font-size:12px">${escapeHTML(l.adminEmail) || "—"}</td>
+        <td style="font-size:12px">${escapeHTML(l.details) || "—"}</td>
+      </tr>`;
+  }).join("");
+}
+
+function startAdminAuditLogListener() {
+  const q = query(collection(db, "admin_action_logs"), orderBy("createdAt", "desc"), limit(200));
+  onSnapshot(q, (snap) => {
+    const logs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderAdminAuditLog(logs);
+  }, (err) => {
+    console.error("Admin audit log listener failed:", err);
+  });
+}
 
 
 window.showSection = function(name, btn) {
@@ -504,6 +569,7 @@ window.toggleBan = async function(userId, ban) {
   if (!confirm(`${ban ? "Ban" : "Unban"} this user?`)) return;
   try {
     await updateDoc(doc(db, "users", userId), { banned: ban });
+    logAdminAction(ban ? "USER_BANNED" : "USER_UNBANNED", `User ID: ${userId}`);
     showToast(ban ? "User banned" : "User unbanned", ban ? "error" : "success");
     loadUsers();
   } catch (e) {
@@ -528,6 +594,7 @@ window.bulkBanUsers = async function(ban) {
     try { await updateDoc(doc(db, "users", id), { banned: ban }); }
     catch (e) { console.error(`Failed for ${id}:`, e); }
   }
+  logAdminAction(ban ? "BULK_USER_BAN" : "BULK_USER_UNBAN", `${ids.length} user(s): ${ids.join(", ")}`);
   showToast(`${ban ? "Banned" : "Unbanned"} ${ids.length} user(s)`, ban ? "error" : "success");
   loadUsers();
 };
@@ -550,6 +617,7 @@ window.bulkDeleteUsers = async function() {
     try { await fn({ userId: id }); succeeded++; }
     catch (e) { failed++; console.error(`Failed to delete ${id}:`, e); }
   }
+  logAdminAction("BULK_USER_DELETE", `${succeeded} succeeded, ${failed} failed: ${ids.join(", ")}`);
   showToast(`Deleted ${succeeded} user(s)${failed ? `, ${failed} failed` : ""}`, failed ? "info" : "success");
   loadUsers();
 };
@@ -1204,6 +1272,7 @@ window.adminDeleteAd = async function(adId) {
   if (!confirm("Delete this ad permanently?")) return;
   try {
     await deleteDoc(doc(db, "products", adId));
+    logAdminAction("AD_DELETED", `Ad ID: ${adId}`);
     showToast("Ad deleted", "info");
     loadAds();
   } catch (e) { showToast("Failed", "error"); }
