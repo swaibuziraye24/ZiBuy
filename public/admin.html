@@ -434,6 +434,11 @@
   <span class="nav-icon">🏪</span> Shops
 </button>
 
+<button class="admin-nav-item"
+  onclick="window.showSection('staffaccess', this);loadAdmins()">
+  <span class="nav-icon">🔑</span> Staff Access
+</button>
+
   </aside>
 
   <!-- ── MAIN ── -->
@@ -1327,6 +1332,33 @@ Separate paragraphs with a blank line."
   </div>
 </div>
 <!-- ══ end section-plansettings ══ -->
+
+<div class="admin-section" id="section-staffaccess">
+  <h2 style="font-size:20px;font-weight:800;margin-bottom:16px">🔑 Staff Access</h2>
+  <p style="color:#6b7280;font-size:13px;margin-bottom:16px">
+    Give trusted staff full admin access. They must have signed up on ZiBuy first — open their user record in the <b>Users</b> tab (🗂️ Full Doc) to copy their User ID, then paste it below.
+  </p>
+  <div class="admin-card" style="margin-bottom:16px">
+    <input type="text" id="new-admin-uid" placeholder="User ID (from Full Doc)"
+      style="width:100%;box-sizing:border-box;padding:10px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:10px;font-family:monospace;font-size:13px">
+    <input type="text" id="new-admin-email" placeholder="Their email (for your own reference)"
+      style="width:100%;box-sizing:border-box;padding:10px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:10px">
+    <button onclick="addAdmin()"
+      style="background:#111827;color:white;border:none;padding:10px 16px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer">
+      ➕ Grant Admin Access
+    </button>
+  </div>
+  <div class="admin-card">
+    <table class="data-table">
+      <thead>
+        <tr><th>User ID</th><th>Email</th><th>Added</th><th>Action</th></tr>
+      </thead>
+      <tbody id="admins-table-body">
+        <tr class="empty-row"><td colspan="4">Loading…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
 
   </main>
 
