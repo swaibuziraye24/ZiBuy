@@ -406,32 +406,40 @@ function setupAuthStateListener() {
 
     const ADMIN_EMAIL = "swaibuziraye22@gmail.com";
 
-    // Show boost requests button only for admin
-    const adminBoostBtn = document.getElementById("admin-boost-btn");
-    if (adminBoostBtn) {
-      if (user && user.email === ADMIN_EMAIL) {
-        adminBoostBtn.style.display = "block";
-      } else {
-        adminBoostBtn.style.display = "none";
+    (async () => {
+      let isAdmin = user?.email === ADMIN_EMAIL;
+      if (user && !isAdmin) {
+        try {
+          const { getDoc, doc } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+          const adminSnap = await getDoc(doc(db, "admins", user.uid));
+          isAdmin = adminSnap.exists();
+        } catch (e) {
+          isAdmin = false;
+        }
       }
-    }
 
-    // Safely update all DOM elements
-   const isAdmin = user?.email === "swaibuziraye22@gmail.com";
-    const elements = {
-      "post-ad-btn":   user ? "block" : "none",
-      "dashboard-btn": user && !isAdmin ? "block" : "none",
-      "upgrade-btn":   user && !isAdmin ? "block" : "none",
-      "messages-btn":  user ? "block" : "none",
-      "go-admin-btn":  isAdmin ? "flex" : "none"
-    };
-
-    Object.keys(elements).forEach(id => {
-      const el = document.getElementById(id);
-      if (el) {
-        el.style.display = elements[id];
+      // Show boost requests button only for admin
+      const adminBoostBtn = document.getElementById("admin-boost-btn");
+      if (adminBoostBtn) {
+        adminBoostBtn.style.display = isAdmin ? "block" : "none";
       }
-    });
+
+      // Safely update all DOM elements
+      const elements = {
+        "post-ad-btn":   user ? "block" : "none",
+        "dashboard-btn": user && !isAdmin ? "block" : "none",
+        "upgrade-btn":   user && !isAdmin ? "block" : "none",
+        "messages-btn":  user ? "block" : "none",
+        "go-admin-btn":  isAdmin ? "flex" : "none"
+      };
+
+      Object.keys(elements).forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.style.display = elements[id];
+        }
+      });
+    })();
 
     // Update account button
     // Handle both old (#account-btn) and new (#login-btn) topbar
