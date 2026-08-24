@@ -300,6 +300,11 @@
   <h1>⚙️ ZiBuy Admin</h1>
   <span id="admin-email-display"></span>
   <div class="ml">
+    <input type="text" id="jump-to-user-input" placeholder="Paste User ID…"
+      style="font-size:12px;padding:7px 10px;border:1px solid #e5e7eb;border-radius:8px;width:150px"
+      onkeydown="if(event.key==='Enter') jumpToUser()">
+    <button class="btn btn-dark" style="font-size:12px;padding:7px 12px"
+      onclick="jumpToUser()">🔎 Go</button>
     <button class="btn btn-dark" style="font-size:12px;padding:7px 12px"
       onclick="adminLogout()">Logout</button>
   </div>
@@ -514,10 +519,16 @@
       <h2 style="font-size:20px;font-weight:800;margin-bottom:16px">👥 Users & Plans</h2>
       <input class="search-input" type="text" id="user-search"
         placeholder="Search by email…" oninput="filterUsers()">
+      <div style="display:flex;gap:8px;margin:10px 0;flex-wrap:wrap">
+        <button class="action-btn" style="background:#fee2e2;color:#991b1b;border:none;padding:8px 12px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer" onclick="bulkBanUsers(true)">🚫 Ban Selected</button>
+        <button class="action-btn" style="background:#dcfce7;color:#166534;border:none;padding:8px 12px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer" onclick="bulkBanUsers(false)">✅ Unban Selected</button>
+        <button class="action-btn" style="background:#111827;color:white;border:none;padding:8px 12px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer" onclick="bulkDeleteUsers()">🗑️ Delete Selected</button>
+      </div>
       <div class="admin-card">
         <table class="data-table">
           <thead>
   <tr>
+    <th><input type="checkbox" id="users-select-all" onchange="toggleSelectAllUsers(this)"></th>
     <th>Email</th>
     <th>Plan</th>
     <th>Ads</th>
@@ -530,7 +541,7 @@
   </tr>
 </thead>
           <tbody id="users-table-body">
-            <tr class="empty-row"><td colspan="10">Loading…</td></tr>
+            <tr class="empty-row"><td colspan="11">Loading…</td></tr>
           </tbody>
         </table>
       </div>
@@ -581,6 +592,7 @@
         <button class="action-btn ads-status-filter-btn" data-status="active" onclick="filterAdsByStatus('active')" style="background:#dcfce7;color:#166534">✅ Active</button>
         <button class="action-btn ads-status-filter-btn" data-status="expired" onclick="filterAdsByStatus('expired')" style="background:#fef3c7;color:#92400e">⏰ Expired</button>
         <button class="action-btn ads-status-filter-btn" data-status="sold" onclick="filterAdsByStatus('sold')" style="background:#fee2e2;color:#991b1b">❌ Sold</button>
+        <button class="action-btn ads-status-filter-btn" data-status="badphone" onclick="filterAdsByStatus('badphone')" style="background:#fee2e2;color:#991b1b">⚠️ Bad Phone</button>
       </div>
       <input class="search-input" type="text" id="ads-search"
         placeholder="Search ads…" oninput="filterAds()">
@@ -589,11 +601,11 @@
           <thead>
             <tr>
               <th>Image</th><th>Name</th><th>Price</th>
-              <th>Seller</th><th>Status</th><th>Expires</th><th>Action</th>
+              <th>Seller</th><th>Phone</th><th>Status</th><th>Expires</th><th>Action</th>
             </tr>
           </thead>
           <tbody id="ads-table-body">
-            <tr class="empty-row"><td colspan="7">Loading…</td></tr>
+            <tr class="empty-row"><td colspan="8">Loading…</td></tr>
           </tbody>
         </table>
       </div>
