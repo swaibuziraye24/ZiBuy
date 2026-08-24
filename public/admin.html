@@ -434,9 +434,14 @@
   <span class="nav-icon">🏪</span> Shops
 </button>
 
-<button class="admin-nav-item"
+<button class="admin-nav-item" id="staff-access-nav-btn"
   onclick="window.showSection('staffaccess', this);loadAdmins()">
   <span class="nav-icon">🔑</span> Staff Access
+</button>
+
+<button class="admin-nav-item" id="admin-audit-nav-btn"
+  onclick="window.showSection('adminaudit', this)">
+  <span class="nav-icon">🕵️</span> Admin Audit Log
 </button>
 
   </aside>
@@ -1354,6 +1359,23 @@ Separate paragraphs with a blank line."
         <tr><th>User ID</th><th>Email</th><th>Added</th><th>Action</th></tr>
       </thead>
       <tbody id="admins-table-body">
+        <tr class="empty-row"><td colspan="4">Loading…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="admin-section" id="section-adminaudit">
+  <h2 style="font-size:20px;font-weight:800;margin-bottom:16px">🕵️ Admin Audit Log</h2>
+  <p style="color:#6b7280;font-size:13px;margin-bottom:16px">
+    Live feed of every action taken by any admin — bans, deletes, ad changes, staff access. Only visible to you, and it updates instantly, no refresh needed.
+  </p>
+  <div class="admin-card">
+    <table class="data-table">
+      <thead>
+        <tr><th>Time</th><th>Action</th><th>Admin</th><th>Details</th></tr>
+      </thead>
+      <tbody id="admin-audit-table-body">
         <tr class="empty-row"><td colspan="4">Loading…</td></tr>
       </tbody>
     </table>
