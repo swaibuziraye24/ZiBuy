@@ -126,6 +126,7 @@ async function loadAdmins() {
     renderAdmins(admins);
   } catch (e) { console.error(e); }
 }
+window.loadAdmins = loadAdmins;
 
 function renderAdmins(admins) {
   const tbody = document.getElementById("admins-table-body");
