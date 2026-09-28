@@ -480,7 +480,8 @@ function renderUsers(users) {
   tbody.innerHTML = users.map(u => {
     const plan     = u.plan || "free";
     const verified = u.isSellerVerified ? "✅ Yes" : "—";
-    const banned   = u.banned ? "banned" : "active";
+    const isBanned = isCurrentlyBanned(u);
+    const banned   = isBanned ? (u.bannedUntil ? "banned until " + fmtDate(u.bannedUntil) : "banned") : "active";
 
     return `
       <tr>
@@ -490,7 +491,7 @@ function renderUsers(users) {
         <td id="ads-count-${u.id}">—</td>
         <td>${verified}</td>
         <td>
-          <span class="plan-chip ${u.banned ? 'chip-expired' : 'chip-approved'}">
+          <span class="plan-chip ${isBanned ? 'chip-expired' : 'chip-approved'}">
             ${banned}
           </span>
         </td>
@@ -509,7 +510,7 @@ function renderUsers(users) {
           </select>
         </td>
         <td class="zb-action-cell">
-          ${u.banned
+          ${isBanned
             ? `<button class="action-btn btn-unban" onclick="toggleBan('${u.id}', false)">Unban</button>`
             : `<button class="action-btn btn-ban"   onclick="toggleBan('${u.id}', true)">Ban</button>`}
           ${u.phone ? `
@@ -626,11 +627,48 @@ window.changeUserPlan = async function(userId, newPlan) {
   }
 };
 
+function isCurrentlyBanned(u) {
+  if (!u || u.banned !== true) return false;
+  if (!u.bannedUntil) return true;
+  const until = u.bannedUntil.toDate ? u.bannedUntil.toDate() : new Date(u.bannedUntil);
+  return until > new Date();
+}
+
+function askBanDays() {
+  const input = prompt("Ban for how many days?\n\nType a number (e.g. 7) for a temporary ban, or leave EMPTY for a permanent ban.", "");
+  if (input === null) return null;
+  const t = input.trim();
+  if (t === "") return 0;
+  const days = parseInt(t, 10);
+  if (isNaN(days) || days < 1) { showToast("Enter a whole number of days, like 7", "error"); return null; }
+  return days;
+}
+
+function askBanReason() {
+  const r = prompt("Reason for the ban?\n\nThe user will SEE this on their ban screen, so keep it clear and polite (e.g. \"Posting fake listings\").", "Violation of ZiBuy policies");
+  if (r === null) return null;
+  return r.trim() || "Violation of ZiBuy policies";
+}
+
 window.toggleBan = async function(userId, ban) {
-  if (!confirm(`${ban ? "Ban" : "Unban"} this user?`)) return;
   try {
-    await updateDoc(doc(db, "users", userId), { banned: ban });
-    showToast(ban ? "User banned" : "User unbanned", ban ? "error" : "success");
+    if (ban) {
+      const days = askBanDays();
+      if (days === null) return;
+      const reason = askBanReason();
+      if (reason === null) return;
+      await updateDoc(doc(db, "users", userId), {
+        banned: true,
+        bannedUntil: days > 0 ? new Date(Date.now() + days * 86400000) : null,
+        banReason: reason,
+        bannedAt: new Date()
+      });
+      showToast(days > 0 ? `User banned for ${days} day(s)` : "User banned permanently", "error");
+    } else {
+      if (!confirm("Unban this user?")) return;
+      await updateDoc(doc(db, "users", userId), { banned: false, bannedUntil: null, banReason: "" });
+      showToast("User unbanned", "success");
+    }
     loadUsers();
   } catch (e) {
     showToast("Failed", "error");
@@ -648,10 +686,24 @@ function getSelectedUserIds() {
 window.bulkBanUsers = async function(ban) {
   const ids = getSelectedUserIds();
   if (ids.length === 0) { showToast("No users selected", "info"); return; }
-  if (!confirm(`${ban ? "Ban" : "Unban"} ${ids.length} selected user(s)?`)) return;
+  let banData = { banned: false, bannedUntil: null, banReason: "" };
+  if (ban) {
+    const days = askBanDays();
+    if (days === null) return;
+    const reason = askBanReason();
+    if (reason === null) return;
+    banData = {
+      banned: true,
+      bannedUntil: days > 0 ? new Date(Date.now() + days * 86400000) : null,
+      banReason: reason,
+      bannedAt: new Date()
+    };
+  } else if (!confirm(`Unban ${ids.length} selected user(s)?`)) {
+    return;
+  }
 
   for (const id of ids) {
-    try { await updateDoc(doc(db, "users", id), { banned: ban }); }
+    try { await updateDoc(doc(db, "users", id), banData); }
     catch (e) { console.error(`Failed for ${id}:`, e); }
   }
   showToast(`${ban ? "Banned" : "Unbanned"} ${ids.length} user(s)`, ban ? "error" : "success");
@@ -3741,7 +3793,7 @@ async function checkFraudAlerts() {
   } catch(e) {}
 
   // Banned users whose ads are still live — a real data inconsistency to catch
-  const bannedIds = allUsers.filter(u => u.banned).map(u => u.id);
+  const bannedIds = allUsers.filter(u => isCurrentlyBanned(u)).map(u => u.id);
   if (bannedIds.length && allAds.length) {
     allAds.filter(a => a.status === "active" && bannedIds.includes(a.userId))
       .forEach(a => alerts.push(`<p style="color:#991b1b">⚠️ Banned user still has an active ad: "${escapeHTML(a.name)}"</p>`));
