@@ -274,3 +274,6 @@
   }
 
 })();
+
+// Show the "account banned" screen to banned users on every page
+import("./ban-guard.js").catch(err => console.warn("ban-guard failed to load:", err));
