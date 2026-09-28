@@ -217,6 +217,8 @@ if (currentStrikes + 1 >= 3) {
 
   await updateDoc(userRef, {
     banned: true,
+    bannedUntil: null,
+    banReason: "Multiple confirmed reports against your listings (3 strikes).",
     bannedAt: new Date()
   });
 
