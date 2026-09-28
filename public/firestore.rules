@@ -8,15 +8,42 @@ service cloud.firestore {
     function isAdmin() {
       return request.auth != null &&
         (
-          isAdmin()
+          request.auth.token.email == "swaibuziraye22@gmail.com"
           ||
           exists(/databases/$(database)/documents/admins/$(request.auth.uid))
         );
     }
 
+    // Full admins can write. Viewers (role == "viewer") can only read.
+    function isFullAdmin() {
+      return request.auth != null &&
+        (
+          request.auth.token.email == "swaibuziraye22@gmail.com"
+          ||
+          (
+            exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+            &&
+            get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.get("role", "full") != "viewer"
+          )
+        );
+    }
+
     match /admins/{adminId} {
-      allow read: if isAdmin();
-      allow write: if request.auth != null && isAdmin();
+      allow get: if request.auth != null && (request.auth.uid == adminId || request.auth.token.email == "swaibuziraye22@gmail.com");
+      allow list: if request.auth != null && request.auth.token.email == "swaibuziraye22@gmail.com";
+      allow write: if request.auth != null && request.auth.token.email == "swaibuziraye22@gmail.com";
+    }
+
+    match /admin_action_logs/{logId} {
+      allow create: if isAdmin();
+      allow read: if request.auth != null && request.auth.token.email == "swaibuziraye22@gmail.com";
+    }
+
+    match /admin_sessions/{sid} {
+      allow read: if request.auth != null && request.auth.token.email == "swaibuziraye22@gmail.com";
+      allow get: if request.auth != null && request.auth.uid == sid;
+      allow create, update: if isAdmin() && request.auth.uid == sid;
+      allow delete: if request.auth != null && request.auth.token.email == "swaibuziraye22@gmail.com";
     }
 
     /* ======================================================
@@ -29,24 +56,23 @@ service cloud.firestore {
 
   allow create: if request.auth != null;
 
-  allow update: if request.auth != null &&
+  allow update: if
     (
-      isAdmin()
-
-      ||
-
-      resource.data.userId == request.auth.uid
-
-      ||
-
-      request.resource.data.diff(resource.data)
-        .affectedKeys()
-        .hasOnly(["likes", "views", "orders"])
-    );
+      request.auth != null &&
+      (
+        isFullAdmin()
+        ||
+        resource.data.userId == request.auth.uid
+      )
+    )
+    ||
+    request.resource.data.diff(resource.data)
+      .affectedKeys()
+      .hasOnly(["likes", "views", "orders"]);
 
   allow delete: if request.auth != null &&
     (
-      isAdmin()
+      isFullAdmin()
       ||
       resource.data.userId == request.auth.uid
     );
@@ -57,31 +83,36 @@ match /category_stats/{document=**} {
   allow write: if false; // Admin SDK (Cloud Functions) bypasses this — client can never write
 }
 
-
+match /similar_item_alerts/{document=**} {
+  allow read: if false;
+  allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+}
 
 match /client_errors/{document=**} {
   allow read: if isAdmin();
   allow create: if true;  // any user's browser can log, even logged out
-  allow delete: if isAdmin();
+  allow delete: if isFullAdmin();
 }
 
        match /job_ads/{jobId} {
   allow read: if true;
   allow create: if request.auth != null;
   allow update, delete: if request.auth != null
-    && isAdmin();
+    && isFullAdmin();
 }
 
 match /whatsapp_reminders/{remId} {
-  allow read, write: if request.auth != null
+  allow read: if request.auth != null
     && isAdmin();
+  allow write: if request.auth != null
+    && isFullAdmin();
 }
 
 
        match /category_sponsors/{id} {
   allow read: if true;
   allow write: if request.auth != null
-    && isAdmin();
+    && isFullAdmin();
 }
 
 match /cv_boosts/{id} {
@@ -93,7 +124,7 @@ match /cv_boosts/{id} {
         match /blog_posts/{postId} {
   allow read: if resource.data.status == "published" || 
               (request.auth != null && isAdmin());
-  allow write: if request.auth != null && isAdmin();
+  allow write: if request.auth != null && isFullAdmin();
 }
 
 
@@ -116,7 +147,7 @@ match /boost_credits/{id} {
      match /auto_renewals/{document=**} {
   allow read: if request.auth != null;
   allow create: if request.auth != null;
-  allow update: if isAdmin();
+  allow update: if isFullAdmin();
 }
 
          match /pin_requests/{id} {
@@ -125,7 +156,7 @@ match /boost_credits/{id} {
      || isAdmin());
   allow create: if request.auth != null;
   allow update: if request.auth != null
-    && isAdmin();
+    && isFullAdmin();
 }
 
     /* ======================================================
@@ -141,11 +172,11 @@ match /boost_credits/{id} {
       allow update: if request.auth != null
         && (
           request.auth.uid == resource.data.userId
-          || isAdmin()
+          || isFullAdmin()
         );
 
       allow delete: if request.auth != null
-        && isAdmin();
+        && isFullAdmin();
     }
 
     /* ======================================================
@@ -156,39 +187,38 @@ match /boost_credits/{id} {
       allow read: if request.auth != null;
       allow write: if request.auth != null
         && request.auth.uid == request.resource.data.userId
-        || isAdmin();
+        || isFullAdmin();
     }
 
     match /plans/{document=**} {
       allow read: if request.auth != null;
       allow write: if request.auth != null
         && request.auth.uid == request.resource.data.userId
-        || isAdmin();
+        || isFullAdmin();
     }
 
     match /subscriptions/{document=**} {
       allow read: if request.auth != null;
-      allow write: if isAdmin();
+      allow write: if isFullAdmin();
     }
      
     match /shops/{shopId}/products/{productId} {
   allow read: if true;
-  allow write: if request.auth != null;
-  
+  allow write: if request.auth != null && request.auth.uid == shopId;
   } 
      match /plan_config/{document} {
   allow read: if true;
-  allow write: if isAdmin();
+  allow write: if isFullAdmin();
 }
     
      match /broadcasts/{id} {
   allow read: if true;
   allow write: if request.auth != null
-    && isAdmin();
+    && isFullAdmin();
 }
      match /system_config/{document=**} {
   allow read: if true;
-  allow write: if isAdmin();
+  allow write: if isFullAdmin();
 }
    
      
@@ -217,7 +247,7 @@ match /boost_credits/{id} {
       allow update: if request.auth != null
         && (
           request.auth.uid == resource.data.userId
-          || isAdmin()
+          || isFullAdmin()
         );
 
       allow delete: if request.auth != null
@@ -238,10 +268,10 @@ match /boost_credits/{id} {
       allow update: if request.auth != null
         && (
           request.auth.uid == resource.data.userId
-          || isAdmin()
+          || isFullAdmin()
         );
 
-      allow delete: if isAdmin();
+      allow delete: if isFullAdmin();
     }
 
     /* ======================================================
@@ -258,13 +288,13 @@ match /boost_credits/{id} {
       allow update: if request.auth != null
         && (
           request.auth.uid == resource.data.userId
-          || isAdmin()
+          || isFullAdmin()
         );
 
       allow delete: if request.auth != null
         && (
           request.auth.uid == resource.data.userId
-          || isAdmin()
+          || isFullAdmin()
         );
     }
 
@@ -282,18 +312,15 @@ match /boost_credits/{id} {
   allow update: if request.auth != null
     && (
       request.auth.uid == resource.data.ownerId
-      || isAdmin()
+      || isFullAdmin()
     );
 
   allow delete: if request.auth != null
     && (
       request.auth.uid == resource.data.ownerId
-      || isAdmin()
+      || isFullAdmin()
     );
-    
-    
-  allow create, update: if request.auth != null && request.auth.uid == resource.id;
-  
+
   }
 
 
@@ -309,7 +336,7 @@ match /boost_credits/{id} {
   allow update: if request.auth != null
     && (
       request.auth.uid == userId
-      || isAdmin()
+      || isFullAdmin()
       || request.resource.data.diff(resource.data).affectedKeys()
            .hasOnly(['buyerRating', 'buyerRatingCount', 'phoneVerified', 'phone', 'phoneVerifiedAt'])
     );
@@ -317,7 +344,7 @@ match /boost_credits/{id} {
   allow delete: if request.auth != null
     && (
       request.auth.uid == userId
-      || isAdmin()
+      || isFullAdmin()
     );
 }
 
@@ -346,7 +373,7 @@ match /boost_credits/{id} {
 
   allow update: if request.auth != null
     && (
-      isAdmin()
+      isFullAdmin()
       ||
       (
         resource.data.userEmail == request.auth.token.email &&
@@ -356,13 +383,13 @@ match /boost_credits/{id} {
     );
 
   allow delete: if request.auth != null
-    && isAdmin();
+    && isFullAdmin();
 }
 
        match /disputes/{document=**} {
   allow read: if request.auth != null;
   allow create: if request.auth != null && request.resource.data.buyerUid == request.auth.uid;
-  allow update: if isAdmin();
+  allow update: if isFullAdmin();
 }
 
 
@@ -418,8 +445,11 @@ match /messages/{messageId} {
 
     match /notifications/{document=**} {
 
-      allow read, write:
-        if request.auth.uid == resource.data.userId;
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+
+      allow create: if request.auth != null;
+
+      allow update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
     }
 
     /* ======================================================
@@ -439,13 +469,13 @@ match /messages/{messageId} {
   allow update: if request.auth != null
     && (
       request.auth.uid == resource.data.userId
-      || isAdmin()
+      || isFullAdmin()
     );
 
   allow delete: if request.auth != null
     && (
       request.auth.uid == resource.data.userId
-      || isAdmin()
+      || isFullAdmin()
     );
 }
 
@@ -464,11 +494,13 @@ match /messages/{messageId} {
 
     match /verificationRequests/{docId} {
       allow create: if request.auth != null;
-      allow read, update, delete: if isAdmin();
+      allow read: if isAdmin();
+      allow update, delete: if isFullAdmin();
     }
 
     match /analytics/{docId} {
-      allow read, write: if isAdmin();
+      allow read: if isAdmin();
+      allow write: if isFullAdmin();
     }
 
     /* ======================================================
@@ -477,7 +509,7 @@ match /messages/{messageId} {
 
     match /featured_ads/{document=**} {
       allow read: if request.auth != null;
-      allow write: if isAdmin();
+      allow write: if isFullAdmin();
     }
     
     
@@ -486,7 +518,8 @@ match /messages/{messageId} {
 
   allow read: if true;
 
-  allow create: if request.auth != null;
+  allow create: if request.auth != null
+    && request.resource.data.userId == request.auth.uid;
 
   allow delete: if request.auth != null
     && request.auth.uid == resource.data.userId;
@@ -498,9 +531,9 @@ match /messages/{messageId} {
      match /banner_ads/{bannerId} {
   allow read: if true;
   allow create, delete: if request.auth != null
-    && isAdmin();
+    && isFullAdmin();
   allow update: if (request.auth != null
-    && isAdmin())
+    && isFullAdmin())
     || request.resource.data.diff(resource.data).affectedKeys()
        .hasOnly(["impressions", "clicks"]);
 }
@@ -508,8 +541,8 @@ match /messages/{messageId} {
 match /reports/{document=**} {
   allow read: if true;
   allow create: if request.auth != null;
-  allow update: if isAdmin();
-  allow delete: if isAdmin();
+  allow update: if isFullAdmin();
+  allow delete: if isFullAdmin();
 }
 
 match /response_stats/{userId} {
@@ -523,9 +556,12 @@ match /response_stats/{userId} {
     ====================================================== */
 
     match /{document=**} {
-      allow read, write:
+      allow read:
         if request.auth != null
         && isAdmin();
+      allow write:
+        if request.auth != null
+        && isFullAdmin();
     }
 
   }
