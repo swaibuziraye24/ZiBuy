@@ -2638,8 +2638,11 @@ window.submitAd = async function() {
     console.warn("User fetch failed:", err);
   }
 
-  if (userDoc?.banned === true) {
-    alert("⚠️ Your ZiBuy account has been restricted due to policy violations.");
+  const banUntil = userDoc?.bannedUntil?.toDate ? userDoc.bannedUntil.toDate() : null;
+  const banIsActive = userDoc?.banned === true && (!banUntil || banUntil > new Date());
+  if (banIsActive) {
+    const untilTxt = banUntil ? ` until ${banUntil.toLocaleDateString()}` : "";
+    alert(`⚠️ Your ZiBuy account has been restricted${untilTxt} due to policy violations.`);
     return;
   }
 
