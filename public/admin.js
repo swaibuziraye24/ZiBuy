@@ -15,27 +15,37 @@ import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/
 import { onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // ── Write interceptors: every admin write, anywhere in this file, is auto-logged ──
+function assertCanWrite() {
+  if (window.isViewerAdmin) {
+    showToast("View-only account: you can't make changes", "error");
+    throw new Error("View-only admin");
+  }
+}
 async function updateDoc(ref, data) {
+  assertCanWrite();
   const result = await _updateDoc(ref, data);
   logAdminAction("UPDATE", `${ref.path} — fields: ${Object.keys(data || {}).join(", ")}`);
   return result;
 }
 async function addDoc(ref, data) {
+  assertCanWrite();
   const result = await _addDoc(ref, data);
   logAdminAction("CREATE", result.path);
   return result;
 }
 async function deleteDoc(ref) {
+  assertCanWrite();
   const result = await _deleteDoc(ref);
   logAdminAction("DELETE", ref.path);
   return result;
 }
 async function setDoc(ref, data, options) {
+  assertCanWrite();
   const result = await _setDoc(ref, data, options);
   logAdminAction("SET", `${ref.path} — fields: ${Object.keys(data || {}).join(", ")}`);
   return result;
 }
-import { onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
 
 
 // ==========================================
@@ -135,14 +145,17 @@ onAuthStateChanged(auth, async (user) => {
   }
 
   let allowed = user.email === ADMIN_EMAIL;
+  let adminRole = "full";
   if (!allowed) {
     try {
       const adminSnap = await getDoc(doc(db, "admins", user.uid));
       allowed = adminSnap.exists();
+      if (allowed) adminRole = adminSnap.data().role || "full";
     } catch (e) {
       allowed = false;
     }
   }
+  window.isViewerAdmin = adminRole === "viewer";
 
   if (!allowed) {
     alert("Access denied. Admins only.");
@@ -152,7 +165,7 @@ onAuthStateChanged(auth, async (user) => {
   }
 
   if (emailDisplay) {
-    emailDisplay.textContent = user.email;
+    emailDisplay.textContent = user.email + (window.isViewerAdmin ? " (View only)" : "");
   }
 
   const staffAccessNavBtn = document.getElementById("staff-access-nav-btn");
@@ -191,18 +204,38 @@ function renderAdmins(admins) {
   if (!tbody) return;
 
   if (admins.length === 0) {
-    tbody.innerHTML = `<tr class="empty-row"><td colspan="4">No additional admins yet</td></tr>`;
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="5">No additional admins yet</td></tr>`;
     return;
   }
 
-  tbody.innerHTML = admins.map(a => `
+  tbody.innerHTML = admins.map(a => {
+    const role = a.role || "full";
+    const nextRole = role === "viewer" ? "full" : "viewer";
+    return `
     <tr>
       <td style="font-family:monospace;font-size:12px">${escapeHTML(a.id)}</td>
       <td>${escapeHTML(a.email) || "—"}</td>
+      <td><span class="plan-chip ${role === "viewer" ? "chip-pending" : "chip-approved"}">${role === "viewer" ? "👁️ Viewer" : "🛠️ Full"}</span></td>
       <td style="font-size:12px">${fmtDate(a.addedAt)}</td>
-      <td><button class="action-btn btn-reject" onclick="removeAdmin('${a.id}')">🗑️ Remove</button></td>
-    </tr>`).join("");
+      <td style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="action-btn" style="background:#e0f2fe;color:#0369a1;border:none;padding:6px 10px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer"
+          onclick="setAdminRole('${a.id}','${nextRole}')">Make ${nextRole === "viewer" ? "Viewer" : "Full"}</button>
+        <button class="action-btn btn-reject" onclick="removeAdmin('${a.id}')">🗑️ Remove</button>
+      </td>
+    </tr>`;
+  }).join("");
 }
+
+window.setAdminRole = async function(uid, role) {
+  if (!confirm(`Change this admin to ${role === "viewer" ? "VIEW-ONLY" : "FULL access"}?`)) return;
+  try {
+    await updateDoc(doc(db, "admins", uid), { role });
+    showToast("Role updated", "success");
+    loadAdmins();
+  } catch (e) {
+    showToast("Failed: " + e.message, "error");
+  }
+};
 
 window.addAdmin = async function() {
   const uid = document.getElementById("new-admin-uid")?.value.trim();
@@ -212,6 +245,7 @@ window.addAdmin = async function() {
   try {
     await setDoc(doc(db, "admins", uid), {
       email: email || "",
+      role: document.getElementById("new-admin-role")?.value || "full",
       addedAt: new Date(),
       addedBy: ADMIN_EMAIL
     });
@@ -4170,7 +4204,7 @@ window.adminDeleteUser = async function(userId, userEmail) {
     }
     loadUsers();
 
-  } catch(e) {
+  } catch(e) { 
     showToast("Failed: " + e.message, "error");
   }
 };
