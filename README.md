@@ -205,3 +205,578 @@ A set of legacy admin pages (`admin-subscriptions`, `admin-verification`, `admin
 ---
 
 *Last updated for the ZiBuy platform state as of this document's generation. For anything not covered here, ask your development partner — this file should be updated as new features ship.*
+
+
+
+
+
+
+
+rules_version = '2';
+
+service cloud.firestore {
+
+  match /databases/{database}/documents {
+
+    // ── Multi-admin check: super-admin email OR listed in /admins/{uid} ──
+    function isAdmin() {
+      return request.auth != null &&
+        (
+          request.auth.token.email == "swaibuziraye22@gmail.com"
+          ||
+          exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+        );
+    }
+
+    // Full admins can write. Viewers (role == "viewer") can only read.
+    function isFullAdmin() {
+      return request.auth != null &&
+        (
+          request.auth.token.email == "swaibuziraye22@gmail.com"
+          ||
+          (
+            exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+            &&
+            get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.get("role", "full") != "viewer"
+          )
+        );
+    }
+
+    match /admins/{adminId} {
+      allow get: if request.auth != null && (request.auth.uid == adminId || request.auth.token.email == "swaibuziraye22@gmail.com");
+      allow list: if request.auth != null && request.auth.token.email == "swaibuziraye22@gmail.com";
+      allow write: if request.auth != null && request.auth.token.email == "swaibuziraye22@gmail.com";
+    }
+
+    match /admin_action_logs/{logId} {
+      allow create: if isAdmin();
+      allow read: if request.auth != null && request.auth.token.email == "swaibuziraye22@gmail.com";
+    }
+
+    match /admin_sessions/{sid} {
+      allow read: if request.auth != null && request.auth.token.email == "swaibuziraye22@gmail.com";
+      allow get: if request.auth != null && request.auth.uid == sid;
+      allow create, update: if isAdmin() && request.auth.uid == sid;
+      allow delete: if request.auth != null && request.auth.token.email == "swaibuziraye22@gmail.com";
+    }
+
+    /* ======================================================
+       PRODUCTS
+    ====================================================== */
+
+      match /products/{document=**} {
+
+  allow read: if true;
+
+  allow create: if request.auth != null;
+
+  allow update: if
+    (
+      request.auth != null &&
+      (
+        isFullAdmin()
+        ||
+        resource.data.userId == request.auth.uid
+      )
+    )
+    ||
+    request.resource.data.diff(resource.data)
+      .affectedKeys()
+      .hasOnly(["likes", "views", "orders"]);
+
+  allow delete: if request.auth != null &&
+    (
+      isFullAdmin()
+      ||
+      resource.data.userId == request.auth.uid
+    );
+}
+
+match /category_stats/{document=**} {
+  allow read: if true;
+  allow write: if false; // Admin SDK (Cloud Functions) bypasses this — client can never write
+}
+
+match /similar_item_alerts/{document=**} {
+  allow read: if false;
+  allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+}
+
+match /client_errors/{document=**} {
+  allow read: if isAdmin();
+  allow create: if true;  // any user's browser can log, even logged out
+  allow delete: if isFullAdmin();
+}
+
+       match /job_ads/{jobId} {
+  allow read: if true;
+  allow create: if request.auth != null;
+  allow update, delete: if request.auth != null
+    && isFullAdmin();
+}
+
+match /whatsapp_reminders/{remId} {
+  allow read: if request.auth != null
+    && isAdmin();
+  allow write: if request.auth != null
+    && isFullAdmin();
+}
+
+
+       match /category_sponsors/{id} {
+  allow read: if true;
+  allow write: if request.auth != null
+    && isFullAdmin();
+}
+
+match /cv_boosts/{id} {
+  allow read: if request.auth != null
+    && isAdmin();
+  allow create: if request.auth != null;
+}
+
+        match /blog_posts/{postId} {
+  allow read: if resource.data.status == "published" || 
+              (request.auth != null && isAdmin());
+  allow write: if request.auth != null && isFullAdmin();
+}
+
+
+     match /referrals/{id} {
+  allow read: if request.auth != null
+    && (request.auth.uid == resource.data.referrerId
+     || request.auth.uid == resource.data.referredId);
+  allow create: if request.auth != null;
+}
+
+match /boost_credits/{id} {
+  allow read: if request.auth != null
+    && request.auth.uid == resource.data.userId;
+  allow update: if request.auth != null
+    && request.auth.uid == resource.data.userId;
+  allow create: if request.auth != null;
+}
+     
+     
+     match /auto_renewals/{document=**} {
+  allow read: if request.auth != null;
+  allow create: if request.auth != null;
+  allow update: if isFullAdmin();
+}
+
+         match /pin_requests/{id} {
+  allow read: if request.auth != null
+    && (request.auth.uid == resource.data.userId
+     || isAdmin());
+  allow create: if request.auth != null;
+  allow update: if request.auth != null
+    && isFullAdmin();
+}
+
+    /* ======================================================
+       PREMIUM ADS
+    ====================================================== */
+
+    match /premium_ads/{document=**} {
+
+      allow read: if true;
+
+      allow create: if request.auth != null;
+
+      allow update: if request.auth != null
+        && (
+          request.auth.uid == resource.data.userId
+          || isFullAdmin()
+        );
+
+      allow delete: if request.auth != null
+        && isFullAdmin();
+    }
+
+    /* ======================================================
+       USER PLANS / PLANS / SUBSCRIPTIONS
+    ====================================================== */
+
+    match /user_plans/{document=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null
+        && request.auth.uid == request.resource.data.userId
+        || isFullAdmin();
+    }
+
+    match /plans/{document=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null
+        && request.auth.uid == request.resource.data.userId
+        || isFullAdmin();
+    }
+
+    match /subscriptions/{document=**} {
+      allow read: if request.auth != null;
+      allow write: if isFullAdmin();
+    }
+     
+    match /shops/{shopId}/products/{productId} {
+  allow read: if true;
+  allow write: if request.auth != null && request.auth.uid == shopId;
+  } 
+     match /plan_config/{document} {
+  allow read: if true;
+  allow write: if isFullAdmin();
+}
+    
+     match /broadcasts/{id} {
+  allow read: if true;
+  allow write: if request.auth != null
+    && isFullAdmin();
+}
+     match /system_config/{document=**} {
+  allow read: if true;
+  allow write: if isFullAdmin();
+}
+   
+     
+     match /saved_searches/{document=**} {
+  allow read: if false; // Cloud Functions (admin SDK) bypass this — client never needs to read others' searches directly except via query
+  allow read: if resource.data.userId == request.auth.uid;
+  allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+  allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
+}
+     
+    /* ======================================================
+       BUSINESS ACCOUNTS
+    ====================================================== */
+
+    match /business_accounts/{accountId} {
+
+      allow read: if request.auth != null
+        && (
+          request.auth.uid == resource.data.userId
+          || isAdmin()
+        );
+
+      allow create: if request.auth != null
+        && request.auth.uid == request.resource.data.userId;
+
+      allow update: if request.auth != null
+        && (
+          request.auth.uid == resource.data.userId
+          || isFullAdmin()
+        );
+
+      allow delete: if request.auth != null
+        && request.auth.uid == resource.data.userId;
+    }
+
+
+    /* ======================================================
+       SELLER VERIFICATIONS
+    ====================================================== */
+
+    match /seller_verifications/{document=**} {
+
+      allow read: if true;
+
+      allow create: if request.auth != null;
+
+      allow update: if request.auth != null
+        && (
+          request.auth.uid == resource.data.userId
+          || isFullAdmin()
+        );
+
+      allow delete: if isFullAdmin();
+    }
+
+    /* ======================================================
+       BUSINESS PROFILES
+    ====================================================== */
+
+    match /business_profiles/{profileId} {
+
+      allow read: if true;
+
+      allow create: if request.auth != null
+        && request.auth.uid == request.resource.data.userId;
+
+      allow update: if request.auth != null
+        && (
+          request.auth.uid == resource.data.userId
+          || isFullAdmin()
+        );
+
+      allow delete: if request.auth != null
+        && (
+          request.auth.uid == resource.data.userId
+          || isFullAdmin()
+        );
+    }
+
+    /* ======================================================
+       SHOPS
+    ====================================================== */
+
+   match /shops/{shopId} {
+
+  allow read: if true;
+
+  allow create: if request.auth != null
+    && request.auth.uid == request.resource.data.ownerId;
+
+  allow update: if request.auth != null
+    && (
+      request.auth.uid == resource.data.ownerId
+      || isFullAdmin()
+    );
+
+  allow delete: if request.auth != null
+    && (
+      request.auth.uid == resource.data.ownerId
+      || isFullAdmin()
+    );
+
+  }
+
+
+    /* ======================================================
+       USERS
+    ====================================================== */
+
+    match /users/{userId} {
+  allow read: if true;
+
+  allow create: if request.auth != null && request.auth.uid == userId;
+
+  allow update: if request.auth != null
+    && (
+      request.auth.uid == userId
+      || isFullAdmin()
+      || request.resource.data.diff(resource.data).affectedKeys()
+           .hasOnly(['buyerRating', 'buyerRatingCount', 'phoneVerified', 'phone', 'phoneVerifiedAt'])
+    );
+
+  allow delete: if request.auth != null
+    && (
+      request.auth.uid == userId
+      || isFullAdmin()
+    );
+}
+
+
+
+        match /phone_otps/{userId} {
+  allow read, write: if false; // Cloud Functions only — admin SDK bypasses rules
+}
+
+
+         match /buyer_ratings/{document=**} {
+  allow read: if true;
+  allow create: if request.auth != null;
+}
+
+
+
+
+    /* ======================================================
+       ORDERS
+    ====================================================== */
+       match /orders/{orderId} {
+  allow read: if request.auth != null;
+
+  allow create: if true; // guest checkout via Buy Now is allowed
+
+  allow update: if request.auth != null
+    && (
+      isFullAdmin()
+      ||
+      (
+        resource.data.userEmail == request.auth.token.email &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['deliveryConfirmed','confirmedAt','autoConfirmed','disputeStatus','disputeReason','disputedAt','status','cancelledAt'])
+      )
+    );
+
+  allow delete: if request.auth != null
+    && isFullAdmin();
+}
+
+       match /disputes/{document=**} {
+  allow read: if request.auth != null;
+  allow create: if request.auth != null && request.resource.data.buyerUid == request.auth.uid;
+  allow update: if isFullAdmin();
+}
+
+
+    /* ======================================================
+       REVIEWS
+    ====================================================== */
+
+    match /reviews/{document=**} {
+
+      allow read: if true;
+
+      allow create: if request.auth != null;
+
+      allow delete: if request.auth.uid == resource.data.userId;
+    }
+    
+    
+    
+    match /likes/{likeId} {
+  allow read: if request.auth != null
+              && request.auth.uid == resource.data.userId;
+
+  allow create: if request.auth != null
+                && request.auth.uid == request.resource.data.userId;
+
+  allow delete: if request.auth != null
+                && request.auth.uid == resource.data.userId;
+}
+
+    /* ======================================================
+       MESSAGES
+    ====================================================== */
+
+match /messages/{messageId} {
+
+  allow read: if request.auth != null &&
+               request.auth.token.email in resource.data.participants;
+
+  allow create: if request.auth != null &&
+                 request.auth.token.email in request.resource.data.participants;
+
+  allow update: if request.auth != null &&
+                 request.auth.token.email in resource.data.participants &&
+                 request.resource.data.diff(resource.data)
+                   .affectedKeys()
+                   .hasOnly(["read","readAt"]);
+
+}
+
+    /* ======================================================
+       NOTIFICATIONS
+    ====================================================== */
+
+    match /notifications/{document=**} {
+
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+
+      allow create: if request.auth != null;
+
+      allow update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
+    }
+
+    /* ======================================================
+       BOOST REQUESTS
+    ====================================================== */
+
+       match /boost_requests/{id} {
+
+  allow read: if request.auth != null
+    && (
+      request.auth.uid == resource.data.userId
+      || isAdmin()
+    );
+
+  allow create: if request.auth != null;
+
+  allow update: if request.auth != null
+    && (
+      request.auth.uid == resource.data.userId
+      || isFullAdmin()
+    );
+
+  allow delete: if request.auth != null
+    && (
+      request.auth.uid == resource.data.userId
+      || isFullAdmin()
+    );
+}
+
+    /* ======================================================
+       ADS
+    ====================================================== */
+
+    match /ads/{adId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    /* ======================================================
+       VERIFICATIONS / ANALYTICS
+    ====================================================== */
+
+    match /verificationRequests/{docId} {
+      allow create: if request.auth != null;
+      allow read: if isAdmin();
+      allow update, delete: if isFullAdmin();
+    }
+
+    match /analytics/{docId} {
+      allow read: if isAdmin();
+      allow write: if isFullAdmin();
+    }
+
+    /* ======================================================
+       FEATURED ADS
+    ====================================================== */
+
+    match /featured_ads/{document=**} {
+      allow read: if request.auth != null;
+      allow write: if isFullAdmin();
+    }
+    
+    
+    
+    match /shop_followers/{followId} {
+
+  allow read: if true;
+
+  allow create: if request.auth != null
+    && request.resource.data.userId == request.auth.uid;
+
+  allow delete: if request.auth != null
+    && request.auth.uid == resource.data.userId;
+
+  allow update: if false;
+}
+
+
+     match /banner_ads/{bannerId} {
+  allow read: if true;
+  allow create, delete: if request.auth != null
+    && isFullAdmin();
+  allow update: if (request.auth != null
+    && isFullAdmin())
+    || request.resource.data.diff(resource.data).affectedKeys()
+       .hasOnly(["impressions", "clicks"]);
+}
+
+match /reports/{document=**} {
+  allow read: if true;
+  allow create: if request.auth != null;
+  allow update: if isFullAdmin();
+  allow delete: if isFullAdmin();
+}
+
+match /response_stats/{userId} {
+  allow read: if true;
+  allow write: if request.auth != null;
+}
+
+
+    /* ======================================================
+       FINAL ADMIN OVERRIDE (KEEP LAST)
+    ====================================================== */
+
+    match /{document=**} {
+      allow read:
+        if request.auth != null
+        && isAdmin();
+      allow write:
+        if request.auth != null
+        && isFullAdmin();
+    }
+
+  }
+}
