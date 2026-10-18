@@ -3,6 +3,7 @@
 // ============================================
 
 import { db, auth, collection, getDocs, addDoc, query, where } from "./firebase.js";
+import { trackInterest, getTopCategories } from "./interest.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFeaturedAds } from "./premium-ads.js";
 import "./auth.js";
@@ -22,6 +23,10 @@ import { captureReferralCode, ensureReferralCode } from "./referral.js";
 captureReferralCode(); // runs immediately on every page load
 
 import { getDistricts, getSubLocations } from "./uganda-locations.js";
+
+import { unitPriceFor, bulkBadgeHTML } from "./seller-options.js";
+
+import "./auth-ui.js";
 
 
 function escapeHTML(value) {
@@ -73,6 +78,20 @@ window.addEventListener("beforeunload", () => {
     sessionStorage.setItem("zibuy_scroll", window.scrollY);
   }
 });
+
+
+// Primary save mechanism — continuously track scroll position while on
+// the homepage, since the "page closing" signal above doesn't fire
+// reliably on every mobile browser or installed-app setup.
+let scrollSaveThrottle = null;
+window.addEventListener("scroll", () => {
+  if (!document.getElementById("products")) return;
+  if (scrollSaveThrottle) return;
+  scrollSaveThrottle = setTimeout(() => {
+    sessionStorage.setItem("zibuy_scroll", window.scrollY);
+    scrollSaveThrottle = null;
+  }, 150);
+}, { passive: true });
 
 // =============================
 // GLOBAL STATE (ZiBuy SAFE FIX)
@@ -132,9 +151,12 @@ function initApp() {
   // if maintenance mode is genuinely turned on
   checkMaintenanceMode();
 
-   // Always start at top of page
-  window.scrollTo({ top: 0, behavior: "instant" });
-  sessionStorage.removeItem("zibuy_scroll");
+   // Only snap to top on a fresh visit — if we're returning from a
+  // product (or anywhere else), the restore block further down
+  // positions the page instead, and clears this key once it's used.
+  if (!sessionStorage.getItem("zibuy_scroll")) {
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }
 
   setupAuthStateListener();
   
@@ -157,7 +179,7 @@ function initApp() {
 
 
   // ── Restore scroll position and category after back navigation ──
-  const savedScroll   = sessionStorage.getItem("zibuy_scroll");
+  const savedScroll   = null; // scroll restore is handled by scroll-memory.js now
   const savedCategory = sessionStorage.getItem("zibuy_last_category");
 
   if (savedCategory && savedCategory !== "all") {
@@ -172,10 +194,34 @@ function initApp() {
   }
 
   if (savedScroll) {
+    const targetScroll = parseInt(savedScroll);
+    let userScrolled = false;
+
+    // The moment the person deliberately scrolls, stop correcting —
+    // this is their scroll now, not ours
+    const onUserScroll = () => { userScrolled = true; };
+    window.addEventListener("wheel", onUserScroll, { once: true, passive: true });
+    window.addEventListener("touchmove", onUserScroll, { once: true, passive: true });
+
+    const applyScroll = () => window.scrollTo({ top: targetScroll, behavior: "instant" });
+    applyScroll();
+
+    // Several things load in after the initial paint — a saved category
+    // filter, banner ads, featured shops, deals, sponsors — any of which
+    // can resize the page and knock scroll position loose. Rather than
+    // guessing which one and when, watch the page itself for any size
+    // change and correct for it, for a few seconds, unless the person
+    // has taken over scrolling themselves.
+    const ro = new ResizeObserver(() => {
+      if (userScrolled) { ro.disconnect(); sessionStorage.removeItem("zibuy_scroll"); return; }
+      applyScroll();
+    });
+    ro.observe(document.body);
+
     setTimeout(() => {
-      window.scrollTo({ top: parseInt(savedScroll), behavior: "instant" });
+      ro.disconnect();
       sessionStorage.removeItem("zibuy_scroll");
-    }, 600);
+    }, 3500);
   }
 } // ← closes initApp
 
@@ -418,6 +464,25 @@ function setupAuthStateListener() {
         }
       }
 
+      // Load this user's personalized category scores for the home feed
+      window._homeFeedScores = {};
+      if (user) {
+        try {
+          const { getDoc, doc } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+          const userSnap = await getDoc(doc(db, "users", user.uid));
+          window._homeFeedScores = userSnap.exists() ? (userSnap.data().homeFeedCategoryScores || {}) : {};
+        } catch (e) {
+          window._homeFeedScores = {};
+        }
+        if (typeof window.renderProducts === "function") {
+          if (window.scrollY > 300 || window.__zbHomeRestored) {
+            window.zbRenderKeepingPosition();   // person is mid-scroll: keep their place
+          } else {
+            window.renderProducts();            // at the top: apply the personalised order
+          }
+        }
+      }
+
       // Show boost requests button only for admin
       const adminBoostBtn = document.getElementById("admin-boost-btn");
       if (adminBoostBtn) {
@@ -587,19 +652,65 @@ function isTrending(p) {
 // ============================================
 // LOAD PRODUCTS FROM FIRESTORE
 // ============================================
+// Saved copies lose their date objects; put them back so sorting and
+// "pinned" checks behave the same as on freshly loaded listings
+function reviveCachedTimestamps(p) {
+  ["createdAt", "expiresAt", "pinnedUntil", "premiumExpiresAt", "boostExpiresAt", "boostApprovedAt"].forEach((k) => {
+    const v = p[k];
+    if (v && typeof v === "object" && typeof v.seconds === "number" && !v.toDate) {
+      const d = new Date(v.seconds * 1000);
+      v.toDate = () => d;
+    }
+  });
+  return p;
+}
+
 async function loadProducts() {
-  const cached   = sessionStorage.getItem("zibuy_products_cache");
-  const cachedAt = sessionStorage.getItem("zibuy_products_cache_time");
+  // Coming back to the homepage: rebuild exactly what the person was looking at
+  if (window.__zbShouldRestore) {
+    try {
+      const raw = sessionStorage.getItem("zb_home_products");
+      const st  = JSON.parse(sessionStorage.getItem("zb_home_state") || "null");
+
+      if (raw && st && Array.isArray(st.order)) {
+        allProducts = JSON.parse(raw).map(reviveCachedTimestamps);
+        window.allProducts = allProducts;
+        filteredProducts   = [...allProducts];
+
+        currentCategory    = st.category || "all";
+        currentSubcategory = st.sub || "all";
+        if (st.filter) Object.assign(filterState, st.filter);
+
+        window.__zbFullRequested = !!st.full;
+        window.__zbSavedOrder    = st.order;
+        window.__zbHomeRestored  = true;
+
+        document.querySelectorAll(".cat-btn").forEach(b =>
+          b.classList.toggle("active", b.dataset.cat === currentCategory));
+        if (currentCategory !== "all") renderPriceChips(currentCategory);
+
+        window.renderProducts();
+        zbRestoreHome(st);
+        document.body.classList.add("zb-ready");
+        return;
+      }
+    } catch (e) {
+      console.warn("Could not restore the homepage view:", e);
+    }
+  }
+  const cached   = localStorage.getItem("zibuy_products_cache");
+  const cachedAt = localStorage.getItem("zibuy_products_cache_time");
   const cacheAge = cachedAt ? Date.now() - parseInt(cachedAt) : Infinity;
 
   // Cache usable up to 10 minutes — keeps "Home" feeling instant even
   // after browsing other pages (dashboard, product, shop) for a while
-  if (cached && cacheAge < 600000) {
+  if (cached && cacheAge < 6 * 3600000) {
     try {
-      allProducts = JSON.parse(cached);
+      allProducts = JSON.parse(cached).map(reviveCachedTimestamps);
       window.allProducts = allProducts;
       filteredProducts = [...allProducts];
       window.renderProducts(); // instant paint — zero network wait
+      document.body.classList.add("zb-ready");
 
       // Cache a bit stale (>90s)? Refresh it quietly in the background
       // without blocking or re-showing a skeleton — stale-while-revalidate
@@ -648,7 +759,204 @@ function showProductSkeleton() {
   `;
 }
 
+// ============================================
+// FAST HOME LOAD: light list first, full catalog only on demand
+// ============================================
+function zbEnrichProducts(docs, planMap, verifSet, memberSinceMap) {
+  return docs.map((docSnap) => {
+    const product = { id: docSnap.id, ...docSnap.data() };
+
+    if (product.expiresAt) {
+      const expiryDate = product.expiresAt.toDate
+        ? product.expiresAt.toDate()
+        : new Date(product.expiresAt);
+      if (expiryDate < new Date()) product.status = "expired";
+    }
+
+    product.shopPlan = planMap[product.userId] || "free";
+    product.seller   = product.seller || {};
+    product.seller.isVerified = verifSet.has(product.userId);
+    product.sellerMemberSince = memberSinceMap[product.userId] || null;
+    product.sellerIsVerified  = verifSet.has(product.userId);
+
+    const isAdminPost = product.userEmail === "swaibuziraye22@gmail.com";
+    product.isZiBuyOfficial = isAdminPost;
+    if (isAdminPost) product.isPremium = true;
+
+    const planScore      = PLAN_SCORE[product.shopPlan] || 1;
+    const boostScore     = product.isPremium ? 5000 : 0;
+    const verifScore     = product.seller.isVerified ? 500 : 0;
+    const created        = product.createdAt?.toDate?.() || new Date();
+    const freshnessScore = Math.max(0, 100 - (new Date() - created) / 3_600_000);
+
+    product.rankScore = isAdminPost
+      ? 999999
+      : (planScore * 1000) + boostScore + verifScore + freshnessScore;
+
+    return product;
+  });
+}
+
+let zbFullCatalogPromise = null;
+
+
+var zbTopCache = [];
+var zbTopAt = 0;
+function zbInterestWeight(cat) {
+  if (!zbTopAt || Date.now() - zbTopAt > 1000) {
+    zbTopCache = getTopCategories(3);
+    zbTopAt = Date.now();
+  }
+  const i = zbTopCache.indexOf(cat);
+  return i === -1 ? 0 : 3 - i;
+}
+
+
+window.zbLoadNextPage = async function () {
+  if (window.__zbExhausted || !window.__zbCursor) return [];
+
+  const { orderBy, limit, startAfter } =
+    await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+
+  let collected = [];
+  for (let i = 0; i < 5 && collected.length < 20 && !window.__zbExhausted; i++) {
+    const snap = await getDocs(query(
+      collection(db, "products"),
+      orderBy("createdAt", "desc"),
+      startAfter(window.__zbCursor),
+      limit(40)
+    ));
+
+    if (snap.docs.length === 0) { window.__zbExhausted = true; break; }
+    window.__zbCursor = snap.docs[snap.docs.length - 1];
+    if (snap.docs.length < 40) window.__zbExhausted = true;
+
+    const have  = new Set(allProducts.map(p => p.id));
+    const fresh = snap.docs.filter(d => !have.has(d.id));
+    const extra = zbEnrichProducts(fresh, {}, window.__zbVerifSet || new Set(), {})
+      .filter(p => p.status !== "expired" && !p.vacationPaused);
+
+    allProducts = [...allProducts, ...extra];
+    collected = collected.concat(extra);
+  }
+
+  window.allProducts = allProducts;
+  filteredProducts = [...allProducts];
+  return collected;
+};
+window.ensureFullCatalog = function () {
+  if (zbFullCatalogPromise) return zbFullCatalogPromise;
+  zbFullCatalogPromise = (async () => {
+    try {
+      const snap  = await getDocs(collection(db, "products"));
+      const known = new Set(allProducts.map(p => p.id));
+      const missing = snap.docs.filter(d => !known.has(d.id));
+      if (missing.length === 0) return false;
+
+      const extra = zbEnrichProducts(missing, {}, window.__zbVerifSet || new Set(), {})
+        .filter(p => p.status !== "expired" && !p.vacationPaused);
+
+      allProducts = [...allProducts, ...extra].sort((a, b) => b.rankScore - a.rankScore);
+      window.allProducts = allProducts;
+      filteredProducts = [...allProducts];
+      return extra.length > 0;
+    } catch (e) {
+      zbFullCatalogPromise = null;
+      return false;
+    }
+  })();
+  return zbFullCatalogPromise;
+};
+
 async function fetchAndCacheProducts(isBackground) {
+  try {
+    const { orderBy, limit, documentId } =
+      await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+
+    const empty = { docs: [] };
+
+        const interestPromise = Promise.all(getTopCategories(2).map(c =>
+      getDocs(query(collection(db, "products"), where("category", "==", c), where("status", "==", "active"), orderBy("createdAt", "desc"), limit(30)))
+        .catch(() => getDocs(query(collection(db, "products"), where("category", "==", c), limit(30))).catch(() => empty))
+    ));
+    const [newestSnap, premiumSnap, officialSnap, verifSnap] = await Promise.all([
+      getDocs(query(collection(db, "products"), orderBy("createdAt", "desc"), limit(60))),
+      getDocs(query(collection(db, "products"), where("isPremium", "==", true), limit(40))).catch(() => empty),
+      getDocs(query(collection(db, "products"), where("userEmail", "==", "swaibuziraye22@gmail.com"), limit(20))).catch(() => empty),
+      getDocs(query(collection(db, "seller_verifications"), where("status", "==", "approved"))).catch(() => empty)
+    ]);
+
+    // merge the three lists, no duplicates
+    const byId = new Map();
+    const interestSnaps = await interestPromise.catch(() => []);
+    [newestSnap, premiumSnap, officialSnap, ...interestSnaps].forEach(s => s.docs.forEach(d => byId.set(d.id, d)));
+    const rawDocs = [...byId.values()];
+
+        window.__zbCursor    = newestSnap.docs[newestSnap.docs.length - 1] || null;
+    window.__zbExhausted = newestSnap.docs.length < 60;
+
+    const verifSet = new Set();
+    verifSnap.docs.forEach(d => verifSet.add(d.data().userId));
+    window.__zbVerifSet = verifSet;
+
+    // load ONLY the sellers of these products (not every user)
+    const sellerIds = [...new Set(rawDocs.map(d => d.data().userId).filter(Boolean))];
+    const chunks = [];
+    for (let i = 0; i < sellerIds.length; i += 10) chunks.push(sellerIds.slice(i, i + 10));
+    const userSnaps = await Promise.all(chunks.map(c =>
+      getDocs(query(collection(db, "users"), where(documentId(), "in", c))).catch(() => empty)
+    ));
+
+    const planMap = {};
+    const memberSinceMap = {};
+    userSnaps.forEach(s => s.docs.forEach(d => {
+      const data = d.data();
+      if (data.plan && data.plan !== "free") planMap[d.id] = data.plan;
+      const rawDate = data.createdAt || data.planUpdatedAt || data.lastVerificationSubmit || null;
+      const joinDate = rawDate?.toDate?.() || (rawDate instanceof Date ? rawDate : null);
+      if (joinDate) {
+        memberSinceMap[d.id] = joinDate.toLocaleDateString("en-UG", { month: "long", year: "numeric" });
+      }
+    }));
+
+    const products = zbEnrichProducts(rawDocs, planMap, verifSet, memberSinceMap)
+      .filter(p => p.status !== "expired" && !p.vacationPaused);
+
+    allProducts = products.sort((a, b) => b.rankScore - a.rankScore);
+    window.allProducts = allProducts;
+    filteredProducts = [...allProducts];
+    zbFullCatalogPromise = null; // a fresh light list means "full" must be re-merged on demand
+    window.__zbFullRequested = false;
+
+        window.__zbBgRefresh = !!isBackground;
+
+    try {
+      localStorage.setItem("zibuy_products_cache", JSON.stringify(allProducts));
+      localStorage.setItem("zibuy_products_cache_time", Date.now().toString());
+    } catch (e) { /* storage full, not critical */ }
+
+    window.renderProducts();
+    document.body.classList.add("zb-ready");
+
+  } catch (err) {
+    console.error(err);
+    document.body.classList.add("zb-ready");
+    if (!isBackground) {
+      const container = document.getElementById("products");
+      if (container) {
+        container.innerHTML = `
+          <div style="padding:40px 20px;text-align:center;color:#6b7280">
+            <p style="font-size:32px;margin-bottom:10px">⚠️</p>
+            <p>Couldn't load listings. Check your connection.</p>
+            <button onclick="location.reload()" style="margin-top:12px;background:#ff6600;color:white;border:none;padding:10px 20px;border-radius:8px;font-weight:700;cursor:pointer">Retry</button>
+          </div>`;
+      }
+    }
+  }
+}
+
+// OLD version (no longer used, safe to delete later)
+async function fetchAndCacheProductsOLD(isBackground) {
   try {
     let planMap        = {};
     let verifSet       = new Set();
@@ -729,8 +1037,8 @@ async function fetchAndCacheProducts(isBackground) {
     filteredProducts = [...allProducts];
 
     try {
-      sessionStorage.setItem("zibuy_products_cache", JSON.stringify(allProducts));
-      sessionStorage.setItem("zibuy_products_cache_time", Date.now().toString());
+      localStorage.setItem("zibuy_products_cache", JSON.stringify(allProducts));
+      localStorage.setItem("zibuy_products_cache_time", Date.now().toString());
     } catch (e) {
       // storage full — not critical
     }
@@ -970,7 +1278,7 @@ style="width:100%;height:150px;object-fit:cover">
             ${escapeHTML(p.name)}
           </p>
           <p style="margin:0 0 4px;color:#ff6600;font-weight:900;font-size:15px">
-            UGX ${price}
+            UGX ${price}${bulkBadgeHTML(p)}
           </p>
           <p style="margin:0;font-size:11px;color:#9ca3af">
             📍 ${escapeHTML(p.seller?.location || p.location || "Uganda")} · ${escapeHTML(condition)}
@@ -1021,7 +1329,7 @@ async function loadFeaturedProducts() {
                 <div class="product-info">
                   <p class="product-cat">${product.category}</p>
                   <h3 class="product-title">${product.name}</h3>
-                  <p class="product-price">UGX ${Number(product.price).toLocaleString()}</p>
+                  <p class="product-price">UGX ${Number(product.price).toLocaleString()}${bulkBadgeHTML(product)}</p>
                   <div style="margin-bottom:6px">
                     ${product.sellerIsVerified
                       ? `<span style="display:inline-block;background:#10b981;color:white;padding:1px 7px;border-radius:20px;font-size:10px;font-weight:800">✅ Verified</span>`
@@ -1122,12 +1430,30 @@ window.renderProducts = function () {
   const container = document.getElementById("products");
   if (!container) return;
 
+
+  if (window.__zbBgRefresh) {
+    window.__zbBgRefresh = false;
+    if (window.scrollY > 300) return;   // fresh data is kept; the screen isn't rebuilt under the person
+  }
+
   if (!Array.isArray(allProducts)) {
     console.warn("allProducts is not ready");
     return;
   }
 
   let products = [...allProducts];
+
+  
+  // Search / category / filters need the whole catalog: load it once, then refresh
+  if (!window.__zbFullRequested &&
+      ((searchQuery && searchQuery.length > 0) ||
+       (currentCategory && currentCategory !== "all") ||
+       (currentSubcategory && currentSubcategory !== "all") ||
+       filterState.location ||
+       filterState.dateRange !== "all")) {
+    window.__zbFullRequested = true;
+    window.ensureFullCatalog().then(changed => { if (changed) window.renderProducts(); });
+  }
 
   // =========================
   // 1. CATEGORY FILTER
@@ -1234,10 +1560,21 @@ window.renderProducts = function () {
         const bPinned = isPinnedActive(b) ? 1 : 0;
         if (aPinned !== bPinned) return bPinned - aPinned;
 
+                // Personal interest tier: the user's favourite categories come first
+        const aI = zbInterestWeight(a.category);
+        const bI = zbInterestWeight(b.category);
+        if (aI !== bI) return bI - aI;
+
         const aBoost = (a.boost?.boosted || a.isPremium) ? 1 : 0;
         const bBoost = (b.boost?.boosted || b.isPremium) ? 1 : 0;
 
         if (aBoost !== bBoost) return bBoost - aBoost;
+
+        // Personal interest (your order/like history) + plan tier + engagement
+        const scores = window._homeFeedScores || {};
+        const aScore = (scores[a.category] || 0) + getProductRankScore(a);
+        const bScore = (scores[b.category] || 0) + getProductRankScore(b);
+        if (aScore !== bScore) return bScore - aScore;
 
         const aTime = a.createdAt?.toDate
           ? a.createdAt.toDate().getTime()
@@ -1279,6 +1616,8 @@ window.renderProducts = function () {
   }
 
   products = mixedProducts;
+
+    products = window.__zbApplySavedOrder ? window.__zbApplySavedOrder(products) : products;
 
   if (typeof buildCategoryNav === "function") {
     buildCategoryNav(products);
@@ -1462,7 +1801,7 @@ const topTrending = trending.slice(0, 10);
             </h3>
 
             <p style="color:#f68b1e;font-weight:700;margin:4px 0;">
-              UGX ${Number(p.price || 0).toLocaleString()}
+              UGX ${Number(p.price || 0).toLocaleString()}${bulkBadgeHTML(p)}
             </p>
 
             <label onclick="event.stopPropagation()" style="display:flex;align-items:center;gap:4px;font-size:9px;font-weight:700;color:#6b7280;margin-bottom:4px;cursor:pointer">
@@ -1509,11 +1848,16 @@ const topTrending = trending.slice(0, 10);
     container.appendChild(section);
   }
   
-  renderRow("🔥 Trending", topTrending);
+  const _zbTop = getTopCategories(2);
+if (_zbTop.length && currentCategory === "all" && !(searchQuery && searchQuery.length > 0)) {
+  const picked = products.filter(p => _zbTop.includes(p.category)).slice(0, 16);
+  if (picked.length >= 3) renderRow("✨ Picked for you", picked);
+}
+renderRow("🔥 Trending", topTrending);
 renderRow("🆕 New Arrivals", newArrivals);
 
 if (!isDataSaverOn()) {
-  loadBuyPowerSection(usedProducts);
+  // Pre-Loved Picks removed from the homepage (replaced by "Picked for you")
 }
 
   // ── Infinite scroll grid (below Trending & New Arrivals) ──
@@ -1546,7 +1890,81 @@ if (!isDataSaverOn()) {
    _appendPage();
 };
 
+// ══════════════════════════════════════════════
+//  HOMEPAGE: remember and restore exactly where you were
+// ══════════════════════════════════════════════
 
+// Save a snapshot of the homepage whenever the person leaves it
+function zbSaveHomeState() {
+  try {
+    if (!document.getElementById("all-products-grid")) return;   // homepage only
+    if (!_pagedProducts.length) return;
+
+    sessionStorage.setItem("zb_home_state", JSON.stringify({
+      pageIndex: _pageIndex,
+      order:     _pagedProducts.map(p => p.id),
+      category:  currentCategory,
+      sub:       currentSubcategory,
+      filter:    filterState,
+      full:      !!window.__zbFullRequested,
+      at:        Date.now()
+    }));
+    try {
+      sessionStorage.setItem("zb_home_products", JSON.stringify(allProducts));
+    } catch (storageErr) {
+      // too big for this phone: keep a lighter copy (shorter text, fewer photos)
+      const slim = allProducts.map(p => ({
+        ...p,
+        description: String(p.description || "").slice(0, 160),
+        details:     undefined,
+        images:      (p.images || []).slice(0, 2)
+      }));
+      try {
+        sessionStorage.setItem("zb_home_products", JSON.stringify(slim));
+      } catch (storageErr2) {
+        sessionStorage.removeItem("zb_home_state");
+        sessionStorage.removeItem("zb_home_products");
+      }
+    }
+  } catch (e) { /* storage full: the normal cached list is used instead */ }
+}
+window.addEventListener("pagehide", zbSaveHomeState);
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") zbSaveHomeState();
+});
+
+// Re-draw the list in the exact saved order (so nothing jumps around)
+window.__zbApplySavedOrder = function (products) {
+  const ids = window.__zbSavedOrder;
+  if (!ids || !ids.length) return products;
+  window.__zbSavedOrder = null;
+
+  const byId = new Map(products.map(p => [p.id, p]));
+  const ordered = [];
+  ids.forEach(id => {
+    const p = byId.get(id);
+    if (p) { ordered.push(p); byId.delete(id); }
+  });
+  return ordered.concat([...byId.values()]);
+};
+
+// Draw as many grid pages as the person had scrolled through
+function zbRestoreHome(st) {
+  let guard = 0;
+  while (_pageIndex < st.pageIndex && _pageIndex < _pagedProducts.length && guard++ < 500) {
+    _appendPage();
+  }
+}
+
+// Re-draw the list without losing the person's place
+window.zbRenderKeepingPosition = function () {
+  const y     = window.scrollY;
+  const pages = _pageIndex;
+  window.__zbSavedOrder = _pagedProducts.map(p => p.id);
+  window.renderProducts();
+  while (_pageIndex < pages && _pageIndex < _pagedProducts.length) _appendPage();
+  window.scrollTo({ top: y, behavior: "instant" });
+};
 
 // ── Append next page of products to the grid ──
 function _appendPage() {
@@ -1562,7 +1980,7 @@ function _appendPage() {
     const card = document.createElement("div");
     card.className = "product-card";
     card.style.cssText = "background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.10);cursor:pointer";
-    card.onclick = () => window.location.href = `product.html?id=${p.id}`;
+    card.setAttribute("onclick", `window.location.href='product.html?id=${p.id}'`);
 
     card.innerHTML = `
       <div style="position:relative;background:#f7f7f7">
@@ -1680,7 +2098,7 @@ box-shadow:0 2px 8px rgba(0,0,0,.18);
         <h3 style="font-size:12px;margin:0 0 4px;color:#111827;overflow:hidden;
           text-overflow:ellipsis;white-space:nowrap">${escapeHTML(p.name) || "No name"}</h3>
         <p style="color:#ff6600;font-weight:800;font-size:14px;margin:0 0 6px">
-          UGX ${Number(p.price || 0).toLocaleString()}
+          UGX ${Number(p.price || 0).toLocaleString()}${bulkBadgeHTML(p)}
         </p>
         <button onclick="event.stopPropagation();window.location.href='product.html?id=${p.id}'"
           style="width:100%;padding:7px;font-size:11px;background:#ff6600;color:white;
@@ -1963,6 +2381,8 @@ window.filterCategory = function(category, el) {
 
 
   currentCategory = category;
+
+    if (category && category !== "all") trackInterest(category, 2);
   currentSubcategory = "all";
  
 
@@ -2083,19 +2503,20 @@ window.closeFilters = function() {
 // CART FUNCTIONS
 // ============================================
 
-window.addToCart = function(name, price, image) {
+window.addToCart = function(name, price, image, productId) {
   let cart = JSON.parse(localStorage.getItem("zibuy-cart")) || [];
   const existing = cart.find(item => item.name === name);
 
   if (existing) {
     existing.qty += 1;
   } else {
-    cart.push({ name, price, image, qty: 1 });
+    cart.push({ name, price, image, qty: 1, productId: productId || "" });
   }
 
   localStorage.setItem("zibuy-cart", JSON.stringify(cart));
   updateCartUI();
   showToast(`✅ Added to cart`);
+  if (productId) zbEnrichCartItem(productId);
 
   // Save cart session for abandoned cart emails
   if (currentUser) {
@@ -2110,6 +2531,23 @@ window.addToCart = function(name, price, image) {
       }).catch(() => {});
   }
 };
+
+// Looks up the live price and bulk prices of a cart item
+async function zbEnrichCartItem(productId) {
+  try {
+    const { getDoc, doc } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+    const snap = await getDoc(doc(db, "products", productId));
+    if (!snap.exists()) return;
+    const p    = snap.data();
+    const cart = JSON.parse(localStorage.getItem("zibuy-cart")) || [];
+    const item = cart.find(i => i.productId === productId);
+    if (!item) return;
+    item.price = Number(p.price) || item.price;
+    item.tiers = p.priceTiers || [];
+    localStorage.setItem("zibuy-cart", JSON.stringify(cart));
+    renderCartItems();
+  } catch (e) { /* not critical */ }
+}
 
 window.updateCartUI = function () {
   const cart = JSON.parse(localStorage.getItem("zibuy-cart")) || [];
@@ -2157,7 +2595,7 @@ function renderCartItems() {
       <img src="${item.image}" alt="${item.name}">
       <div class="cart-item-info">
         <h4>${item.name}</h4>
-        <p class="item-price">UGX ${Number(item.price).toLocaleString()}</p>
+        <p class="item-price">${(() => { const u = unitPriceFor(item.price, item.tiers, item.qty); return "UGX " + u.toLocaleString() + (u < item.price ? ' <span style="color:#059669;font-size:11px;font-weight:700">bulk price</span>' : ""); })()}</p>
         <div class="qty-controls">
           <button class="qty-btn" onclick="updateQty(${idx}, -1)">−</button>
           <span class="qty-count">${item.qty}</span>
@@ -2195,7 +2633,7 @@ function updateCartTotal() {
   let total = 0;
 
   cart.forEach(item => {
-    total += item.price * item.qty;
+    total += unitPriceFor(item.price, item.tiers, item.qty) * item.qty;
   });
 
   const totalEl = document.getElementById("cart-total");
@@ -2256,7 +2694,7 @@ window.openProductModal = function(productId) {
     // Set button actions
     if (modalCartBtn) {
       modalCartBtn.onclick = () => {
-        addToCart(product.name, product.price, product.images?.[0] || "");
+        addToCart(product.name, product.price, product.images?.[0] || "", product.id);
         closeProductModal();
       };
     }
@@ -2922,7 +3360,48 @@ window.toggleLike = async function(productId, btnEl) {
     entries.forEach(entry => {
       if (!entry.isIntersecting) return;
       if (_isLoadingMore) return;
-      if (_pageIndex >= _pagedProducts.length) return;
+      if (_pageIndex >= _pagedProducts.length) {
+        // End of the list: load the next batch of products, then keep scrolling
+        if (window.__zbExhausted || !window.__zbCursor) return;
+        _isLoadingMore = true;
+        const sentinelEl2 = document.getElementById("scroll-sentinel");
+        if (sentinelEl2) sentinelEl2.innerHTML = '<span style="color:#9ca3af;font-size:12px">Loading more...</span>';
+
+        window.zbLoadNextPage()
+          .then(extra => {
+            if (extra && extra.length) {
+              _pagedProducts = _pagedProducts.concat(extra);
+              const countEl2 = document.getElementById("all-products-count");
+              if (countEl2) countEl2.textContent = `(${_pagedProducts.length})`;
+            }
+          })
+          .catch(e => console.error("Load more failed:", e))
+          .finally(() => {
+            _isLoadingMore = false;
+            _appendPage();
+          });
+        return;
+        if (!window.__zbFullRequested) {
+          window.__zbFullRequested = true;
+          _isLoadingMore = true;
+
+          const sentinelEl = document.getElementById("scroll-sentinel");
+          if (sentinelEl) sentinelEl.innerHTML = '<span style="color:#9ca3af;font-size:12px">Loading more...</span>';
+
+          window.ensureFullCatalog().then(changed => {
+            if (changed) {
+              const have = new Set(_pagedProducts.map(p => p.id));
+              const extra = allProducts.filter(p => !have.has(p.id));
+              _pagedProducts = _pagedProducts.concat(extra);
+              const countEl = document.getElementById("all-products-count");
+              if (countEl) countEl.textContent = `(${_pagedProducts.length})`;
+            }
+            _appendPage();
+            _isLoadingMore = false;
+          });
+        }
+        return;
+      }
 
       _isLoadingMore = true;
       setTimeout(() => {
@@ -3124,7 +3603,7 @@ window.runOverlaySearch = function(query) {
                 color:#111827;overflow:hidden;text-overflow:ellipsis;
                 white-space:nowrap">${escapeHTML(p.name)}</h4>
               <p style="margin:0 0 5px;color:#ff6600;font-weight:900;
-                font-size:14px">UGX ${price}</p>
+                font-size:14px">UGX ${price}${bulkBadgeHTML(p)}</p>
               <label onclick="event.stopPropagation()" style="display:flex;align-items:center;gap:4px;font-size:9px;font-weight:700;color:#6b7280;margin-bottom:5px;cursor:pointer">
                 <input type="checkbox" onclick="event.stopPropagation();toggleCompareProduct('${p.id}','${(p.name||"").replace(/'/g,"\\'")}',${Number(p.price)||0},'${(img||"").replace(/'/g,"\\'")}','${(condition||"").replace(/'/g,"\\'")}')" style="width:11px;height:11px;margin:0;accent-color:#ff6600">
                 Compare
@@ -3207,8 +3686,8 @@ async function loadRecentSoldTicker() {
 
   try {
     const snap = await getDocs(query(
-      collection(db, "orders"),
-      orderBy("createdAt", "desc"),
+      collection(db, "products"),
+      orderBy("soldAt", "desc"),
       limit(10)
     ));
 
@@ -3216,8 +3695,8 @@ async function loadRecentSoldTicker() {
       .map(d => d.data())
       .map(o => ({
         name: o.productName || o.name || (o.items?.[0]?.name) || "an item",
-        location: o.customerLocation || "Uganda",
-        time: o.createdAt?.toDate?.() || new Date(o.createdAt)
+        location: o.location || "Uganda",
+        time: o.soldAt?.toDate?.() || (o.soldAt ? new Date(o.soldAt) : null)
       }))
       .filter(o => o.time);
 
@@ -3380,7 +3859,7 @@ async function loadDealsNearYou() {
           <div style="padding:9px">
             <p style="margin:0 0 4px;font-size:11px;font-weight:700;color:#111827;
               overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(p.name)}</p>
-            <p style="margin:0;color:#ff6600;font-weight:900;font-size:13px">UGX ${price}</p>
+            <p style="margin:0;color:#ff6600;font-weight:900;font-size:13px">UGX ${price}${bulkBadgeHTML(p)}</p>
             <p style="margin:2px 0 0;font-size:9.5px;color:#9ca3af">📍 ${escapeHTML(p.location || p.seller?.location || "")}</p>
           </div>
         </div>`;

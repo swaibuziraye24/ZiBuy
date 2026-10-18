@@ -22,6 +22,91 @@ import { updateDoc } from "./firebase.js";
 
 import { getDistricts, getSubLocations } from "./uganda-locations.js";
 
+import { mountPriceTiers, collectPriceTiers } from "./seller-options.js";
+
+// ── Optional bulk prices, shown right under the price field ──
+(function setupBulkPrices() {
+  const priceField = document.getElementById("ad-price");
+  if (!priceField) return;
+
+  const box = document.createElement("div");
+  box.id = "tiers-section";
+  box.style.cssText = "margin:10px 0 14px";
+  priceField.insertAdjacentElement("afterend", box);
+
+  mountPriceTiers(box, { getBasePrice: () => Number(priceField.value) || 0 });
+  window.zbCollectTiers = () => collectPriceTiers(box);
+})();
+
+
+// ── Optional delivery section, injected into step 2 of the post-ad form ──
+(function setupDeliverySection() {
+  const nextBtn = document.getElementById("step2-next");
+  if (!nextBtn || !nextBtn.parentElement) return;
+
+  const areaOptions = ["All of Uganda", ...getDistricts()]
+    .map(d => `<option value="${d}">${d}</option>`).join("");
+
+  const box = document.createElement("div");
+  box.className = "admin-form-group";
+  box.id = "delivery-section";
+  box.innerHTML = `
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+      <input type="checkbox" id="delivery-available" style="width:18px;height:18px;accent-color:#10b981"
+        onchange="document.getElementById('delivery-body').style.display = this.checked ? 'block' : 'none'">
+      🚚 I offer delivery for this item (optional)
+    </label>
+    <div id="delivery-body" style="display:none;margin-top:10px">
+      <p style="font-size:12px;color:#6b7280;margin:0 0 8px">
+        Add the places you deliver to. Enter <strong>0</strong> for free delivery, or the delivery fee in UGX.
+      </p>
+      <div id="delivery-rows"></div>
+      <button type="button" onclick="zbAddDeliveryRow()"
+        style="background:#ecfdf5;color:#065f46;border:1.5px dashed #6ee7b7;padding:9px 14px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;margin-top:4px">
+        + Add a location
+      </button>
+      <input type="text" id="delivery-note" maxlength="120"
+        placeholder="Optional note (e.g. Delivered within 24 hours)"
+        style="width:100%;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:13px;font-family:inherit;margin-top:10px;box-sizing:border-box">
+    </div>`;
+
+  nextBtn.parentElement.insertAdjacentElement("beforebegin", box);
+
+  window.zbAddDeliveryRow = function () {
+    const row = document.createElement("div");
+    row.className = "delivery-row";
+    row.style.cssText = "display:flex;gap:8px;margin-bottom:8px;align-items:center";
+    row.innerHTML = `
+      <select class="delivery-area" style="flex:1;padding:10px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:13px;font-family:inherit;background:white">
+        <option value="">Select location</option>${areaOptions}
+      </select>
+      <input type="number" class="delivery-fee" min="0" placeholder="Fee UGX (0 = free)"
+        style="width:130px;padding:10px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:13px;font-family:inherit">
+      <button type="button" onclick="this.parentElement.remove()"
+        style="background:#fee2e2;color:#b91c1c;border:none;width:32px;height:32px;border-radius:8px;font-size:16px;cursor:pointer">×</button>`;
+    document.getElementById("delivery-rows").appendChild(row);
+  };
+  window.zbAddDeliveryRow();
+
+  window.zbCollectDelivery = function () {
+    const available = !!document.getElementById("delivery-available")?.checked;
+    if (!available) return { available: false, zones: [], note: "" };
+
+    const zones = [];
+    document.querySelectorAll("#delivery-rows .delivery-row").forEach(row => {
+      const area = row.querySelector(".delivery-area")?.value || "";
+      const fee  = Math.max(0, Number(row.querySelector(".delivery-fee")?.value) || 0);
+      if (area) zones.push({ area, fee });
+    });
+
+    return {
+      available: zones.length > 0,
+      zones,
+      note: (document.getElementById("delivery-note")?.value || "").trim()
+    };
+  };
+})();
+
 // ── Phone number validation — must be WhatsApp-ready (country code, no 0, no +) ──
 function isValidWhatsAppPhone(phone) {
   return /^[1-9]\d{9,14}$/.test(phone);
@@ -2784,7 +2869,9 @@ expiresAt.setDate(expiresAt.getDate() + adDays);
       },
       details:   collectCategoryFields(selectedCategory),
       condition: document.getElementById("cf-condition")?.value || "",
-      videoUrl:  videoUrl || ""
+      videoUrl:  videoUrl || "",
+      delivery:  window.zbCollectDelivery ? window.zbCollectDelivery() : null,
+      priceTiers: window.zbCollectTiers ? window.zbCollectTiers() : []
     };
 
     // ── 6. Save to Firestore — same robust retry as images ──
@@ -3063,14 +3150,6 @@ window.requestBoost = async function (productId) {
       txnInput.placeholder = "⚠️ Please enter your transaction reference";
       txnInput.focus();
     }
-    return;
-  }
-
-  // ── Plan boost limit check ──────────────────
-  const { checkCanBoost } = await import("./plan-limits.js");
-  const boostCheck = await checkCanBoost();
-  if (!boostCheck.allowed) {
-    alert(`⚠️ ${boostCheck.reason}`);
     return;
   }
 

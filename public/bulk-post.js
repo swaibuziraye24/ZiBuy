@@ -3,6 +3,36 @@
 // ============================================
 
 import { db, auth, collection, addDoc, doc, setDoc } from "./firebase.js";
+import { mountPriceTiers, collectPriceTiers, mountDelivery, collectDelivery } from "./seller-options.js";
+
+// ── Optional delivery and bulk prices for every product in this batch ──
+let batchTiersBox = null;
+let batchDeliveryBox = null;
+
+(function setupBatchOptions() {
+  const rowsContainer = document.getElementById("bulk-rows-container");
+  if (!rowsContainer) return;
+
+  const wrap = document.createElement("div");
+  wrap.style.cssText = "margin-bottom:16px";
+  wrap.innerHTML = `
+    <div style="background:white;border:1.5px solid #e5e7eb;border-radius:14px;padding:14px">
+      <p style="margin:0 0 4px;font-weight:800;font-size:14px">⚙️ Options for every product in this batch</p>
+      <p style="margin:0 0 12px;font-size:12px;color:#6b7280;line-height:1.5">
+        Optional. These apply to all the products you post below.
+        You can change them for a single product later in Edit.
+      </p>
+      <div id="batch-tiers" style="margin-bottom:10px"></div>
+      <div id="batch-delivery"></div>
+    </div>`;
+  rowsContainer.insertAdjacentElement("beforebegin", wrap);
+
+  batchTiersBox    = wrap.querySelector("#batch-tiers");
+  batchDeliveryBox = wrap.querySelector("#batch-delivery");
+
+  mountPriceTiers(batchTiersBox, { percentOnly: true });
+  mountDelivery(batchDeliveryBox);
+})();
 import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { storage } from "./firebase.js";
@@ -133,13 +163,28 @@ onAuthStateChanged(auth, async (user) => {
   await checkLimitsAndInit();
 });
 
-// Warn before an accidental refresh/close if there's unsaved work
+// Warn before an accidental refresh/close if there's unsaved work —
+// but never while a batch is actively posting. Leaving mid-post (to
+// chat on WhatsApp, make a call, etc.) is a supported flow: progress
+// is already saved after every row, so there's nothing to lose.
 window.addEventListener("beforeunload", (e) => {
+  if (window._bulkPostingActive) { saveBulkDraft(); return; }
   const hasContent = document.querySelectorAll(".bulk-row").length > 0;
   if (hasContent) {
     saveBulkDraft();
     e.preventDefault();
     e.returnValue = "";
+  }
+});
+
+// If the tab gets paused mid-batch (backgrounded while you're in
+// WhatsApp, a call, etc.) and the browser stops running the posting
+// loop, this picks it back up automatically the moment you return —
+// no need to tap "Post All Ads" again.
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState !== "visible") return;
+  if (window._bulkPostingActive && !window._bulkPostingLoopRunning) {
+    window.postAllBulkAds();
   }
 });
 
@@ -388,8 +433,14 @@ async function withRetry(operation, { maxTries = 2, timeoutMs = 15000, baseDelay
 }
 
 window.postAllBulkAds = async function() {
+  if (window._bulkPostingLoopRunning) return; // already in progress — don't double-run
+  window._bulkPostingLoopRunning = true;
+  window._bulkPostingActive = true;
+
   const rows = document.querySelectorAll(".bulk-row");
   if (rows.length === 0) {
+    window._bulkPostingLoopRunning = false;
+    window._bulkPostingActive = false;
     alert("Add at least one product first");
     return;
   }
@@ -426,11 +477,17 @@ window.postAllBulkAds = async function() {
   }
 
   if (rowData.length === 0) {
+    window._bulkPostingLoopRunning = false;
+    window._bulkPostingActive = false;
     alert("All products in this batch are already posted ✅");
     return;
   }
 
   const btn = document.getElementById("post-all-btn");
+    window.__zbBatchOptions = {
+    delivery:   collectDelivery(batchDeliveryBox),
+    priceTiers: collectPriceTiers(batchTiersBox)
+  };
   btn.disabled = true;
 
   const { getMyLimits: getLimitsNow } = await import("./plan-limits.js");
@@ -476,6 +533,8 @@ window.postAllBulkAds = async function() {
 
   btn.textContent = "🚀 Post All Ads";
   btn.disabled = false;
+  window._bulkPostingLoopRunning = false;
+  window._bulkPostingActive = false;
 
   if (failed === 0) {
     localStorage.removeItem(DRAFT_KEY);
@@ -523,7 +582,9 @@ async function processOneRow(item, index, total, expiresAt) {
     boost: { boosted: false, startDate: null, endDate: null, type: null },
     createdAt: new Date(), updatedAt: new Date(), expiresAt,
     seller: { name: currentUser.email.split("@")[0], phone: item.phone, location: fullLocation, isVerified: false },
-    details: {}, postedViaBulk: true
+    details: {}, postedViaBulk: true,
+    delivery:   window.__zbBatchOptions?.delivery || null,
+    priceTiers: window.__zbBatchOptions?.priceTiers || []
   }));
 }
 

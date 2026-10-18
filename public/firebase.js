@@ -33,8 +33,17 @@ const firebaseConfig = {
   appId: "1:283997357155:web:de76cef72c6b278afda456"
 };
 
+// An admin "viewing as a user" gets a completely separate, isolated Firebase
+// app instance — its login never touches the admin's own saved session,
+// in this tab or any other tab.
+const isImpersonating =
+  new URLSearchParams(location.search).has("impersonate_token") ||
+  sessionStorage.getItem("zb_impersonating");
+
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
+const app = isImpersonating
+  ? initializeApp(firebaseConfig, "impersonation")
+  : initializeApp(firebaseConfig);
 
 // Services
 const db      = getFirestore(app);

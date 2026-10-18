@@ -2,24 +2,21 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#ff6600">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#ff6600">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
 
   <title>Checkout — ZiBuy</title>
   <link rel="stylesheet" href="style.css">
-     <link rel="icon" type="image/png" href="/icons/icon-192.png">
-     <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <link rel="icon" type="image/png" href="/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
   <link rel="manifest" href="/manifest.json">
-
 </head>
 <body>
 
 <header class="topbar">
-<a href="index.html"><img src="my_logo.png" alt="ZiBuy" id="secret-admin-trigger" style="height:45px;width:auto;cursor:pointer"></a>
+  <a href="index.html"><img src="my_logo.png" alt="ZiBuy" id="secret-admin-trigger" style="height:45px;width:auto;cursor:pointer"></a>
 </header>
 
 <div class="checkout-wrap">
@@ -27,22 +24,24 @@
     <h1>🛒 Checkout</h1>
 
     <div class="checkout-grid">
+
       <!-- Order Summary -->
       <div class="order-summary">
         <h2>Order Summary</h2>
 
-<div id="order-items"></div>
+        <div id="order-items"></div>
+
         <div class="summary-line">
           <span>Subtotal:</span>
           <span id="subtotal">UGX 0</span>
         </div>
         <div class="summary-line">
-          <span>ZiBuy Fee (3%):</span>
+          <span>ZiBuy Protect Fee:</span>
           <span id="platform-fee">UGX 0</span>
         </div>
         <div class="summary-line">
           <span>Delivery:</span>
-          <span id="delivery">UGX 0</span>
+          <span id="delivery">Select your district</span>
         </div>
         <div class="summary-line" style="border-top:2px solid #e5e7eb;padding-top:12px;font-weight:800;font-size:18px">
           <span>Total:</span>
@@ -50,18 +49,17 @@
         </div>
       </div>
 
-      <!-- Payment Form -->
+      <!-- Delivery & Payment -->
       <div class="payment-form">
         <h2>Delivery & Payment</h2>
 
         <div class="form-section">
           <h3>Delivery Address</h3>
           <input type="text" id="delivery-name" placeholder="Full Name" required>
-          <input type="tel" id="delivery-phone" placeholder="Phone Number" required>
-          <input type="text" id="delivery-address" placeholder="Street Address" required>
+          <input type="tel" id="delivery-phone" placeholder="Phone Number e.g. 256701234567" required>
+          <input type="text" id="delivery-address" placeholder="Area / landmark (e.g. Ntinda, near XYZ shop)" required>
 
-          <label style="display:block;font-size:12px;font-weight:800;
-            color:#374151;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">
+          <label style="display:block;font-size:12px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">
             📍 District / City
           </label>
           <input type="hidden" id="delivery-district">
@@ -72,8 +70,7 @@
           </div>
 
           <div id="delivery-sublocation-wrap" style="display:none">
-            <label style="display:block;font-size:12px;font-weight:800;
-              color:#374151;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">
+            <label style="display:block;font-size:12px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">
               🏘️ Town / Village / Area
             </label>
             <input type="hidden" id="delivery-sublocation">
@@ -83,22 +80,85 @@
               <div class="loc-dropdown" id="delivery-sublocation-dropdown"></div>
             </div>
           </div>
-
-        <div class="form-section">
-          <h3>Payment Method</h3>
-          <div style="background:#e7f9ef;border:1px solid #86efac;padding:16px;border-radius:12px;display:flex;align-items:center;gap:12px">
-            <span style="font-size:28px">💬</span>
-            <div>
-              <p style="margin:0;font-weight:800;color:#166534">Pay via WhatsApp</p>
-              <p style="margin:4px 0 0;font-size:13px;color:#15803d">MTN / Airtel Money · confirmed by our team</p>
-            </div>
-          </div>
         </div>
 
-        <div id="payment-details"></div>
+        <!-- ZiBuy Protect -->
+        <div style="border:2px solid #10b981;border-radius:14px;padding:16px;margin:16px 0 12px;background:#f0fdf4">
+          <label style="display:flex;align-items:flex-start;gap:12px;cursor:pointer">
+            <input type="checkbox" id="cart-protect-toggle" checked onchange="zbCartRecalc()"
+              style="width:20px;height:20px;margin-top:2px;accent-color:#10b981;cursor:pointer;flex-shrink:0">
+            <div>
+              <p style="margin:0;font-weight:800;font-size:14px;color:#166534">🛡️ ZiBuy Protect</p>
+              <p style="margin:4px 0 0;font-size:12px;color:#15803d;line-height:1.5">
+                Confirm you received each item before it's marked complete. If there's a problem,
+                raise a dispute and our team steps in.
+              </p>
+            </div>
+          </label>
+        </div>
 
-        <button onclick="placeOrder()" class="checkout-btn" style="width:100%;padding:16px;font-size:16px;margin-top:20px">
-          Place Order
+        <!-- How payment works -->
+        <div style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:12px;padding:12px 14px;margin-bottom:16px;font-size:12.5px;color:#1e3a8a;line-height:1.6">
+          <strong>🛡️ How payment works:</strong> you pay <strong>ZiBuy</strong> (the company), not the sellers.
+          After you receive an item and confirm it is the real product you wanted from that seller,
+          ZiBuy releases the money to the seller.
+        </div>
+
+        <!-- Total + instructions -->
+        <div style="display:flex;justify-content:space-between;font-size:15px;padding:12px 0;border-top:1.5px solid #f0f0f0;border-bottom:1.5px solid #f0f0f0;margin-bottom:14px">
+          <strong>Total to Pay</strong>
+          <strong id="cart-total-display" style="color:#ff6600">UGX 0</strong>
+        </div>
+        <p style="margin:0 0 12px;font-size:11px;color:#9ca3af">Pay this single total via MTN or Airtel below. One payment covers everything in your cart.</p>
+
+        <!-- MTN -->
+        <div style="border:2px solid #ffcc00;border-radius:12px;padding:14px;margin-bottom:10px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+            <div style="background:#ffcc00;border-radius:6px;padding:4px 8px;font-weight:900;font-size:12px;color:#111">MTN</div>
+            <span style="font-weight:800;font-size:14px">MTN Mobile Money</span>
+          </div>
+          <ol style="padding-left:18px;color:#374151;line-height:2.2;font-size:13px;margin:0">
+            <li>Dial <strong style="color:#ff6600">*165#</strong> on your MTN line</li>
+            <li>Select <strong>Pay With Momo</strong></li>
+            <li>Enter Merchant Code: <strong style="color:#ff6600;font-size:15px">27868095</strong></li>
+            <li>Amount: <strong id="cart-total-mtn" style="color:#ff6600">UGX 0</strong></li>
+            <li>Reference: <strong class="cart-ref" style="color:#ff6600;letter-spacing:.5px"></strong></li>
+            <li>Enter PIN to confirm</li>
+          </ol>
+        </div>
+
+        <!-- Airtel -->
+        <div style="border:2px solid #ef4444;border-radius:12px;padding:14px;margin-bottom:14px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+            <div style="background:#ef4444;border-radius:6px;padding:4px 8px;font-weight:900;font-size:12px;color:white">AIRTEL</div>
+            <span style="font-weight:800;font-size:14px">Airtel Money</span>
+          </div>
+          <ol style="padding-left:18px;color:#374151;line-height:2.2;font-size:13px;margin:0">
+            <li>Dial <strong style="color:#ef4444">*185#</strong> on your Airtel line</li>
+            <li>Select <strong>Send Money</strong></li>
+            <li>Send to: <strong style="color:#ef4444;font-size:15px">+256575996624</strong></li>
+            <li>Amount: <strong id="cart-total-airtel" style="color:#ef4444">UGX 0</strong></li>
+            <li>Reference: <strong class="cart-ref" style="color:#ef4444;letter-spacing:.5px"></strong></li>
+            <li>Enter PIN to confirm</li>
+          </ol>
+        </div>
+
+        <div style="margin-bottom:14px">
+          <label style="font-size:13px;font-weight:800;color:#111827;display:block;margin-bottom:8px">
+            📋 Enter your transaction ID after paying
+          </label>
+          <input type="text" id="cart-txn-ref"
+            placeholder="e.g. 1234567890 or REF123456"
+            style="width:100%;padding:12px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box"
+            onfocus="this.style.borderColor='#ff6600'"
+            onblur="this.style.borderColor='#e5e7eb'">
+          <p style="font-size:12px;color:#6b7280;margin-top:6px">The confirmation ID from your phone after paying</p>
+        </div>
+
+        <p id="cart-warning" style="display:none;margin:0 0 12px;font-size:12.5px;font-weight:700;color:#b91c1c;background:#fee2e2;padding:10px 12px;border-radius:10px"></p>
+
+        <button onclick="placeOrder()" class="checkout-btn" style="width:100%;padding:16px;font-size:16px;margin-top:6px">
+          ✅ Submit Payment Reference
         </button>
       </div>
     </div>
@@ -109,7 +169,6 @@
 <div id="toast-container" class="toast-container"></div>
 
 <script type="module" src="error-logger.js"></script>
-
 <script type="module" src="payment.js"></script>
 <script type="module" src="notifications-setup.js"></script>
 <script type="module" src="nav.js"></script>

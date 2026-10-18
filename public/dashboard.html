@@ -162,6 +162,11 @@ html, body {
         <span>🛒</span>
         <span>My Orders</span>
       </button>
+      
+      <button class="nav-item" onclick="window.location.href='seller-orders.html'">
+        <span>🚚</span>
+        <span>Orders to Deliver</span>
+      </button>
       <button class="nav-item" data-tab="profile" onclick="switchTab('profile', this)">
         <span>⚙️</span>
         <span>Settings</span>
@@ -169,6 +174,10 @@ html, body {
 
       <button class="nav-item" data-tab="wishlist" onclick="switchTab('wishlist',this)">
   <span>❤️</span> Wishlist
+</button>
+
+<button class="nav-item" data-tab="watching" onclick="switchTab('watching',this)">
+  <span>👀</span> Watching
 </button>
 
 <button class="nav-item" data-tab="referral" onclick="switchTab('referral',this)">
@@ -199,6 +208,10 @@ html, body {
           <a href="bulk-post.html" class="btn" style="background:#111827;color:white">📦 Bulk Post</a>
         </div>
       </div>
+      <div style="display:flex;gap:8px;margin:10px 0;flex-wrap:wrap">
+        <button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border:none" onclick="bulkPriceDrop()">📉 Bulk Price Drop</button>
+        <button class="btn btn-sm" style="background:#dbeafe;color:#1e40af;border:none" onclick="bulkRelist()">🔄 Bulk Relist</button>
+      </div>
       <div id="my-ads-list">
         <!-- Spinner shown until JS renders -->
         <div style="text-align:center;padding:40px;color:#6b7280">
@@ -222,6 +235,16 @@ html, body {
     <h2>❤️ My Wishlist</h2>
   </div>
   <div id="wishlist-list"></div>
+</div>
+
+<div class="dashboard-tab" id="watching-tab">
+  <div class="tab-header">
+    <h2>👀 Watching</h2>
+  </div>
+  <p style="color:#6b7280;font-size:13px;margin:-8px 0 16px">
+    Items you asked to be notified about when something similar comes back. Price-drop alerts for things you've liked happen automatically — manage those from ❤️ Wishlist instead.
+  </p>
+  <div id="watching-list"></div>
 </div>
 
     <!-- ANALYTICS TAB -->
@@ -251,10 +274,29 @@ html, body {
     <div class="dashboard-tab" id="profile-tab">
       <div class="tab-header">
         <h2>⚙️ Account Settings</h2>
+        <script type="module" src="auth-ui.js"></script>
+        <div style="background:#f9fafb;border-radius:12px;padding:14px 16px;margin-bottom:16px;border:1px solid #e5e7eb">
+          <p style="margin:0 0 4px;font-weight:800;font-size:14px">🔑 Login methods</p>
+          <p style="margin:0 0 10px;font-size:12px;color:#6b7280;line-height:1.5">
+            Signed up with Google? Add a password so you can also log in with your email and password.
+            Already have a password? You can change it here.</p>
+          <button class="btn btn-outline" onclick="zbOpenPasswordSettings()" style="width:100%">🔑 Set or change password</button>
+        </div>
       </div>
       <!-- JS writes everything here — no child elements needed -->
       <div id="profile-settings">
         <p style="text-align:center;padding:40px;color:#6b7280">Loading settings...</p>
+      </div>
+
+      <div style="background:#fef2f2;border:1.5px solid #fecaca;border-radius:16px;padding:20px;margin-top:20px">
+        <p style="margin:0 0 6px;font-weight:800;font-size:14px;color:#991b1b">🗑️ Delete My Account</p>
+        <p style="margin:0 0 14px;font-size:12.5px;color:#7f1d1d;line-height:1.6">
+          Permanently deletes your account, ads, photos, wishlist and messages you sent. Any remaining plan or boost time is lost. This cannot be undone.
+        </p>
+        <button id="delete-account-btn" onclick="deleteMyAccount()"
+          style="background:#dc2626;color:white;border:none;padding:11px 18px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit">
+          Delete My Account
+        </button>
       </div>
     </div>
 

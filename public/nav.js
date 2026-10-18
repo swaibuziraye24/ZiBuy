@@ -24,7 +24,18 @@
     });
   }).catch(() => { _navAuthReady = true; });
 
-  window.goToProtectedPage = function(url) {
+  // Reusable by any page's own back button — real browser back only if we
+// actually arrived by clicking through the site; otherwise a safe fallback.
+window.smartGoBack = function(fallbackUrl) {
+  const cameFromZiBuy = document.referrer && document.referrer.includes(window.location.host);
+  if (cameFromZiBuy && window.history.length > 1) {
+    history.back();
+  } else {
+    window.location.href = fallbackUrl || "index.html";
+  }
+};
+
+window.goToProtectedPage = function(url) {
     const proceed = (user) => {
       if (user) {
         window.location.href = url;
@@ -155,18 +166,7 @@
     back.id        = "nav-back-btn";
     back.innerHTML = `<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>`;
 
-    back.onclick = () => {
-      // Only trust real browser history if we actually arrived here
-      // by clicking through the site itself — not via a shared link,
-      // bookmark, or notification tap, which have no real "back" to go to
-      const cameFromZiBuy = document.referrer && document.referrer.includes(window.location.host);
-
-      if (cameFromZiBuy && window.history.length > 1) {
-        history.back();
-      } else {
-        window.location.href = "index.html";
-      }
-    };
+    back.onclick = () => window.smartGoBack("index.html");
 
     if (topbar) {
       // Page has a topbar (product.html, messages.html, etc.) — insert inline
@@ -261,6 +261,41 @@
   syncNotifBadge();
   setInterval(syncNotifBadge, 30000); // refresh every 30s
 
+  // ── Unread messages badge sync ──────────────
+  async function syncMessagesBadge() {
+    const dot = document.getElementById("nav-messages-count");
+    if (!dot) return;
+
+    try {
+      const { getAuth }       = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js");
+      const { getFirestore, collection, query, where, getDocs } =
+        await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+
+      const auth = getAuth();
+      const user = auth.currentUser;
+      if (!user || !user.email) { dot.style.display = "none"; return; }
+
+      const db = getFirestore();
+      const snap = await getDocs(query(
+        collection(db, "messages"),
+        where("participants", "array-contains", user.email),
+        where("read", "==", false)
+      ));
+
+      const unreadCount = snap.docs.filter(d => d.data().senderEmail !== user.email).length;
+
+      if (unreadCount > 0) {
+        dot.textContent = unreadCount > 9 ? "9+" : unreadCount;
+        dot.style.display = "flex";
+      } else {
+        dot.style.display = "none";
+      }
+    } catch (e) {
+      // silent — page may not have firebase initialized yet
+    }
+  }
+
+
 
   
 
@@ -277,3 +312,7 @@
 
 // Show the "account banned" screen to banned users on every page
 import("./ban-guard.js").catch(err => console.warn("ban-guard failed to load:", err));
+
+
+// Show the "viewing as user" banner during admin impersonation sessions
+import("./impersonation-banner.js").catch(err => console.warn("impersonation-banner failed to load:", err));

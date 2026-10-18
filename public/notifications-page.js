@@ -136,6 +136,11 @@ window.handleNotificationClick = async function(notificationId, type, relatedId)
     return;
   }
 
+  if (type === "feature_update") {
+    showUpdatesPanel();
+    return;
+  }
+
   // Default: stay on notifications page (already marked read)
 };
 
@@ -169,6 +174,11 @@ window.handleNotificationClick = async function(notificationId, type, relatedId)
     return;
   }
 
+  if (type === "feature_update") {
+    showUpdatesPanel();
+    return;
+  }
+
   // Default: stay on notifications page (already marked read)
 };
 
@@ -181,5 +191,56 @@ window.markAllRead = async function() {
     loadNotifications();
   } catch (err) {
     console.error(err);
+  }
+};
+
+
+// ── ZiBuy Updates: a one-way feed shown right on the Alerts page ──
+function escUpd(s) {
+  return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+}
+
+window.showUpdatesPanel = async function() {
+  const panel = document.getElementById("updates-panel");
+  if (!panel) return;
+
+  panel.style.display = "block";
+  panel.innerHTML = `<p style="text-align:center;color:#6b7280;padding:20px">Loading updates…</p>`;
+  panel.scrollIntoView({ behavior: "smooth", block: "start" });
+
+  try {
+    const snap = await getDocs(collection(db, "feature_updates"));
+    const updates = snap.docs
+      .map(d => d.data())
+      .sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
+
+    if (updates.length === 0) {
+      panel.innerHTML = `<p style="text-align:center;color:#6b7280;padding:20px">No updates yet</p>`;
+      return;
+    }
+
+    panel.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <h2 style="margin:0;font-size:16px;font-weight:800">🎓 ZiBuy Updates</h2>
+        <a href="javascript:void(0)" onclick="document.getElementById('updates-panel').style.display='none'"
+          style="font-size:12px;font-weight:700;color:#9ca3af;text-decoration:none">Close</a>
+      </div>
+      ${updates.map(u => {
+        const date = u.createdAt?.toDate
+          ? u.createdAt.toDate().toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" })
+          : "";
+        return `
+        <div style="background:white;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 2px 10px rgba(0,0,0,0.06)">
+          <p style="margin:0 0 4px;font-size:11px;color:#9ca3af;font-weight:700;text-transform:uppercase">${date}</p>
+          <h3 style="margin:0 0 8px;font-size:16px;font-weight:800;color:#111827">${escUpd(u.title)}</h3>
+          ${u.text ? `<p style="margin:0 0 10px;font-size:14px;color:#374151;line-height:1.6;white-space:pre-wrap">${escUpd(u.text)}</p>` : ""}
+          ${u.videoUrl ? `<video controls style="width:100%;border-radius:12px;margin-bottom:10px;background:#000"><source src="${u.videoUrl}"></video>` : ""}
+          ${u.audioUrl ? `<audio controls style="width:100%"><source src="${u.audioUrl}"></audio>` : ""}
+        </div>`;
+      }).join("")}
+    `;
+  } catch (e) {
+    console.error("updates panel:", e);
+    panel.innerHTML = `<p style="text-align:center;color:#ef4444;padding:20px">Couldn't load updates</p>`;
   }
 };

@@ -9,6 +9,15 @@
   <meta name="mobile-web-app-capable" content="yes">
   <title>ZiBuy — Buy & Sell in Uganda</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+  body:not(.zb-ready) footer,
+  body:not(.zb-ready) .safety-banner { display: none !important; }
+    #buy-power-section { display: none !important; }
+</style>
+<script>
+  /* safety net: never leave the footer hidden if loading fails */
+  setTimeout(function () { if (document.body) document.body.classList.add("zb-ready"); }, 7000);
+</script>
      <link rel="icon" type="image/png" href="/icons/icon-192.png">
      <link rel="apple-touch-icon" href="/icons/icon-192.png">
   <link rel="manifest" href="/manifest.json">
@@ -755,15 +764,203 @@
 .loc-option:last-child { border-bottom:none; }
 </style>
 
+  <!-- Speed: start connecting to Firebase before the page scripts ask for it -->
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js">
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js">
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js">
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js">
+  <link rel="modulepreload" href="firebase.js">
+  <link rel="modulepreload" href="app.js">
+
+  <style>
+    /* Grey "loading" shapes shown before the product scripts arrive */
+    .zb-skel {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+
+    /* Phones: logo + buttons on the first row, full-width search on its own row */
+    @media (max-width: 600px) {
+      .zb-topbar { flex-wrap: wrap; row-gap: 8px; padding: 8px 10px; }
+      .zb-topbar .logo { order: 1; margin: 0; flex-shrink: 0; }
+      .zb-topbar .logo img { height: 38px !important; }
+      .zb-topbar-right { order: 2; margin-left: auto; gap: 8px; }
+      .zb-search-wrap { order: 3; flex: 1 1 100%; max-width: none; }
+      .zb-search-wrap input { font-size: 14px; padding: 10px 12px; }
+      .zb-search-btn { padding: 0 16px; font-size: 13px; }
+      .zb-login-btn span { max-width: 84px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    }
+  </style>
 </head>
 <body>
 
   <script>
-  // Prevent the browser from auto-restoring old scroll positions on
-  // back/forward navigation — every "Home" entry should start at top
-  if ("scrollRestoration" in history) {
-    history.scrollRestoration = "manual";
-  }
+  // ── Scroll memory: put people back exactly where they were ──
+  (function () {
+    // We restore the position ourselves, so the browser must not also try
+    if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+
+    var KEY = "zb_home_scroll";
+    var MAX_AGE_MS = 6 * 60 * 60 * 1000;   // forget positions older than 30 minutes
+    var contentSeen = false;
+    var HOLD_MS = 7000;                // keep correcting for up to 7 seconds
+    var DEBUG = true;                  // set to false once you're happy with it
+    var restoring = false;
+    var saveTimer = null;
+    var ANY = '[onclick*="product.html?id="], a[href*="product.html?id="]';
+
+    function log() {
+      if (DEBUG) console.log.apply(console, ["[scroll-memory]"].concat([].slice.call(arguments)));
+    }
+    function norm(p) { return p.replace(/\/(index(\.html)?)?$/, "/"); }
+    function here() { return norm(location.pathname); }
+    function selFor(id) {
+      return '[onclick*="product.html?id=' + id + '"], a[href*="product.html?id=' + id + '"]';
+    }
+    function readEntry() { try { return JSON.parse(sessionStorage.getItem(KEY) || "null"); } catch (e) { return null; } }
+    function writeEntry(v) { try { sessionStorage.setItem(KEY, JSON.stringify(v)); } catch (e) {} }
+    function jumpBy(dy) { try { window.scrollBy({ top: dy, behavior: "instant" }); } catch (e) { window.scrollBy(0, dy); } }
+    function jumpTo(y)  { try { window.scrollTo({ top: y, behavior: "instant" }); } catch (e) { window.scrollTo(0, y); } }
+
+    // Plain "you were about here" save — never wipes a fresh product-tap note
+    function savePlain() {
+      if (restoring) return;
+      var prev = readEntry();
+      var stopped = false, cached = null, announced = false, contentSeen = false;
+      writeEntry({ y: Math.round(window.scrollY), loc: here(), ts: Date.now() });
+    }
+
+    // Remember exactly which product was tapped, and where it sat on screen
+    document.addEventListener("click", function (ev) {
+      var t = ev.target;
+      if (!t || !t.closest) return;
+
+      // Taps on ♥ or Compare don't leave the page — ignore them
+      var ctl = t.closest("button, input, label");
+      if (ctl && (ctl.getAttribute("onclick") || "").indexOf("product.html?id=") === -1) return;
+
+      var card = t.closest(".product-card, " + ANY);
+      if (!card) return;
+      var idEl = card.matches(ANY) ? card : card.querySelector(ANY);
+      if (!idEl) return;
+
+      var src = idEl.getAttribute("onclick") || idEl.getAttribute("href") || "";
+      var m = /product\.html\?id=([A-Za-z0-9_-]+)/.exec(src);
+      if (!m) return;
+
+      var id = m[1];
+      var all = Array.prototype.slice.call(document.querySelectorAll(selFor(id)));
+      var entry = {
+        y: Math.round(window.scrollY), loc: here(), ts: Date.now(),
+        id: id, nth: Math.max(0, all.indexOf(idEl)),
+        off: Math.round(idEl.getBoundingClientRect().top)
+      };
+      writeEntry(entry);
+      log("saved your place at product", id, entry);
+    }, true);
+
+    function shouldRestore(entry) {
+      if (!entry) { log("nothing saved yet"); return false; }
+      if (Date.now() - entry.ts > MAX_AGE_MS) { log("saved position is too old"); return false; }
+      if (entry.loc !== here()) { log("saved for a different page address:", entry.loc); return false; }
+
+      var nav = performance.getEntriesByType && performance.getEntriesByType("navigation")[0];
+      var type = nav ? nav.type : "navigate";
+      if (type === "reload") { log("page was refreshed — not restoring"); return false; }
+      if (type === "back_forward") return true;
+
+      try {
+        var ref = new URL(document.referrer);
+        if (ref.origin === location.origin && norm(ref.pathname) !== norm(location.pathname)) return true;
+      } catch (e) {}
+
+      log("arrived from outside the site — starting at the top");
+      return false;
+    }
+
+    function hold(entry) {
+      restoring = true;
+      var stopped = false, cached = null, announced = false;
+
+      function stop(why) {
+        if (stopped) return;
+        stopped = true;
+        restoring = false;
+        log("stopped:", why);
+      }
+
+      // The moment the person scrolls or taps, the page is theirs again
+      ["wheel", "touchstart", "keydown", "mousedown", "pointerdown"].forEach(function (type) {
+        window.addEventListener(type, function () { if (contentSeen) stop("you took over scrolling"); },
+          { passive: true, capture: true });
+      });
+
+      var tStart = performance.now();
+      var t0 = performance.now();
+
+      function tick() {
+        if (stopped) return;
+        // wait for the products to appear (slow connections), then start the holding window
+        if (!contentSeen) {
+          if (document.querySelector(ANY)) {
+            contentSeen = true;
+            t0 = performance.now();
+          } else if (performance.now() - tStart > 30000) {
+            stop("the products never appeared");
+            return;
+          } else {
+            requestAnimationFrame(tick);
+            return;
+          }
+        }
+        var elapsed = performance.now() - t0;
+        if (elapsed > HOLD_MS) { stop("finished holding your position"); return; }
+
+        var anchored = false;
+
+        if (entry.id) {
+          if (!cached || !cached.isConnected) {
+            var list = document.querySelectorAll(selFor(entry.id));
+            cached = list[entry.nth] || list[0] || null;
+          }
+          if (cached) {
+            anchored = true;
+            var delta = cached.getBoundingClientRect().top - entry.off;
+            if (Math.abs(delta) > 2) jumpBy(delta);
+            else if (!announced) { announced = true; log("back on the product you opened"); }
+          }
+        }
+
+        // No product card to line up with (or it never appeared) — go by distance
+        if (!anchored && (!entry.id || elapsed > 2500)) {
+          if (Math.abs(window.scrollY - entry.y) > 2) jumpTo(entry.y);
+        }
+
+        requestAnimationFrame(tick);
+      }
+
+      log("restoring…", entry);
+      requestAnimationFrame(tick);
+    }
+
+    // Keep a plain scroll position too, for leaving the page any other way
+    window.addEventListener("scroll", function () {
+      if (restoring) return;
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(savePlain, 150);
+    }, { passive: true });
+    window.addEventListener("pagehide", savePlain);
+    document.addEventListener("visibilitychange", function () {
+      if (document.visibilityState === "hidden") savePlain();
+    });
+
+    var entry = readEntry();
+    log("homepage ready. saved:", entry);
+    if (shouldRestore(entry)) { window.__zbShouldRestore = true; hold(entry); }
+  })();
 </script>
   
 
@@ -904,8 +1101,11 @@
 <section id="recently-viewed-section" style="display:none;padding:0 20px 8px">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
     <h2 style="font-size:18px;font-weight:800;margin:0;font-family:'Syne',sans-serif">🕒 Recently Viewed</h2>
-    <a href="javascript:void(0)" onclick="if(confirm('Clear your recently viewed history?')){clearRecentlyViewed();document.getElementById('recently-viewed-section').style.display='none'}"
-      style="font-size:12px;font-weight:700;color:#9ca3af;text-decoration:none">Clear</a>
+    <div style="display:flex;gap:12px;align-items:center">
+      <a href="recently-viewed.html" style="font-size:12px;font-weight:700;color:#ff6600;text-decoration:none">View All →</a>
+      <a href="javascript:void(0)" onclick="if(confirm('Clear your recently viewed history?')){clearRecentlyViewed();document.getElementById('recently-viewed-section').style.display='none'}"
+        style="font-size:12px;font-weight:700;color:#9ca3af;text-decoration:none">Clear</a>
+    </div>
   </div>
   <div id="recently-viewed-row"
     style="display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;
@@ -1167,7 +1367,19 @@
 
 
 <!-- ══ PRODUCTS ══ -->
-<div id="products" style="padding:0 20px 40px"></div>
+<div id="products" style="padding:0 20px 40px">
+  <div style="padding:10px">
+    <div class="zb-skel" style="height:22px;width:140px;border-radius:6px;margin-bottom:12px"></div>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">
+      <div style="border-radius:12px;overflow:hidden;background:white;box-shadow:0 1px 4px rgba(0,0,0,0.08)"><div class="zb-skel" style="aspect-ratio:1/1"></div><div style="padding:10px"><div class="zb-skel" style="height:10px;border-radius:4px;margin-bottom:8px;width:60%"></div><div class="zb-skel" style="height:14px;border-radius:4px;margin-bottom:8px;width:80%"></div><div class="zb-skel" style="height:28px;border-radius:7px"></div></div></div>
+      <div style="border-radius:12px;overflow:hidden;background:white;box-shadow:0 1px 4px rgba(0,0,0,0.08)"><div class="zb-skel" style="aspect-ratio:1/1"></div><div style="padding:10px"><div class="zb-skel" style="height:10px;border-radius:4px;margin-bottom:8px;width:60%"></div><div class="zb-skel" style="height:14px;border-radius:4px;margin-bottom:8px;width:80%"></div><div class="zb-skel" style="height:28px;border-radius:7px"></div></div></div>
+      <div style="border-radius:12px;overflow:hidden;background:white;box-shadow:0 1px 4px rgba(0,0,0,0.08)"><div class="zb-skel" style="aspect-ratio:1/1"></div><div style="padding:10px"><div class="zb-skel" style="height:10px;border-radius:4px;margin-bottom:8px;width:60%"></div><div class="zb-skel" style="height:14px;border-radius:4px;margin-bottom:8px;width:80%"></div><div class="zb-skel" style="height:28px;border-radius:7px"></div></div></div>
+      <div style="border-radius:12px;overflow:hidden;background:white;box-shadow:0 1px 4px rgba(0,0,0,0.08)"><div class="zb-skel" style="aspect-ratio:1/1"></div><div style="padding:10px"><div class="zb-skel" style="height:10px;border-radius:4px;margin-bottom:8px;width:60%"></div><div class="zb-skel" style="height:14px;border-radius:4px;margin-bottom:8px;width:80%"></div><div class="zb-skel" style="height:28px;border-radius:7px"></div></div></div>
+      <div style="border-radius:12px;overflow:hidden;background:white;box-shadow:0 1px 4px rgba(0,0,0,0.08)"><div class="zb-skel" style="aspect-ratio:1/1"></div><div style="padding:10px"><div class="zb-skel" style="height:10px;border-radius:4px;margin-bottom:8px;width:60%"></div><div class="zb-skel" style="height:14px;border-radius:4px;margin-bottom:8px;width:80%"></div><div class="zb-skel" style="height:28px;border-radius:7px"></div></div></div>
+      <div style="border-radius:12px;overflow:hidden;background:white;box-shadow:0 1px 4px rgba(0,0,0,0.08)"><div class="zb-skel" style="aspect-ratio:1/1"></div><div style="padding:10px"><div class="zb-skel" style="height:10px;border-radius:4px;margin-bottom:8px;width:60%"></div><div class="zb-skel" style="height:14px;border-radius:4px;margin-bottom:8px;width:80%"></div><div class="zb-skel" style="height:28px;border-radius:7px"></div></div></div>
+    </div>
+  </div>
+</div>
 
 
 <!-- ══ SAFETY BANNER ══ -->
@@ -1607,9 +1819,34 @@ window.setActiveCard = function(el) {
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
       navigator.serviceWorker.register("/sw.js")
-        .then(reg => console.log("[SW] Registered:", reg.scope))
+        .then(reg => {
+          console.log("[SW] Registered:", reg.scope);
+
+          reg.addEventListener("updatefound", () => {
+            const newWorker = reg.installing;
+            if (!newWorker) return;
+            newWorker.addEventListener("statechange", () => {
+              if (newWorker.state === "installed" && navigator.serviceWorker.controller && newWorker.scriptURL.endsWith("/sw.js")) {
+                showZibuyUpdateBanner();
+              }
+            });
+          });
+        })
         .catch(err => console.warn("[SW] Failed:", err));
     });
+  }
+
+  function showZibuyUpdateBanner() {
+    if (document.getElementById("zb-update-banner")) return;
+    const bar = document.createElement("div");
+    bar.id = "zb-update-banner";
+    bar.style.cssText = "position:fixed;bottom:70px;left:16px;right:16px;z-index:999999;background:#111827;color:#fff;border-radius:14px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 8px 24px rgba(0,0,0,.3);font-family:system-ui,-apple-system,sans-serif";
+    bar.innerHTML = `
+      <span style="font-size:13px;font-weight:700">🎉 A new version of ZiBuy is ready</span>
+      <button id="zb-update-btn" style="background:#ff6600;color:#fff;border:none;padding:8px 14px;border-radius:8px;font-weight:800;font-size:12px;cursor:pointer;flex-shrink:0">Update</button>
+    `;
+    document.body.appendChild(bar);
+    document.getElementById("zb-update-btn").addEventListener("click", () => window.location.reload());
   }
 </script>
 
@@ -1714,10 +1951,7 @@ window.setActiveCard = function(el) {
   // Don't force reload on back/forward navigation — let browser bfcache work
   window.addEventListener("pageshow", (event) => {
     if (event.persisted) {
-      window.scrollTo(0, 0);
-      if (typeof window.renderProducts === "function" && window.allProducts?.length) {
-        window.renderProducts();
-      }
+      // Restored from the back/forward memory: the page is already exactly as it was. Leave it alone.
     }
   });
 </script>

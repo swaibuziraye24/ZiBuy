@@ -104,7 +104,8 @@ window.switchTab = async function(tabName) {
     "analytics": "analytics-tab",
     "myprofile": "myprofile-tab",
     "wishlist":  "wishlist-tab",
-    "referral":  "referral-tab"
+    "referral":  "referral-tab",
+    "watching":  "watching-tab"
   };
 
   const tabId = tabMap[tabName] || "";
@@ -144,6 +145,8 @@ window.switchTab = async function(tabName) {
       await loadWishlist();
     } else if (tabName === "referral") {
       await loadReferralTab();
+    } else if (tabName === "watching") {
+      await loadWatching();
     }
   
   } catch (err) {
@@ -152,6 +155,78 @@ window.switchTab = async function(tabName) {
 
   }
 }
+
+// ============================================
+// WATCHING — "notify me" alerts on sold-out items
+// ============================================
+async function loadWatching() {
+  const container = document.getElementById("watching-list");
+  if (!container || !currentUser) return;
+
+  container.innerHTML = `<div style="text-align:center;padding:40px;color:#6b7280">Loading...</div>`;
+
+  try {
+    const snap = await getDocs(query(
+      collection(db, "similar_item_alerts"),
+      where("userId", "==", currentUser.uid)
+    ));
+
+    if (snap.empty) {
+      container.innerHTML = `
+        <div style="text-align:center;padding:60px 20px;color:#6b7280">
+          <p style="font-size:48px;margin-bottom:12px">👀</p>
+          <p style="font-size:16px;font-weight:700">Not watching anything yet</p>
+          <p style="font-size:13px">When an item you want sells out, tap "Notify Me About Similar Items" on it — it'll show up here.</p>
+        </div>`;
+      return;
+    }
+
+    const alerts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    const withProductInfo = await Promise.all(alerts.map(async (a) => {
+      let product = null;
+      if (a.soldProductId) {
+        try {
+          const pSnap = await getDoc(doc(db, "products", a.soldProductId));
+          if (pSnap.exists()) product = pSnap.data();
+        } catch(e) {}
+      }
+      return { ...a, product };
+    }));
+
+    const esc = (s) => String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+
+    container.innerHTML = withProductInfo.map(a => `
+      <div style="display:flex;align-items:center;gap:12px;background:white;border-radius:12px;padding:12px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
+        <img src="${a.product?.images?.[0] || ''}" alt=""
+          style="width:56px;height:56px;object-fit:cover;border-radius:10px;background:#f3f4f6;flex-shrink:0">
+        <div style="flex:1;min-width:0">
+          <p style="margin:0 0 2px;font-weight:700;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+            ${esc(a.product?.name) || "A sold item"}
+          </p>
+          <p style="margin:0;font-size:12px;color:#6b7280">Category: ${esc(a.category) || "—"}</p>
+        </div>
+        <button onclick="stopWatching('${a.id}')"
+          style="background:#fee2e2;color:#991b1b;border:none;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">
+          Stop Watching
+        </button>
+      </div>
+    `).join("");
+
+  } catch (err) {
+    console.error("loadWatching error:", err);
+    container.innerHTML = `<div style="text-align:center;padding:40px;color:#ef4444">Failed to load</div>`;
+  }
+}
+
+window.stopWatching = async function(alertId) {
+  try {
+    await deleteDoc(doc(db, "similar_item_alerts", alertId));
+    loadWatching();
+  } catch (e) {
+    alert("Failed to remove: " + e.message);
+  }
+};
 
 // ============================================
 // WISHLIST — liked products
@@ -255,6 +330,226 @@ function isAdExpired(p) {
   const exp = p.expiresAt?.toDate ? p.expiresAt.toDate() : (p.expiresAt ? new Date(p.expiresAt) : null);
   return exp ? exp < new Date() : false;
 }
+
+window.bulkPriceDrop = async function() {
+  const ids = Array.from(document.querySelectorAll(".my-ad-select:checked")).map(cb => cb.value);
+  if (ids.length === 0) { alert("Select at least one ad first"); return; }
+
+  const input = prompt(`Drop price by what percentage for ${ids.length} selected ad(s)?\n\nType a number, e.g. 10 for 10% off.`, "10");
+  if (input === null) return;
+  const percent = parseFloat(input);
+  if (isNaN(percent) || percent <= 0 || percent >= 100) { alert("Enter a percentage between 1 and 99"); return; }
+
+  if (!confirm(`Drop the price of ${ids.length} ad(s) by ${percent}%? This can't be automatically undone.`)) return;
+
+  const ads = (window._userAds || []).filter(a => ids.includes(a.id));
+  let done = 0;
+  for (const ad of ads) {
+    if (ad.status === "sold") continue;
+    const newPrice = Math.round(ad.price * (1 - percent / 100));
+    try {
+      await updateDoc(doc(db, "products", ad.id), {
+        price: newPrice,
+        priceDropped: true,
+        priceDropFrom: ad.price,
+        priceDropPercent: percent
+      });
+      done++;
+    } catch (e) { console.error(`Price drop failed for ${ad.id}:`, e); }
+  }
+
+  alert(`✅ Price dropped on ${done} ad(s)`);
+  loadMyProducts();
+};
+
+window.bulkRelist = async function() {
+  const ids = Array.from(document.querySelectorAll(".my-ad-select:checked")).map(cb => cb.value);
+  if (ids.length === 0) { alert("Select at least one ad first"); return; }
+
+  const ads = (window._userAds || []).filter(a => ids.includes(a.id) && (a.status === "expired" || isAdExpired(a)));
+  if (ads.length === 0) { alert("None of the selected ads are expired — only expired ads can be relisted"); return; }
+
+  if (!confirm(`Relist ${ads.length} expired ad(s)? They'll become visible to buyers again.`)) return;
+
+  const { getMyLimits } = await import("./plan-limits.js");
+  const limits = await getMyLimits(currentUser.uid);
+  const newExpiresAt = new Date();
+  newExpiresAt.setDate(newExpiresAt.getDate() + (limits.duration || 30));
+
+  let done = 0;
+  for (const ad of ads) {
+    try {
+      await updateDoc(doc(db, "products", ad.id), {
+        status: "active",
+        expiresAt: newExpiresAt,
+        reactivatedAt: new Date()
+      });
+      done++;
+    } catch (e) { console.error(`Relist failed for ${ad.id}:`, e); }
+  }
+
+  alert(`✅ Relisted ${done} ad(s)`);
+  loadMyProducts();
+};
+
+window.showBoostStats = function(productId) {
+  const p = (window._userAds || []).find(a => a.id === productId);
+  if (!p) return;
+
+  const created   = p.createdAt?.toDate ? p.createdAt.toDate() : new Date(p.createdAt);
+  const boostStart = p.boostApprovedAt?.toDate ? p.boostApprovedAt.toDate() : new Date(p.boostApprovedAt);
+  const boostEnd   = p.boostExpiresAt?.toDate ? p.boostExpiresAt.toDate() : new Date(p.boostExpiresAt);
+  const now        = new Date();
+  const compareEnd = now < boostEnd ? now : boostEnd;
+
+  const daysBefore = Math.max(1, Math.round((boostStart - created) / 86400000));
+  const daysDuring = Math.max(1, Math.round((compareEnd - boostStart) / 86400000));
+
+  const viewsBefore = p.boostStartViews || 0;
+  const viewsDuring = Math.max(0, (p.views || 0) - viewsBefore);
+
+  const rateBefore = (viewsBefore / daysBefore).toFixed(1);
+  const rateDuring = (viewsDuring / daysDuring).toFixed(1);
+
+  const change = rateBefore > 0 ? Math.round(((rateDuring - rateBefore) / rateBefore) * 100) : (viewsDuring > 0 ? 100 : 0);
+  const isActive = boostEnd > now;
+
+  const existing = document.getElementById("boost-stats-modal");
+  if (existing) existing.remove();
+
+  const modal = document.createElement("div");
+  modal.id = "boost-stats-modal";
+  modal.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px`;
+  modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+
+  modal.innerHTML = `
+    <div style="background:white;border-radius:20px;padding:24px;max-width:400px;width:100%">
+      <div style="display:flex;justify-content:space-between;margin-bottom:16px">
+        <h2 style="margin:0;font-size:17px;font-weight:800">📊 Boost Performance</h2>
+        <button onclick="document.getElementById('boost-stats-modal').remove()"
+          style="background:#f3f4f6;border:none;width:32px;height:32px;border-radius:50%;font-size:18px;cursor:pointer">×</button>
+      </div>
+      <p style="font-size:13px;color:#6b7280;margin-bottom:16px">${escHTML(p.name)} ${isActive ? "— boost still active" : "— boost ended"}</p>
+
+      <div style="display:flex;gap:10px;margin-bottom:16px">
+        <div style="flex:1;background:#f9fafb;border-radius:12px;padding:14px;text-align:center">
+          <p style="margin:0 0 4px;font-size:11px;color:#6b7280;font-weight:700;text-transform:uppercase">Before Boost</p>
+          <p style="margin:0;font-size:22px;font-weight:900">${rateBefore}</p>
+          <p style="margin:0;font-size:11px;color:#9ca3af">views/day</p>
+        </div>
+        <div style="flex:1;background:#fff4ee;border-radius:12px;padding:14px;text-align:center">
+          <p style="margin:0 0 4px;font-size:11px;color:#ff6600;font-weight:700;text-transform:uppercase">During Boost</p>
+          <p style="margin:0;font-size:22px;font-weight:900;color:#ff6600">${rateDuring}</p>
+          <p style="margin:0;font-size:11px;color:#9ca3af">views/day</p>
+        </div>
+      </div>
+
+      <div style="text-align:center;padding:14px;background:${change >= 0 ? '#f0fdf4' : '#fef2f2'};border-radius:12px">
+        <p style="margin:0;font-size:15px;font-weight:800;color:${change >= 0 ? '#166534' : '#991b1b'}">
+          ${change >= 0 ? '📈' : '📉'} ${change >= 0 ? '+' : ''}${change}% ${change >= 0 ? 'more' : 'fewer'} views per day
+        </p>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+};
+
+window.bulkPriceDrop = async function() {
+  const ids = Array.from(document.querySelectorAll(".my-ad-select:checked")).map(cb => cb.value);
+  if (ids.length === 0) { alert("Select at least one ad first"); return; }
+
+  const input = prompt(`Drop price by what percentage for ${ids.length} selected ad(s)?\n\nType a number, e.g. 10 for 10% off.`, "10");
+  if (input === null) return;
+  const percent = parseFloat(input);
+  if (isNaN(percent) || percent <= 0 || percent >= 100) { alert("Enter a percentage between 1 and 99"); return; }
+
+  if (!confirm(`Drop the price of ${ids.length} ad(s) by ${percent}%? This can't be automatically undone.`)) return;
+
+  const ads = (window._userAds || []).filter(a => ids.includes(a.id));
+  let done = 0;
+  for (const ad of ads) {
+    if (ad.status === "sold") continue;
+    const newPrice = Math.round(ad.price * (1 - percent / 100));
+    try {
+      await updateDoc(doc(db, "products", ad.id), {
+        price: newPrice,
+        priceDropped: true,
+        priceDropFrom: ad.price,
+        priceDropPercent: percent
+      });
+      done++;
+    } catch (e) { console.error(`Price drop failed for ${ad.id}:`, e); }
+  }
+
+  alert(`✅ Price dropped on ${done} ad(s)`);
+  loadMyProducts();
+};
+
+window.bulkRelist = async function() {
+  const ids = Array.from(document.querySelectorAll(".my-ad-select:checked")).map(cb => cb.value);
+  if (ids.length === 0) { alert("Select at least one ad first"); return; }
+
+  const ads = (window._userAds || []).filter(a => ids.includes(a.id) && (a.status === "expired" || isAdExpired(a)));
+  if (ads.length === 0) { alert("None of the selected ads are expired — only expired ads can be relisted"); return; }
+
+  if (!confirm(`Relist ${ads.length} expired ad(s)? They'll become visible to buyers again.`)) return;
+
+  const { getMyLimits } = await import("./plan-limits.js");
+  const limits = await getMyLimits(currentUser.uid);
+  const newExpiresAt = new Date();
+  newExpiresAt.setDate(newExpiresAt.getDate() + (limits.duration || 30));
+
+  let done = 0;
+  for (const ad of ads) {
+    try {
+      await updateDoc(doc(db, "products", ad.id), {
+        status: "active",
+        expiresAt: newExpiresAt,
+        reactivatedAt: new Date()
+      });
+      done++;
+    } catch (e) { console.error(`Relist failed for ${ad.id}:`, e); }
+  }
+
+  alert(`✅ Relisted ${done} ad(s)`);
+  loadMyProducts();
+};
+
+window.deleteMyAccount = async function() {
+  if (!currentUser) { alert("Please log in first"); return; }
+
+  const typed = prompt(
+    "This permanently deletes your ZiBuy account, ads, photos, wishlist and the messages you sent.\n\n" +
+    "• Any remaining plan or boost time is lost\n" +
+    "• Order records are kept without your personal details\n" +
+    "• This cannot be undone\n\n" +
+    "Type DELETE to confirm:"
+  );
+  if (typed === null) return;
+  if (typed.trim() !== "DELETE") {
+    alert("Not confirmed — your account was NOT deleted.");
+    return;
+  }
+
+  const btn = document.getElementById("delete-account-btn");
+  if (btn) { btn.disabled = true; btn.textContent = "Deleting…"; }
+
+  try {
+    const { getFunctions, httpsCallable } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js");
+    await httpsCallable(getFunctions(), "deleteMyAccount")({});
+
+    const { signOut } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js");
+    try { await signOut(auth); } catch (e) {}
+    try { localStorage.clear(); sessionStorage.clear(); } catch (e) {}
+
+    alert("Your account has been deleted. Thank you for using ZiBuy.");
+    window.location.href = "index.html";
+  } catch (e) {
+    alert("Couldn't delete your account:\n" + (e.message || "Unknown error"));
+    if (btn) { btn.disabled = false; btn.textContent = "Delete My Account"; }
+  }
+};
 
 window.reactivateAd = async function(productId) {
   if (!confirm("Reactivate this ad? It will become visible to buyers again.")) return;
@@ -362,7 +657,10 @@ window.loadMyProducts = async function () {
       else if (expiredNow) { statusClass = "expired"; statusLabel = "⏰ Expired"; }
 
       return `
-      <div class="ad-item">
+      <div class="ad-item" style="position:relative">
+        <label style="position:absolute;top:8px;left:8px;z-index:5;background:white;border-radius:6px;padding:4px 6px;box-shadow:0 1px 4px rgba(0,0,0,.15)">
+          <input type="checkbox" class="my-ad-select" value="${p.id}" style="width:16px;height:16px;accent-color:#ff6600">
+        </label>
         <div class="ad-item-image">
           <img 
             src="${p.images?.[0] || 'https://zibuy.ziteche.com/icons/icon-512.png/100'}" 
@@ -386,7 +684,9 @@ window.loadMyProducts = async function () {
               <button class="btn btn-sm btn-delete" onclick="deleteProduct('${p.id}')">🗑️ Delete</button>
           ` : `
               <button class="btn btn-sm btn-edit" onclick="editProduct('${p.id}')">✏️ Edit</button>
-              ${!soldNow ? `<button class="btn btn-sm btn-sold" onclick="markSold('${p.id}')">✓ Sold</button>` : ""}
+              ${!soldNow
+                ? `<button class="btn btn-sm btn-sold" onclick="markSold('${p.id}')">✓ Sold</button>`
+                : `<button class="btn btn-sm" style="background:#10b981;color:white;border:none;border-radius:8px" onclick="markAvailable('${p.id}')">♻️ Back in stock</button>`}
 
               ${!soldNow ? (p.category === "seeking-work"
                 ? `<button class="btn btn-sm"
@@ -404,6 +704,10 @@ window.loadMyProducts = async function () {
                       ⭐ Boost
                     </button>`
               ) : ""}
+              ${p.boostStartViews !== undefined ? `
+                <button class="btn btn-sm" style="background:#ede9fe;color:#5b21b6;border:none;border-radius:8px"
+                  onclick="showBoostStats('${p.id}')">📊 Boost Stats</button>
+              ` : ""}
      
                ${!soldNow && !p.autoRenew ? `
   <button class="btn-sm"
@@ -639,14 +943,6 @@ window.submitDashboardBoost = async function(productId, productName, days, price
       txnInput.placeholder = "⚠️ Please enter your transaction ID first";
       txnInput.focus();
     }
-    return;
-  }
-
-  // ── Plan boost limit check ──────────────────
-  const { checkCanBoost } = await import("./plan-limits.js");
-  const boostCheck = await checkCanBoost();
-  if (!boostCheck.allowed) {
-    alert(`⚠️ ${boostCheck.reason}`);
     return;
   }
 
@@ -1225,13 +1521,36 @@ window.markSold = async function(productId) {
 
   try {
     await updateDoc(doc(db, "products", productId), {
-      status: "sold"
+      status: "sold",
+      soldAt: new Date()
     });
 
     alert("✅ Product marked as sold");
     loadMyProducts();
   } catch (err) {
     console.error("Mark sold error:", err);
+    alert("❌ Error: " + err.message);
+  }
+};
+
+
+// ============================================
+// BACK IN STOCK (undo "sold")
+// ============================================
+window.markAvailable = async function(productId) {
+  if (!confirm("Is this item back in stock? Buyers will see it as available again.")) return;
+
+  try {
+    const { deleteField } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+    await updateDoc(doc(db, "products", productId), {
+      status: "active",
+      soldAt: deleteField()      // also removes it from the "recently sold" ticker
+    });
+
+    alert("✅ Back in stock. Buyers can see it again.");
+    loadMyProducts();
+  } catch (err) {
+    console.error("Back in stock error:", err);
     alert("❌ Error: " + err.message);
   }
 };
@@ -1286,12 +1605,223 @@ async function loadMyOrders() {
     }
 
     container.innerHTML = orders.map(o => renderOrderCard(o)).join("");
+    zbStartOrdersLive();
+    zbLoadDeliveryCodes();
+    zbLoadRefunds();
 
   } catch (err) {
     debug("❌ Load orders error:", err);
     container.innerHTML = `<p style="color:red;padding:20px">Error: ${err.message}</p>`;
   }
 }
+
+// ── Live delivery tracking ──
+const ZB_TRACK_STEPS = [
+  { key: "placed",           label: "Order placed" },
+  { key: "payment_verified", label: "Payment confirmed" },
+  { key: "packed",           label: "Packed" },
+  { key: "on_the_way",       label: "On the way" },
+  { key: "arrived",          label: "Seller arrived" },
+  { key: "received",         label: "Received" }
+];
+
+function zbTrackBadge(status) {
+  const map = {
+    placed:           { bg: "#fef3c7", color: "#92400e", label: "⏳ Awaiting payment check" },
+    payment_verified: { bg: "#dbeafe", color: "#1e40af", label: "💰 Payment confirmed" },
+    packed:           { bg: "#e0e7ff", color: "#3730a3", label: "📦 Packed" },
+    on_the_way:       { bg: "#ede9fe", color: "#5b21b6", label: "🚚 On the way" },
+    arrived:          { bg: "#ffedd5", color: "#9a3412", label: "📍 Seller arrived" },
+    received:         { bg: "#dcfce7", color: "#166534", label: "✅ Received" }
+  };
+  return map[status] || { bg: "#f3f4f6", color: "#374151", label: status };
+}
+
+function zbTrackingHTML(o) {
+  if (!o.trackingStatus) return "";
+  const idx = ZB_TRACK_STEPS.findIndex(s => s.key === o.trackingStatus);
+  const events = {};
+  (o.trackingEvents || []).forEach(e => { events[e.status] = e.at; });
+
+  return `<div style="margin:12px 0 4px;padding:12px 14px;background:#f9fafb;border-radius:12px">` +
+    ZB_TRACK_STEPS.map((s, i) => {
+      const done = i <= idx;
+      const t = events[s.key]
+        ? new Date(events[s.key]).toLocaleString("en-UG", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })
+        : "";
+      return `<div style="display:flex;gap:10px;align-items:flex-start;padding-bottom:${i === ZB_TRACK_STEPS.length - 1 ? 0 : 10}px">
+        <span style="width:18px;height:18px;border-radius:50%;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;background:${done ? "#10b981" : "#e5e7eb"};color:${done ? "white" : "#9ca3af"}">${done ? "✓" : ""}</span>
+        <div>
+          <div style="font-size:13px;font-weight:${done ? 800 : 600};color:${done ? "#111827" : "#9ca3af"}">${s.label}</div>
+          ${t ? `<div style="font-size:11px;color:#6b7280">${t}</div>` : ""}
+        </div>
+      </div>`;
+    }).join("") + `</div>`;
+}
+
+// Re-draw the orders list the moment anything about the buyer's orders changes
+let zbOrdersUnsub = null;
+async function zbStartOrdersLive() {
+  if (zbOrdersUnsub || !currentUser) return;
+  const { onSnapshot } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+  let first = true;
+  zbOrdersUnsub = onSnapshot(
+    query(collection(db, "orders"), where("userEmail", "==", currentUser.email)),
+    () => { if (first) { first = false; return; } loadMyOrders(); },
+    () => {}
+  );
+}
+
+
+// Delivery code (buyer) and certificate link
+function zbDeliveryCodeSlot(o) {
+  if (!o.trackingStatus) return "";
+
+  if (o.trackingStatus === "received") {
+    return `<a href="certificate.html?order=${o.id}" target="_blank"
+      style="display:block;margin:10px 0 0;text-align:center;background:#f3f4f6;color:#374151;padding:10px;border-radius:10px;font-weight:700;font-size:13px;text-decoration:none">
+      📄 Delivery certificate</a>
+      <a href="handover-note.html?order=${o.id}" target="_blank"
+        style="display:block;margin:8px 0 0;text-align:center;background:${o.noteSigned?.buyer ? "#f0fdf4" : "#ff6600"};color:${o.noteSigned?.buyer ? "#166534" : "white"};padding:11px;border-radius:10px;font-weight:800;font-size:13px;text-decoration:none">
+        ${o.noteSigned?.buyer ? "✅ Receipt note signed · view" : "✍️ Review & sign receipt note"}</a>`;
+  }
+  if (["payment_verified", "packed", "on_the_way", "arrived"].includes(o.trackingStatus)) {
+    return `<div class="zb-pin-slot" data-order="${o.id}" style="margin-top:10px"></div>`;
+  }
+  return "";
+}
+
+async function zbLoadDeliveryCodes() {
+  const slots = document.querySelectorAll(".zb-pin-slot");
+  if (!slots.length) return;
+
+  const { db: fdb, doc: fdoc, getDoc: fgetDoc } = await import("./firebase.js");
+  slots.forEach(async (slot) => {
+    try {
+      const s = await fgetDoc(fdoc(fdb, "order_secrets", slot.dataset.order));
+      if (!s.exists()) return;
+      const code = s.data().code;
+      slot.innerHTML = `
+        <div style="border:2px solid #10b981;border-radius:12px;padding:12px 14px;background:#f0fdf4">
+          <p style="margin:0 0 4px;font-weight:800;font-size:14px;color:#166534">🔐 Your delivery code</p>
+          <p style="margin:0 0 10px;font-size:12px;color:#15803d;line-height:1.5">
+            Give this code to the seller <strong>only when you are holding your item</strong>.
+            Never share it earlier, and never in chat.
+          </p>
+          <button onclick="this.nextElementSibling.style.display='block'; this.style.display='none'"
+            style="background:#10b981;color:white;border:none;padding:9px 16px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer">
+            Show my code
+          </button>
+          <p style="display:none;margin:8px 0 0;text-align:center;font-size:32px;letter-spacing:10px;font-weight:900;color:#065f46">${code}</p>
+        </div>`;
+    } catch (e) { /* code not ready yet */ }
+  });
+}
+
+// ── Refunds (buyer) ──
+let zbMyRefunds = {};
+
+function zbRefundSlot(o) {
+  return `<div class="zb-refund-slot" data-order="${o.id}"></div>`;
+}
+
+async function zbLoadRefunds() {
+  const slots = document.querySelectorAll(".zb-refund-slot");
+  if (!slots.length || !currentUser) return;
+
+  try {
+    const snap = await getDocs(query(collection(db, "refunds"), where("buyerUid", "==", currentUser.uid)));
+    zbMyRefunds = {};
+    snap.docs.forEach(d => {
+      const r = { id: d.id, ...d.data() };
+      (zbMyRefunds[r.orderId] = zbMyRefunds[r.orderId] || []).push(r);
+    });
+  } catch (e) { return; }
+
+  slots.forEach(slot => {
+    const list = zbMyRefunds[slot.dataset.order] || [];
+    slot.innerHTML = list.map(r => r.status === "acknowledged"
+      ? `<div style="margin-top:10px;background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:12px;font-size:13px;color:#166534">
+           ✅ <strong>Refund of UGX ${Number(r.amount).toLocaleString()} confirmed</strong><br>
+           <span style="font-size:11.5px">${new Date(r.acknowledgement?.atMs || 0).toLocaleString("en-UG")}</span></div>`
+      : `<div style="margin-top:10px;background:#fffbeb;border:1.5px solid #fcd34d;border-radius:12px;padding:12px">
+           <p style="margin:0 0 4px;font-weight:800;font-size:14px;color:#92400e">↩️ Refund sent: UGX ${Number(r.amount).toLocaleString()}</p>
+           <p style="margin:0 0 10px;font-size:12px;color:#92400e;line-height:1.5">
+             Sent by ZiBuy via ${String(r.method).toUpperCase()} (transaction ${r.txnId}). Check your phone, then confirm below.</p>
+           <button onclick="zbOpenRefundConfirm('${r.id}')"
+             style="width:100%;background:#f59e0b;color:white;border:none;padding:11px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer">
+             ✍️ Confirm I received my refund</button>
+         </div>`).join("");
+  });
+}
+
+window.zbOpenRefundConfirm = function (refundId) {
+  const r = Object.values(zbMyRefunds).flat().find(x => x.id === refundId);
+  if (!r) return;
+  const user = auth.currentUser;
+  const hasPw = user.providerData.some(p => p.providerId === "password");
+
+  document.getElementById("refund-modal")?.remove();
+  const m = document.createElement("div");
+  m.id = "refund-modal";
+  m.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px";
+  m.innerHTML = `
+    <div style="background:white;border-radius:16px;padding:22px;max-width:400px;width:100%">
+      <h3 style="margin:0 0 6px">✍️ Confirm your refund</h3>
+      <p style="margin:0 0 12px;font-size:13px;color:#374151;line-height:1.5">
+        You are confirming that you received <strong>UGX ${Number(r.amount).toLocaleString()}</strong> from ZiBuy as a refund
+        for order <strong>${r.orderRef || ""}</strong>.</p>
+      <p style="margin:0 0 8px;font-size:13px">Signing as <strong>${user.displayName || user.email}</strong></p>
+      ${hasPw
+        ? `<input id="rf-pass" type="password" placeholder="Enter your account password to confirm" autocomplete="current-password"
+             style="width:100%;padding:11px;border:1.5px solid #d1d5db;border-radius:10px;font-size:15px;margin-bottom:10px;box-sizing:border-box">`
+        : `<p style="margin:0 0 10px;font-size:12px;color:#6b7280">You will be asked to confirm with your Google account.</p>`}
+      <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;line-height:1.5;margin-bottom:12px">
+        <input type="checkbox" id="rf-agree" style="margin-top:3px">
+        <span>I confirm that I received this refund. Confirming my account ${hasPw ? "password" : "login"} is my electronic signature and is legally binding.</span>
+      </label>
+      <button onclick="zbSubmitRefundConfirm('${refundId}', this)"
+        style="width:100%;background:#10b981;color:white;border:none;padding:12px;border-radius:10px;font-weight:800;cursor:pointer">Confirm</button>
+      <button onclick="this.closest('#refund-modal').remove()"
+        style="width:100%;margin-top:8px;background:#e5e7eb;border:none;padding:11px;border-radius:10px;font-weight:700;cursor:pointer">Cancel</button>
+    </div>`;
+  document.body.appendChild(m);
+};
+
+window.zbSubmitRefundConfirm = async function (refundId, btn) {
+  if (!document.getElementById("rf-agree")?.checked) { alert("Please tick the box to confirm."); return; }
+
+  const user = auth.currentUser;
+  const hasPw = user.providerData.some(p => p.providerId === "password");
+  btn.disabled = true;
+  btn.textContent = "Confirming...";
+
+  try {
+    const A = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js");
+    if (hasPw) {
+      const pw = document.getElementById("rf-pass")?.value || "";
+      if (!pw) throw { message: "Please enter your account password." };
+      await A.reauthenticateWithCredential(user, A.EmailAuthProvider.credential(user.email, pw));
+    } else {
+      await A.reauthenticateWithPopup(user, new A.GoogleAuthProvider());
+    }
+    await user.getIdToken(true);
+
+    const { getFunctions, httpsCallable } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js");
+    await httpsCallable(getFunctions(), "confirmRefund")({ refundId });
+
+    document.getElementById("refund-modal")?.remove();
+    await zbLoadRefunds();
+  } catch (e) {
+    console.error(e);
+    const code = e.code || "";
+    alert(code === "auth/wrong-password" || code === "auth/invalid-credential"
+      ? "Wrong password. Please try again."
+      : (e.message || "Couldn't confirm. Please try again."));
+    btn.disabled = false;
+    btn.textContent = "Confirm";
+  }
+};
 
 function renderOrderCard(o) {
   const dateStr  = new Date(o.createdAt?.toDate?.() || o.createdAt).toLocaleDateString();
@@ -1316,6 +1846,10 @@ function renderOrderCard(o) {
     badge = { bg: "#f3f4f6", color: "#374151", label: o.status || "pending" };
   }
 
+  if (o.trackingStatus && !isCancelled && o.disputeStatus !== "open") {
+    badge = o.refunded ? { bg: "#fef3c7", color: "#92400e", label: "↩️ Refunded" } : zbTrackBadge(o.trackingStatus);
+  }
+
   const itemLine = isBuyNow
     ? `<p style="margin:4px 0"><strong>Item:</strong> ${o.productName || "—"}</p>`
     : `<p style="margin:4px 0"><strong>Items:</strong> ${o.items?.length || 0} product(s)</p>`;
@@ -1331,11 +1865,15 @@ function renderOrderCard(o) {
   // Can this order still be cancelled by the buyer?
   const nonCancellableStatuses = ["cancelled_by_buyer", "Delivered", "Shipped"];
   const canCancel = !isCancelled &&
+    (!o.trackingStatus || o.trackingStatus === "placed") &&
     !nonCancellableStatuses.includes(o.status) &&
     !o.deliveryConfirmed &&
     o.disputeStatus !== "open";
 
-  const protectActions = (o.protected && !o.deliveryConfirmed && o.disputeStatus !== "open" && !isCancelled)
+  const canConfirmNow = o.trackingStatus
+    ? ["on_the_way", "arrived"].includes(o.trackingStatus)
+    : o.protected;
+  const protectActions = (canConfirmNow && !o.deliveryConfirmed && o.disputeStatus !== "open" && !isCancelled && !o.refunded)
     ? `
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
         <button onclick="confirmOrderReceipt('${o.id}')"
@@ -1370,6 +1908,7 @@ function renderOrderCard(o) {
       <p style="margin:4px 0"><strong>Total:</strong> UGX ${Number(o.total || o.price || 0).toLocaleString()}</p>
       ${locationLine}
       ${feeNote}
+      ${zbTrackingHTML(o)}${zbDeliveryCodeSlot(o)}${zbRefundSlot(o)}
       <p style="font-size:12px;color:#6b7280;margin:4px 0 0">Order Date: ${dateStr}</p>
       ${protectActions}
       ${cancelButton}

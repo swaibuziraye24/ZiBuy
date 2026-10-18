@@ -1,3 +1,4 @@
+import { bulkBadgeHTML } from "./seller-options.js";
 import {
   db,
   collection,
@@ -90,7 +91,7 @@ window.performSearch = async function () {
           <h3>${product.name}</h3>
 
           <p>
-            UGX ${Number(product.price).toLocaleString()}
+            UGX ${Number(product.price).toLocaleString()}${bulkBadgeHTML(product)}
           </p>
 
           <p>

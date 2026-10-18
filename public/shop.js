@@ -21,6 +21,7 @@ import {
 
 import "./buyer-ratings.js";
 import { renderTrustBadge } from "./trust-badge.js";
+import { bulkBadgeHTML } from "./seller-options.js";
 import { renderEarnedBadge } from "./earned-badge.js";
 import { renderResponseBadge } from "./response-badge.js";
 
@@ -160,7 +161,8 @@ window.loadSellerOrdersToRate = async function() {
     for (const batch of batches) {
       const snap = await getDocs(query(
         collection(db, "orders"),
-        where("productId", "in", batch)
+        where("productId", "in", batch),
+        where("sellerId", "==", sellerId)
       ));
       snap.forEach(d => orders.push({ id: d.id, ...d.data() }));
     }
@@ -267,7 +269,7 @@ function renderShopProductsGrid(products) {
 >
         <div class="product-info">
           <div class="product-title">${escapeHTML(p.name) || "No name"}</div>
-          <div class="product-price">
+          <div class="product-price">${bulkBadgeHTML(p)}
            UGX ${new Intl.NumberFormat().format(
   p.price || 0
 )}

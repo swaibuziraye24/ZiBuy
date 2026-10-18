@@ -27,6 +27,18 @@
 <div class="notifications-wrap">
   <h1>🔔 Notifications</h1>
 
+  <button onclick="window.location.href='messages.html'"
+    style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:#25d366;color:#fff;border:none;padding:13px;border-radius:12px;font-weight:800;font-size:15px;margin-bottom:10px;cursor:pointer">
+    💬 Open Messages
+  </button>
+
+  <button onclick="showUpdatesPanel()"
+    style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:#5b21b6;color:#fff;border:none;padding:13px;border-radius:12px;font-weight:800;font-size:15px;margin-bottom:14px;cursor:pointer">
+    🎓 ZiBuy Updates
+  </button>
+
+  <div id="updates-panel" style="display:none;margin-bottom:16px"></div>
+
   <div class="notifications-filters">
     <button class="notif-filter active" onclick="filterNotifications('all')">All</button>
     <button class="notif-filter" onclick="filterNotifications('unread')">Unread</button>

@@ -4,7 +4,7 @@
 //   works for guests and logged-in users alike,
 //   zero extra Firestore reads to track a view.
 // ============================================
-
+import { bulkBadgeHTML } from "./seller-options.js";
 const STORAGE_KEY = "zibuy_recently_viewed";
 const MAX_ITEMS    = 20;
 
@@ -31,12 +31,12 @@ function getRecentlyViewedIds(excludeId) {
   }
 }
 
-export async function renderRecentlyViewed(sectionId, containerId, excludeId) {
+export async function renderRecentlyViewed(sectionId, containerId, excludeId, limit = 12) {
   const section   = document.getElementById(sectionId);
   const container = document.getElementById(containerId);
   if (!section || !container) return;
 
-  const ids = getRecentlyViewedIds(excludeId).slice(0, 12);
+  const ids = getRecentlyViewedIds(excludeId).slice(0, limit);
   if (ids.length === 0) { section.style.display = "none"; return; }
 
   try {
@@ -74,7 +74,7 @@ export async function renderRecentlyViewed(sectionId, containerId, excludeId) {
           <div style="padding:9px">
             <p style="margin:0 0 4px;font-size:11px;font-weight:700;color:#111827;
               overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.name)}</p>
-            <p style="margin:0;color:#ff6600;font-weight:900;font-size:13px">UGX ${price}</p>
+            <p style="margin:0;color:#ff6600;font-weight:900;font-size:13px">UGX ${price}${bulkBadgeHTML(p)}</p>
           </div>
         </div>`;
     }).join("");

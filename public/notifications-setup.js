@@ -39,7 +39,8 @@ export async function setupPushNotifications(userId) {
     const messaging = getMessaging(app);
 
      const swReg = await navigator.serviceWorker.register(
-      "/firebase-messaging-sw.js"
+      "/firebase-messaging-sw.js",
+      { scope: "/firebase-cloud-messaging-push-scope" }
     ).catch((err) => {
       console.warn("[FCM] SW registration failed:", err.message);
       return null;

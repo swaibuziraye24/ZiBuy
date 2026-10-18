@@ -28,6 +28,9 @@ import { renderEarnedBadge } from "./earned-badge.js";
 import { renderResponseBadge } from "./response-badge.js";
 import { trackProductView } from "./recently-viewed.js";
 
+import { unitPriceFor, cleanTiers, tierRanges } from "./seller-options.js";
+import { trackInterest } from "./interest.js";
+
 function escapeHTML(value) {
   if (value === null || value === undefined) return "";
 
@@ -39,12 +42,26 @@ function escapeHTML(value) {
     .replace(/'/g, "&#39;");
 }
 
+// Safely embed a value as a single-quoted JS argument inside an
+// onclick="..." attribute. First escapes it so it can't break out of
+// the JS string, then HTML-escapes the result so a stray " can't
+// break out of the surrounding attribute either.
+function escapeJsAttr(value) {
+  const jsSafe = String(value ?? "")
+    .replace(/\\/g, "\\\\")
+    .replace(/'/g, "\\'")
+    .replace(/\n/g, "\\n")
+    .replace(/\r/g, "");
+  return escapeHTML(jsSafe);
+}
+
 // ── Smart back button ─────────────────────────
 window.goBackToHome = function() {
-  // Always a fresh navigation to the homepage — never real browser
-  // back/forward, which restores the exact old scroll position and
-  // can land the user far down the page instead of at the top
-  window.location.href = "index.html";
+  if (typeof window.smartGoBack === "function") {
+    window.smartGoBack("index.html");
+  } else {
+    window.location.href = "index.html";
+  }
 };
 
 let currentUser = null;
@@ -234,6 +251,15 @@ async function loadProduct() {
 
     trackProductView(id);
 
+    
+    window.__zbIsOfficial = p.userEmail === "swaibuziraye22@gmail.com";
+
+        window.__zbDelivery = p.delivery || null;
+
+            window.__zbTiers = p.priceTiers || [];
+
+    trackInterest(p.category, 3);
+
     const images = Array.isArray(p.images) ? p.images : [];
     const seller = p.seller || {};
     let active = 0;
@@ -407,7 +433,7 @@ document.head.appendChild(schemaTag);
           <span style="margin-left:auto;font-size:12px;color:#ff6600;font-weight:700;flex-shrink:0">View Profile →</span>
         </div>
 
-        <button onclick="openReportModal('${p.userId || ""}','${(seller.name || "Seller").replace(/'/g,"\\'")}', '${snap.id}', '${p.name.replace(/'/g,"\\'")}')"
+        <button onclick="openReportModal('${escapeJsAttr(p.userId || "")}','${escapeJsAttr(seller.name || "Seller")}', '${escapeJsAttr(snap.id)}', '${escapeJsAttr(p.name)}')"
           style="display:inline-flex;align-items:center;gap:6px;background:white;color:#ef4444;
           border:1.5px solid #ef4444;padding:10px 16px;border-radius:10px;font-weight:800;
           font-size:13px;cursor:pointer;font-family:inherit;margin-top:10px;width:100%;
@@ -420,6 +446,7 @@ document.head.appendChild(schemaTag);
         <p class="product-cat" style="font-size:12px;font-weight:700;color:#ff6600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">${p.category || "Product"}</p>
         <h1 style="font-size:26px;font-weight:800;color:#111827;line-height:1.2;margin-bottom:10px">${escapeHTML(p.name)}</h1>
         <p style="font-size:32px;font-weight:900;color:#ff6600;margin-bottom:6px">UGX ${Number(p.price).toLocaleString()}</p>
+        ${(() => { const r = tierRanges(p.price, p.priceTiers); return r.length ? `<p style="margin:0 0 8px;font-size:13px;font-weight:700;color:#059669">📦 Bulk price from UGX ${r[r.length - 1].unit.toLocaleString()} each</p>` : ""; })()}
         ${p.priceDropped ? `
           <div style="display:inline-flex;align-items:center;gap:6px;background:#fee2e2;color:#991b1b;
             padding:6px 12px;border-radius:20px;font-size:12px;font-weight:800;margin-bottom:16px">
@@ -427,6 +454,9 @@ document.head.appendChild(schemaTag);
           </div>
         ` : ""}
         <p style="font-size:13px;color:#6b7280;margin-bottom:18px">📍 ${escapeHTML(seller.location) || "Uganda"} · Posted ${p.createdAt ? new Date(p.createdAt.toDate()).toLocaleDateString() : "recently"}</p>
+
+        ${zbTiersHTML(p)}
+        ${zbDeliveryHTML(p)}
 
         <!-- Description -->
         <div style="background:#f9fafb;border-radius:12px;padding:16px;margin-bottom:20px">
@@ -446,21 +476,26 @@ document.head.appendChild(schemaTag);
           </div>
         ` : `
           <!-- Primary Actions -->
+          ${true ? `
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
-            <button onclick="addToCart('${p.name.replace(/'/g,"\\'")}', ${p.price}, '${images[0] || ""}')"
+            <button onclick="addToCart('${escapeJsAttr(p.name)}', ${p.price}, '${escapeJsAttr(images[0] || "")}', '${snap.id}')"
               style="background:#ff6600;color:white;border:none;padding:15px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px">
               🛒 Add to Cart
             </button>
-            <button onclick="${p.userEmail === 'swaibuziraye22@gmail.com'
-              ? `openBuyNow('${snap.id}','${p.name.replace(/'/g,"\\'")}',${p.price},'${(seller.phone||"").replace(/\D/g,"")}','${seller.name||"Seller"}')`
-              : `buyNowWhatsApp('${p.name.replace(/'/g,"\\'")}',${p.price},'${(seller.phone||"").replace(/\D/g,"")}')`
-            }"
+            <button onclick="openBuyNow('${snap.id}','${escapeJsAttr(p.name)}',${p.price},'${(seller.phone||"").replace(/\D/g,"")}','${escapeJsAttr(seller.name||"Seller")}')"
               style="background:#111827;color:white;border:none;padding:15px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px">
               ⚡ Buy Now
             </button>
           </div>
+          ` : ""}
 
           <!-- Contact Buttons -->
+
+          ${p.userEmail !== 'swaibuziraye22@gmail.com' ? `
+          <div style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:12px;padding:14px 16px;margin-bottom:12px;font-size:13px;color:#1e3a8a;line-height:1.6">
+            <strong>🛡️ How Buy Now works for this seller's item</strong><br>
+            When you use <strong>Buy Now</strong> or <strong>Add to Cart</strong>, you pay <strong>ZiBuy</strong> (the company), not the seller. After you receive the item and confirm it is the real product you wanted from this seller, ZiBuy then releases the money to the seller.
+          </div>` : ""}
           ${contactHTML}
         `}
 
@@ -739,6 +774,16 @@ async function loadRelatedProducts(category, currentProductId) {
             const img   = p.images?.[0] || "";
             const price = Number(p.price || 0).toLocaleString();
             const cond  = p.condition || p.details?.condition || p.details?.["cf-condition"] || "";
+            const productName = String(p.name || "Product").replace(/['"]/g, "");
+            const productCategory = String(p.category || "product").replace(/['"]/g, "");
+            const productCondition = String(cond || "").replace(/['"]/g, "");
+            const productLocation = String(p.seller?.location || p.location || "Uganda").replace(/['"]/g, "");
+            const conditionText = productCondition ? ` in ${productCondition} condition` : "";
+            const altText = `${productName} ${productCategory} for sale in ${productLocation}${conditionText}. The main subject is ${productName}, presented as a product photo in a clean online marketplace style. It is centered on a simple neutral background with soft lighting and a clear, professional presentation. The overall tone is clean, trustworthy, and inviting. No readable text appears in the image.`;
+            const safeCompareId = escapeJsAttr(p.id ?? "");
+            const safeProductName = escapeJsAttr(p.name || "Product");
+            const safeImage = escapeJsAttr(p.images?.[0] || "");
+            const safeCondition = escapeJsAttr(cond || "");
 
             let condBadge = "";
             if (cond) {
@@ -761,12 +806,12 @@ async function loadRelatedProducts(category, currentProductId) {
                 <label style="position:absolute;top:6px;left:6px;z-index:5;background:white;border-radius:6px;
                   padding:3px 6px;display:flex;align-items:center;gap:4px;font-size:9px;font-weight:700;
                   box-shadow:0 1px 4px rgba(0,0,0,0.15);cursor:pointer">
-                  <input type="checkbox" onclick="event.stopPropagation();toggleCompareProduct('${p.id}','${p.name.replace(/'/g,"\\'")}',${p.price},'${(p.images?.[0]||"").replace(/'/g,"\\'")}','${(cond||"").replace(/'/g,"\\'")}')"
+                  <input type="checkbox" onclick="event.stopPropagation();toggleCompareProduct('${safeCompareId}','${safeProductName}',${Number(p.price || 0)},'${safeImage}','${safeCondition}')"
                     style="width:12px;height:12px;margin:0;accent-color:#ff6600">
                   Compare
                 </label>
                 <div onclick="window.location.href='product.html?id=${p.id}'" style="cursor:pointer">
-                <img src="${img}" alt="${p.name}"
+                <img src="${img}" alt="${altText}" title="${altText}"
                   onerror="this.src='https://via.placeholder.com/200?text=ZiBuy'"
                   style="width:100%;aspect-ratio:1/1;object-fit:cover">
                 <div style="padding:10px">
@@ -1073,6 +1118,44 @@ console.log("PRODUCT UPDATED");
 
 }
 
+function zbTiersHTML(p) {
+  const rows = tierRanges(p.price, p.priceTiers);
+  if (rows.length === 0) return "";
+
+  const label = r => r.to === null
+    ? `${r.from}+ items`
+    : (r.from === r.to ? `${r.from} item` : `${r.from}–${r.to} items`);
+
+  return `<div style="background:#fff7ed;border:1.5px solid #fed7aa;border-radius:12px;padding:14px 16px;margin-bottom:20px">
+    <p style="margin:0 0 6px;font-size:14px;font-weight:800;color:#9a3412">💰 Bulk prices: the more you buy, the less you pay</p>
+    ${rows.map(r => `
+      <div style="display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #ffedd5;font-size:13px">
+        <span style="color:#7c2d12">${label(r)}</span>
+        <strong>UGX ${r.unit.toLocaleString()} each${r.savePct > 0 ? ` <span style="color:#059669;font-size:11px">save ${r.savePct}%</span>` : ""}</strong>
+      </div>`).join("")}
+  </div>`;
+}
+
+
+function zbDeliveryHTML(p) {
+  const d = p.delivery;
+  if (!d || !d.available || !Array.isArray(d.zones) || d.zones.length === 0) return "";
+
+  const rows = d.zones.map(z => {
+    const fee = Number(z.fee) || 0;
+    return `<div style="display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #d1fae5;font-size:13px">
+      <span style="color:#065f46">📍 ${escapeHTML(z.area)}</span>
+      <strong style="color:${fee === 0 ? "#059669" : "#111827"}">${fee === 0 ? "FREE delivery" : "UGX " + fee.toLocaleString()}</strong>
+    </div>`;
+  }).join("");
+
+  return `<div style="background:#ecfdf5;border:1.5px solid #a7f3d0;border-radius:12px;padding:14px 16px;margin-bottom:20px">
+    <p style="margin:0 0 4px;font-size:14px;font-weight:800;color:#065f46">🚚 Delivery available</p>
+    ${rows}
+    ${d.note ? `<p style="margin:8px 0 0;font-size:12px;color:#047857">${escapeHTML(d.note)}</p>` : ""}
+  </div>`;
+}
+
 // ============================================
 // BUY NOW — Mobile Money payment flow
 // ============================================
@@ -1128,6 +1211,11 @@ window.openBuyNow = function(productId, productName, price, sellerPhone, sellerN
         <p style="margin:4px 0 0;font-size:12px;color:#6b7280">Seller: <strong>${escapeHTML(sellerName)}</strong></p>
       </div>
 
+      ${window.__zbIsOfficial ? "" : `
+      <div style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:12px;padding:12px 14px;margin-bottom:16px;font-size:12.5px;color:#1e3a8a;line-height:1.6">
+        <strong>🛡️ Please note:</strong> you are paying <strong>ZiBuy</strong> (the company), not the seller. After you receive the item and confirm it is the real product you wanted from this seller, ZiBuy will release the money to the seller.
+      </div>`}
+
       <!-- Delivery details — previously missing entirely -->
       <div style="margin-bottom:16px">
         <label style="font-size:13px;font-weight:800;color:#111827;display:block;margin-bottom:8px">📍 Delivery Details</label>
@@ -1135,7 +1223,7 @@ window.openBuyNow = function(productId, productName, price, sellerPhone, sellerN
           style="width:100%;padding:11px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:8px">
         <input type="tel" id="bn-phone" placeholder="Your phone number e.g. 256701234567"
           style="width:100%;padding:11px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:8px">
-        <select id="bn-district"
+        <select id="bn-district" onchange="zbRecalcBuyNow(${price})"
           style="width:100%;padding:11px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box;background:white;margin-bottom:8px">
           <option value="">Select your district</option>
           ${districtOptions}
@@ -1159,12 +1247,30 @@ window.openBuyNow = function(productId, productName, price, sellerPhone, sellerN
         </label>
       </div>
 
+      ${(window.__zbTiers || []).length ? `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <label style="font-size:13px;font-weight:800;color:#111827">🔢 Quantity</label>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button type="button" onclick="zbBnQty(-1, ${price})" style="width:34px;height:34px;border-radius:50%;border:1.5px solid #e5e7eb;background:white;font-size:18px;cursor:pointer">−</button>
+          <input id="bn-qty" type="number" min="1" value="1" oninput="zbRecalcBuyNow(${price})"
+            style="width:56px;text-align:center;padding:8px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:15px;font-weight:800;font-family:inherit">
+          <button type="button" onclick="zbBnQty(1, ${price})" style="width:34px;height:34px;border-radius:50%;border:1.5px solid #e5e7eb;background:white;font-size:18px;cursor:pointer">+</button>
+        </div>
+      </div>
+      <p id="bn-tier-hint" style="margin:0 0 12px;font-size:12px;color:#059669;font-weight:700"></p>` : ""}
+
       <!-- Clear price breakdown — this is the part that was invisible before -->
       <div style="background:white;border:1.5px solid #e5e7eb;border-radius:12px;padding:14px;margin-bottom:16px">
         <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px">
           <span style="color:#6b7280">Item Price</span>
           <span id="bn-item-price" style="font-weight:700">UGX ${Number(price).toLocaleString()}</span>
         </div>
+
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px">
+          <span style="color:#6b7280">🚚 Delivery</span>
+          <span id="bn-delivery-amount" style="font-weight:700;color:#6b7280">Select your district</span>
+        </div>
+        <p id="bn-delivery-warning" style="display:none;margin:0 0 8px;font-size:12px;font-weight:700;color:#b91c1c;background:#fee2e2;padding:8px 10px;border-radius:8px"></p>
         <div id="bn-fee-line" style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px">
           <span style="color:#6b7280">ZiBuy Protect Fee</span>
           <span id="bn-fee-amount" style="font-weight:700;color:#166534">+ UGX ${protectFee.toLocaleString()}</span>
@@ -1227,7 +1333,7 @@ window.openBuyNow = function(productId, productName, price, sellerPhone, sellerN
       </div>
 
       <div style="display:flex;flex-direction:column;gap:10px">
-        <button onclick="confirmBuyNow('${productId}','${productName.replace(/'/g,"\\'")}',${price},'${sellerPhone}','${orderRef}','${sellerName}')"
+        <button onclick="confirmBuyNow('${escapeJsAttr(productId)}','${escapeJsAttr(productName)}',${price},'${escapeJsAttr(sellerPhone)}','${escapeJsAttr(orderRef)}','${escapeJsAttr(sellerName)}')"
           style="background:#ff6600;color:white;border:none;padding:14px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;width:100%">
           ✅ Submit Payment Reference
         </button>
@@ -1242,6 +1348,8 @@ window.openBuyNow = function(productId, productName, price, sellerPhone, sellerN
 
   document.body.appendChild(modal);
 
+  window.zbRecalcBuyNow(price);
+
   // Prefill name from account email
   const nameInput = document.getElementById("bn-name");
   if (nameInput && auth.currentUser?.email) {
@@ -1249,7 +1357,146 @@ window.openBuyNow = function(productId, productName, price, sellerPhone, sellerN
   }
 };
 
+window.zbDeliveryFeeFor = function (district) {
+  const d = window.__zbDelivery;
+  if (!d || !d.available || !Array.isArray(d.zones) || d.zones.length === 0) {
+    return { mode: "arranged", fee: 0 };
+  }
+  const zone = d.zones.find(z => z.area === district)
+            || d.zones.find(z => z.area === "All of Uganda");
+  if (!zone) return { mode: "unavailable", fee: 0 };
+  const fee = Number(zone.fee) || 0;
+  return { mode: fee === 0 ? "free" : "paid", fee, area: zone.area };
+};
+
+window.zbBnQty = function (delta, price) {
+  const el = document.getElementById("bn-qty");
+  if (!el) return;
+  el.value = Math.max(1, (parseInt(el.value, 10) || 1) + delta);
+  window.zbRecalcBuyNow(price);
+};
+
+window.zbRecalcBuyNow = function (price) {
+  const qty       = Math.max(1, parseInt(document.getElementById("bn-qty")?.value, 10) || 1);
+  const unit      = unitPriceFor(price, window.__zbTiers, qty);
+  const itemTotal = unit * qty;
+
+  const protectOn  = document.getElementById("bn-protect-toggle")?.checked;
+  const protectFee = protectOn ? Math.max(1000, Math.round(itemTotal * 0.025)) : 0;
+  const district   = document.getElementById("bn-district")?.value || "";
+
+  let deliveryText = "Select your district";
+  let deliveryFee  = 0;
+  let warning      = "";
+
+  if (district) {
+    const info = window.zbDeliveryFeeFor(district);
+    deliveryFee = info.fee || 0;
+    if (info.mode === "free")          deliveryText = "FREE";
+    else if (info.mode === "paid")     deliveryText = "+ UGX " + deliveryFee.toLocaleString();
+    else if (info.mode === "arranged") deliveryText = "Arranged with seller";
+    else {
+      deliveryText = "Not available";
+      warning = "This seller doesn't deliver to " + district + ". Please choose another location or contact the seller.";
+    }
+  }
+
+  const total = itemTotal + protectFee + deliveryFee;
+
+  const itemEl = document.getElementById("bn-item-price");
+  if (itemEl) {
+    itemEl.textContent = qty > 1
+      ? `${qty} × UGX ${unit.toLocaleString()} = UGX ${itemTotal.toLocaleString()}`
+      : `UGX ${itemTotal.toLocaleString()}`;
+  }
+
+  const hint = document.getElementById("bn-tier-hint");
+  if (hint) {
+    const tiers = cleanTiers(window.__zbTiers);
+    const next  = tiers.find(t => t.minQty > qty);
+    if (unit < price) {
+      hint.textContent = `🎉 Bulk price applied: UGX ${unit.toLocaleString()} each`;
+    } else if (next) {
+      hint.textContent = `Buy ${next.minQty}+ to pay UGX ${unitPriceFor(price, tiers, next.minQty).toLocaleString()} each`;
+    } else {
+      hint.textContent = "";
+    }
+  }
+
+  const feeLine = document.getElementById("bn-fee-line");
+  if (feeLine) feeLine.style.display = protectOn ? "flex" : "none";
+  const feeAmt = document.getElementById("bn-fee-amount");
+  if (feeAmt) feeAmt.textContent = "+ UGX " + protectFee.toLocaleString();
+
+  const delEl = document.getElementById("bn-delivery-amount");
+  if (delEl) {
+    delEl.textContent = deliveryText;
+    delEl.style.color = deliveryText === "FREE" ? "#059669" : "#111827";
+  }
+  const warnEl = document.getElementById("bn-delivery-warning");
+  if (warnEl) {
+    warnEl.textContent   = warning;
+    warnEl.style.display = warning ? "block" : "none";
+  }
+
+  const t = "UGX " + Number(total).toLocaleString();
+  ["bn-total-display", "bn-total-mtn", "bn-total-airtel"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = t;
+  });
+};
+
+window.__oldZbRecalcBuyNow = function (price) {
+  const protectOn  = document.getElementById("bn-protect-toggle")?.checked;
+  const protectFee = protectOn ? Math.max(1000, Math.round(price * 0.025)) : 0;
+  const district   = document.getElementById("bn-district")?.value || "";
+
+  let deliveryText = "Select your district";
+  let deliveryFee  = 0;
+  let warning      = "";
+
+  if (district) {
+    const info = window.zbDeliveryFeeFor(district);
+    deliveryFee = info.fee || 0;
+    if (info.mode === "free")          deliveryText = "FREE";
+    else if (info.mode === "paid")     deliveryText = "+ UGX " + deliveryFee.toLocaleString();
+    else if (info.mode === "arranged") deliveryText = "Arranged with seller";
+    else {
+      deliveryText = "Not available";
+      warning = "This seller doesn't deliver to " + district + ". Please choose another location or contact the seller.";
+    }
+  }
+
+  const total = price + protectFee + deliveryFee;
+
+  const feeLine = document.getElementById("bn-fee-line");
+  if (feeLine) feeLine.style.display = protectOn ? "flex" : "none";
+  const feeAmt = document.getElementById("bn-fee-amount");
+  if (feeAmt) feeAmt.textContent = "+ UGX " + protectFee.toLocaleString();
+
+  const delEl = document.getElementById("bn-delivery-amount");
+  if (delEl) {
+    delEl.textContent = deliveryText;
+    delEl.style.color = deliveryText === "FREE" ? "#059669" : "#111827";
+  }
+  const warnEl = document.getElementById("bn-delivery-warning");
+  if (warnEl) {
+    warnEl.textContent   = warning;
+    warnEl.style.display = warning ? "block" : "none";
+  }
+
+  const t = "UGX " + Number(total).toLocaleString();
+  ["bn-total-display", "bn-total-mtn", "bn-total-airtel"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = t;
+  });
+};
+
 window.toggleBuyNowProtect = function(price) {
+  return window.zbRecalcBuyNow(price);
+};
+
+window.__oldToggleBuyNowProtect = function(price) {
   const checked    = document.getElementById("bn-protect-toggle")?.checked;
   const protectFee = Math.max(1000, Math.round(price * 0.025));
   const total      = checked ? price + protectFee : price;
@@ -1289,11 +1536,32 @@ window.confirmBuyNow = async function(productId, productName, price, sellerPhone
   }
 
   const location     = address ? `${address}, ${district}` : district;
-  const isProtected = document.getElementById("bn-protect-toggle")?.checked || false;
-  const protectFee  = isProtected ? Math.max(1000, Math.round(price * 0.025)) : 0;
-  const totalPaid   = price + protectFee;
 
-  const btn = event.target;
+    const qty       = Math.max(1, parseInt(document.getElementById("bn-qty")?.value, 10) || 1);
+  const unitPrice = unitPriceFor(price, window.__zbTiers, qty);
+  const itemTotal = unitPrice * qty;
+  const isProtected = document.getElementById("bn-protect-toggle")?.checked || false;
+  const protectFee  = isProtected ? Math.max(1000, Math.round(itemTotal * 0.025)) : 0;
+  const deliveryInfo = window.zbDeliveryFeeFor ? window.zbDeliveryFeeFor(district) : { mode: "arranged", fee: 0 };
+  if (deliveryInfo.mode === "unavailable") {
+    alert("This seller doesn't deliver to " + district + ". Please choose another location or contact the seller.");
+    return;
+  }
+  const deliveryFee = deliveryInfo.fee || 0;
+  const totalPaid   = itemTotal + protectFee + deliveryFee;
+  
+  const btnClicked = event.target;
+  let sellerUid = "";
+  let sellerEmailForOrder = "";
+  try {
+    const ps = await getDoc(doc(db, "products", productId));
+    if (ps.exists()) {
+      sellerUid = ps.data().userId || "";
+      sellerEmailForOrder = ps.data().userEmail || "";
+    }
+  } catch (e) { /* ignore */ }
+
+  const btn = btnClicked;
   btn.textContent = "Saving order...";
   btn.disabled    = true;
 
@@ -1311,12 +1579,22 @@ window.confirmBuyNow = async function(productId, productName, price, sellerPhone
       customerPhone:     phone,
       customerLocation:  location,
       sellerName,
+      sellerId:          sellerUid,
       sellerPhone,
       paymentMethod:     "mobile_money",
       status:            "pending_verification",
       protected:         isProtected,
       protectionFee:      protectFee,
       total:             totalPaid,
+      price:             itemTotal,
+      unitPrice,
+      quantity:          qty,
+      deliveryFee,
+      deliveryZone:      deliveryInfo.area || district,
+      deliveryMode:      deliveryInfo.mode,
+      sellerEmail:       sellerEmailForOrder,
+      trackingStatus:    "placed",
+      trackingEvents:    [{ status: "placed", at: Date.now(), by: "buyer" }],
       deliveryConfirmed: false,
       disputeStatus:     null,
       createdAt:         new Date()

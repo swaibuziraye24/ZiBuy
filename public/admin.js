@@ -134,6 +134,8 @@ let allPremiumAds  = [];
 let allVerifs      = [];
 let allReports     = [];
 let allJobAds      = [];
+let allDisputes    = [];
+let currentDisputeFilter = "all";
 
 // ── Auth guard ────────────────────────────────
 onAuthStateChanged(auth, async (user) => {
@@ -149,7 +151,7 @@ onAuthStateChanged(auth, async (user) => {
   if (!allowed) {
     try {
       const adminSnap = await getDoc(doc(db, "admins", user.uid));
-      allowed = adminSnap.exists();
+      allowed = adminSnap.exists() && adminSnap.data().suspended !== true;
       if (allowed) adminRole = adminSnap.data().role || "full";
     } catch (e) {
       allowed = false;
@@ -178,8 +180,15 @@ onAuthStateChanged(auth, async (user) => {
     auditLogNavBtn.style.display = user.email === ADMIN_EMAIL ? "" : "none";
   }
 
+  const revenueNavBtn = document.getElementById("revenue-nav-btn");
+  if (revenueNavBtn) {
+    revenueNavBtn.style.display = user.email === ADMIN_EMAIL ? "" : "none";
+  }
+
   if (user.email === ADMIN_EMAIL) {
     startAdminAuditLogListener();
+  } else {
+    startStaffSessionWatch(user);
   }
 
   await loadAll();
@@ -192,8 +201,13 @@ window.adminLogout = () => signOut(auth).then(() => window.location.href = "inde
 // ══════════════════════════════════════════════
 async function loadAdmins() {
   try {
-    const snap = await getDocs(collection(db, "admins"));
-    const admins = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const [snap, sessSnap] = await Promise.all([
+      getDocs(collection(db, "admins")),
+      getDocs(collection(db, "admin_sessions")).catch(() => ({ docs: [] }))
+    ]);
+    const sessions = {};
+    sessSnap.docs.forEach(d => { sessions[d.id] = d.data(); });
+    const admins = snap.docs.map(d => ({ id: d.id, session: sessions[d.id] || null, ...d.data() }));
     renderAdmins(admins);
   } catch (e) { console.error(e); }
 }
@@ -204,27 +218,81 @@ function renderAdmins(admins) {
   if (!tbody) return;
 
   if (admins.length === 0) {
-    tbody.innerHTML = `<tr class="empty-row"><td colspan="5">No additional admins yet</td></tr>`;
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="6">No additional admins yet</td></tr>`;
     return;
   }
 
   tbody.innerHTML = admins.map(a => {
     const role = a.role || "full";
     const nextRole = role === "viewer" ? "full" : "viewer";
+    const suspended = a.suspended === true;
+
+    const seen = a.session?.lastSeen?.toDate ? a.session.lastSeen.toDate() : null;
+    let activity;
+    if (suspended) {
+      const until = a.suspendedUntil?.toDate ? a.suspendedUntil.toDate() : null;
+      activity = `<span class="plan-chip chip-expired">⛔ Suspended${until ? " until " + until.toLocaleDateString() : ""}</span>`;
+    } else if (seen && (Date.now() - seen.getTime()) < 120000) {
+      activity = `<span class="plan-chip chip-approved">🟢 Online</span>`;
+    } else if (seen) {
+      activity = `<span style="font-size:12px;color:#6b7280">Last seen ${escapeHTML(seen.toLocaleString())}</span>`;
+    } else {
+      activity = `<span style="font-size:12px;color:#9ca3af">Not seen yet</span>`;
+    }
+
     return `
     <tr>
       <td style="font-family:monospace;font-size:12px">${escapeHTML(a.id)}</td>
       <td>${escapeHTML(a.email) || "—"}</td>
       <td><span class="plan-chip ${role === "viewer" ? "chip-pending" : "chip-approved"}">${role === "viewer" ? "👁️ Viewer" : "🛠️ Full"}</span></td>
+      <td>${activity}</td>
       <td style="font-size:12px">${fmtDate(a.addedAt)}</td>
       <td style="display:flex;gap:6px;flex-wrap:wrap">
         <button class="action-btn" style="background:#e0f2fe;color:#0369a1;border:none;padding:6px 10px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer"
           onclick="setAdminRole('${a.id}','${nextRole}')">Make ${nextRole === "viewer" ? "Viewer" : "Full"}</button>
+        ${suspended
+          ? `<button class="action-btn" style="background:#dcfce7;color:#166534;border:none;padding:6px 10px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer"
+              onclick="setAdminSuspended('${a.id}', false)">✅ Restore</button>`
+          : `<button class="action-btn" style="background:#fef3c7;color:#92400e;border:none;padding:6px 10px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer"
+              onclick="setAdminSuspended('${a.id}', true)">⏏ Force logout</button>`}
         <button class="action-btn btn-reject" onclick="removeAdmin('${a.id}')">🗑️ Remove</button>
       </td>
     </tr>`;
   }).join("");
 }
+
+window.setAdminSuspended = async function(uid, suspended) {
+  if (!suspended) {
+    if (!confirm("Restore this admin's access?")) return;
+    try {
+      await updateDoc(doc(db, "admins", uid), { suspended: false, suspendedUntil: null });
+      showToast("Admin access restored", "success");
+      loadAdmins();
+    } catch (e) {
+      showToast("Failed: " + e.message, "error");
+    }
+    return;
+  }
+
+  const input = prompt("Force logout for how many days?\n\nType a number (e.g. 3) to auto-restore them after that many days, or leave EMPTY to suspend indefinitely until you manually restore them.", "");
+  if (input === null) return;
+  const t = input.trim();
+  let until = null;
+  if (t !== "") {
+    const days = parseInt(t, 10);
+    if (isNaN(days) || days < 1) { showToast("Enter a whole number of days, like 3", "error"); return; }
+    until = new Date(Date.now() + days * 86400000);
+  }
+
+  if (!confirm("Force logout this admin?\n\nThey are signed out immediately and blocked from all admin data until restored" + (until ? `, which happens automatically on ${until.toLocaleDateString()}.` : " by you."))) return;
+  try {
+    await updateDoc(doc(db, "admins", uid), { suspended: true, suspendedUntil: until, suspendedAt: new Date() });
+    showToast(until ? `Admin suspended until ${until.toLocaleDateString()}` : "Admin logged out and suspended", "info");
+    loadAdmins();
+  } catch (e) {
+    showToast("Failed: " + e.message, "error");
+  }
+};
 
 window.setAdminRole = async function(uid, role) {
   if (!confirm(`Change this admin to ${role === "viewer" ? "VIEW-ONLY" : "FULL access"}?`)) return;
@@ -269,6 +337,231 @@ window.removeAdmin = async function(uid) {
   }
 };
 
+async function loadRevenueDashboard() {
+  try {
+    const pinSnap = await getDocs(query(
+      collection(db, "pin_requests"),
+      where("status", "==", "approved")
+    ));
+
+    window._revenueData = {
+      subs:    allSubs.filter(s => s.status === "active"),
+      boosts:  allBoosts.filter(b => b.status === "approved"),
+      pins:    pinSnap.docs.map(d => d.data()),
+      premium: allPremiumAds,
+      orders:  allOrders.filter(o => o.protected)
+    };
+
+    renderRevenueDashboard("all");
+  } catch (e) {
+    console.error("loadRevenueDashboard:", e);
+  }
+}
+window.loadRevenueDashboard = loadRevenueDashboard;
+
+function tsToDate(ts) {
+  return ts?.toDate ? ts.toDate() : (ts ? new Date(ts) : null);
+}
+
+window.renderRevenueDashboard = function(range) {
+  const data = window._revenueData;
+  if (!data) return;
+
+  document.querySelectorAll(".revenue-range-btn").forEach(b => b.classList.remove("active-filter"));
+  document.querySelector(`.revenue-range-btn[data-range="${range}"]`)?.classList.add("active-filter");
+
+  const now = new Date();
+  const inRange = (dateField) => {
+    if (range === "all") return true;
+    const d = tsToDate(dateField);
+    if (!d) return false;
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  };
+
+  const dateOf = (x) => x.activatedAt || x.approvedAt || x.createdAt || x.requestedAt;
+
+  const subTotal     = data.subs.filter(x => inRange(dateOf(x))).reduce((s,x) => s + Number(x.price||0), 0);
+  const boostTotal   = data.boosts.filter(x => inRange(dateOf(x))).reduce((s,x) => s + Number(x.price||0), 0);
+  const pinTotal     = data.pins.filter(x => inRange(dateOf(x))).reduce((s,x) => s + Number(x.price||0), 0);
+  const premiumTotal = data.premium.filter(x => inRange(dateOf(x))).reduce((s,x) => s + Number(x.price||0), 0);
+  const protectTotal = data.orders.filter(x => inRange(dateOf(x))).reduce((s,x) => s + Number(x.protectionFee||0), 0);
+  const grandTotal   = subTotal + boostTotal + pinTotal + premiumTotal + protectTotal;
+
+  const fmt = n => "UGX " + Number(n).toLocaleString();
+
+  document.getElementById("rev-subs").textContent     = fmt(subTotal);
+  document.getElementById("rev-boosts").textContent   = fmt(boostTotal);
+  document.getElementById("rev-pins").textContent     = fmt(pinTotal);
+  document.getElementById("rev-premium").textContent  = fmt(premiumTotal);
+  document.getElementById("rev-protect").textContent  = fmt(protectTotal);
+  document.getElementById("rev-total").textContent    = fmt(grandTotal);
+};
+
+async function loadModerationKeywords() {
+  try {
+    const snap = await getDoc(doc(db, "moderation_config", "keywords"));
+    const data = snap.exists() ? snap.data() : {};
+    const input = document.getElementById("moderation-keywords-input");
+    if (input) input.value = (data.bannedWords || []).join(", ");
+    const daysInput = document.getElementById("flag-expiry-days-input");
+    if (daysInput) daysInput.value = data.flagExpiryDays || 14;
+  } catch (e) { console.error(e); }
+}
+window.loadModerationKeywords = loadModerationKeywords;
+
+window.saveModerationKeywords = async function() {
+  const raw = document.getElementById("moderation-keywords-input")?.value || "";
+  const words = raw.split(",").map(w => w.trim()).filter(Boolean);
+  const days = parseInt(document.getElementById("flag-expiry-days-input")?.value, 10) || 14;
+  try {
+    await setDoc(doc(db, "moderation_config", "keywords"), { bannedWords: words, flagExpiryDays: days, updatedAt: new Date() });
+    showToast("Settings saved", "success");
+  } catch (e) {
+    showToast("Failed: " + e.message, "error");
+  }
+};
+
+window.backfillBoostStats = async function() {
+  if (!confirm("Backfill boost stats for currently-boosted ads with no baseline yet? This uses today's view count as the starting point, since the real historical number from when they were boosted isn't available.")) return;
+  try {
+    const snap = await getDocs(query(collection(db, "products"), where("isPremium", "==", true)));
+    let updated = 0;
+    for (const docSnap of snap.docs) {
+      const p = docSnap.data();
+      if (p.boostStartViews === undefined) {
+        await updateDoc(doc(db, "products", docSnap.id), { boostStartViews: p.views || 0 });
+        updated++;
+      }
+    }
+    showToast(`Backfilled ${updated} ad(s)`, "success");
+  } catch (e) {
+    showToast("Failed: " + e.message, "error");
+  }
+};
+
+window.postFeatureUpdate = async function() {
+  const title = document.getElementById("fu-title")?.value.trim();
+  const text  = document.getElementById("fu-text")?.value.trim();
+  const audioFile = document.getElementById("fu-audio")?.files[0];
+  const videoFile = document.getElementById("fu-video")?.files[0];
+
+  if (!title) { showToast("Add a title first", "error"); return; }
+  if (!text && !audioFile && !videoFile) { showToast("Add text, audio, or a video — at least one", "error"); return; }
+
+  const btn = document.getElementById("fu-post-btn");
+  if (btn) { btn.disabled = true; btn.textContent = "Posting..."; }
+
+  try {
+    const { getStorage, ref, uploadBytes, getDownloadURL } =
+      await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js");
+    const storage = getStorage();
+
+    let audioUrl = "", videoUrl = "";
+
+    if (audioFile) {
+      const audioRef = ref(storage, `feature-updates/${Date.now()}-${audioFile.name}`);
+      await uploadBytes(audioRef, audioFile, { contentType: audioFile.type });
+      audioUrl = await getDownloadURL(audioRef);
+    }
+
+    if (videoFile) {
+      if (videoFile.size > 50 * 1024 * 1024) {
+        showToast("Video too large — keep it under 50MB", "error");
+        if (btn) { btn.disabled = false; btn.textContent = "📢 Post Update"; }
+        return;
+      }
+      const videoRef = ref(storage, `feature-updates/${Date.now()}-${videoFile.name}`);
+      await uploadBytes(videoRef, videoFile, { contentType: videoFile.type });
+      videoUrl = await getDownloadURL(videoRef);
+    }
+
+    await addDoc(collection(db, "feature_updates"), {
+      title, text: text || "", audioUrl, videoUrl,
+      createdBy: ADMIN_EMAIL,
+      createdAt: new Date()
+    });
+
+    const usersSnap = await getDocs(collection(db, "users"));
+    const batch = usersSnap.docs.map(d =>
+      addDoc(collection(db, "notifications"), {
+        userId: d.id,
+        type: "feature_update",
+        title: `🎓 New: ${title}`,
+        message: text ? text.slice(0, 80) : "Tap to see the new feature",
+        relatedId: "updates.html",
+        read: false,
+        createdAt: new Date()
+      })
+    );
+    await Promise.all(batch);
+
+    showToast("Posted and users notified", "success");
+    document.getElementById("fu-title").value = "";
+    document.getElementById("fu-text").value = "";
+    document.getElementById("fu-audio").value = "";
+    document.getElementById("fu-video").value = "";
+    loadFeatureUpdatesAdmin();
+  } catch (e) {
+    showToast("Failed: " + e.message, "error");
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = "📢 Post Update"; }
+  }
+};
+
+async function loadFeatureUpdatesAdmin() {
+  const container = document.getElementById("feature-updates-list");
+  if (!container) return;
+  try {
+    const snap = await getDocs(collection(db, "feature_updates"));
+    const updates = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      .sort((a,b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
+
+    if (updates.length === 0) {
+      container.innerHTML = `<p style="color:#6b7280;font-size:13px">No updates posted yet</p>`;
+      return;
+    }
+
+    container.innerHTML = updates.map(u => `
+      <div style="background:white;border:1px solid #e5e7eb;border-radius:12px;padding:12px;margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <strong style="font-size:13px">${escapeHTML(u.title)}</strong>
+          <button class="action-btn btn-reject" onclick="deleteFeatureUpdate('${u.id}')">🗑️</button>
+        </div>
+        <p style="font-size:12px;color:#6b7280;margin:4px 0 0">${escapeHTML((u.text||"").slice(0,100)) || "—"}</p>
+        <p style="font-size:11px;color:#9ca3af;margin:4px 0 0">${u.audioUrl ? "🎙️ Audio " : ""}${u.videoUrl ? "🎬 Video" : ""}</p>
+      </div>
+    `).join("");
+  } catch(e) {
+    container.innerHTML = `<p style="color:red;font-size:13px">Failed: ${e.message}</p>`;
+  }
+}
+window.loadFeatureUpdatesAdmin = loadFeatureUpdatesAdmin;
+
+window.deleteFeatureUpdate = async function(id) {
+  if (!confirm("Delete this update? Users who already saw the notification keep that, but the post itself disappears from the Updates page.")) return;
+  try {
+    await deleteDoc(doc(db, "feature_updates", id));
+    showToast("Deleted", "info");
+    loadFeatureUpdatesAdmin();
+  } catch(e) { showToast("Failed: " + e.message, "error"); }
+};
+
+window.exportAllData = async function() {
+  const btn = document.getElementById("export-all-btn");
+  if (btn) { btn.disabled = true; btn.textContent = "Generating… this may take a minute"; }
+  try {
+    const { getFunctions, httpsCallable } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js");
+    const fn = httpsCallable(getFunctions(), "adminExportAllData");
+    const result = await fn({});
+    showToast(`Export ready: ${result.data.totalDocs} documents`, "success");
+    window.open(result.data.url, "_blank");
+  } catch (e) {
+    showToast("Failed: " + e.message, "error");
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = "Generate Export"; }
+  }
+};
+
 // ══════════════════════════════════════════════
 //  ADMIN AUDIT LOG — real-time, super-admin only
 // ══════════════════════════════════════════════
@@ -301,6 +594,29 @@ function startAdminAuditLogListener() {
   }, (err) => {
     console.error("Admin audit log listener failed:", err);
   });
+}
+
+// ── Staff session watch: instant sign-out if suspended/removed + "online" heartbeat ──
+function startStaffSessionWatch(user) {
+  onSnapshot(doc(db, "admins", user.uid), async (snap) => {
+    if (!snap.exists() || snap.data().suspended === true) {
+      alert(snap.exists()
+        ? "Your admin access has been suspended by the owner. You have been logged out."
+        : "Your admin access has been removed.");
+      try { await signOut(auth); } catch (e) {}
+      window.location.href = "index.html";
+    }
+  }, () => {});
+
+  const beat = () => {
+    _setDoc(doc(db, "admin_sessions", user.uid), {
+      email: user.email,
+      lastSeen: new Date(),
+      device: (navigator.userAgent || "").slice(0, 120)
+    }, { merge: true }).catch(() => {});
+  };
+  beat();
+  setInterval(beat, 60000);
 }
 
 
@@ -387,7 +703,8 @@ function renderOverview() {
   const boostRevenue   = allBoosts.filter(b => b.status === "approved").reduce((s,b) => s + Number(b.price||0), 0);
   const subRevenue     = allSubs.filter(s => s.status === "active").reduce((s,sub) => s + Number(sub.price||0), 0);
   const premiumRevenue = allPremiumAds.reduce((s,p) => s + Number(p.price||0), 0);
-  const totalRevenue   = boostRevenue + subRevenue + premiumRevenue;
+  const protectRevenue = allOrders.filter(o => o.protected).reduce((s,o) => s + Number(o.protectionFee||0), 0);
+  const totalRevenue   = boostRevenue + subRevenue + premiumRevenue + protectRevenue;
   const kpiRevenue = document.getElementById("kpi-revenue");
   if (kpiRevenue) kpiRevenue.textContent = "UGX " + totalRevenue.toLocaleString();
 
@@ -486,7 +803,7 @@ function renderUsers(users) {
     return `
       <tr>
         <td><input type="checkbox" class="user-select-checkbox" value="${u.id}"></td>
-        <td><span style="font-weight:700">${escapeHTML(u.email) || escapeHTML(u.id)}</span></td>
+        <td><span style="font-weight:700">${u.scamFlagged ? '🚩 ' : ''}${escapeHTML(u.email) || escapeHTML(u.id)}</span></td>
         <td><span class="plan-chip chip-${plan}">${planEmoji(plan)} ${plan}</span></td>
         <td id="ads-count-${u.id}">—</td>
         <td>${verified}</td>
@@ -1000,11 +1317,15 @@ window.approveBoost = async function(boostId, productId, days) {
       expiresAt               // saves expiry on the boost_request doc too
     });
 
+    const productSnap = await getDoc(doc(db, "products", productId));
+    const productData = productSnap.exists() ? productSnap.data() : {};
+
     await updateDoc(doc(db, "products", productId), {
       isPremium:        true,
       premiumExpiresAt: expiresAt,
       boostApprovedAt:  new Date(),
-      boostExpiresAt:   expiresAt
+      boostExpiresAt:   expiresAt,
+      boostStartViews:  productData.views || 0
     });
 
     // ── Step 4: notify the seller ─────────────
@@ -1287,7 +1608,7 @@ function renderAdsTable(ads) {
         <img src="${a.images?.[0] || ''}" alt=""
           style="width:44px;height:44px;object-fit:cover;border-radius:8px;background:#f3f4f6">
       </td>
-      <td style="font-weight:700;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(a.name)}</td>
+      <td style="font-weight:700;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.adminAdNotes ? '🚩 ' : ''}${escapeHTML(a.name)}</td>
       <td style="color:var(--orange);font-weight:800">UGX ${Number(a.price||0).toLocaleString()}</td>
       <td style="font-size:12px">${escapeHTML(a.userEmail) || "—"}</td>
       <td>
@@ -1312,6 +1633,8 @@ function renderAdsTable(ads) {
           <button class="action-btn" style="background:#ede9fe;color:#5b21b6;border:none;padding:6px 10px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer"
             onclick="grantFreePin('${a.id}')">📍 Free Pin</button>
         `}
+        <button class="action-btn" style="background:${a.adminAdNotes ? '#fee2e2' : '#f3f4f6'};color:${a.adminAdNotes ? '#991b1b' : '#374151'};border:none;padding:6px 10px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer"
+          onclick="viewAdNotes('${a.id}', '${(a.adminAdNotes||"").replace(/'/g,"\\'").replace(/\n/g,"\\n")}')">${a.adminAdNotes ? '🚩 Notes' : '🗒️ Add Note'}</button>
         <button class="action-btn btn-reject" onclick="adminDeleteAd('${a.id}')">🗑️ Delete</button>
       </td>
     </tr>`;
@@ -1351,6 +1674,8 @@ function applyAdsFilters() {
   );
   if (currentAdsStatusFilter === "badphone") {
     filtered = filtered.filter(a => !isValidWhatsAppPhoneAdmin(a.seller?.phone));
+  } else if (currentAdsStatusFilter === "flagged") {
+    filtered = filtered.filter(a => !!a.adminAdNotes);
   } else if (currentAdsStatusFilter !== "all") {
     filtered = filtered.filter(a => getAdEffectiveStatus(a) === currentAdsStatusFilter);
   }
@@ -1388,6 +1713,687 @@ window.adminDeleteAd = async function(adId) {
   } catch (e) { showToast("Failed", "error"); }
 };
 
+
+// ══════════════════════════════════════════════
+//  DELIVERY TRACKING (admin)
+// ══════════════════════════════════════════════
+const ZB_TRACK_STEPS_ADMIN = [
+  { key: "placed",           label: "Order placed" },
+  { key: "payment_verified", label: "Payment confirmed" },
+  { key: "packed",           label: "Packed" },
+  { key: "on_the_way",       label: "On the way" },
+  { key: "arrived",          label: "Seller arrived" },
+  { key: "received",         label: "Received by buyer" }
+];
+
+const ZB_TRACK_LABELS = {
+  placed:           "📝 Order placed",
+  payment_verified: "💰 Payment confirmed",
+  packed:           "📦 Packed",
+  on_the_way:       "🚚 On the way",
+  arrived:          "📍 Seller arrived",
+  received:         "✅ Received"
+};
+
+// Live feed: the table, the order popup and pop-up messages update by themselves
+let zbAdminOrdersUnsub = null;
+function zbStartAdminOrdersLive() {
+  if (zbAdminOrdersUnsub) return;
+  let first = true;
+
+  zbAdminOrdersUnsub = onSnapshot(collection(db, "orders"), (snap) => {
+    const fresh = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
+
+    if (!first) {
+      const before = new Map(allOrders.map(o => [o.id, o.trackingStatus]));
+      fresh.forEach(o => {
+        const name = o.productName || o.orderRef || o.orderId || "Order";
+        if (!before.has(o.id)) {
+          showToast(`🛍️ New order: ${name}`, "success");
+        } else if (o.trackingStatus && before.get(o.id) !== o.trackingStatus) {
+          showToast(`${ZB_TRACK_LABELS[o.trackingStatus] || o.trackingStatus}: ${name}`, "success");
+        }
+      });
+    }
+    first = false;
+
+    allOrders = fresh;
+    renderOrdersTable(allOrders);
+
+    // keep an open order popup in sync
+    const open = document.getElementById("admin-order-detail-modal");
+    if (open && open.dataset.orderId) {
+      const id = open.dataset.orderId;
+      open.remove();
+      window.viewOrderDetail(id);
+    }
+  }, (e) => console.error(e));
+}
+
+function zbAdminTrackingHTML(order) {
+  const idx = ZB_TRACK_STEPS_ADMIN.findIndex(s => s.key === order.trackingStatus);
+  const events = {};
+  (order.trackingEvents || []).forEach(e => { events[e.status] = e; });
+
+  const timeline = ZB_TRACK_STEPS_ADMIN.map((s, i) => {
+    const done = i <= idx;
+    const ev   = events[s.key];
+    const when = ev
+      ? new Date(ev.at).toLocaleString("en-UG", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) + (ev.by ? " · by " + ev.by : "")
+      : "";
+    return `<div style="display:flex;gap:10px;align-items:flex-start;padding-bottom:8px">
+      <span style="width:18px;height:18px;border-radius:50%;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;background:${done ? "#10b981" : "#e5e7eb"};color:${done ? "white" : "#9ca3af"}">${done ? "✓" : ""}</span>
+      <div>
+        <div style="font-size:13px;font-weight:${done ? 800 : 600};color:${done ? "#111827" : "#9ca3af"}">${s.label}</div>
+        ${when ? `<div style="font-size:11px;color:#6b7280">${when}</div>` : ""}
+      </div>
+    </div>`;
+  }).join("");
+
+  const needsPayment = !order.trackingStatus || order.trackingStatus === "placed";
+
+  return `
+    <div style="border:1.5px solid #e5e7eb;border-radius:12px;padding:14px;margin-bottom:14px">
+      <h3 style="font-size:14px;font-weight:800;margin:0 0 10px">🚚 Delivery Tracking</h3>
+      ${timeline}
+
+      ${needsPayment ? `
+        <button onclick="adminSetTracking('${order.id}','payment_verified')"
+          style="width:100%;background:#10b981;color:white;border:none;padding:12px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;margin:4px 0 10px">
+          ✅ Confirm Payment Received
+        </button>` : ""}
+
+
+        ${(needsPayment && order.paymentGroupId && order.paymentGroupOrders > 1) ? `
+        <button onclick="adminConfirmGroup('${order.paymentGroupId}')"
+          style="width:100%;background:#059669;color:white;border:none;padding:12px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;margin:0 0 10px">
+          ✅ Confirm all ${order.paymentGroupOrders} orders in this payment (combined UGX ${Number(order.paymentGroupTotal || 0).toLocaleString()})
+        </button>` : ""}
+
+        ${zbAdminProofHTML(order)}
+
+      <select onchange="adminSetTracking('${order.id}', this.value); this.value=''"
+        style="width:100%;padding:10px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:13px;margin-bottom:10px;background:white">
+        <option value="">Override tracking step…</option>
+        ${ZB_TRACK_STEPS_ADMIN.map(s => `<option value="${s.key}">${s.label}</option>`).join("")}
+      </select>
+
+      <div style="display:flex;gap:8px">
+        <button onclick="adminChatWith('${order.id}','buyer')"
+          style="flex:1;background:#eff6ff;color:#1e40af;border:1.5px solid #bfdbfe;padding:10px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer">
+          💬 Chat with Buyer
+        </button>
+        <button onclick="adminChatWith('${order.id}','seller')"
+          style="flex:1;background:#fff7ed;color:#9a3412;border:1.5px solid #fed7aa;padding:10px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer">
+          💬 Chat with Seller
+        </button>
+      </div>
+    </div>`;
+}
+
+window.adminOpenPayout = async function (orderId) {
+  const o = allOrders.find(x => x.id === orderId);
+  if (!o) return;
+
+  let p = null;
+  try {
+    const snap = await getDocs(query(collection(db, "payouts"), where("orderId", "==", orderId)));
+    if (!snap.empty) p = { id: snap.docs[0].id, ...snap.docs[0].data() };
+  } catch (e) { console.error(e); }
+
+  document.getElementById("admin-payout-modal")?.remove();
+  const m = document.createElement("div");
+  m.id = "admin-payout-modal";
+  m.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px";
+
+  const refText = escapeHTML(o.orderRef || o.orderId || orderId.slice(0, 8));
+  const closeBtn = `<button onclick="this.closest('#admin-payout-modal').remove()" style="width:100%;margin-top:10px;background:#e5e7eb;border:none;padding:11px;border-radius:10px;font-weight:700;cursor:pointer">Close</button>`;
+  const field = "width:100%;padding:10px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;margin:4px 0 12px;box-sizing:border-box;font-family:inherit";
+
+  if (p) {
+    const a = p.acknowledgement;
+    m.innerHTML = `<div style="background:white;border-radius:16px;padding:22px;max-width:420px;width:100%;max-height:90vh;overflow:auto">
+      <h3 style="margin:0 0 12px">💸 Seller payout · ${refText}</h3>
+      <p style="margin:0 0 6px">Amount: <strong>UGX ${Number(p.amount).toLocaleString()}</strong></p>
+      <p style="margin:0 0 6px">${escapeHTML(String(p.method).toUpperCase())} · ${escapeHTML(p.txnId)}</p>
+      <p style="margin:0 0 10px">${a
+        ? `✅ Seller signed as <strong>${escapeHTML(a.nameTyped)}</strong> on ${new Date(a.atMs).toLocaleString("en-UG")}`
+        : "⏳ Waiting for the seller to confirm"}</p>
+      ${p.screenshotUrl ? `<p style="margin:0 0 10px"><a href="${escapeHTML(p.screenshotUrl)}" target="_blank">View payment screenshot</a></p>` : ""}
+      <button onclick="window.open('certificate.html?order=${orderId}','_blank')"
+        style="width:100%;background:white;border:1.5px solid #d1d5db;padding:10px;border-radius:10px;font-weight:800;cursor:pointer">📄 Proof log &amp; certificate</button>
+      ${closeBtn}
+    </div>`;
+  } else {
+    m.innerHTML = `<div style="background:white;border-radius:16px;padding:22px;max-width:420px;width:100%;max-height:90vh;overflow:auto">
+      <h3 style="margin:0 0 6px">💸 Record seller payout · ${refText}</h3>
+      <p style="margin:0 0 14px;font-size:12px;color:#6b7280;line-height:1.5">
+        Record this only after you have actually sent the money. The seller will then be asked to confirm and sign.</p>
+
+      <label style="font-size:12px;font-weight:800">Amount sent (UGX)</label>
+      <input id="po-amount" type="number" min="1" value="${Math.round(o.price || 0)}" style="${field}">
+
+      <label style="font-size:12px;font-weight:800">Method</label>
+      <select id="po-method" style="${field}">
+        <option value="mtn">MTN Mobile Money</option>
+        <option value="airtel">Airtel Money</option>
+        <option value="bank">Bank transfer</option>
+      </select>
+
+      <label style="font-size:12px;font-weight:800">Transaction ID</label>
+      <input id="po-txn" type="text" placeholder="e.g. 1234567890" style="${field}">
+
+      <label style="font-size:12px;font-weight:800">Screenshot of the payment (recommended)</label>
+      <input id="po-file" type="file" accept="image/*" style="${field}">
+
+      <button onclick="adminSubmitPayout('${orderId}', this)"
+        style="width:100%;background:#10b981;color:white;border:none;padding:13px;border-radius:10px;font-weight:800;font-size:14px;cursor:pointer">
+        Record payout &amp; notify seller</button>
+      ${closeBtn}
+    </div>`;
+  }
+  document.body.appendChild(m);
+};
+
+window.adminSubmitPayout = async function (orderId, btn) {
+  const o = allOrders.find(x => x.id === orderId);
+  if (!o) return;
+
+  const amount = Math.round(Number(document.getElementById("po-amount")?.value));
+  const method = document.getElementById("po-method")?.value;
+  const txnId  = (document.getElementById("po-txn")?.value || "").trim();
+  const file   = document.getElementById("po-file")?.files?.[0];
+
+  if (!(amount > 0) || txnId.length < 4) { alert("Enter the amount and the transaction ID."); return; }
+  if (!confirm(`Record a payout of UGX ${amount.toLocaleString()} to the seller of this order?`)) return;
+
+  btn.disabled = true;
+  btn.textContent = "Saving...";
+
+  try {
+    let screenshotUrl = "";
+    if (file) {
+      const { storage } = await import("./firebase.js");
+      const { ref, uploadBytes, getDownloadURL } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js");
+      const r = ref(storage, `payout-proofs/${o.sellerId}/${orderId}-${Date.now()}.jpg`);
+      await uploadBytes(r, file);
+      screenshotUrl = await getDownloadURL(r);
+    }
+
+    const { getFunctions, httpsCallable } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js");
+    await httpsCallable(getFunctions(), "recordPayout")({
+      orderId, amount, method, txnId, screenshotUrl, payoutDateMs: Date.now()
+    });
+
+    document.getElementById("admin-payout-modal")?.remove();
+    showToast("Payout recorded. The seller was notified ✅", "success");
+  } catch (e) {
+    console.error(e);
+    alert(e.message || "Failed to record the payout");
+    btn.disabled = false;
+    btn.textContent = "Record payout & notify seller";
+  }
+};
+
+
+// ── Terms & Privacy acceptance log ──
+let zbTermsRows = [];
+
+const ZB_TERMS_METHODS = {
+  signup_form:  "Sign-up form",
+  google_signup: "Google sign-up",
+  reaccept:     "Accepted updated terms",
+  login_gate:   "Asked at login"
+};
+
+window.loadTermsLog = async function () {
+  const body = document.getElementById("terms-log-body");
+  try {
+    const snap = await getDocs(query(collection(db, "terms_acceptances"), orderBy("atMs", "desc"), limit(1000)));
+    zbTermsRows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    window.renderTermsLog();
+  } catch (e) {
+    console.error(e);
+    if (body) body.innerHTML = `<tr class="empty-row"><td colspan="6">Couldn't load the log.</td></tr>`;
+  }
+};
+
+window.renderTermsLog = function () {
+  const body = document.getElementById("terms-log-body");
+  if (!body) return;
+
+  const q = (document.getElementById("terms-log-search")?.value || "").trim().toLowerCase();
+  const rows = zbTermsRows.filter(r =>
+    !q || (r.email || "").toLowerCase().includes(q) || (r.name || "").toLowerCase().includes(q));
+
+  if (!rows.length) {
+    body.innerHTML = `<tr class="empty-row"><td colspan="6">No records found</td></tr>`;
+    return;
+  }
+
+  body.innerHTML = rows.map(r => `<tr>
+    <td style="font-size:12px;white-space:nowrap">${new Date(r.atMs).toLocaleString("en-UG", { timeZone: "Africa/Kampala" })}</td>
+    <td><strong>${escapeHTML(r.name || "")}</strong><br><span style="font-size:12px;color:#6b7280">${escapeHTML(r.email || "")}</span></td>
+    <td>${escapeHTML(r.termsVersion)}</td>
+    <td>${escapeHTML(r.privacyVersion)}</td>
+    <td style="font-size:12px">${escapeHTML(ZB_TERMS_METHODS[r.method] || r.method)}</td>
+    <td style="font-size:11px;color:#6b7280;max-width:220px">${escapeHTML(r.ip || "")}<br>${escapeHTML((r.userAgent || "").slice(0, 70))}</td>
+  </tr>`).join("");
+};
+
+window.exportTermsLog = function () {
+  const q = s => `"${String(s ?? "").replace(/"/g, '""')}"`;
+  const head = ["time_kampala", "email", "name", "terms_version", "privacy_version", "method", "ip", "user_agent", "terms_fingerprint", "privacy_fingerprint", "uid"];
+  const lines = zbTermsRows.map(r => [
+    new Date(r.atMs).toLocaleString("en-UG", { timeZone: "Africa/Kampala" }),
+    r.email, r.name, r.termsVersion, r.privacyVersion, r.method, r.ip, r.userAgent, r.termsHash, r.privacyHash, r.uid
+  ].map(q).join(","));
+
+  const blob = new Blob([head.join(",") + "\n" + lines.join("\n")], { type: "text/csv" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `zibuy-terms-log-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+};
+
+
+// ══════════════════════════════════════════════
+//  MONEY & ALERTS DASHBOARD
+// ══════════════════════════════════════════════
+let zbPayouts = [];
+const ZB_DAY = 86400000;
+
+// How long each step may take before an order counts as "stuck" (change the numbers to suit you)
+const ZB_STUCK_RULES = {
+  placed:           { days: 1, text: "Payment not confirmed yet" },
+  payment_verified: { days: 3, text: "Seller hasn't packed it" },
+  packed:           { days: 3, text: "Packed but not on the way" },
+  on_the_way:       { days: 5, text: "On the way for a long time" },
+  arrived:          { days: 2, text: "Buyer hasn't confirmed receipt" }
+};
+
+const zbMoney = (n) => "UGX " + Math.round(Number(n) || 0).toLocaleString();
+
+function zbOrderTime(o) {
+  return o.createdAt?.toDate?.().getTime() || new Date(o.createdAt || 0).getTime() || 0;
+}
+
+function zbStatusSince(o) {
+  const at = (o.trackingEvents || []).filter(e => e.status === o.trackingStatus).map(e => e.at).pop();
+  return at || zbOrderTime(o);
+}
+
+function zbAge(ms) {
+  if (!ms) return "";
+  const h = Math.floor((Date.now() - ms) / 3600000);
+  return (h < 48 ? h + "h" : Math.floor(h / 24) + "d") + " ago";
+}
+
+function zbMoneyList(title, color, rows, emptyText) {
+  const body = rows.length ? rows.map(r => `
+    <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid #f3f4f6;flex-wrap:wrap">
+      <div style="min-width:0;flex:1">
+        <div style="font-weight:700;font-size:13px">${escapeHTML(r.name)}</div>
+        <div style="font-size:11.5px;color:#6b7280">${escapeHTML(r.ref)}${r.since ? " · " + zbAge(r.since) : ""}${r.note ? " · " + escapeHTML(r.note) : ""}</div>
+      </div>
+      <div style="font-weight:800;font-size:13px;white-space:nowrap">${zbMoney(r.amount)}</div>
+      <div style="display:flex;gap:6px">
+        <button class="action-btn" onclick="viewOrderDetail('${r.id}')">Open</button>
+        ${r.pay ? `<button class="action-btn btn-approve" onclick="adminOpenPayout('${r.id}')">💸 Pay</button>` : ""}
+      </div>
+    </div>`).join("")
+    : `<p style="margin:10px 0 0;font-size:13px;color:#9ca3af">${emptyText}</p>`;
+
+  return `<div class="admin-card" style="margin-bottom:12px;border-left:4px solid ${color}">
+    <h3 style="margin:0;font-size:15px;font-weight:800">${title} <span style="color:#6b7280;font-weight:600">(${rows.length})</span></h3>
+    ${body}
+  </div>`;
+}
+
+window.loadMoneyDashboard = async function () {
+  const box = document.getElementById("money-body");
+  if (box) box.innerHTML = `<p style="color:#6b7280">Loading…</p>`;
+  try {
+    if (!allOrders.length) await loadOrders();
+    const ps = await getDocs(collection(db, "payouts"));
+    zbPayouts = ps.docs.map(d => ({ id: d.id, ...d.data() }));
+    const rs = await getDocs(collection(db, "refunds"));
+    zbRefunds = rs.docs.map(d => ({ id: d.id, ...d.data() }));
+    window.renderMoneyDashboard();
+  } catch (e) {
+    console.error(e);
+    if (box) box.innerHTML = `<p style="color:#b91c1c">Couldn't load the dashboard. Please try again.</p>`;
+  }
+};
+
+window.renderMoneyDashboard = function () {
+  const box = document.getElementById("money-body");
+  if (!box) return;
+
+  const now  = Date.now();
+  const live = allOrders.filter(o => o.trackingStatus && o.status !== "cancelled_by_buyer");
+  const paid = {};
+  zbPayouts.forEach(p => { paid[p.orderId] = p; });
+
+  const sum = (arr, f) => arr.reduce((t, x) => t + (Number(f(x)) || 0), 0);
+  const row = (o, extra = {}) => ({
+    id: o.id, name: o.productName || "Order",
+    ref: o.orderRef || o.orderId || o.id.slice(0, 8),
+    amount: o.total, since: zbStatusSince(o), ...extra
+  });
+  const oldest = (a, b) => a.since - b.since;
+
+  const awaitingPayment = live.filter(o => o.trackingStatus === "placed").map(o => row(o)).sort(oldest);
+  const holding = live.filter(o => ["payment_verified", "packed", "on_the_way", "arrived"].includes(o.trackingStatus))
+    .map(o => row(o)).sort(oldest);
+  const toPay = live.filter(o => o.trackingStatus === "received" && !paid[o.id])
+    .map(o => row(o, { amount: o.price, pay: true })).sort(oldest);
+  const waitingSign = zbPayouts.filter(p => p.status === "sent").map(p => ({
+    id: p.orderId, name: p.sellerName || "Seller", ref: p.orderRef || "", amount: p.amount,
+    since: p.createdAt?.toDate?.().getTime() || 0, note: "waiting for the seller to sign"
+  })).sort(oldest);
+
+  const waitingRefund = zbRefunds.filter(r => r.status === "sent").map(r => ({
+    id: r.orderId, name: r.buyerName || "Buyer", ref: r.orderRef || "", amount: r.amount,
+    since: r.createdAt?.toDate?.().getTime() || 0, note: "waiting for the buyer to confirm"
+  })).sort(oldest);
+  const disputes = allOrders.filter(o => o.disputeStatus === "open")
+    .map(o => row(o, { note: o.disputeReason || "dispute open" }));
+
+  const stuck = [];
+  live.forEach(o => {
+    const rule = ZB_STUCK_RULES[o.trackingStatus];
+    if (rule && now - zbStatusSince(o) > rule.days * ZB_DAY) stuck.push(row(o, { note: rule.text }));
+    if (o.trackingStatus === "received" && !paid[o.id] && now - zbStatusSince(o) > 3 * ZB_DAY) {
+      stuck.push(row(o, { note: "Seller payout overdue", amount: o.price, pay: true }));
+    }
+  });
+  stuck.sort(oldest);
+
+  const attention = stuck.length + disputes.length + awaitingPayment.length + toPay.length;
+
+  const kpi = (label, value, sub, color) => `
+    <div class="admin-card" style="padding:14px;border-top:4px solid ${color}">
+      <div style="font-size:12px;color:#6b7280;font-weight:700">${label}</div>
+      <div style="font-size:20px;font-weight:900;margin:4px 0">${value}</div>
+      <div style="font-size:11.5px;color:#6b7280">${sub}</div>
+    </div>`;
+
+  const periods = [["Last 24 hours", 1], ["Last 7 days", 7], ["Last 30 days", 30]].map(([label, d]) => {
+    const since = now - d * ZB_DAY;
+    const placed = live.filter(o => zbOrderTime(o) >= since);
+    const delivered = live.filter(o => o.trackingStatus === "received" && zbStatusSince(o) >= since).length;
+    return `<tr><td>${label}</td><td>${placed.length}</td><td>${zbMoney(sum(placed, o => o.total))}</td><td>${delivered}</td></tr>`;
+  }).join("");
+
+  box.innerHTML = `
+    ${attention ? `<div style="background:#fff7ed;border:1.5px solid #fdba74;color:#9a3412;padding:12px 14px;border-radius:12px;font-weight:700;font-size:13px;margin-bottom:12px">
+      ⚠️ ${attention} item${attention === 1 ? "" : "s"} need your attention (see the lists below).</div>` : ""}
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:14px">
+      ${kpi("Waiting for your payment check", awaitingPayment.length, zbMoney(sum(awaitingPayment, r => r.amount)), "#f59e0b")}
+      ${kpi("Money you are holding", zbMoney(sum(holding, r => r.amount)), holding.length + " order(s) in progress", "#3b82f6")}
+      ${kpi("Owed to sellers (delivered)", zbMoney(sum(toPay, r => r.amount)), toPay.length + " order(s), item value", "#10b981")}
+      ${kpi("Needs attention", stuck.length + disputes.length, stuck.length + " stuck · " + disputes.length + " dispute(s)", "#ef4444")}
+    </div>
+
+    <div class="admin-card" style="margin-bottom:12px">
+      <table class="data-table">
+        <thead><tr><th>Period</th><th>Orders placed</th><th>Order value</th><th>Delivered</th></tr></thead>
+        <tbody>${periods}</tbody>
+      </table>
+    </div>
+
+    ${zbMoneyList("🛑 Stuck orders", "#ef4444", stuck, "Nothing is stuck. 🎉")}
+    ${zbMoneyList("🚨 Open disputes", "#dc2626", disputes, "No open disputes.")}
+    ${zbMoneyList("💳 Waiting for your payment check", "#f59e0b", awaitingPayment, "No payments waiting.")}
+    ${zbMoneyList("💸 Owed to sellers (delivered, not paid yet)", "#10b981", toPay, "You don't owe any seller right now.")}
+    ${zbMoneyList("✍️ Payouts waiting for the seller's signature", "#8b5cf6", waitingSign, "Every payout has been confirmed.")}
+    ${zbMoneyList("↩️ Refunds waiting for the buyer's confirmation", "#f97316", waitingRefund, "Every refund has been confirmed.")}
+    ${zbMoneyList("📦 Money you are holding (orders in progress)", "#3b82f6", holding, "No orders in progress.")}
+  `;
+};
+
+
+// ── Refunds ──
+let zbRefunds = [];
+
+window.adminOpenRefund = async function (orderId) {
+  const o = allOrders.find(x => x.id === orderId);
+  if (!o) return;
+
+  let list = [];
+  try {
+    const snap = await getDocs(query(collection(db, "refunds"), where("orderId", "==", orderId)));
+    list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch (e) { console.error(e); }
+
+  const refunded  = list.reduce((t, r) => t + (Number(r.amount) || 0), 0);
+  const remaining = Math.max(0, (Number(o.total) || 0) - refunded);
+  const refText   = escapeHTML(o.orderRef || o.orderId || orderId.slice(0, 8));
+  const field = "width:100%;padding:10px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;margin:4px 0 12px;box-sizing:border-box;font-family:inherit";
+
+  document.getElementById("admin-refund-modal")?.remove();
+  const m = document.createElement("div");
+  m.id = "admin-refund-modal";
+  m.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px";
+
+  const existing = list.map(r => `
+    <div style="border:1px solid #e5e7eb;border-radius:10px;padding:10px 12px;margin-bottom:8px;font-size:13px">
+      <strong>UGX ${Number(r.amount).toLocaleString()}</strong> · ${escapeHTML(String(r.method).toUpperCase())} · ${escapeHTML(r.txnId)}<br>
+      <span style="color:#6b7280">${escapeHTML(r.reason)}</span><br>
+      ${r.acknowledgement
+        ? `✅ Buyer confirmed on ${new Date(r.acknowledgement.atMs).toLocaleString("en-UG")}`
+        : "⏳ Waiting for the buyer to confirm"}
+      ${r.screenshotUrl ? `<br><a href="${escapeHTML(r.screenshotUrl)}" target="_blank">View screenshot</a>` : ""}
+    </div>`).join("");
+
+  const form = remaining > 0 ? `
+      <p style="margin:0 0 12px;font-size:12px;color:#6b7280;line-height:1.5">
+        Record this only after you have actually sent the money. The buyer will then be asked to confirm.
+        Left to refund: <strong>UGX ${remaining.toLocaleString()}</strong>.</p>
+
+      <label style="font-size:12px;font-weight:800">Amount sent (UGX)</label>
+      <input id="rf-amount" type="number" min="1" max="${remaining}" value="${remaining}" style="${field}">
+
+      <label style="font-size:12px;font-weight:800">Reason</label>
+      <select id="rf-reason" style="${field}">
+        <option>Order cancelled before delivery</option>
+        <option>Item was not delivered</option>
+        <option>Item not as described / not the real product</option>
+        <option>Seller could not supply the item</option>
+        <option>Dispute decided in the buyer's favour</option>
+        <option>Other</option>
+      </select>
+      <input id="rf-note" type="text" placeholder="Optional note" style="${field}">
+
+      <label style="font-size:12px;font-weight:800">Method</label>
+      <select id="rf-method" style="${field}">
+        <option value="mtn">MTN Mobile Money</option>
+        <option value="airtel">Airtel Money</option>
+        <option value="bank">Bank transfer</option>
+      </select>
+
+      <label style="font-size:12px;font-weight:800">Transaction ID</label>
+      <input id="rf-txn" type="text" placeholder="e.g. 1234567890" style="${field}">
+
+      <label style="font-size:12px;font-weight:800">Screenshot of the payment (recommended)</label>
+      <input id="rf-file" type="file" accept="image/*" style="${field}">
+
+      <button onclick="adminSubmitRefund('${orderId}', this)"
+        style="width:100%;background:#ef4444;color:white;border:none;padding:13px;border-radius:10px;font-weight:800;font-size:14px;cursor:pointer">
+        Record refund &amp; notify buyer</button>`
+    : `<p style="font-size:13px;color:#166534;font-weight:700">✅ This order has been fully refunded.</p>`;
+
+  m.innerHTML = `<div style="background:white;border-radius:16px;padding:22px;max-width:420px;width:100%;max-height:90vh;overflow:auto">
+      <h3 style="margin:0 0 6px">↩️ Refund · ${refText}</h3>
+      <p style="margin:0 0 12px;font-size:12px;color:#6b7280">The buyer paid UGX ${Number(o.total || 0).toLocaleString()}.</p>
+      ${existing}
+      ${form}
+      <button onclick="this.closest('#admin-refund-modal').remove()"
+        style="width:100%;margin-top:10px;background:#e5e7eb;border:none;padding:11px;border-radius:10px;font-weight:700;cursor:pointer">Close</button>
+    </div>`;
+  document.body.appendChild(m);
+};
+
+window.adminSubmitRefund = async function (orderId, btn) {
+  const o = allOrders.find(x => x.id === orderId);
+  if (!o) return;
+
+  const amount = Math.round(Number(document.getElementById("rf-amount")?.value));
+  const method = document.getElementById("rf-method")?.value;
+  const txnId  = (document.getElementById("rf-txn")?.value || "").trim();
+  const note   = (document.getElementById("rf-note")?.value || "").trim();
+  const reason = (document.getElementById("rf-reason")?.value || "") + (note ? ": " + note : "");
+  const file   = document.getElementById("rf-file")?.files?.[0];
+
+  if (!(amount > 0) || txnId.length < 4) { alert("Enter the amount and the transaction ID."); return; }
+  if (!confirm(`Record a refund of UGX ${amount.toLocaleString()} to the buyer?`)) return;
+
+  btn.disabled = true;
+  btn.textContent = "Saving...";
+
+  try {
+    let screenshotUrl = "";
+    if (file) {
+      const { storage } = await import("./firebase.js");
+      const { ref, uploadBytes, getDownloadURL } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js");
+      const r = ref(storage, `refund-proofs/${o.buyerUid || "unknown"}/${orderId}-${Date.now()}.jpg`);
+      await uploadBytes(r, file);
+      screenshotUrl = await getDownloadURL(r);
+    }
+
+    const { getFunctions, httpsCallable } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js");
+    await httpsCallable(getFunctions(), "recordRefund")({ orderId, amount, method, txnId, reason, screenshotUrl });
+
+    document.getElementById("admin-refund-modal")?.remove();
+    showToast("Refund recorded. The buyer was notified ✅", "success");
+  } catch (e) {
+    console.error(e);
+    alert(e.message || "Failed to record the refund");
+    btn.disabled = false;
+    btn.textContent = "Record refund & notify buyer";
+  }
+};
+
+
+function zbAdminProofHTML(order) {
+  let line;
+  if (order.deliveryProof?.method === "pin") {
+    const t = order.deliveryProof.verifiedAt?.toDate?.();
+    line = `<span style="color:#166534;font-weight:800">🔐 Delivery code verified by the seller${t ? " · " + t.toLocaleString("en-UG") : ""}</span>`;
+  } else if (order.trackingStatus === "received") {
+    line = `<span style="color:#92400e;font-weight:800">✋ Buyer tapped "received" (no delivery code used)</span>`;
+  } else {
+    line = `<span style="color:#6b7280">No delivery proof yet</span>`;
+  }
+
+  return `
+    <div style="background:#f9fafb;border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:12.5px">
+      <div style="margin-bottom:8px">${line}</div>
+      <button onclick="adminOpenRefund('${order.id}')"
+        style="width:100%;background:#fef2f2;border:1.5px solid #fecaca;color:#b91c1c;padding:9px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;margin-bottom:8px">
+        ↩️ Refund the buyer
+      </button>
+      ${order.trackingStatus === "received" ? `
+      <div style="margin-bottom:8px;font-size:12.5px;line-height:1.7">
+        <div>${order.noteSigned?.buyer ? "✅ Buyer signed the note · " + new Date(order.noteSigned.buyer).toLocaleString("en-UG") : "⏳ Buyer has not signed the note"}</div>
+        <div>${order.noteSigned?.seller ? "✅ Seller signed the note · " + new Date(order.noteSigned.seller).toLocaleString("en-UG") : "⏳ Seller has not signed the note"}</div>
+        <button onclick="window.open('handover-note.html?order=${order.id}','_blank')"
+          style="width:100%;margin-top:6px;background:white;border:1.5px solid #d1d5db;padding:9px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer">
+          📑 Signed handover note (copies)
+        </button>
+      </div>` : ""}
+      ${(order.trackingStatus === "received") ? `
+      <button onclick="adminOpenPayout('${order.id}')"
+        style="width:100%;background:#fff7ed;border:1.5px solid #fed7aa;color:#9a3412;padding:9px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;margin-bottom:8px">
+        💸 Seller payout
+      </button>` : ""}
+      <button onclick="window.open('certificate.html?order=${order.id}','_blank')"
+        style="width:100%;background:white;border:1.5px solid #d1d5db;padding:9px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer">
+        📄 Proof log &amp; certificate
+      </button>
+    </div>`;
+}
+
+window.adminConfirmGroup = async function (groupId) {
+  const mine = allOrders.filter(o =>
+    o.paymentGroupId === groupId && (!o.trackingStatus || o.trackingStatus === "placed")
+  );
+  if (mine.length === 0) return;
+  if (!confirm(`Confirm payment received for ${mine.length} order(s) in this payment?`)) return;
+
+  try {
+    await Promise.all(mine.map(o => updateDoc(doc(db, "orders", o.id), {
+      trackingStatus: "payment_verified",
+      trackingEvents: [...(o.trackingEvents || []), { status: "payment_verified", at: Date.now(), by: "admin" }],
+      status:         "Processing",
+      updatedAt:      new Date()
+    })));
+    showToast("Payment confirmed for all orders ✅", "success");
+  } catch (e) {
+    console.error(e);
+    showToast("Failed to update", "error");
+  }
+};
+
+window.adminSetTracking = async function (orderId, step) {
+  if (!step) return;
+  const o = allOrders.find(x => x.id === orderId);
+  if (!o) return;
+  if (!confirm(`Set this order to "${ZB_TRACK_LABELS[step] || step}"?`)) return;
+
+  const update = {
+    trackingStatus: step,
+    trackingEvents: [...(o.trackingEvents || []), { status: step, at: Date.now(), by: "admin" }],
+    updatedAt:      new Date()
+  };
+  if (step === "payment_verified") update.status = "Processing";
+  if (step === "received") {
+    update.deliveryConfirmed = true;
+    update.confirmedAt       = new Date();
+  }
+
+  try {
+    await updateDoc(doc(db, "orders", orderId), update);
+    showToast("Tracking updated ✅", "success");
+  } catch (e) {
+    console.error(e);
+    showToast("Failed to update tracking", "error");
+  }
+};
+
+// Opens the live Messages page with the buyer or seller of this order
+window.adminChatWith = async function (orderId, role) {
+  const o = allOrders.find(x => x.id === orderId);
+  if (!o) return;
+
+  let email = "";
+  if (role === "buyer") {
+    email = (o.userEmail && o.userEmail !== "guest") ? o.userEmail : (o.buyerEmail || "");
+  } else {
+    email = o.sellerEmail || "";
+    try {
+      if (!email && o.sellerId) {
+        const u = await getDoc(doc(db, "users", o.sellerId));
+        email = u.exists() ? (u.data().email || "") : "";
+      }
+      const pid = o.productId || o.items?.[0]?.productId;
+      if (!email && pid) {
+        const p = await getDoc(doc(db, "products", pid));
+        email = p.exists() ? (p.data().userEmail || "") : "";
+      }
+    } catch (e) { console.error(e); }
+  }
+
+  if (!email || email === "guest") {
+    showToast(`No email on file for this ${role}`, "error");
+    return;
+  }
+  window.open(`messages.html?to=${encodeURIComponent(email)}`, "_blank");
+};
+
 // ══════════════════════════════════════════════
 //  ORDERS
 // ══════════════════════════════════════════════
@@ -1397,7 +2403,25 @@ async function loadOrders() {
     allOrders = snap.docs.map(d => ({ id: d.id, ...d.data() }))
                          .sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
     renderOrdersTable(allOrders);
+    zbStartAdminOrdersLive();
   } catch (e) { console.error(e); }
+}
+
+
+// Works for both Buy Now orders (productName) and cart orders (items list)
+function zbOrderProducts(o) {
+  if (Array.isArray(o.items) && o.items.length) {
+    return o.items.map(i => ({
+      name:  i.name,
+      qty:   i.qty || 1,
+      id:    i.productId || i.id || "",
+      price: i.price ?? 0
+    }));
+  }
+  if (o.productName) {
+    return [{ name: o.productName, qty: 1, id: o.productId || "", price: o.price ?? 0 }];
+  }
+  return [];
 }
 
 function renderOrdersTable(orders) {
@@ -1405,17 +2429,18 @@ function renderOrdersTable(orders) {
   if (!tbody) return;
 
   if (orders.length === 0) {
-    tbody.innerHTML = `<tr class="empty-row"><td colspan="7">No orders</td></tr>`;
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="8">No orders</td></tr>`;
     return;
   }
 
   tbody.innerHTML = orders.map(o => `
     <tr>
-      <td style="font-weight:700;font-size:12px;color:var(--orange)">${escapeHTML(o.orderId)}</td>
+      <td style="font-weight:700;font-size:12px;color:var(--orange)">${escapeHTML(o.orderId || o.orderRef) || "—"}</td>
+      <td style="font-size:12px;max-width:220px">${zbOrderProducts(o).map(i => `<div style="margin-bottom:4px">${escapeHTML(i.name)}${i.qty > 1 ? " × " + i.qty : ""}<br>${i.id ? `<a href="product.html?id=${encodeURIComponent(i.id)}" target="_blank" style="color:var(--gray);font-size:11px">ID: ${escapeHTML(i.id)}</a>` : `<span style="color:var(--gray);font-size:11px">ID: —</span>`}</div>`).join("") || "—"}</td>
       <td style="font-size:12px">${escapeHTML(o.customerName) || "—"}<br><span style="color:var(--gray)">${escapeHTML(o.customerPhone)}</span></td>
       <td style="font-weight:800">UGX ${Number(o.total||0).toLocaleString()}</td>
       <td style="font-size:12px">${o.paymentMethod || "—"}</td>
-      <td><span class="plan-chip ${chipClass(o.status)}">${o.status}</span></td>
+      <td><span class="plan-chip ${chipClass(o.status)}">${o.status}</span>${o.trackingStatus ? `<div style="margin-top:4px;font-size:11px;font-weight:800;color:#5b21b6">${ZB_TRACK_LABELS[o.trackingStatus] || o.trackingStatus}</div>` : ""}</td>
       <td style="font-size:12px">${fmtDate(o.createdAt)}</td>
       <td style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
         <button class="action-btn btn-approve" onclick="viewOrderDetail('${o.id}')">👁️ View</button>
@@ -3167,6 +4192,9 @@ window.viewOrderDetail = function(orderId) {
 
   const modal = document.createElement("div");
   modal.id = "admin-order-detail-modal";
+
+  
+  modal.dataset.orderId = orderId;
   modal.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px`;
   modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
   modal.innerHTML = `
@@ -3183,12 +4211,17 @@ window.viewOrderDetail = function(orderId) {
         <p style="margin:0 0 6px;font-size:13px"><strong>Location:</strong> ${escapeHTML(order.customerLocation || order.deliveryAddress) || "—"}</p>
         <p style="margin:0 0 6px;font-size:13px"><strong>Payment:</strong> ${order.paymentMethod || "—"}</p>
         <p style="margin:0 0 6px;font-size:13px"><strong>Total:</strong> <span style="color:#ff6600;font-weight:800">UGX ${Number(order.total || 0).toLocaleString()}</span></p>
+        ${order.transactionRef ? `<p style="margin:0 0 6px;font-size:13px"><strong>Transaction ID:</strong> ${escapeHTML(order.transactionRef)}</p>` : ""}
+        ${order.sellerName ? `<p style="margin:0 0 6px;font-size:13px"><strong>Seller:</strong> ${escapeHTML(order.sellerName)}${order.sellerPhone ? " · " + escapeHTML(order.sellerPhone) : ""}</p>` : ""}
+        ${order.protected ? `<p style="margin:0 0 6px;font-size:13px"><strong>ZiBuy Protect:</strong> Yes (fee UGX ${Number(order.protectionFee || 0).toLocaleString()})</p>` : ""}
         <p style="margin:0;font-size:13px"><strong>Status:</strong> ${order.status}</p>
       </div>
+
+      ${zbAdminTrackingHTML(order)}
       <h3 style="font-size:14px;font-weight:800;margin-bottom:8px">Items:</h3>
-      ${(order.items || []).map(item => `
+      ${zbOrderProducts(order).map(item => `
         <div style="display:flex;justify-content:space-between;padding:8px;background:#f9fafb;border-radius:8px;margin-bottom:6px;font-size:13px">
-          <span>${escapeHTML(item.name)} × ${item.qty}</span>
+          <span>${escapeHTML(item.name)} × ${item.qty}<br><small style="color:#6b7280">Product ID: ${escapeHTML(item.id) || "—"}</small></span>
           <span style="font-weight:700;color:#ff6600">UGX ${Number(item.price * item.qty).toLocaleString()}</span>
         </div>`).join("") || "<p style='color:#6b7280;font-size:13px'>No items recorded</p>"}
       ${order.customerPhone ? `
@@ -3470,11 +4503,15 @@ window.grantFreeBoost = async function(productId, productName) {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + Number(customDays));
 
+    const productSnap = await getDoc(doc(db, "products", productId));
+    const productData = productSnap.exists() ? productSnap.data() : {};
+
     await updateDoc(doc(db, "products", productId), {
       isPremium:        true,
       premiumExpiresAt: expiresAt,
       boostApprovedAt:  new Date(),
-      boostExpiresAt:   expiresAt
+      boostExpiresAt:   expiresAt,
+      boostStartViews:  productData.views || 0
     });
 
     await addDoc(collection(db, "boost_requests"), {
@@ -3655,32 +4692,135 @@ window.loadDisputesAdmin = async function() {
 
   try {
     const snap = await getDocs(collection(db, "disputes"));
-    const disputes = snap.docs
+    allDisputes = snap.docs
       .map(d => ({ id: d.id, ...d.data() }))
       .sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
 
-    if (disputes.length === 0) {
-      tbody.innerHTML = `<tr class="empty-row"><td colspan="6">No disputes</td></tr>`;
-      return;
-    }
-
-    tbody.innerHTML = disputes.map(d => `
-      <tr>
-        <td style="font-weight:700;font-size:13px">${escapeHTML(d.productName)}</td>
-        <td style="font-size:12px">${escapeHTML(d.buyerEmail)}</td>
-        <td><span class="plan-chip chip-rejected">${escapeHTML(d.reason)}</span></td>
-        <td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(d.details)}</td>
-        <td><span class="plan-chip ${d.status === 'resolved' ? 'chip-approved' : 'chip-pending'}">${d.status}</span></td>
-        <td>
-          ${d.status !== "resolved" ? `
-            <button class="action-btn btn-approve" onclick="resolveDispute('${d.id}','${d.orderId}')">✅ Resolve — Buyer Wins</button>
-            <button class="action-btn btn-reject" onclick="dismissDispute('${d.id}','${d.orderId}')">✗ Dismiss</button>
-          ` : "—"}
-        </td>
-      </tr>`).join("");
-
+    renderDisputesTable();
   } catch(e) {
     tbody.innerHTML = `<tr><td colspan="6" style="color:red">Failed: ${e.message}</td></tr>`;
+  }
+};
+
+function renderDisputesTable() {
+  const tbody = document.getElementById("disputes-table-body");
+  if (!tbody) return;
+
+  const disputes = currentDisputeFilter === "all"
+    ? allDisputes
+    : allDisputes.filter(d => currentDisputeFilter === "open" ? d.status !== "resolved" : d.status === "resolved");
+
+  if (disputes.length === 0) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="6">No disputes</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = disputes.map(d => `
+    <tr>
+      <td style="font-weight:700;font-size:13px">${escapeHTML(d.productName)}</td>
+      <td style="font-size:12px">${escapeHTML(d.buyerEmail)}</td>
+      <td><span class="plan-chip chip-rejected">${escapeHTML(d.reason)}</span></td>
+      <td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(d.details)}</td>
+      <td><span class="plan-chip ${d.status === 'resolved' ? 'chip-approved' : 'chip-pending'}">${d.status}</span></td>
+      <td style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="action-btn" style="background:#e0f2fe;color:#0369a1;border:none;padding:6px 10px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer"
+          onclick="viewDisputeDetails('${d.id}','${d.orderId || ""}')">👁️ View</button>
+        ${d.status !== "resolved" ? `
+          <button class="action-btn btn-approve" onclick="resolveDispute('${d.id}','${d.orderId}')">✅ Resolve</button>
+          <button class="action-btn btn-reject" onclick="dismissDispute('${d.id}','${d.orderId}')">✗ Dismiss</button>
+        ` : ""}
+      </td>
+    </tr>`).join("");
+}
+
+window.filterDisputes = function(filter) {
+  currentDisputeFilter = filter;
+  document.querySelectorAll(".dispute-filter-btn").forEach(b => b.classList.remove("active-filter"));
+  document.querySelector(`.dispute-filter-btn[data-filter="${filter}"]`)?.classList.add("active-filter");
+  renderDisputesTable();
+};
+
+window.viewDisputeDetails = async function(disputeId, orderId) {
+  try {
+    const disputeSnap = await getDoc(doc(db, "disputes", disputeId));
+    const orderSnap = orderId ? await getDoc(doc(db, "orders", orderId)) : null;
+
+    if (!disputeSnap.exists()) { showToast("Dispute not found", "error"); return; }
+
+    const d = disputeSnap.data();
+    const o = orderSnap && orderSnap.exists() ? orderSnap.data() : {};
+
+    const buyerPhone = (o.customerPhone || "").replace(/\D/g, "");
+    const sellerPhone = (o.sellerPhone || "").replace(/\D/g, "");
+
+    const buyerWaMsg = encodeURIComponent(`Hello, this is ZiBuy support regarding your dispute on order "${o.productName || d.productName}". Could you share more details?`);
+    const sellerWaMsg = encodeURIComponent(`Hello, this is ZiBuy support. A buyer has raised a dispute on order "${o.productName || d.productName}" (Ref: ${o.orderRef || orderId}). Please respond with your side so we can resolve this fairly.`);
+
+    const existing = document.getElementById("dispute-detail-modal");
+    if (existing) existing.remove();
+
+    const modal = document.createElement("div");
+    modal.id = "dispute-detail-modal";
+    modal.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px`;
+    modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+
+    modal.innerHTML = `
+      <div style="background:white;border-radius:20px;padding:24px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto">
+        <div style="display:flex;justify-content:space-between;margin-bottom:16px">
+          <h2 style="margin:0;font-size:18px;font-weight:800">🚨 Dispute Details</h2>
+          <button onclick="document.getElementById('dispute-detail-modal').remove()"
+            style="background:#f3f4f6;border:none;width:32px;height:32px;border-radius:50%;font-size:18px;cursor:pointer">×</button>
+        </div>
+
+        <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:14px;margin-bottom:14px">
+          <p style="margin:0 0 4px;font-size:11px;font-weight:800;color:#991b1b;text-transform:uppercase">Reason</p>
+          <p style="margin:0 0 10px;font-size:14px;font-weight:700;color:#111827">${escapeHTML(d.reason)}</p>
+          <p style="margin:0 0 4px;font-size:11px;font-weight:800;color:#991b1b;text-transform:uppercase">Buyer's Details</p>
+          <p style="margin:0;font-size:13px;color:#374151;line-height:1.5">${escapeHTML(d.details) || "—"}</p>
+        </div>
+
+        <div style="background:#f9fafb;border-radius:12px;padding:14px;margin-bottom:14px">
+          <p style="margin:0 0 8px;font-size:13px;font-weight:800">📦 Order Info</p>
+          <div style="font-size:13px;color:#374151;line-height:1.9">
+            <div><strong>Product:</strong> ${escapeHTML(o.productName || d.productName) || "—"}</div>
+            <div><strong>Amount Paid:</strong> UGX ${Number(o.total || 0).toLocaleString()}${o.protected ? ` (incl. UGX ${Number(o.protectionFee||0).toLocaleString()} Protect fee)` : ""}</div>
+            <div><strong>Transaction Ref:</strong> ${escapeHTML(o.transactionRef) || "—"}</div>
+            <div><strong>Order Status:</strong> ${escapeHTML(o.status) || "—"}</div>
+            <div><strong>Delivery Location:</strong> ${escapeHTML(o.customerLocation) || "—"}</div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+          <div style="background:white;border:1.5px solid #e5e7eb;border-radius:12px;padding:12px">
+            <p style="margin:0 0 4px;font-size:11px;font-weight:800;color:#6b7280;text-transform:uppercase">Buyer</p>
+            <p style="margin:0;font-size:13px;font-weight:700">${escapeHTML(d.buyerEmail) || "—"}</p>
+            <p style="margin:2px 0 8px;font-size:12px;color:#6b7280">${escapeHTML(o.customerPhone) || "No phone"}</p>
+            ${buyerPhone ? `<a href="https://wa.me/${buyerPhone}?text=${buyerWaMsg}" target="_blank"
+              style="display:block;text-align:center;background:#25d366;color:white;text-decoration:none;padding:8px;border-radius:8px;font-size:12px;font-weight:700">💬 WhatsApp Buyer</a>` : ""}
+          </div>
+          <div style="background:white;border:1.5px solid #e5e7eb;border-radius:12px;padding:12px">
+            <p style="margin:0 0 4px;font-size:11px;font-weight:800;color:#6b7280;text-transform:uppercase">Seller</p>
+            <p style="margin:0;font-size:13px;font-weight:700">${escapeHTML(o.sellerName) || "—"}</p>
+            <p style="margin:2px 0 8px;font-size:12px;color:#6b7280">${escapeHTML(o.sellerPhone) || "No phone"}</p>
+            ${sellerPhone ? `<a href="https://wa.me/${sellerPhone}?text=${sellerWaMsg}" target="_blank"
+              style="display:block;text-align:center;background:#25d366;color:white;text-decoration:none;padding:8px;border-radius:8px;font-size:12px;font-weight:700">💬 WhatsApp Seller</a>` : ""}
+          </div>
+        </div>
+
+        ${d.status !== "resolved" ? `
+          <div style="display:flex;gap:10px">
+            <button onclick="resolveDispute('${d.id}','${d.orderId || orderId || ""}');document.getElementById('dispute-detail-modal').remove()"
+              style="flex:1;background:#dcfce7;color:#166534;border:none;padding:12px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer">✅ Resolve — Buyer Wins</button>
+            <button onclick="dismissDispute('${d.id}','${d.orderId || orderId || ""}');document.getElementById('dispute-detail-modal').remove()"
+              style="flex:1;background:#fee2e2;color:#991b1b;border:none;padding:12px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer">✗ Dismiss</button>
+          </div>
+        ` : `<p style="text-align:center;color:#6b7280;font-size:13px">This dispute is already resolved.</p>`}
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+  } catch (e) {
+    showToast("Failed to load dispute: " + e.message, "error");
   }
 };
 
@@ -3707,6 +4847,8 @@ window.dismissDispute = async function(disputeId, orderId) {
     loadDisputesAdmin();
   } catch(e) { showToast("Failed", "error"); }
 };
+
+window.filterDisputes = window.filterDisputes; // no-op, keeps declaration order clear
 
 
 window.adminForceTrustRecalc = async function(userId) {
@@ -3847,6 +4989,21 @@ window.viewUserNotes = async function(userId, currentNotes) {
   }
 };
 
+window.viewAdNotes = async function(adId, currentNotes) {
+  const notes = prompt("Admin notes for this ad (only visible to admins — never shown to the buyer or seller):", currentNotes || "");
+  if (notes === null) return;
+  try {
+    await updateDoc(doc(db, "products", adId), {
+      adminAdNotes: notes,
+      adminAdNotesFlaggedAt: notes ? new Date() : null
+    });
+    showToast("Notes saved", "success");
+    loadAds();
+  } catch(e) {
+    showToast("Failed: " + e.message, "error");
+  }
+};
+
 
 // ══════════════════════════════════════════════
 //  FULL USER DOCUMENT — raw Firestore record
@@ -3891,6 +5048,8 @@ window.adminViewUserDoc = async function(userId) {
           style="width:100%;box-sizing:border-box;padding:10px;border:1px solid #e5e7eb;border-radius:8px;font-family:monospace;font-size:12px;white-space:pre;overflow:auto">${jsonText.replace(/</g,"&lt;")}</textarea>
         <button onclick="navigator.clipboard.writeText(document.getElementById('admin-user-doc-json').value); showToast('Document copied','success')"
           style="margin-top:8px;background:#e0f2fe;color:#0369a1;border:none;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">📋 Copy Full Document</button>
+        <button onclick="viewAsUser('${snap.id}')"
+          style="margin-top:8px;width:100%;background:#111827;color:white;border:none;padding:10px 12px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">👁️ View as this user</button>
       </div>
     `;
     document.body.appendChild(modal);
@@ -3904,6 +5063,108 @@ window.jumpToUser = function() {
   if (!uid) return;
   window.showSection("users", document.querySelector('.admin-nav-item[data-section="users"]'));
   adminViewUserDoc(uid);
+};
+
+window.viewAsUser = async function(uid) {
+  if (window.isViewerAdmin) { showToast("View-only account: you can't impersonate users", "error"); return; }
+  if (!confirm("Open a new tab signed in AS this user? Use this only for support — anything done in that tab happens on their account.")) return;
+  try {
+    const { getFunctions, httpsCallable } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js");
+    const fn = httpsCallable(getFunctions(), "adminImpersonateUser");
+    const result = await fn({ userId: uid });
+    const token = encodeURIComponent(result.data.token);
+    window.open(`index.html?impersonate_token=${token}`, "_blank");
+    showToast("Opening as " + result.data.email, "success");
+  } catch (e) {
+    showToast("Failed: " + e.message, "error");
+  }
+};
+
+let globalSearchDebounce = null;
+window.onGlobalSearchInput = function() {
+  clearTimeout(globalSearchDebounce);
+  globalSearchDebounce = setTimeout(runGlobalSearch, 200);
+};
+
+function runGlobalSearch() {
+  const box = document.getElementById("global-search-results");
+  const raw = document.getElementById("global-search-input")?.value.trim() || "";
+  if (!box) return;
+
+  if (raw.length < 2) { box.style.display = "none"; box.innerHTML = ""; return; }
+
+  const q = raw.toLowerCase();
+
+  const userMatches = (allUsers || []).filter(u =>
+    (u.email || "").toLowerCase().includes(q) || u.id === raw
+  ).slice(0, 5);
+
+  const adMatches = (allAds || []).filter(a =>
+    (a.name || "").toLowerCase().includes(q)
+  ).slice(0, 5);
+
+  const orderMatches = (allOrders || []).filter(o =>
+    (o.userEmail || o.buyerEmail || "").toLowerCase().includes(q) ||
+    (o.orderId || "").toLowerCase().includes(q) ||
+    o.id === raw
+  ).slice(0, 5);
+
+  if (userMatches.length === 0 && adMatches.length === 0 && orderMatches.length === 0) {
+    box.innerHTML = `<div style="padding:12px;font-size:13px;color:#9ca3af">No matches</div>`;
+    box.style.display = "block";
+    return;
+  }
+
+  let html = "";
+
+  if (userMatches.length) {
+    html += `<div style="padding:8px 12px 4px;font-size:11px;font-weight:800;color:#9ca3af;text-transform:uppercase">Users</div>`;
+    html += userMatches.map(u => `
+      <div onmousedown="goToSearchResult('user','${u.id}')"
+        style="padding:9px 12px;cursor:pointer;font-size:13px;border-top:1px solid #f3f4f6">
+        👤 ${escapeHTML(u.email) || escapeHTML(u.id)}
+      </div>`).join("");
+  }
+
+  if (adMatches.length) {
+    html += `<div style="padding:8px 12px 4px;font-size:11px;font-weight:800;color:#9ca3af;text-transform:uppercase">Ads</div>`;
+    html += adMatches.map(a => `
+      <div onmousedown="goToSearchResult('ad','${a.id}')"
+        style="padding:9px 12px;cursor:pointer;font-size:13px;border-top:1px solid #f3f4f6">
+        📦 ${escapeHTML(a.name)} <span style="color:#9ca3af">— ${escapeHTML(a.userEmail) || ""}</span>
+      </div>`).join("");
+  }
+
+  if (orderMatches.length) {
+    html += `<div style="padding:8px 12px 4px;font-size:11px;font-weight:800;color:#9ca3af;text-transform:uppercase">Orders</div>`;
+    html += orderMatches.map(o => `
+      <div onmousedown="goToSearchResult('order','${o.id}')"
+        style="padding:9px 12px;cursor:pointer;font-size:13px;border-top:1px solid #f3f4f6">
+        🧾 ${escapeHTML(o.userEmail || o.buyerEmail) || "Order"} <span style="color:#9ca3af">— ${escapeHTML(o.orderId) || o.id.slice(0,8)+"…"}</span>
+      </div>`).join("");
+  }
+
+  box.innerHTML = html;
+  box.style.display = "block";
+}
+
+window.goToSearchResult = function(type, id) {
+  const box = document.getElementById("global-search-results");
+  if (box) box.style.display = "none";
+  const input = document.getElementById("global-search-input");
+  if (input) input.value = "";
+
+  if (type === "user") {
+    window.showSection("users", document.querySelector('.admin-nav-item[data-section="users"]'));
+    adminViewUserDoc(id);
+  } else if (type === "ad") {
+    window.showSection("ads", document.querySelector('.admin-nav-item[data-section="ads"]'));
+    const ad = (allAds || []).find(a => a.id === id);
+    if (ad) renderAdsTable([ad]);
+  } else if (type === "order") {
+    window.showSection("orders", document.querySelector('.admin-nav-item[data-section="orders"]'));
+    viewOrderDetail(id);
+  }
 };
 
 

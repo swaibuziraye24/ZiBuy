@@ -225,6 +225,9 @@
         <input type="tel" id="seller-phone" placeholder="+256 700 000000">
       </div>
 
+      <div class="form-group" id="tiers-box"></div>
+      <div class="form-group" id="delivery-box"></div>
+
       <!-- Images -->
       <div class="form-group">
         <label>Product Images (Current: <span id="image-count">0</span>)</label>
@@ -256,6 +259,8 @@
 <script type="module">
   import { db, auth, doc, getDoc, updateDoc, deleteObject, ref, storage, uploadBytes, getDownloadURL } from "./firebase.js";
   import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+  import { mountPriceTiers, collectPriceTiers, mountDelivery, collectDelivery } from "./seller-options.js";
 
   let currentUser = null;
   let productId = null;
@@ -302,6 +307,12 @@
         document.getElementById("product-description").value = product.description || "";
         document.getElementById("product-location").value = product.location || "";
         document.getElementById("seller-phone").value = product.seller?.phone || "";
+
+        mountPriceTiers(document.getElementById("tiers-box"), {
+          initial:      product.priceTiers || [],
+          getBasePrice: () => Number(document.getElementById("product-price").value) || 0
+        });
+        mountDelivery(document.getElementById("delivery-box"), { initial: product.delivery || null });
 
         // Load current images
         currentImages = product.images || [];
@@ -451,6 +462,8 @@
         description: document.getElementById("product-description").value,
         location: document.getElementById("product-location").value,
         images: allImages,
+        delivery:   collectDelivery(document.getElementById("delivery-box")),
+        priceTiers: collectPriceTiers(document.getElementById("tiers-box")),
         seller: {
           name: currentUser.displayName || "Seller",
           phone: document.getElementById("seller-phone").value,

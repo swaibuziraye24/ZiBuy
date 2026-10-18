@@ -19,6 +19,284 @@ setGlobalOptions({
   maxInstances:   10,
 });
 
+// Shared check: super-admin, or a non-suspended, non-viewer entry in /admins
+async function assertCallerIsFullAdmin(request) {
+  const callerUid = request.auth?.uid;
+  if (!callerUid) throw new HttpsError("unauthenticated", "Login required");
+
+  if (request.auth.token.email === "swaibuziraye22@gmail.com") {
+    return { uid: callerUid, email: request.auth.token.email };
+  }
+
+  const adminSnap = await db.collection("admins").doc(callerUid).get();
+  if (!adminSnap.exists || adminSnap.data()?.suspended === true || adminSnap.data()?.role === "viewer") {
+    throw new HttpsError("permission-denied", "Full admin access required");
+  }
+  return { uid: callerUid, email: request.auth.token.email };
+}
+
+// ============================================
+// VIEW AS USER — mints a sign-in token for support
+// ============================================
+exports.adminImpersonateUser = onCall(async (request) => {
+  const caller = await assertCallerIsFullAdmin(request);
+
+  const targetUid = request.data?.userId;
+  if (!targetUid) throw new HttpsError("invalid-argument", "userId required");
+
+  const targetSnap = await db.collection("users").doc(targetUid).get();
+  if (!targetSnap.exists) throw new HttpsError("not-found", "User not found");
+  const targetEmail = targetSnap.data()?.email || "";
+
+  const token = await admin.auth().createCustomToken(targetUid, {
+    impersonatedBy: caller.email
+  });
+
+  await db.collection("admin_action_logs").add({
+    action: "VIEW_AS_USER",
+    details: `Viewing as ${targetEmail} (UID: ${targetUid})`,
+    adminEmail: caller.email,
+    adminUid: caller.uid,
+    createdAt: admin.firestore.FieldValue.serverTimestamp()
+  });
+
+  return { token, email: targetEmail };
+});
+
+// ============================================
+// AUTO-FLAG NEW ADS MATCHING BANNED KEYWORDS
+// ============================================
+// ============================================
+// AUTO-EXPIRE OLD AD FLAGS
+// ============================================
+exports.autoExpireFlags = onSchedule(
+  { schedule: "every 24 hours", timeZone: "Africa/Kampala" },
+  async () => {
+    try {
+      const cfgSnap = await db.collection("moderation_config").doc("keywords").get();
+      const days = Number(cfgSnap.exists ? cfgSnap.data().flagExpiryDays : 14) || 14;
+      const cutoff = admin.firestore.Timestamp.fromMillis(Date.now() - days * 86400000);
+
+      const snap = await db.collection("products")
+        .where("adminAdNotesFlaggedAt", "<=", cutoff)
+        .get();
+
+      if (snap.empty) { console.log("[FLAG EXPIRY] Nothing to clear"); return; }
+
+      const batch = db.batch();
+      snap.forEach(docSnap => {
+        batch.update(docSnap.ref, {
+          adminAdNotes: admin.firestore.FieldValue.delete(),
+          adminAdNotesFlaggedAt: admin.firestore.FieldValue.delete()
+        });
+      });
+      await batch.commit();
+
+      await db.collection("admin_action_logs").add({
+        action: "FLAGS_AUTO_EXPIRED",
+        details: `Cleared ${snap.size} ad flag(s) older than ${days} day(s)`,
+        adminEmail: "SYSTEM (auto-moderation)",
+        adminUid: "system",
+        createdAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+
+      console.log(`[FLAG EXPIRY] Cleared ${snap.size} flags`);
+    } catch (err) {
+      console.error("[FLAG EXPIRY ERROR]", err.message);
+    }
+  }
+);
+
+// ============================================
+// AUTO-RESTORE SUSPENDED STAFF ADMINS
+// ============================================
+exports.autoUnsuspendStaff = onSchedule(
+  { schedule: "every 1 hours", timeZone: "Africa/Kampala" },
+  async () => {
+    try {
+      const now = admin.firestore.Timestamp.now();
+      const snap = await db.collection("admins")
+        .where("suspended", "==", true)
+        .where("suspendedUntil", "<=", now)
+        .get();
+
+      if (snap.empty) return;
+
+      const batch = db.batch();
+      const restored = [];
+      snap.forEach(docSnap => {
+        batch.update(docSnap.ref, {
+          suspended: false,
+          suspendedUntil: null
+        });
+        restored.push(docSnap.data().email || docSnap.id);
+      });
+      await batch.commit();
+
+      await db.collection("admin_action_logs").add({
+        action: "STAFF_AUTO_RESTORED",
+        details: `Restored: ${restored.join(", ")}`,
+        adminEmail: "SYSTEM (auto-moderation)",
+        adminUid: "system",
+        createdAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+
+      console.log(`[AUTO-RESTORE] Restored ${restored.length} admin(s)`);
+    } catch (err) {
+      console.error("[AUTO-RESTORE ERROR]", err.message);
+    }
+  }
+);
+
+// ============================================
+// AUTO-FLAG SELLERS WITH REPEATED REPORTS
+// ============================================
+exports.autoFlagRepeatedlyReportedSeller = onDocumentCreated("reports/{reportId}", async (event) => {
+  const report = event.data.data();
+  if (!report.sellerId) return;
+
+  try {
+    const since = admin.firestore.Timestamp.fromMillis(Date.now() - 7 * 86400000); // 7 days
+    const recentReports = await db.collection("reports")
+      .where("sellerId", "==", report.sellerId)
+      .where("createdAt", ">=", since)
+      .get();
+
+    if (recentReports.size < 3) return; // threshold: 3+ reports in 7 days
+
+    const userSnap = await db.collection("users").doc(report.sellerId).get();
+    if (!userSnap.exists) return;
+    if (userSnap.data().scamFlagged) return; // already flagged, don't repeat
+
+    await userSnap.ref.update({
+      scamFlagged: true,
+      scamFlagReason: `${recentReports.size} reports in the last 7 days`,
+      scamFlaggedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    await db.collection("admin_action_logs").add({
+      action: "SELLER_AUTO_FLAGGED",
+      details: `Seller ${userSnap.data().email || report.sellerId}: ${recentReports.size} reports in 7 days`,
+      adminEmail: "SYSTEM (auto-moderation)",
+      adminUid: "system",
+      createdAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+  } catch (err) {
+    console.error("[SCAM FLAG ERROR]", err.message);
+  }
+});
+
+// ============================================
+// AUTO-FLAG NEW ACCOUNTS POSTING HIGH-VALUE ITEMS
+// ============================================
+exports.autoFlagNewAccountHighValue = onDocumentCreated("products/{productId}", async (event) => {
+  const ad = event.data.data();
+  if (!ad.userId || !ad.price) return;
+
+  try {
+    const userSnap = await db.collection("users").doc(ad.userId).get();
+    if (!userSnap.exists) return;
+    const user = userSnap.data();
+
+    const joined = user.createdAt?.toDate ? user.createdAt.toDate() : (user.createdAt ? new Date(user.createdAt) : null);
+    if (!joined) return;
+
+    const accountAgeHours = (Date.now() - joined.getTime()) / 3600000;
+    const HIGH_VALUE_THRESHOLD = 2000000; // UGX 2,000,000 — adjust to taste
+
+    if (accountAgeHours > 24 || Number(ad.price) < HIGH_VALUE_THRESHOLD) return;
+
+    await db.collection("products").doc(event.params.productId).update({
+      adminAdNotes: `🤖 Auto-flagged: brand-new account (joined ${Math.round(accountAgeHours)}h ago) posting a high-value item (UGX ${Number(ad.price).toLocaleString()}) — common scam pattern, review before buyer contact.`,
+      adminAdNotesFlaggedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    await db.collection("admin_action_logs").add({
+      action: "AD_AUTO_FLAGGED_NEW_ACCOUNT",
+      details: `${user.email || ad.userId}: UGX ${Number(ad.price).toLocaleString()} item, account ${Math.round(accountAgeHours)}h old`,
+      adminEmail: "SYSTEM (auto-moderation)",
+      adminUid: "system",
+      createdAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+  } catch (err) {
+    console.error("[NEW ACCOUNT FLAG ERROR]", err.message);
+  }
+});
+
+exports.autoFlagNewAd = onDocumentCreated("products/{productId}", async (event) => {
+  const ad = event.data.data();
+  if (!ad) return;
+
+  try {
+    const cfgSnap = await db.collection("moderation_config").doc("keywords").get();
+    const words = (cfgSnap.exists ? cfgSnap.data().bannedWords : []) || [];
+    if (words.length === 0) return;
+
+    const haystack = `${ad.name || ""} ${ad.description || ""}`.toLowerCase();
+    const hit = words.find(w => w && haystack.includes(String(w).toLowerCase()));
+    if (!hit) return;
+
+    await db.collection("products").doc(event.params.productId).update({
+      adminAdNotes: `🤖 Auto-flagged: matched banned word "${hit}" — review this listing.`,
+      adminAdNotesFlaggedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    await db.collection("admin_action_logs").add({
+      action: "AD_AUTO_FLAGGED",
+      details: `Ad "${ad.name || event.params.productId}" matched "${hit}"`,
+      adminEmail: "SYSTEM (auto-moderation)",
+      adminUid: "system",
+      createdAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+  } catch (err) {
+    console.error("[AUTO-FLAG ERROR]", err.message);
+  }
+});
+
+// ============================================
+// FULL DATA EXPORT
+// ============================================
+exports.adminExportAllData = onCall(async (request) => {
+  const caller = await assertCallerIsFullAdmin(request);
+
+  const collectionsToExport = [
+    "users", "products", "orders", "subscriptions", "shops",
+    "business_accounts", "reviews", "disputes", "reports", "seller_verifications"
+  ];
+
+  const exportData = {};
+  let totalDocs = 0;
+
+  for (const name of collectionsToExport) {
+    const snap = await db.collection(name).get();
+    exportData[name] = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    totalDocs += snap.size;
+  }
+
+  const fileName = `admin-exports/export-${Date.now()}.json`;
+  const bucket = admin.storage().bucket();
+  const file = bucket.file(fileName);
+
+  await file.save(JSON.stringify(exportData, null, 2), {
+    contentType: "application/json"
+  });
+
+  const [url] = await file.getSignedUrl({
+    action: "read",
+    expires: Date.now() + 60 * 60 * 1000 // 1 hour
+  });
+
+  await db.collection("admin_action_logs").add({
+    action: "FULL_DATA_EXPORT",
+    details: `${totalDocs} documents across ${collectionsToExport.length} collections`,
+    adminEmail: caller.email,
+    adminUid: caller.uid,
+    createdAt: admin.firestore.FieldValue.serverTimestamp()
+  });
+
+  return { url, totalDocs, collections: collectionsToExport };
+});
+
 
 
 // ============================================
@@ -804,7 +1082,11 @@ exports.sendPushOnNotification = onDocumentCreated(
     if (!data?.userId) return;
 
     const user = await getUser(data.userId);
-    if (!user?.fcmToken || user.plan === "free") return;
+    if (!user?.fcmToken) return;
+
+    // Messages notify everyone, like WhatsApp. Other notification types
+    // (price drops, boosts, etc.) remain a paid-plan perk for now.
+    if (user.plan === "free" && data.type !== "message" && data.type !== "order") return;
 
     try {
       await admin.messaging().send({
@@ -822,8 +1104,1094 @@ exports.sendPushOnNotification = onDocumentCreated(
 
 
 // ============================================
-// ORDER SYSTEM (SINGLE MASTER TRIGGER)
+// PROOF LOG + DELIVERY CODE
 // ============================================
+const crypto = require("crypto");
+
+// Same key-sorted form is used by the certificate page to re-check the fingerprints
+function zbCanon(v) {
+  if (Array.isArray(v)) return "[" + v.map(zbCanon).join(",") + "]";
+  if (v && typeof v === "object") {
+    return "{" + Object.keys(v).sort().map(k => JSON.stringify(k) + ":" + zbCanon(v[k])).join(",") + "}";
+  }
+  return JSON.stringify(v === undefined ? null : v);
+}
+
+// Adds one permanent entry to an order's proof chain
+async function zbAppendProof(orderId, order, type, actorUid, actorRole, data) {
+  const headRef  = db.collection("order_proof_heads").doc(orderId);
+  const proofRef = db.collection("order_proofs").doc();
+  const cleanData = JSON.parse(JSON.stringify(data || {}));
+
+  await db.runTransaction(async (t) => {
+    const head     = await t.get(headRef);
+    const prevHash = head.exists ? head.data().hash : "GENESIS";
+    const seq      = head.exists ? head.data().seq + 1 : 1;
+
+    const core = {
+      orderId, seq, type,
+      atMs:      Date.now(),
+      actorUid:  actorUid || "",
+      actorRole: actorRole || "system",
+      data:      cleanData
+    };
+    const hash = crypto.createHash("sha256").update(prevHash + zbCanon(core)).digest("hex");
+
+    t.set(proofRef, {
+      ...core,
+      buyerUid:    order.buyerUid || "",
+      buyerEmail:  order.userEmail || "",
+      sellerId:    order.sellerId || "",
+      sellerEmail: order.sellerEmail || "",
+      prevHash,
+      hash,
+      at: admin.firestore.FieldValue.serverTimestamp()
+    });
+    t.set(headRef, { seq, hash, at: admin.firestore.FieldValue.serverTimestamp() });
+  });
+}
+
+// 1) A snapshot of the order the moment it is placed
+exports.onOrderPlacedProof = onDocumentCreated("orders/{orderId}", async (event) => {
+  try {
+    const o = event.data.data();
+    if (!o || !o.trackingStatus) return;
+    await zbAppendProof(event.params.orderId, o, "order_placed", o.buyerUid || "", "buyer", {
+      orderRef:         o.orderRef || "",
+      productName:      o.productName || "",
+      quantity:         o.quantity || 1,
+      itemsCount:       Array.isArray(o.items) ? o.items.length : 1,
+      itemTotal:        o.price || 0,
+      deliveryFee:      o.deliveryFee || 0,
+      protectionFee:    o.protectionFee || 0,
+      total:            o.total || 0,
+      transactionRef:   o.transactionRef || "",
+      buyerName:        o.customerName || "",
+      buyerPhone:       o.customerPhone || "",
+      deliveryLocation: o.customerLocation || "",
+      sellerName:       o.sellerName || ""
+    });
+  } catch (e) {
+    console.error("[onOrderPlacedProof]", e);
+  }
+});
+
+// 2) Every step change is logged; the delivery code is created when payment is confirmed
+exports.onOrderProofLog = onDocumentUpdated("orders/{orderId}", async (event) => {
+  try {
+    const before = event.data.before.data() || {};
+    const after  = event.data.after.data()  || {};
+    const status = after.trackingStatus;
+    if (!status || before.trackingStatus === status) return;
+
+    const orderId = event.params.orderId;
+    const events  = Array.isArray(after.trackingEvents) ? after.trackingEvents : [];
+    const last    = [...events].reverse().find(e => e.status === status) || {};
+    const role    = last.by || "system";
+    const isSeller = String(role).startsWith("seller");
+    const actorUid = isSeller ? (after.sellerId || "") : role === "buyer" ? (after.buyerUid || "") : "";
+
+    await zbAppendProof(orderId, after, "status_" + status, actorUid, isSeller ? "seller" : role, {
+      status, eventAtMs: last.at || 0
+    });
+
+    const notifyBuyer = async (title, message) => {
+      if (!after.buyerUid || after.buyerUid === "guest") return;
+      await db.collection("notifications").add({
+        userId: after.buyerUid, type: "order", title, message, orderId, read: false, createdAt: new Date()
+      });
+    };
+
+    if (status === "payment_verified") {
+      const secretRef = db.collection("order_secrets").doc(orderId);
+      const existing  = await secretRef.get();
+      if (!existing.exists) {
+        await secretRef.set({
+          buyerUid:   after.buyerUid || "",
+          buyerEmail: after.userEmail || "",
+          code:       String(crypto.randomInt(1000, 10000)),
+          attempts:   0,
+          used:       false,
+          createdAt:  admin.firestore.FieldValue.serverTimestamp()
+        });
+        await notifyBuyer(
+          "🔐 Your delivery code is ready",
+          "Open My Orders to see your 4-digit delivery code. Give it to the seller only when you are holding your item."
+        );
+      }
+    }
+
+
+    if (status === "received") {
+      const noteUrl = `https://zibuy.ziteche.com/handover-note.html?order=${orderId}`;
+      const itemName = after.productName || "your order";
+
+      await notifyBuyer("✍️ Please sign your receipt note",
+        `Review and sign the handover note for ${itemName} with your account password.`);
+      if (after.sellerId) {
+        await db.collection("notifications").add({
+          userId: after.sellerId, type: "order", title: "✍️ Please sign the handover note",
+          message: `Review and sign the handover note for ${itemName} with your account password.`,
+          orderId, read: false, createdAt: new Date()
+        });
+      }
+
+      const body = `<p>The delivery of <strong>${itemName}</strong> is complete.
+        Please review and sign the handover note. You sign by confirming your account password.</p>`;
+      await sendEmail(after.userEmail,   "Please sign your ZiBuy receipt note",
+        emailTemplate("Sign your receipt note", body, "Review & sign", noteUrl));
+      await sendEmail(after.sellerEmail, "Please sign the ZiBuy handover note",
+        emailTemplate("Sign the handover note", body, "Review & sign", noteUrl));
+    }
+
+    if (status === "received" && after.deliveryProof?.method === "pin") {
+      await notifyBuyer("✅ Delivery confirmed", "Your delivery code was verified at handover. Thank you for shopping on ZiBuy.");
+    }
+  } catch (e) {
+    console.error("[onOrderProofLog]", e);
+  }
+});
+
+// 3) The seller types the buyer's code at handover; checked here, on the server
+exports.verifyDeliveryCode = onCall(async (request) => {
+  const uid = request.auth?.uid;
+  if (!uid) throw new HttpsError("unauthenticated", "Please log in");
+
+  const orderId = String(request.data?.orderId || "");
+  const code    = String(request.data?.code || "").trim();
+  if (!orderId || !/^\d{4}$/.test(code)) throw new HttpsError("invalid-argument", "Enter the 4-digit code");
+
+  const ev          = request.data?.evidence || {};
+  const photoPath   = String(ev.photoPath || "");
+  const photoSha256 = String(ev.photoSha256 || "");
+  if (photoPath && !photoPath.startsWith(`handover-photos/${uid}/`)) {
+    throw new HttpsError("invalid-argument", "Invalid photo");
+  }
+  if (photoSha256 && !/^[a-f0-9]{64}$/.test(photoSha256)) {
+    throw new HttpsError("invalid-argument", "Invalid photo fingerprint");
+  }
+  const loc = (ev.location && Number.isFinite(Number(ev.location.lat)) && Number.isFinite(Number(ev.location.lng)))
+    ? {
+        lat:      Math.round(Number(ev.location.lat) * 1e5) / 1e5,
+        lng:      Math.round(Number(ev.location.lng) * 1e5) / 1e5,
+        accuracy: Math.round(Number(ev.location.accuracy) || 0),
+        atMs:     Number(ev.location.atMs) || Date.now()
+      }
+    : null;
+
+  const orderRef  = db.collection("orders").doc(orderId);
+  const secretRef = db.collection("order_secrets").doc(orderId);
+
+  const outcome = await db.runTransaction(async (t) => {
+    const [oSnap, sSnap] = await Promise.all([t.get(orderRef), t.get(secretRef)]);
+    if (!oSnap.exists) throw new HttpsError("not-found", "Order not found");
+
+    const o = oSnap.data();
+    if (o.sellerId !== uid) throw new HttpsError("permission-denied", "This isn't your order");
+    if (o.refunded) throw new HttpsError("failed-precondition", "This order was refunded and can't be delivered");
+    if (!["on_the_way", "arrived"].includes(o.trackingStatus)) {
+      throw new HttpsError("failed-precondition", "This order isn't out for delivery");
+    }
+    if (!sSnap.exists) throw new HttpsError("failed-precondition", "No delivery code exists for this order");
+
+    const s = sSnap.data();
+    if (s.used) throw new HttpsError("failed-precondition", "This order was already completed");
+    if ((s.attempts || 0) >= 5) {
+      throw new HttpsError("resource-exhausted", "Too many wrong attempts. Please contact ZiBuy support.");
+    }
+
+    if (s.code !== code) {
+      t.update(secretRef, { attempts: (s.attempts || 0) + 1 });
+      return { ok: false, attemptsLeft: 4 - (s.attempts || 0), order: o };
+    }
+
+    if (!photoPath) throw new HttpsError("invalid-argument", "Please take a photo of the handover first");
+    const events = Array.isArray(o.trackingEvents) ? o.trackingEvents : [];
+    t.update(orderRef, {
+      trackingStatus:    "received",
+      trackingEvents:    [...events, { status: "received", at: Date.now(), by: "seller_pin" }],
+      deliveryConfirmed: true,
+      confirmedAt:       new Date(),
+      deliveryProof:     { method: "pin", verifiedAt: new Date(), sellerUid: uid, photoPath, photoSha256, location: loc },
+      updatedAt:         new Date()
+    });
+    t.update(secretRef, { used: true, usedAt: admin.firestore.FieldValue.serverTimestamp() });
+    return { ok: true, order: o };
+  });
+
+  if (!outcome.ok) {
+    await zbAppendProof(orderId, outcome.order, "delivery_pin_failed", uid, "seller", { attemptsLeft: outcome.attemptsLeft });
+    throw new HttpsError("invalid-argument", `Wrong code. ${outcome.attemptsLeft} attempt(s) left.`);
+  }
+
+  await zbAppendProof(orderId, outcome.order, "delivery_pin_verified", uid, "seller", {
+    method: "pin",
+    hasPhoto: true,
+    photoSha256,
+    lat:      loc ? loc.lat : null,
+    lng:      loc ? loc.lng : null,
+    accuracy: loc ? loc.accuracy : null
+  });
+  return { ok: true };
+});
+
+
+// ============================================
+// SELLER PAYOUT: admin records it, seller signs with an email code
+// ============================================
+const zbSha = (s) => crypto.createHash("sha256").update(s).digest("hex");
+
+// 1) Admin records that the money was sent to the seller
+exports.recordPayout = onCall(async (request) => {
+  const caller = await assertCallerIsFullAdmin(request);
+  const d = request.data || {};
+
+  const orderId = String(d.orderId || "");
+  const amount  = Math.round(Number(d.amount));
+  const method  = ["mtn", "airtel", "bank"].includes(d.method) ? d.method : "";
+  const txnId   = String(d.txnId || "").trim();
+  if (!orderId || !(amount > 0) || !method || txnId.length < 4) {
+    throw new HttpsError("invalid-argument", "Order, amount, method and transaction ID are required");
+  }
+
+  const orderSnap = await db.collection("orders").doc(orderId).get();
+  if (!orderSnap.exists) throw new HttpsError("not-found", "Order not found");
+  const o = orderSnap.data();
+
+  if (!o.sellerId) {
+    const found = await zbResolveSeller(o);
+    if (!found) {
+      throw new HttpsError("failed-precondition", "We couldn't find the seller's account (the listing may have been deleted)");
+    }
+    Object.assign(o, found);
+    await orderSnap.ref.update(found);
+  }
+  if (o.trackingStatus !== "received") {
+    throw new HttpsError("failed-precondition", "Pay the seller only after the buyer has received the order");
+  }
+
+  if (o.refunded) throw new HttpsError("failed-precondition", "This order was refunded, so no seller payout is due");
+  const existing = await db.collection("payouts").where("orderId", "==", orderId).limit(1).get();
+  if (!existing.empty) throw new HttpsError("already-exists", "A payout was already recorded for this order");
+
+  const core = {
+    orderId, sellerId: o.sellerId, amount, method, txnId,
+    payoutDateMs: Number(d.payoutDateMs) || Date.now()
+  };
+  const detailsHash = zbSha(zbCanon(core));
+
+  const ref = db.collection("payouts").doc();
+  await ref.set({
+    ...core,
+    orderRef:      o.orderRef || "",
+    sellerEmail:   o.sellerEmail || "",
+    sellerName:    o.sellerName || "",
+    buyerUid:      o.buyerUid || "",
+    screenshotUrl: String(d.screenshotUrl || ""),
+    status:        "sent",
+    detailsHash,
+    recordedBy:    caller.email,
+    createdAt:     admin.firestore.FieldValue.serverTimestamp()
+  });
+
+  // the log only holds a fingerprint of the details, so buyers never see the amount
+  await zbAppendProof(orderId, o, "payout_recorded", caller.uid, "admin", {
+    payoutId: ref.id, method, detailsHash
+  });
+
+  await db.collection("notifications").add({
+    userId:    o.sellerId,
+    type:      "order",
+    title:     "💸 ZiBuy has sent your payment",
+    message:   `UGX ${amount.toLocaleString()} for ${o.productName || "your order"} was sent via ${method.toUpperCase()}. Please open Orders to Deliver and confirm you received it.`,
+    orderId,
+    read:      false,
+    createdAt: new Date()
+  });
+
+  return { ok: true, payoutId: ref.id };
+});
+
+// 2) Seller asks for a confirmation code, sent to their account email
+exports.requestPayoutCode = onCall(async (request) => {
+  const uid = request.auth?.uid;
+  if (!uid) throw new HttpsError("unauthenticated", "Please log in");
+
+  const payoutId = String(request.data?.payoutId || "");
+  const pSnap = await db.collection("payouts").doc(payoutId).get();
+  if (!pSnap.exists) throw new HttpsError("not-found", "Payout not found");
+
+  const p = pSnap.data();
+  if (p.sellerId !== uid) throw new HttpsError("permission-denied", "This payout isn't yours");
+  if (p.status === "acknowledged") throw new HttpsError("failed-precondition", "You already confirmed this payment");
+
+  const email = request.auth.token.email;
+  if (!email) throw new HttpsError("failed-precondition", "Your account has no email address");
+
+  const cRef  = db.collection("payout_codes").doc(payoutId);
+  const cSnap = await cRef.get();
+  const now   = Date.now();
+  const recent = ((cSnap.exists ? cSnap.data().sends : []) || []).filter(ms => now - ms < 3600000);
+  if (recent.length >= 3) {
+    throw new HttpsError("resource-exhausted", "Too many codes requested. Please try again in an hour.");
+  }
+
+  const code = String(crypto.randomInt(100000, 1000000));
+  await cRef.set({
+    hash:      zbSha(payoutId + ":" + code),
+    expiresAt: now + 10 * 60 * 1000,
+    attempts:  0,
+    used:      false,
+    sends:     [...recent, now]
+  });
+
+  try {
+    await transporter.sendMail({
+      from:    `"ZiBuy" <${process.env.GMAIL_EMAIL}>`,
+      to:      email,
+      subject: "Your ZiBuy payment confirmation code",
+      html:    emailTemplate(
+        "Confirm your payment",
+        `<p>Your confirmation code is</p>
+         <p style="font-size:30px;font-weight:800;letter-spacing:6px;margin:8px 0">${code}</p>
+         <p>It expires in 10 minutes. Enter it on the ZiBuy page to confirm you received
+         <strong>UGX ${Number(p.amount).toLocaleString()}</strong> from ZiBuy.
+         ZiBuy staff will never ask you for this code.</p>`
+      )
+    });
+  } catch (err) {
+    console.error("[requestPayoutCode] email failed:", err.message);
+    throw new HttpsError("internal", "We couldn't send the email. Please try again in a moment.");
+  }
+
+  return { ok: true, sentTo: email.replace(/^(.).*(@.*)$/, "$1***$2") };
+});
+
+// 3) Seller signs: code + typed full name + confirmation tick
+exports.acknowledgePayout = onCall(async (request) => {
+  const uid = request.auth?.uid;
+  if (!uid) throw new HttpsError("unauthenticated", "Please log in");
+
+  const payoutId = String(request.data?.payoutId || "");
+  const code     = String(request.data?.code || "").trim();
+  const fullName = String(request.data?.fullName || "").trim();
+
+  if (request.data?.agree !== true)  throw new HttpsError("invalid-argument", "Please tick the confirmation box");
+  if (fullName.length < 3)           throw new HttpsError("invalid-argument", "Type your full name to sign");
+  if (!/^\d{6}$/.test(code))         throw new HttpsError("invalid-argument", "Enter the 6-digit code from your email");
+
+  const headers = request.rawRequest?.headers || {};
+  const ip = String(headers["x-forwarded-for"] || request.rawRequest?.ip || "").split(",")[0].trim();
+  const ua = String(headers["user-agent"] || "").slice(0, 300);
+
+  const pRef = db.collection("payouts").doc(payoutId);
+  const cRef = db.collection("payout_codes").doc(payoutId);
+
+  const result = await db.runTransaction(async (t) => {
+    const [pSnap, cSnap] = await Promise.all([t.get(pRef), t.get(cRef)]);
+    if (!pSnap.exists) throw new HttpsError("not-found", "Payout not found");
+
+    const p = pSnap.data();
+    if (p.sellerId !== uid)       throw new HttpsError("permission-denied", "This payout isn't yours");
+    if (p.status !== "sent")      throw new HttpsError("failed-precondition", "This payment was already confirmed");
+    if (!cSnap.exists)            throw new HttpsError("failed-precondition", "Please request a code first");
+
+    const c = cSnap.data();
+    if (c.used)                   throw new HttpsError("failed-precondition", "This code was already used");
+    if (Date.now() > c.expiresAt) throw new HttpsError("deadline-exceeded", "The code expired. Please request a new one.");
+    if ((c.attempts || 0) >= 5)   throw new HttpsError("resource-exhausted", "Too many wrong attempts. Please request a new code.");
+
+    if (c.hash !== zbSha(payoutId + ":" + code)) {
+      t.update(cRef, { attempts: (c.attempts || 0) + 1 });
+      return { ok: false, left: 4 - (c.attempts || 0) };
+    }
+
+    const atMs = Date.now();
+    t.update(pRef, {
+      status: "acknowledged",
+      acknowledgement: {
+        atMs,
+        nameTyped: fullName,
+        email:     request.auth.token.email || "",
+        via:       "email_code",
+        ip,
+        userAgent: ua
+      }
+    });
+    t.update(cRef, { used: true });
+    return { ok: true, p, atMs };
+  });
+
+  if (!result.ok) {
+    throw new HttpsError("invalid-argument", `Wrong code. ${result.left} attempt(s) left.`);
+  }
+
+  const p = result.p;
+  const oSnap = await db.collection("orders").doc(p.orderId).get();
+  const o = oSnap.exists ? oSnap.data() : {};
+
+  const ackHash = zbSha(zbCanon({ payoutId, nameTyped: fullName, atMs: result.atMs, email: request.auth.token.email || "" }));
+  await zbAppendProof(p.orderId, o, "payout_acknowledged", uid, "seller", {
+    payoutId, method: p.method, detailsHash: p.detailsHash, signedVia: "email_code", ackHash
+  });
+
+  // tell the buyer and the owner
+  const notes = [];
+  if (o.buyerUid && o.buyerUid !== "guest") {
+    notes.push({
+      userId:  o.buyerUid,
+      title:   "✅ The seller has been paid",
+      message: `The seller confirmed they received their payment for ${o.productName || "your order"}. Your order is now complete.`
+    });
+  }
+  const ownerSnap = await db.collection("users").where("email", "==", "swaibuziraye22@gmail.com").limit(1).get();
+  if (!ownerSnap.empty) {
+    notes.push({
+      userId:  ownerSnap.docs[0].id,
+      title:   "✅ Seller confirmed payout",
+      message: `${fullName} confirmed receiving UGX ${Number(p.amount).toLocaleString()} for ${o.productName || "an order"}.`
+    });
+  }
+  await Promise.all(notes.map(n => db.collection("notifications").add({
+    ...n, type: "order", orderId: p.orderId, read: false, createdAt: new Date()
+  })));
+
+  return { ok: true };
+});
+
+
+// ============================================
+// FINDS THE SELLER'S ACCOUNT FOR ANY ORDER (even older ones)
+// ============================================
+async function zbResolveSeller(o) {
+  if (o.sellerId) {
+    return { sellerId: o.sellerId, sellerEmail: o.sellerEmail || "", sellerName: o.sellerName || "" };
+  }
+
+  const pid = o.productId || o.items?.[0]?.productId;
+  if (pid) {
+    const ps = await db.collection("products").doc(pid).get();
+    if (ps.exists && ps.data().userId) {
+      const p = ps.data();
+      return {
+        sellerId:    p.userId,
+        sellerEmail: p.userEmail || "",
+        sellerName:  p.seller?.name || o.sellerName || ""
+      };
+    }
+  }
+
+  if (o.sellerEmail) {
+    const u = await db.collection("users").where("email", "==", o.sellerEmail).limit(1).get();
+    if (!u.empty) {
+      return { sellerId: u.docs[0].id, sellerEmail: o.sellerEmail, sellerName: o.sellerName || "" };
+    }
+  }
+  return null;
+}
+
+// ============================================
+// DAILY SEAL: emails the owner the latest record fingerprints
+// ============================================
+exports.dailyProofSeal = onSchedule(
+  { schedule: "55 23 * * *", timeZone: "Africa/Kampala" },
+  async () => {
+    try {
+      const since = admin.firestore.Timestamp.fromMillis(Date.now() - 24 * 3600 * 1000);
+      const snap  = await db.collection("order_proof_heads").where("at", ">=", since).get();
+      if (snap.empty) return;
+
+      const rows = snap.docs
+        .map(d => ({ orderId: d.id, seq: d.data().seq, hash: d.data().hash }))
+        .sort((a, b) => a.orderId.localeCompare(b.orderId));
+
+      const date = new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Kampala" });
+      const csv  = "orderId,entries,latestFingerprint\n" +
+        rows.map(r => `${r.orderId},${r.seq},${r.hash}`).join("\n");
+      const sealHash = zbSha(csv);
+
+      await db.collection("daily_seals").doc(date).set({
+        date, orders: rows.length, sealHash,
+        createdAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+
+      await transporter.sendMail({
+        from:    `"ZiBuy" <${process.env.GMAIL_EMAIL}>`,
+        to:      "swaibuziraye22@gmail.com",
+        subject: `ZiBuy daily record seal ${date}`,
+        html:    emailTemplate(
+          `Daily record seal: ${date}`,
+          `<p>${rows.length} order record(s) had new entries in the last 24 hours.</p>
+           <p><strong>Seal fingerprint:</strong><br>
+           <span style="font-family:monospace;word-break:break-all;font-size:12px">${sealHash}</span></p>
+           <p>The attached file lists the latest fingerprint of each order's record.
+           Keep these emails: they are an independent, time-stamped copy that proves what was recorded and when.</p>`
+        ),
+        attachments: [{ filename: `zibuy-seal-${date}.csv`, content: csv }]
+      });
+    } catch (e) {
+      console.error("[dailyProofSeal]", e);
+    }
+  }
+);
+
+// ============================================
+// SIGNED HANDOVER NOTE
+// ============================================
+function zbNoteSnapshot(orderId, o) {
+  const items = (Array.isArray(o.items) && o.items.length)
+    ? o.items.map(i => ({ name: String(i.name || ""), qty: Number(i.qty) || 1, price: Number(i.price) || 0 }))
+    : [{ name: String(o.productName || ""), qty: Number(o.quantity) || 1, price: Number(o.unitPrice || o.price) || 0 }];
+
+  const received = (Array.isArray(o.trackingEvents) ? o.trackingEvents : [])
+    .filter(e => e.status === "received").map(e => e.at).pop() || 0;
+
+  return {
+    orderId,
+    orderRef:         o.orderRef || "",
+    items,
+    total:            Number(o.total) || 0,
+    buyerName:        o.customerName || "",
+    buyerPhone:       o.customerPhone || "",
+    buyerEmail:       o.userEmail || "",
+    sellerName:       o.sellerName || "",
+    sellerPhone:      o.sellerPhone || "",
+    deliveryLocation: o.customerLocation || "",
+    deliveredAtMs:    received,
+    deliveryMethod:   o.deliveryProof?.method || "buyer_confirmation",
+    photoSha256:      o.deliveryProof?.photoSha256 || ""
+  };
+}
+
+exports.signHandoverNote = onCall(async (request) => {
+  const uid = request.auth?.uid;
+  if (!uid) throw new HttpsError("unauthenticated", "Please log in");
+
+  const orderId = String(request.data?.orderId || "");
+  if (!orderId) throw new HttpsError("invalid-argument", "Missing order");
+
+  // the signer must have just re-entered their password (or confirmed with Google)
+  const authTime = Number(request.auth.token.auth_time || 0);
+  if (!authTime || Date.now() / 1000 - authTime > 300) {
+    throw new HttpsError("failed-precondition", "Please confirm your password again to sign");
+  }
+
+  const orderRef = db.collection("orders").doc(orderId);
+  const snap = await orderRef.get();
+  if (!snap.exists) throw new HttpsError("not-found", "Order not found");
+  const o = snap.data();
+
+  const email = request.auth.token.email || "";
+  let role = "";
+  if ((o.buyerUid && o.buyerUid === uid) || (o.userEmail && o.userEmail === email))            role = "buyer";
+  else if ((o.sellerId && o.sellerId === uid) || (o.sellerEmail && o.sellerEmail === email))   role = "seller";
+  else throw new HttpsError("permission-denied", "You are not part of this order");
+
+  if (o.trackingStatus !== "received") {
+    throw new HttpsError("failed-precondition", "The note can be signed once the order has been received");
+  }
+
+  const snapshot     = zbNoteSnapshot(orderId, o);
+  const documentHash = zbSha(zbCanon(snapshot));
+  const atMs         = Date.now();
+
+  const uDoc = await db.collection("users").doc(uid).get();
+  const name = uDoc.data()?.displayName || request.auth.token.name || email;
+  const provider = request.auth.token.firebase?.sign_in_provider || "";
+
+  const headers = request.rawRequest?.headers || {};
+  const ip = String(headers["x-forwarded-for"] || request.rawRequest?.ip || "").split(",")[0].trim();
+  const ua = String(headers["user-agent"] || "").slice(0, 300);
+
+  const sigId = `${orderId}_${role}`;
+  try {
+    // create() fails if this person already signed
+    await db.collection("order_signatures").doc(sigId).create({
+      orderId, role, uid, name, provider, atMs, documentHash, snapshot,
+      buyerUid: role === "buyer"  ? uid : (o.buyerUid || ""),
+      sellerId: role === "seller" ? uid : (o.sellerId || ""),
+      createdAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+  } catch (e) {
+    throw new HttpsError("already-exists", "You already signed this note");
+  }
+
+  // private details, visible to admins only
+  await db.collection("order_signature_meta").doc(sigId).set({ orderId, role, email, ip, userAgent: ua, atMs });
+
+  await orderRef.update({ [`noteSigned.${role}`]: atMs });
+
+  await zbAppendProof(orderId, o, role === "buyer" ? "note_signed_buyer" : "note_signed_seller", uid, role, {
+    documentHash, via: provider === "google.com" ? "google" : "password"
+  });
+
+  // tell the owner, and remind the other side if they have not signed yet
+  const item  = o.productName || "an order";
+  const other = role === "buyer" ? "seller" : "buyer";
+  const otherUid = role === "buyer" ? o.sellerId : o.buyerUid;
+  const notes = [];
+
+  const ownerSnap = await db.collection("users").where("email", "==", "swaibuziraye22@gmail.com").limit(1).get();
+  if (!ownerSnap.empty) {
+    notes.push({ userId: ownerSnap.docs[0].id, title: `✍️ ${role === "buyer" ? "Buyer" : "Seller"} signed the note`,
+                 message: `${name} signed the handover note for ${item}.` });
+  }
+  if (otherUid && !o.noteSigned?.[other]) {
+    notes.push({ userId: otherUid, title: "✍️ The other side has signed",
+                 message: `Your signature is still needed on the handover note for ${item}.` });
+  }
+  await Promise.all(notes.map(n => db.collection("notifications").add({
+    ...n, type: "order", orderId, read: false, createdAt: new Date()
+  })));
+
+  return { ok: true };
+});
+
+
+// ============================================
+// ACCOUNT SECURITY: terms log, email codes, phone login
+// ============================================
+const ZB_WEB_API_KEY = "AIzaSyDc7-XKk30DshUE-9PUoMF4VObt4UTIncM";   // the public web key from your site config
+
+function zbClientInfo(request) {
+  const h = request.rawRequest?.headers || {};
+  return {
+    ip: String(h["x-forwarded-for"] || request.rawRequest?.ip || "").split(",")[0].trim(),
+    ua: String(h["user-agent"] || "").slice(0, 300)
+  };
+}
+
+// Simple limiter: at most `max` tries per `windowMs` for a key
+async function zbRateLimit(key, max, windowMs) {
+  const ref  = db.collection("rate_limits").doc(zbSha(key));
+  const now  = Date.now();
+  const snap = await ref.get();
+  const hits = ((snap.exists ? snap.data().hits : []) || []).filter(ms => now - ms < windowMs);
+  if (hits.length >= max) {
+    throw new HttpsError("resource-exhausted", "Too many attempts. Please wait a few minutes and try again.");
+  }
+  hits.push(now);
+  await ref.set({ hits, updatedAt: now });
+}
+
+// Ugandan numbers in every common spelling: 0701234567, 256701234567, +256701234567, 701234567
+function zbPhoneForms(raw) {
+  let d = String(raw || "").replace(/\D/g, "");
+  if (d.startsWith("0") && d.length === 10) d = "256" + d.slice(1);
+  if (d.length === 9) d = "256" + d;
+  if (!/^256\d{9}$/.test(d)) return null;
+  return [d, "+" + d, "0" + d.slice(3), d.slice(3)];
+}
+
+// ── Current versions of the Terms and Privacy Policy ──
+async function zbLegalVersions() {
+  const snap = await db.collection("system_config").doc("legal").get();
+  const d = snap.exists ? snap.data() : {};
+  return {
+    termsVersion:   String(d.termsVersion   || "2026-10-15"),
+    privacyVersion: String(d.privacyVersion || "2026-10-15")
+  };
+}
+
+// Fingerprint of the pages as they are live right now (cached for an hour)
+let zbLegalHashCache = { at: 0, terms: "", privacy: "" };
+async function zbLegalHashes() {
+  if (Date.now() - zbLegalHashCache.at < 3600000) return zbLegalHashCache;
+  const hash = async (path) => {
+    try {
+      const r = await fetch("https://zibuy.ziteche.com/" + path);
+      return zbSha(await r.text());
+    } catch (e) { return "unavailable"; }
+  };
+  zbLegalHashCache = { at: Date.now(), terms: await hash("terms.html"), privacy: await hash("privacy.html") };
+  return zbLegalHashCache;
+}
+
+// 1) Saves that a person accepted the Terms and Privacy Policy
+exports.recordTermsAcceptance = onCall(async (request) => {
+  const uid = request.auth?.uid;
+  if (!uid) throw new HttpsError("unauthenticated", "Please log in");
+
+  const d = request.data || {};
+  if (d.agreed !== true) throw new HttpsError("invalid-argument", "Please tick the box to accept");
+
+  const legal = await zbLegalVersions();
+  if (String(d.termsVersion) !== legal.termsVersion || String(d.privacyVersion) !== legal.privacyVersion) {
+    throw new HttpsError("failed-precondition", "Our terms were just updated. Please refresh the page and try again.");
+  }
+
+  const method = ["signup_form", "google_signup", "reaccept", "login_gate"].includes(d.method) ? d.method : "login_gate";
+  const { ip, ua } = zbClientInfo(request);
+  const hashes = await zbLegalHashes();
+  const email  = request.auth.token.email || "";
+
+  const uDoc = await db.collection("users").doc(uid).get();
+  const name = uDoc.data()?.displayName || request.auth.token.name || "";
+  const atMs = Date.now();
+
+  await db.collection("terms_acceptances").add({
+    uid, email, name,
+    termsVersion:   legal.termsVersion,
+    privacyVersion: legal.privacyVersion,
+    termsHash:      hashes.terms,
+    privacyHash:    hashes.privacy,
+    method, ip, userAgent: ua, atMs,
+    at: admin.firestore.FieldValue.serverTimestamp()
+  });
+
+  await db.collection("users").doc(uid).set({
+    termsAccepted: { termsVersion: legal.termsVersion, privacyVersion: legal.privacyVersion, atMs, method }
+  }, { merge: true });
+
+  return { ok: true };
+});
+
+// 2) Sends a 6-digit code to the account's email
+exports.sendEmailCode = onCall(async (request) => {
+  const uid = request.auth?.uid;
+  if (!uid) throw new HttpsError("unauthenticated", "Please log in");
+
+  const email = request.auth.token.email;
+  if (!email) throw new HttpsError("failed-precondition", "Your account has no email address");
+  if (request.auth.token.email_verified === true) return { alreadyVerified: true };
+
+  const ref  = db.collection("email_codes").doc(uid);
+  const snap = await ref.get();
+  const now  = Date.now();
+  const recent = ((snap.exists ? snap.data().sends : []) || []).filter(ms => now - ms < 3600000);
+
+  if (recent.length >= 5) {
+    throw new HttpsError("resource-exhausted", "Too many codes requested. Please try again in an hour.");
+  }
+  if (recent.length && now - recent[recent.length - 1] < 30000) {
+    throw new HttpsError("resource-exhausted", "Please wait a few seconds before asking for another code.");
+  }
+
+  const code = String(crypto.randomInt(100000, 1000000));
+  await ref.set({
+    hash:      zbSha(uid + ":" + code),
+    expiresAt: now + 10 * 60 * 1000,
+    attempts:  0,
+    used:      false,
+    sends:     [...recent, now]
+  });
+
+  try {
+    await transporter.sendMail({
+      from:    `"ZiBuy" <${process.env.GMAIL_EMAIL}>`,
+      to:      email,
+      subject: "Your ZiBuy verification code",
+      html:    emailTemplate(
+        "Verify your email",
+        `<p>Welcome to ZiBuy! Your verification code is</p>
+         <p style="font-size:30px;font-weight:800;letter-spacing:6px;margin:8px 0">${code}</p>
+         <p>It expires in 10 minutes. If you didn't create a ZiBuy account, you can ignore this email.</p>`
+      )
+    });
+  } catch (err) {
+    console.error("[sendEmailCode] email failed:", err.message);
+    throw new HttpsError("internal", "We couldn't send the email. Please try again in a moment.");
+  }
+
+  return { ok: true, sentTo: email.replace(/^(.).*(@.*)$/, "$1***$2") };
+});
+
+// 3) Checks the code and marks the email as verified
+exports.verifyEmailCode = onCall(async (request) => {
+  const uid = request.auth?.uid;
+  if (!uid) throw new HttpsError("unauthenticated", "Please log in");
+
+  const code = String(request.data?.code || "").trim();
+  if (!/^\d{6}$/.test(code)) throw new HttpsError("invalid-argument", "Enter the 6-digit code");
+
+  const ref  = db.collection("email_codes").doc(uid);
+  const snap = await ref.get();
+  if (!snap.exists) throw new HttpsError("failed-precondition", "Please request a code first");
+
+  const c = snap.data();
+  if (c.used)                   throw new HttpsError("failed-precondition", "This code was already used");
+  if (Date.now() > c.expiresAt) throw new HttpsError("deadline-exceeded", "The code expired. Please request a new one.");
+  if ((c.attempts || 0) >= 5)   throw new HttpsError("resource-exhausted", "Too many wrong attempts. Please request a new code.");
+
+  if (c.hash !== zbSha(uid + ":" + code)) {
+    await ref.update({ attempts: (c.attempts || 0) + 1 });
+    throw new HttpsError("invalid-argument", `Wrong code. ${4 - (c.attempts || 0)} attempt(s) left.`);
+  }
+
+  await ref.update({ used: true });
+  await admin.auth().updateUser(uid, { emailVerified: true });
+  await db.collection("users").doc(uid).set({ emailVerified: true, emailVerifiedAt: Date.now() }, { merge: true });
+
+  return { ok: true };
+});
+
+// 4) Log in with phone number + password: finds the email only if the password is right
+exports.phoneLoginLookup = onCall(async (request) => {
+  const forms    = zbPhoneForms(request.data?.phone);
+  const password = String(request.data?.password || "");
+  const generic  = new HttpsError("invalid-argument", "Wrong phone number or password.");
+  if (!forms || !password) throw generic;
+
+  const { ip } = zbClientInfo(request);
+  await zbRateLimit("phone:" + forms[0], 8, 15 * 60000);
+  await zbRateLimit("ip:" + ip, 40, 15 * 60000);
+
+  const found = await db.collection("users").where("phone", "in", forms).limit(5).get();
+
+  for (const d of found.docs) {
+    const email = d.data().email;
+    if (!email) continue;
+    try {
+      const res = await fetch(
+        `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${ZB_WEB_API_KEY}`,
+        {
+          method:  "POST",
+          headers: { "Content-Type": "application/json", "Referer": "https://zibuy.ziteche.com/" },
+          body:    JSON.stringify({ email, password, returnSecureToken: false })
+        }
+      );
+      if (res.ok) return { email };
+
+      const body = await res.json().catch(() => ({}));
+      if (body?.error?.message === "USER_DISABLED") {
+        throw new HttpsError("permission-denied", "This account has been disabled. Please contact support.");
+      }
+    } catch (e) {
+      if (e instanceof HttpsError) throw e;
+      console.error("[phoneLoginLookup]", e.message);
+    }
+  }
+  throw generic;
+});
+
+// 5) Friendly "already registered" checks on the sign-up form
+exports.checkSignupAvailability = onCall(async (request) => {
+  const { ip } = zbClientInfo(request);
+  await zbRateLimit("avail:" + ip, 30, 3600000);
+
+  const email = String(request.data?.email || "").trim().toLowerCase();
+  const forms = zbPhoneForms(request.data?.phone);
+  let emailTaken = false, phoneTaken = false;
+
+  if (/^\S+@\S+\.\S+$/.test(email)) {
+    try { await admin.auth().getUserByEmail(email); emailTaken = true; } catch (e) { /* not registered */ }
+  }
+  if (forms) {
+    const q = await db.collection("users").where("phone", "in", forms).limit(1).get();
+    phoneTaken = !q.empty;
+  }
+  return { emailTaken, phoneTaken };
+});
+
+
+// ============================================
+// REFUNDS: admin records, buyer confirms
+// ============================================
+exports.recordRefund = onCall(async (request) => {
+  const caller = await assertCallerIsFullAdmin(request);
+  const d = request.data || {};
+
+  const orderId = String(d.orderId || "");
+  const amount  = Math.round(Number(d.amount));
+  const method  = ["mtn", "airtel", "bank"].includes(d.method) ? d.method : "";
+  const txnId   = String(d.txnId || "").trim();
+  const reason  = String(d.reason || "").trim().slice(0, 200);
+  if (!orderId || !(amount > 0) || !method || txnId.length < 4 || !reason) {
+    throw new HttpsError("invalid-argument", "Order, amount, method, transaction ID and reason are required");
+  }
+
+  const orderRef = db.collection("orders").doc(orderId);
+  const oSnap = await orderRef.get();
+  if (!oSnap.exists) throw new HttpsError("not-found", "Order not found");
+  const o = oSnap.data();
+  const total = Number(o.total) || 0;
+
+  // the buyer's account
+  let buyerUid = (o.buyerUid && o.buyerUid !== "guest") ? o.buyerUid : "";
+  if (!buyerUid && o.userEmail && o.userEmail !== "guest") {
+    const u = await db.collection("users").where("email", "==", o.userEmail).limit(1).get();
+    if (!u.empty) buyerUid = u.docs[0].id;
+  }
+  if (!buyerUid) throw new HttpsError("failed-precondition", "We couldn't find the buyer's account");
+
+  // never refund more than the buyer paid
+  const prev = await db.collection("refunds").where("orderId", "==", orderId).get();
+  const already = prev.docs.reduce((t, x) => t + (Number(x.data().amount) || 0), 0);
+  if (already + amount > total) {
+    throw new HttpsError("failed-precondition",
+      `Refunds can't be more than the amount paid (UGX ${total.toLocaleString()}). Already refunded: UGX ${already.toLocaleString()}.`);
+  }
+
+  const core = { orderId, buyerUid, amount, method, txnId, reason, refundDateMs: Date.now() };
+  const detailsHash = zbSha(zbCanon(core));
+
+  const ref = db.collection("refunds").doc();
+  await ref.set({
+    ...core,
+    orderRef:      o.orderRef || "",
+    buyerEmail:    o.userEmail || "",
+    buyerName:     o.customerName || "",
+    sellerId:      o.sellerId || "",
+    screenshotUrl: String(d.screenshotUrl || ""),
+    status:        "sent",
+    detailsHash,
+    recordedBy:    caller.email,
+    createdAt:     admin.firestore.FieldValue.serverTimestamp()
+  });
+
+  const fully = already + amount >= total;
+  await orderRef.update(fully
+    ? { refunded: true, status: "refunded", refundedAt: Date.now(), updatedAt: new Date() }
+    : { partiallyRefunded: already + amount, updatedAt: new Date() });
+
+  // the log only holds a fingerprint of the details, so the seller never sees the amount
+  await zbAppendProof(orderId, o, "refund_recorded", caller.uid, "admin", {
+    refundId: ref.id, method, detailsHash
+  });
+
+  const item = o.productName || "your order";
+  const notes = [{
+    userId:  buyerUid,
+    title:   "↩️ ZiBuy has sent your refund",
+    message: `UGX ${amount.toLocaleString()} for ${item} was sent via ${method.toUpperCase()}. Open My Orders and confirm you received it.`
+  }];
+  if (o.sellerId) {
+    notes.push({
+      userId:  o.sellerId,
+      title:   "ℹ️ A refund was issued to the buyer",
+      message: fully
+        ? `The order for ${item} (${o.orderRef || ""}) was refunded. Please do not deliver it.`
+        : `A partial refund was issued on the order for ${item} (${o.orderRef || ""}).`
+    });
+  }
+  await Promise.all(notes.map(n => db.collection("notifications").add({
+    ...n, type: "order", orderId, read: false, createdAt: new Date()
+  })));
+
+  return { ok: true, refundId: ref.id };
+});
+
+exports.confirmRefund = onCall(async (request) => {
+  const uid = request.auth?.uid;
+  if (!uid) throw new HttpsError("unauthenticated", "Please log in");
+
+  // the buyer must have just re-entered their password (or confirmed with Google)
+  const authTime = Number(request.auth.token.auth_time || 0);
+  if (!authTime || Date.now() / 1000 - authTime > 300) {
+    throw new HttpsError("failed-precondition", "Please confirm your password again to continue");
+  }
+
+  const refundId = String(request.data?.refundId || "");
+  const rRef = db.collection("refunds").doc(refundId);
+
+  const uDoc = await db.collection("users").doc(uid).get();
+  const name = uDoc.data()?.displayName || request.auth.token.name || request.auth.token.email || "";
+  const provider = request.auth.token.firebase?.sign_in_provider || "";
+  const { ip, ua } = zbClientInfo(request);
+
+  const r = await db.runTransaction(async (t) => {
+    const snap = await t.get(rRef);
+    if (!snap.exists) throw new HttpsError("not-found", "Refund not found");
+    const x = snap.data();
+    if (x.buyerUid !== uid)  throw new HttpsError("permission-denied", "This refund isn't yours");
+    if (x.status !== "sent") throw new HttpsError("failed-precondition", "This refund was already confirmed");
+    t.update(rRef, {
+      status: "acknowledged",
+      acknowledgement: {
+        atMs: Date.now(), name, email: request.auth.token.email || "",
+        via: provider === "google.com" ? "google" : "password", ip, userAgent: ua
+      }
+    });
+    return x;
+  });
+
+  const oSnap = await db.collection("orders").doc(r.orderId).get();
+  const o = oSnap.exists ? oSnap.data() : {};
+
+  await zbAppendProof(r.orderId, o, "refund_acknowledged", uid, "buyer", {
+    refundId, detailsHash: r.detailsHash, via: provider === "google.com" ? "google" : "password"
+  });
+
+  const ownerSnap = await db.collection("users").where("email", "==", "swaibuziraye22@gmail.com").limit(1).get();
+  if (!ownerSnap.empty) {
+    await db.collection("notifications").add({
+      userId: ownerSnap.docs[0].id, type: "order", orderId: r.orderId, read: false, createdAt: new Date(),
+      title: "✅ Buyer confirmed the refund",
+      message: `${name} confirmed receiving UGX ${Number(r.amount).toLocaleString()} for ${o.productName || "an order"}.`
+    });
+  }
+
+  return { ok: true };
+});
+
+// ============================================
+// ORDER TRACKING: notify buyer, seller and admins on every step
+// ============================================
+exports.onOrderTrackingChange = onDocumentUpdated("orders/{orderId}", async (event) => {
+  try {
+    const before = event.data.before.data() || {};
+    const after  = event.data.after.data()  || {};
+    const status = after.trackingStatus;
+    if (!status || before.trackingStatus === status) return;
+
+    const orderId = event.params.orderId;
+    const ref  = after.orderRef || after.orderId || orderId.slice(0, 8).toUpperCase();
+    const item = after.productName || after.items?.[0]?.name || "your order";
+
+    const uidByEmail = async (email) => {
+      if (!email || email === "guest") return null;
+      const s = await db.collection("users").where("email", "==", email).limit(1).get();
+      return s.empty ? null : s.docs[0].id;
+    };
+
+    const buyerUid  = (after.buyerUid && after.buyerUid !== "guest")
+      ? after.buyerUid : await uidByEmail(after.userEmail);
+    const sellerUid = after.sellerId || await uidByEmail(after.sellerEmail);
+
+    const adminUids = new Set();
+    const superUid  = await uidByEmail("swaibuziraye22@gmail.com");
+    if (superUid) adminUids.add(superUid);
+    const staff = await db.collection("admins").get();
+    staff.forEach(d => { if (d.data().suspended !== true) adminUids.add(d.id); });
+
+    const jobs = [];
+    const notify = (userId, title, message) => {
+      if (!userId) return;
+      jobs.push(db.collection("notifications").add({
+        userId, type: "order", title, message, orderId, read: false, createdAt: new Date()
+      }));
+    };
+    const toAdmins = (title, message) => adminUids.forEach(uid => notify(uid, title, message));
+
+    switch (status) {
+      case "payment_verified":
+        notify(buyerUid,  "✅ Payment confirmed", `We've received your payment for ${item} (${ref}). The seller is now preparing your order.`);
+        notify(sellerUid, "💰 New paid order: start packing", `${item} (${ref}) has been paid for. Please pack it and mark it as packed.`);
+        break;
+      case "packed":
+        notify(buyerUid, "📦 Your order is packed", `${item} (${ref}) has been packed and is getting ready to ship.`);
+        toAdmins("📦 Order packed", `${item} (${ref}) was marked packed by the seller.`);
+        break;
+      case "on_the_way":
+        notify(buyerUid, "🚚 Your order is on the way", `${item} (${ref}) is now on its way to you.`);
+        toAdmins("🚚 Order on the way", `${item} (${ref}) is on its way to the buyer.`);
+        break;
+      case "arrived":
+        notify(buyerUid, "📍 The seller has arrived", `The seller has reached your delivery location with ${item} (${ref}). Please confirm once you receive it.`);
+        toAdmins("📍 Seller arrived", `The seller reached the delivery location for ${item} (${ref}).`);
+        break;
+      case "received":
+        notify(sellerUid, "✅ Buyer confirmed receipt", `The buyer confirmed receiving ${item} (${ref}). ZiBuy will release your payment.`);
+        toAdmins("✅ Order received by buyer", `${item} (${ref}) was received. Ready to release payment to the seller.`);
+        break;
+    }
+
+    await Promise.all(jobs);
+  } catch (err) {
+    console.error("[onOrderTrackingChange]", err);
+  }
+});
+
 
 // ============================================
 // ORDER SYSTEM (SCALE MODE FIXED)
@@ -836,7 +2204,7 @@ exports.onNewOrder = onDocumentCreated(
     const orderId = event.params.orderId;
 
     const product = await getProduct(order.items?.[0]?.productId);
-    const seller = product?.userId ? await getUser(product.userId) : null;
+    const seller = (!order.trackingStatus && product?.userId) ? await getUser(product.userId) : null;
 
     const itemList = (order.items || [])
       .map(i => `<li>${i.name} × ${i.qty}</li>`)
@@ -929,20 +2297,6 @@ exports.onNewMessage = onDocumentCreated(
       read: false,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
-
-    if (user.plan !== "free" && user.fcmToken) {
-      try {
-        await admin.messaging().send({
-          token: user.fcmToken,
-          notification: {
-            title: "New Message",
-            body: msg.text?.slice(0, 100),
-          },
-        });
-      } catch (err) {
-        console.error("[MSG ERROR]", err.message);
-      }
-    }
   }
 );
 
@@ -1218,6 +2572,7 @@ exports.smsGoldSellers = onDocumentCreated(
   async (event) => {
     try {
       const order = event.data.data();
+      if (order.trackingStatus) return;   // tracked orders: the seller is told after payment is confirmed
       const productId = order.items?.[0]?.productId;
 
       const smsKey = `sms_${event.params.orderId}`;
@@ -1448,6 +2803,76 @@ exports.aiRecommendations = onSchedule(
 // ============================================
 // PLAN EXPIRY REMINDERS (CLEAN V2 MODULE)
 // ============================================
+
+// ============================================
+// HOME FEED PERSONALIZATION — category interest per user
+// ============================================
+exports.computeHomeFeedScores = onSchedule(
+  { schedule: "every 6 hours", timeZone: "Africa/Kampala" },
+  async () => {
+    try {
+      let allUserDocs = [];
+      let lastUserDoc = null;
+      while (true) {
+        let q = db.collection("users").limit(500);
+        if (lastUserDoc) q = q.startAfter(lastUserDoc);
+        const batch = await q.get();
+        if (batch.empty) break;
+        batch.docs.forEach(d => allUserDocs.push(d));
+        lastUserDoc = batch.docs[batch.docs.length - 1];
+        if (batch.size < 500) break;
+      }
+
+      let updated = 0;
+
+      for (const userDoc of allUserDocs) {
+        const user = userDoc.data();
+        if (!user.email) continue;
+
+        const categoryScore = {};
+
+        // Past purchases — strongest signal
+        const ordersSnap = await db.collection("orders")
+          .where("userEmail", "==", user.email)
+          .limit(20)
+          .get();
+        ordersSnap.docs.forEach(o => {
+          (o.data().items || []).forEach(i => {
+            if (i.category) categoryScore[i.category] = (categoryScore[i.category] || 0) + 10;
+          });
+        });
+
+        // Liked products — lighter signal
+        const likesSnap = await db.collection("likes")
+          .where("userId", "==", userDoc.id)
+          .limit(50)
+          .get();
+
+        for (const likeDoc of likesSnap.docs) {
+          const productId = likeDoc.data().productId;
+          if (!productId) continue;
+          const prodSnap = await db.collection("products").doc(productId).get();
+          if (prodSnap.exists && prodSnap.data().category) {
+            const cat = prodSnap.data().category;
+            categoryScore[cat] = (categoryScore[cat] || 0) + 3;
+          }
+        }
+
+        if (Object.keys(categoryScore).length === 0) continue;
+
+        await userDoc.ref.update({
+          homeFeedCategoryScores: categoryScore,
+          homeFeedUpdatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+        updated++;
+      }
+
+      console.log(`[HOME FEED] Updated personalization for ${updated} user(s)`);
+    } catch (err) {
+      console.error("[HOME FEED ERROR]", err.message);
+    }
+  }
+);
 
 exports.planExpiryReminders = onSchedule(
   {
@@ -2770,6 +4195,103 @@ exports.notifyAdminOnDispute = onDocumentCreated("disputes/{id}", async (event) 
 // removes Firebase Auth login too (only the
 // Admin SDK, server-side, can do this part)
 // ============================================
+
+// ============================================
+// DELETE MY ACCOUNT — self-service
+// (Google Play and the App Store both require this)
+// ============================================
+async function selfDeleteByQuery(colName, field, value) {
+  const snap = await db.collection(colName).where(field, "==", value).get();
+  for (let i = 0; i < snap.docs.length; i += 400) {
+    const batch = db.batch();
+    snap.docs.slice(i, i + 400).forEach(d => batch.delete(d.ref));
+    await batch.commit();
+  }
+  return snap.size;
+}
+
+exports.deleteMyAccount = onCall(async (request) => {
+  const uid = request.auth?.uid;
+  if (!uid) throw new HttpsError("unauthenticated", "Please log in first");
+
+  const userSnap = await db.collection("users").doc(uid).get();
+  const email = String(userSnap.data()?.email || request.auth.token.email || "").toLowerCase();
+
+  if (email === "swaibuziraye22@gmail.com") {
+    throw new HttpsError("failed-precondition", "The owner account can't be deleted from inside the app.");
+  }
+
+  const openDispute = await db.collection("disputes")
+    .where("buyerUid", "==", uid)
+    .where("status", "==", "open")
+    .limit(1).get();
+  if (!openDispute.empty) {
+    throw new HttpsError("failed-precondition", "You have an open ZiBuy Protect dispute. Please wait until it is resolved, then delete your account.");
+  }
+
+  const errors = [];
+  const step = async (label, fn) => {
+    try { await fn(); } catch (e) { errors.push(`${label}: ${e.message}`); }
+  };
+
+  // 1. Everything they own or created
+  const byUid = [
+    ["products", "userId"], ["boost_requests", "userId"], ["pin_requests", "userId"],
+    ["cv_boosts", "userId"], ["auto_renewals", "userId"], ["business_accounts", "userId"],
+    ["seller_verifications", "userId"], ["saved_searches", "userId"], ["likes", "userId"],
+    ["notifications", "userId"], ["similar_item_alerts", "userId"], ["shop_followers", "userId"],
+    ["boost_credits", "userId"], ["buyer_ratings", "buyerId"], ["reviews", "sellerId"]
+  ];
+  for (const [col, field] of byUid) {
+    await step(col, () => selfDeleteByQuery(col, field, uid));
+  }
+
+  if (email) {
+    await step("reviews-written", () => selfDeleteByQuery("reviews", "reviewerEmail", email));
+    await step("messages-sent", () => selfDeleteByQuery("messages", "senderEmail", email));
+  }
+
+  // 2. Order records are kept (the other party and disputes need them),
+  //    but the buyer's personal details are removed
+  await step("orders-anonymize", async () => {
+    const snap = await db.collection("orders").where("buyerUid", "==", uid).get();
+    for (let i = 0; i < snap.docs.length; i += 400) {
+      const batch = db.batch();
+      snap.docs.slice(i, i + 400).forEach(d => batch.update(d.ref, {
+        customerName: "Deleted user", customerPhone: "", customerLocation: "",
+        userEmail: "deleted", buyerEmail: "deleted"
+      }));
+      await batch.commit();
+    }
+  });
+
+  // 3. Single documents keyed by their id
+  for (const col of ["shops", "business_profiles", "response_stats", "admins", "admin_sessions", "phone_otps"]) {
+    await step(col, () => db.collection(col).doc(uid).delete());
+  }
+
+  // 4. Uploaded files
+  const bucket = admin.storage().bucket();
+  for (const prefix of [
+    `products/${uid}/`, `seller-verification/${uid}/`, `profile-pictures/${uid}/`,
+    `business-logos/${uid}/`, `business-banners/${uid}/`, `service-videos/${uid}/`,
+    `shop-logos/${uid}`, `shop-banners/${uid}`
+  ]) {
+    await step(`storage ${prefix}`, () => bucket.deleteFiles({ prefix }));
+  }
+
+  // 5. The user record, then the login itself
+  await step("user-doc", () => db.collection("users").doc(uid).delete());
+
+  try {
+    await admin.auth().deleteUser(uid);
+  } catch (e) {
+    throw new HttpsError("internal", "Your data was removed but we couldn't close your login. Please contact ZiBuy Support.");
+  }
+
+  await auditLog("USER_SELF_DELETED", "system", `User ${uid} deleted their own account`);
+  return { ok: true, errors };
+});
 
 exports.adminDeleteUserAccount = onCall(async (request) => {
   const callerUid = request.auth?.uid;

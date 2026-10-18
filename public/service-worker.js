@@ -1,4 +1,4 @@
-const CACHE_NAME = "zibuy-v2";
+const CACHE_NAME = "zibuy-v6";
 
 const urlsToCache = [
   "/",

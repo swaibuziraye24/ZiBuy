@@ -1,22 +1,171 @@
 rules_version = '2';
 
-// Craft rules based on data in your Firestore database
-// allow write: if firestore.get(
-//    /databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin;
 service firebase.storage {
   match /b/{bucket}/o {
 
-    // This rule allows anyone with your Storage bucket reference to view, edit,
-    // and delete all data in your Storage bucket. It is useful for getting
-    // started, but it is configured to expire after 30 days because it
-    // leaves your app open to attackers. At that time, all client
-    // requests to your Storage bucket will be denied.
-    //
-    // Make sure to write security rules for your app before that time, or else
-    // all client requests to your Storage bucket will be denied until you Update
-    // your rules
+    // ============================================
+    // HELPER FUNCTIONS
+    // ============================================
+    
+    function isAdmin() {
+      return request.auth != null && 
+             request.auth.token.email == "swaibuziraye22@gmail.com";
+    }
+
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // ============================================
+    // PRODUCTS IMAGES
+    // Path: products/{userId}/{filename}
+    // ============================================
+    
+   match /products/{userId}/{allPaths=**} {
+      // Anyone can read product images
+      allow read: if true;
+      
+      // Only the product owner can upload
+      allow write: if isOwner(userId);
+    }
+
+    match /service-videos/{userId}/{allPaths=**} {
+      // Anyone can watch service videos
+      allow read: if true;
+      
+      // Only the video owner can upload, max 50MB, videos only
+      allow write: if isOwner(userId)
+                   && request.resource.size < 52428800
+                   && request.resource.contentType.matches('video/.*');
+    }
+
+    // ============================================
+    // BUSINESS LOGOS & BANNERS
+    // Path: business-logos/{userId}/{filename}
+    // ============================================
+    
+    match /business-logos/{userId}/{allPaths=**} {
+      // Anyone can read logos (public shop pages)
+      allow read: if true;
+      
+      // Only the business owner can upload
+      allow write: if isOwner(userId);
+    }
+
+    // ============================================
+    // BUSINESS BANNERS
+    // Path: business-banners/{userId}/{filename}
+    // ============================================
+    
+    match /business-banners/{userId}/{allPaths=**} {
+      // Anyone can read banners
+      allow read: if true;
+      
+      // Only the business owner can upload
+      allow write: if isOwner(userId);
+    }
+    
+    
+    // ============================================
+// SHOP LOGOS
+// Path: shop-logos/{userId}
+// ============================================
+
+match /shop-logos/{userId} {
+  allow read: if true;
+  allow write: if isOwner(userId);
+}
+    
+    
+    // ============================================
+// SHOP BANNERS
+// Path: shop-banners/{userId}
+// ============================================
+
+match /shop-banners/{userId} {
+  allow read: if true;
+  allow write: if isOwner(userId);
+}
+    
+    
+match /banner-ads/{fileName} {
+  allow read: if true;
+  allow write: if request.auth != null
+    && request.auth.token.email == "swaibuziraye22@gmail.com";
+}
+
+
+          match /blog-covers/{fileName} {
+  allow read: if true;
+  allow write: if request.auth.token.email == "swaibuziraye22@gmail.com";
+}
+
+match /feature-updates/{fileName} {
+  allow read: if true;
+  allow write: if isAdmin();
+}
+     
+    // ============================================
+    // PROFILE PICTURES
+    // Path: profile-pictures/{userId}/{filename}
+    // ============================================
+    
+        match /profile-pictures/{userId}/{allPaths=**} {
+      // Anyone can read profile pictures
+      allow read: if true;
+      
+      // Only the user can upload their profile picture
+      allow write: if isOwner(userId);
+    }
+
+    // ============================================
+    // SELLER VERIFICATION DOCUMENTS (ID, LICENSE)
+    // Path: seller-verification/{userId}/{filename}
+    // Private — only the uploader and admin may ever read these
+    // ============================================
+
+    match /seller-verification/{userId}/{allPaths=**} {
+  allow read: if isOwner(userId) || isAdmin();
+  allow write: if isOwner(userId) && request.resource.size < 15 * 1024 * 1024;
+}
+
+match /handover-photos/{sellerId}/{allPaths=**} {
+  allow read: if isOwner(sellerId) || isAdmin();
+  allow write: if isOwner(sellerId)
+              && request.resource.size < 10 * 1024 * 1024
+              && request.resource.contentType.matches('image/.*');
+}
+
+match /refund-proofs/{buyerId}/{allPaths=**} {
+  allow read: if isOwner(buyerId) || isAdmin();
+  allow write: if isAdmin() && request.resource.size < 10 * 1024 * 1024;
+}
+
+    match /payout-proofs/{sellerId}/{allPaths=**} {
+  allow read: if isOwner(sellerId) || isAdmin();
+  allow write: if isAdmin() && request.resource.size < 10 * 1024 * 1024;
+}
+
+    // ============================================
+    // ADMIN FILES (BACKUP, TEMP, ETC)
+    // Path: admin/{allPaths=**}
+    // ============================================
+    
+    match /admin/{allPaths=**} {
+      allow read, write: if isAdmin();
+    }
+
+    // ============================================
+    // CATCH-ALL (DENY BY DEFAULT)
+    // ============================================
+    
     match /{allPaths=**} {
-      allow read, write: if request.time < timestamp.date(2026, 6, 12);
+      // Default: deny all access
+      allow read, write: if false;
     }
   }
 }

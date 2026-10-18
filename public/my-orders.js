@@ -1,4 +1,4 @@
-import { db, auth, collection, getDocs, query, where, doc, updateDoc, addDoc } from "./firebase.js";
+import { db, auth, collection, getDocs, query, where, doc, getDoc, updateDoc, addDoc } from "./firebase.js";
 
 export async function loadMyOrders() {
   const container = document.getElementById("my-orders-list");
@@ -65,6 +65,35 @@ export async function loadMyOrders() {
 }
 
 window.confirmOrderReceipt = async function(orderId) {
+  if (!confirm("Confirm you received this item in good condition? This ends the delivery and closes ZiBuy Protect coverage for this order.")) return;
+
+  try {
+    const ref  = doc(db, "orders", orderId);
+    const snap = await getDoc(ref);
+    const o    = snap.data() || {};
+    const base = { deliveryConfirmed: true, confirmedAt: new Date(), autoConfirmed: false };
+
+    if (["on_the_way", "arrived"].includes(o.trackingStatus)) {
+      await updateDoc(ref, {
+        ...base,
+        trackingStatus: "received",
+        trackingEvents: [...(o.trackingEvents || []), { status: "received", at: Date.now(), by: "buyer" }],
+        updatedAt:      new Date()
+      });
+    } else {
+      await updateDoc(ref, base);
+    }
+
+    if (typeof window.refreshOrdersTab === "function") window.refreshOrdersTab();
+    else loadMyOrders();
+
+  } catch (err) {
+    console.error(err);
+    alert("Failed to confirm. Please try again.");
+  }
+};
+
+window.__oldConfirmOrderReceipt = async function(orderId) {
   if (!confirm("Confirm you received this item in good condition? This closes ZiBuy Protect coverage for this order.")) return;
 
   try {

@@ -5,12 +5,21 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // ── Multi-admin check: super-admin email OR listed in /admins/{uid} ──
+    // A staff admin is blocked instantly when the owner sets suspended = true
+    function adminNotSuspended() {
+      return get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.get("suspended", false) != true;
+    }
+
     function isAdmin() {
       return request.auth != null &&
         (
           request.auth.token.email == "swaibuziraye22@gmail.com"
           ||
-          exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+          (
+            exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+            &&
+            adminNotSuspended()
+          )
         );
     }
 
@@ -21,7 +30,7 @@ service cloud.firestore {
           request.auth.token.email == "swaibuziraye22@gmail.com"
           ||
           (
-            exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+            isAdmin()
             &&
             get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.get("role", "full") != "viewer"
           )
@@ -37,6 +46,11 @@ service cloud.firestore {
     match /admin_action_logs/{logId} {
       allow create: if isAdmin();
       allow read: if request.auth != null && request.auth.token.email == "swaibuziraye22@gmail.com";
+    }
+
+    match /moderation_config/{docId} {
+      allow read: if isAdmin();
+      allow write: if isFullAdmin();
     }
 
     match /admin_sessions/{sid} {
@@ -84,8 +98,9 @@ match /category_stats/{document=**} {
 }
 
 match /similar_item_alerts/{document=**} {
-  allow read: if false;
+  allow read: if request.auth != null && resource.data.userId == request.auth.uid;
   allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+  allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
 }
 
 match /client_errors/{document=**} {
@@ -384,6 +399,79 @@ match /boost_credits/{id} {
 
   allow delete: if request.auth != null
     && isFullAdmin();
+}
+
+// Delivery codes: only the buyer can read theirs. Only the server writes.
+match /order_secrets/{orderId} {
+  allow read: if request.auth != null && resource.data.buyerUid == request.auth.uid;
+  allow write: if false;
+}
+
+// Permanent proof log: the buyer, seller and admins of that order can read. Only the server writes.
+match /order_proofs/{proofId} {
+  allow read: if request.auth != null
+    && (
+      isAdmin()
+      || resource.data.buyerUid == request.auth.uid
+      || resource.data.sellerId == request.auth.uid
+    );
+  allow write: if false;
+}
+
+match /order_proof_heads/{orderId} {
+  allow read: if isAdmin();
+  allow write: if false;
+}
+
+// Seller payouts: only the seller and admins can read. Only the server writes.
+match /payouts/{payoutId} {
+  allow read: if request.auth != null
+    && (isAdmin() || resource.data.sellerId == request.auth.uid);
+  allow write: if false;
+}
+
+match /payout_codes/{id} {
+  allow read, write: if false;
+}
+
+
+// Signed handover notes: the buyer, seller and admins of that order can read. Only the server writes.
+match /order_signatures/{sigId} {
+  allow read: if request.auth != null
+    && (
+      isAdmin()
+      || resource.data.buyerUid == request.auth.uid
+      || resource.data.sellerId == request.auth.uid
+    );
+  allow write: if false;
+}
+
+// IP address and device of each signer: admins only
+match /order_signature_meta/{sigId} {
+  allow read: if isAdmin();
+  allow write: if false;
+}
+
+
+// Terms & Privacy acceptance log: admins read, only the server writes
+match /terms_acceptances/{id} {
+  allow read: if isAdmin();
+  allow write: if false;
+}
+
+// Server-only helpers (email codes, rate limits)
+match /email_codes/{id} {
+  allow read, write: if false;
+}
+match /rate_limits/{id} {
+  allow read, write: if false;
+}
+
+// Refunds: the buyer and admins can read. Only the server writes.
+match /refunds/{refundId} {
+  allow read: if request.auth != null
+    && (isAdmin() || resource.data.buyerUid == request.auth.uid);
+  allow write: if false;
 }
 
        match /disputes/{document=**} {
