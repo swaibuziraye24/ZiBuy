@@ -378,6 +378,10 @@
       onclick="window.showSection('money', this);loadMoneyDashboard()">
       <span class="nav-icon">💰</span> Money &amp; Alerts
     </button>
+    <button class="admin-nav-item" data-section="delrequests"
+      onclick="window.showSection('delrequests', this);loadDeletionRequests()">
+      <span class="nav-icon">🗑️</span> Deletion Requests
+    </button>
     <button class="admin-nav-item"
       onclick="window.showSection('reminders', this);loadReminders()">
       <span class="nav-icon">📲</span> WA Reminders
@@ -643,11 +647,36 @@
       </div>
     </div>
 
+    <div class="admin-section" id="section-delrequests">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px">
+        <h2 style="font-size:20px;font-weight:800;margin:0">🗑️ Account Deletion Requests</h2>
+        <button class="action-btn" onclick="loadDeletionRequests()">↻ Refresh</button>
+      </div>
+      <p style="font-size:13px;color:#6b7280;margin:0 0 14px;line-height:1.5">
+        People who confirmed their email and asked us to delete their account. Process each within 30 days:
+        press <strong>Open as user</strong>, then in that tab go to Dashboard → Account Settings → Delete My Account.
+        Then come back and press <strong>Mark done</strong>.
+      </p>
+      <div class="admin-card">
+        <table class="data-table">
+          <thead><tr><th>When</th><th>Email</th><th>Note</th><th>Status</th><th></th></tr></thead>
+          <tbody id="del-req-body"><tr class="empty-row"><td colspan="5">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
 
     <div class="admin-section" id="section-money">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px">
         <h2 style="font-size:20px;font-weight:800;margin:0">💰 Money &amp; Alerts</h2>
         <button class="action-btn" onclick="loadMoneyDashboard()">↻ Refresh</button>
+        <button class="action-btn" onclick="rebuildPublicProfiles()">🔧 Rebuild public profiles</button>
+        <button class="action-btn" onclick="scrubReviewEmails()">🧹 Remove emails from reviews</button>
+        <button class="action-btn" onclick="backfillMessageUids()">🔧 Add user IDs to old messages</button>
+        <button class="action-btn" onclick="backfillProductOwners()">🔧 Prepare ads (owner IDs)</button>
+        <button class="action-btn" onclick="scrubProductEmails()">🧹 Remove emails from ads</button>
+        <button class="action-btn" onclick="scrubPublicEmails()">🧹 Remove emails from followers and ratings</button>
+        <button class="action-btn" onclick="clearShopLoginEmails()">🧹 Clear login emails from shops</button>
       </div>
       <p style="font-size:13px;color:#6b7280;margin:0 0 14px;line-height:1.5">
         What you are holding, what you owe sellers, and which orders are stuck.

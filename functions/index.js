@@ -8,7 +8,7 @@ const db = admin.firestore();
 
 const { setGlobalOptions } = require("firebase-functions/v2");
 const { onRequest, onCall, HttpsError } = require("firebase-functions/v2/https");
-const { onDocumentCreated, onDocumentUpdated } = require("firebase-functions/v2/firestore");
+const { onDocumentCreated, onDocumentUpdated, onDocumentWritten } = require("firebase-functions/v2/firestore");
 const { onSchedule }        = require("firebase-functions/v2/scheduler");
 
 // ── Must be called before any function exports ──
@@ -1086,7 +1086,7 @@ exports.sendPushOnNotification = onDocumentCreated(
 
     // Messages notify everyone, like WhatsApp. Other notification types
     // (price drops, boosts, etc.) remain a paid-plan perk for now.
-    if (user.plan === "free" && data.type !== "message" && data.type !== "order") return;
+    if (user.plan === "free" && data.type !== "message" && data.type !== "order" && data.type !== "back_in_stock") return;
 
     try {
       await admin.messaging().send({
@@ -1575,7 +1575,7 @@ async function zbResolveSeller(o) {
       const p = ps.data();
       return {
         sellerId:    p.userId,
-        sellerEmail: p.userEmail || "",
+        sellerEmail: (await db.collection("users").doc(p.userId).get()).data()?.email || "",
         sellerName:  p.seller?.name || o.sellerName || ""
       };
     }
@@ -2122,6 +2122,626 @@ exports.confirmRefund = onCall(async (request) => {
   }
 
   return { ok: true };
+});
+
+// ============================================
+// ACCOUNT DELETION REQUESTS (for people who can't log in)
+// ============================================
+exports.startDeletionRequest = onCall(async (request) => {
+  const email = String(request.data?.email || "").trim().toLowerCase();
+  if (!/^\S+@\S+\.\S+$/.test(email)) throw new HttpsError("invalid-argument", "Enter a valid email address");
+
+  const { ip } = zbClientInfo(request);
+  await zbRateLimit("delreq-ip:" + ip, 10, 3600000);
+  await zbRateLimit("delreq:" + email, 5, 3600000);
+
+  let exists = true;
+  try { await admin.auth().getUserByEmail(email); } catch (e) { exists = false; }
+
+  if (exists) {
+    const code = String(crypto.randomInt(100000, 1000000));
+    await db.collection("deletion_codes").doc(zbSha(email)).set({
+      hash: zbSha(email + ":" + code), expiresAt: Date.now() + 15 * 60000, attempts: 0, used: false
+    });
+    try {
+      await transporter.sendMail({
+        from:    `"ZiBuy" <${process.env.GMAIL_EMAIL}>`,
+        to:      email,
+        subject: "Your ZiBuy account deletion code",
+        html:    emailTemplate(
+          "Confirm your deletion request",
+          `<p>Someone asked to delete the ZiBuy account for this email. If it was you, enter this code on the deletion page:</p>
+           <p style="font-size:30px;font-weight:800;letter-spacing:6px;margin:8px 0">${code}</p>
+           <p>It expires in 15 minutes. If you didn't ask for this, ignore this email and your account stays as it is.</p>`
+        )
+      });
+    } catch (err) {
+      console.error("[startDeletionRequest] email failed:", err.message);
+      throw new HttpsError("internal", "We couldn't send the email. Please try again in a moment.");
+    }
+  }
+
+  // same answer either way, so nobody can use this to find out who has an account
+  return { ok: true };
+});
+
+exports.confirmDeletionRequest = onCall(async (request) => {
+  const email = String(request.data?.email || "").trim().toLowerCase();
+  const code  = String(request.data?.code || "").trim();
+  const note  = String(request.data?.note || "").trim().slice(0, 300);
+  if (!/^\S+@\S+\.\S+$/.test(email) || !/^\d{6}$/.test(code)) {
+    throw new HttpsError("invalid-argument", "Enter your email and the 6-digit code");
+  }
+
+  const { ip } = zbClientInfo(request);
+  await zbRateLimit("delconf-ip:" + ip, 20, 3600000);
+
+  const ref  = db.collection("deletion_codes").doc(zbSha(email));
+  const snap = await ref.get();
+  const bad  = new HttpsError("invalid-argument", "That code isn't valid. Please request a new one.");
+  if (!snap.exists) throw bad;
+
+  const c = snap.data();
+  if (c.used || Date.now() > c.expiresAt) throw new HttpsError("deadline-exceeded", "The code expired. Please request a new one.");
+  if ((c.attempts || 0) >= 5)             throw new HttpsError("resource-exhausted", "Too many wrong attempts. Please request a new code.");
+  if (c.hash !== zbSha(email + ":" + code)) {
+    await ref.update({ attempts: (c.attempts || 0) + 1 });
+    throw new HttpsError("invalid-argument", `Wrong code. ${4 - (c.attempts || 0)} attempt(s) left.`);
+  }
+  await ref.update({ used: true });
+
+  let user;
+  try { user = await admin.auth().getUserByEmail(email); } catch (e) { throw bad; }
+
+  await db.collection("deletion_requests").add({
+    email, uid: user.uid, note, status: "pending", via: "web_form", ip,
+    atMs: Date.now(), createdAt: admin.firestore.FieldValue.serverTimestamp()
+  });
+
+  // tell the owner
+  try {
+    const ownerSnap = await db.collection("users").where("email", "==", "swaibuziraye22@gmail.com").limit(1).get();
+    if (!ownerSnap.empty) {
+      await db.collection("notifications").add({
+        userId: ownerSnap.docs[0].id, type: "order", read: false, createdAt: new Date(),
+        title: "🗑️ New account deletion request",
+        message: `${email} asked to delete their account. Open Admin → Deletion Requests.`
+      });
+    }
+    await transporter.sendMail({
+      from: `"ZiBuy" <${process.env.GMAIL_EMAIL}>`, to: "swaibuziraye22@gmail.com",
+      subject: "New account deletion request",
+      html: emailTemplate("Account deletion request", `<p><strong>${email}</strong> confirmed a request to delete their account.</p><p>${note ? "Note: " + note : "No note."}</p><p>Open Admin → Deletion Requests to process it.</p>`)
+    });
+  } catch (e) { console.error("[confirmDeletionRequest] owner alert failed:", e.message); }
+
+  // confirm to the person
+  try {
+    await transporter.sendMail({
+      from: `"ZiBuy" <${process.env.GMAIL_EMAIL}>`, to: email,
+      subject: "We received your ZiBuy deletion request",
+      html: emailTemplate("Request received", `<p>We received your request to delete your ZiBuy account and its data. We will process it within 30 days and email you when it's done.</p><p>Some order and payment records are kept as legal evidence, as described in our Privacy Policy.</p>`)
+    });
+  } catch (e) { console.error("[confirmDeletionRequest] confirmation failed:", e.message); }
+
+  return { ok: true };
+});
+
+
+// ============================================
+// AUTOMATIC REMINDERS
+// ============================================
+const ZB_HOUR = 3600000;
+const ZB_REMIND_SCALE = 1;   // 1 = real hours. Use 0.01 to test quickly, then put it back to 1.
+
+async function zbAdminUids() {
+  const set = new Set();
+  const owner = await db.collection("users").where("email", "==", "swaibuziraye22@gmail.com").limit(1).get();
+  if (!owner.empty) set.add(owner.docs[0].id);
+  const staff = await db.collection("admins").get();
+  staff.forEach(d => { if (d.data().suspended !== true) set.add(d.id); });
+  return [...set];
+}
+
+exports.orderReminders = onSchedule(
+  { schedule: "0 8,13,18 * * *", timeZone: "Africa/Kampala" },
+  async () => {
+    try {
+      const now    = Date.now();
+      const admins = await zbAdminUids();
+      const hrs    = (h) => h < 48 ? `${Math.floor(h)} hours` : `${Math.floor(h / 24)} days`;
+
+      // sends the same kind of reminder at most `max` times, at least `gap` hours apart
+      const nudge = async (key, kind, recipients, title, message, orderId, { max = 3, gap = 20 } = {}) => {
+        const ref  = db.collection("order_reminders").doc(key);
+        const snap = await ref.get();
+        const st   = (snap.exists ? snap.data()[kind] : null) || { n: 0, last: 0 };
+        if (st.n >= max || now - st.last < gap * ZB_HOUR * ZB_REMIND_SCALE) return;
+
+        const ids = [...new Set((recipients || []).filter(u => u && u !== "guest"))];
+        if (!ids.length) return;
+
+        await Promise.all(ids.map(userId => db.collection("notifications").add({
+          userId, type: "order", title, message, orderId: orderId || "", read: false, createdAt: new Date()
+        })));
+        await ref.set({ [kind]: { n: st.n + 1, last: now } }, { merge: true });
+      };
+
+      // payouts and refunds, looked up once
+      const [payoutSnap, refundSnap, orderSnap] = await Promise.all([
+        db.collection("payouts").limit(2000).get(),
+        db.collection("refunds").where("status", "==", "sent").limit(500).get(),
+        db.collection("orders")
+          .where("trackingStatus", "in", ["placed", "payment_verified", "packed", "on_the_way", "arrived", "received"])
+          .limit(1000).get()
+      ]);
+
+      const payoutByOrder = {};
+      payoutSnap.forEach(d => { payoutByOrder[d.data().orderId] = { id: d.id, ...d.data() }; });
+
+      // 1) orders moving through the steps
+      for (const d of orderSnap.docs) {
+        const o = d.data();
+        if (o.status === "cancelled_by_buyer" || o.refunded) continue;
+
+        const id   = d.id;
+        const item = o.productName || "an order";
+        const ref  = o.orderRef || id.slice(0, 8).toUpperCase();
+        const ev   = (Array.isArray(o.trackingEvents) ? o.trackingEvents : [])
+                       .filter(e => e.status === o.trackingStatus).map(e => e.at).pop();
+        const since = ev || o.createdAt?.toDate?.().getTime() || now;
+        const age   = (now - since) / (ZB_HOUR * ZB_REMIND_SCALE);
+
+        switch (o.trackingStatus) {
+          case "placed":
+            if (age >= 6) await nudge(id, "admin_payment", admins, "💳 Payment waiting for your check",
+              `${item} (${ref}) has waited ${hrs(age)} for payment confirmation.`, id, { max: 5 });
+            break;
+
+          case "payment_verified":
+            if (age >= 24) await nudge(id, "seller_pack", [o.sellerId], "📦 Please pack your order",
+              `${item} (${ref}) was paid ${hrs(age)} ago. Pack it and mark it as packed.`, id);
+            if (age >= 72) await nudge(id, "admin_pack", admins, "🛑 Seller hasn't packed an order",
+              `${item} (${ref}) was paid ${hrs(age)} ago and is not packed yet.`, id);
+            break;
+
+          case "packed":
+            if (age >= 24) await nudge(id, "seller_ship", [o.sellerId], "🚚 Time to send it",
+              `${item} (${ref}) is packed. Mark it as on the way when you leave.`, id);
+            if (age >= 72) await nudge(id, "admin_ship", admins, "🛑 Packed order not sent",
+              `${item} (${ref}) has been packed for ${hrs(age)}.`, id);
+            break;
+
+          case "on_the_way":
+            if (age >= 48) await nudge(id, "seller_arrive", [o.sellerId], "📍 Please complete the delivery",
+              `${item} (${ref}) has been on the way for ${hrs(age)}. Hand it over with the buyer's code.`, id);
+            if (age >= 120) await nudge(id, "admin_arrive", admins, "🛑 Delivery taking very long",
+              `${item} (${ref}) has been on the way for ${hrs(age)}.`, id);
+            break;
+
+          case "arrived":
+            if (age >= 12) await nudge(id, "buyer_confirm", [o.buyerUid], "✅ Did you receive your item?",
+              `The seller reached you with ${item} (${ref}). Please confirm that you received it.`, id);
+            if (age >= 72) await nudge(id, "admin_confirm", admins, "🛑 Buyer hasn't confirmed receipt",
+              `${item} (${ref}) arrived ${hrs(age)} ago and the buyer hasn't confirmed.`, id);
+            break;
+
+          case "received":
+            if (!payoutByOrder[id] && age >= 24) await nudge(id, "admin_payout", admins, "💸 Seller payment is due",
+              `${item} (${ref}) was delivered ${hrs(age)} ago and the seller hasn't been paid.`, id, { max: 5, gap: 24 });
+            if (age >= 24 && !o.noteSigned?.buyer) await nudge(id, "buyer_note", [o.buyerUid], "✍️ Please sign your receipt note",
+              `Review and sign the handover note for ${item} (${ref}).`, id, { max: 2, gap: 48 });
+            if (age >= 24 && !o.noteSigned?.seller) await nudge(id, "seller_note", [o.sellerId], "✍️ Please sign the handover note",
+              `Review and sign the handover note for ${item} (${ref}).`, id, { max: 2, gap: 48 });
+            break;
+        }
+      }
+
+      // 2) payouts waiting for the seller to sign
+      for (const p of Object.values(payoutByOrder)) {
+        if (p.status !== "sent") continue;
+        const age = (now - (p.createdAt?.toDate?.().getTime() || now)) / (ZB_HOUR * ZB_REMIND_SCALE);
+        if (age >= 24) await nudge(p.orderId, "seller_sign_payout", [p.sellerId], "💸 Please confirm your payment",
+          `ZiBuy sent you UGX ${Number(p.amount).toLocaleString()}. Open Orders to Deliver and confirm you received it.`, p.orderId, { gap: 48 });
+      }
+
+      // 3) refunds waiting for the buyer to confirm
+      for (const d of refundSnap.docs) {
+        const r = d.data();
+        const age = (now - (r.createdAt?.toDate?.().getTime() || now)) / (ZB_HOUR * ZB_REMIND_SCALE);
+        if (age >= 24) await nudge(r.orderId, "buyer_confirm_refund", [r.buyerUid], "↩️ Please confirm your refund",
+          `ZiBuy sent you a refund of UGX ${Number(r.amount).toLocaleString()}. Open My Orders and confirm you received it.`, r.orderId, { gap: 48 });
+      }
+    } catch (e) {
+      console.error("[orderReminders]", e);
+    }
+  }
+);
+
+
+// ============================================
+// BACK IN STOCK: tell everyone who saved a product when it is available again
+// ============================================
+exports.onBackInStock = onDocumentUpdated("products/{productId}", async (event) => {
+  try {
+    const before = event.data.before.data();
+    const after  = event.data.after.data();
+    if (!before || !after) return;
+    if (before.status !== "sold" || after.status !== "active") return;
+
+    const productId = event.params.productId;
+
+    // the same product is announced at most once every 3 days, even if the seller flips it back and forth
+    const bucket = Math.floor(Date.now() / (3 * 86400000));
+    const locked = await logOnce(`backinstock_${productId}_${bucket}`, { type: "back_in_stock_lock", productId });
+    if (!locked) return;
+
+    const likes = await db.collection("likes").where("productId", "==", productId).limit(1000).get();
+    if (likes.empty) return;
+
+    const sellerId = after.userId;
+    const name     = after.name || "An item you saved";
+    const price    = Number(after.price || 0);
+
+    const jobs = [];
+    const seen = new Set();
+    likes.forEach(d => {
+      const userId = d.data().userId;
+      if (!userId || userId === sellerId || seen.has(userId)) return;
+      seen.add(userId);
+      jobs.push(db.collection("notifications").add({
+        userId,
+        type:      "back_in_stock",
+        title:     `🛍️ Back in stock: ${name}`,
+        message:   `An item you saved is available again${price ? " at UGX " + price.toLocaleString() : ""}. Grab it before it's gone!`,
+        relatedId: productId,
+        read:      false,
+        createdAt: admin.firestore.FieldValue.serverTimestamp()
+      }));
+    });
+
+    await Promise.all(jobs);
+    console.log(`[BACK IN STOCK] Notified ${jobs.length} users for ${productId}`);
+  } catch (e) {
+    console.error("[onBackInStock]", e);
+  }
+});
+
+
+// ============================================
+// PUBLIC PROFILES: a safe copy of each user (no email, no phone)
+// ============================================
+const ZB_PUBLIC_FIELDS = [
+  "displayName", "photoURL", "bio", "location", "plan", "accountType",
+  "isSellerVerified", "phoneVerified", "earnedVerification",
+  "trustTier", "trustScore", "buyerRating", "buyerRatingCount",
+  "referralCode", "createdAt"
+];
+
+function zbPublicProfile(u) {
+  const p = {};
+  ZB_PUBLIC_FIELDS.forEach(k => { if (u[k] !== undefined) p[k] = u[k]; });
+  // a scrambled fingerprint, so chat can still find a person by email without anyone being able to read emails
+  if (u.email) p.emailHash = zbSha(String(u.email).trim().toLowerCase());
+  p.updatedAt = Date.now();
+  return p;
+}
+
+exports.syncPublicProfile = onDocumentWritten("users/{uid}", async (event) => {
+  try {
+    const uid = event.params.uid;
+    const ref = db.collection("public_profiles").doc(uid);
+
+    if (!event.data.after.exists) {            // account deleted: remove the public copy too
+      await ref.delete().catch(() => {});
+      return;
+    }
+
+    const after  = event.data.after.data();
+    const before = event.data.before.exists ? event.data.before.data() : null;
+
+    // skip writes that don't change anything public (token refreshes, counters...)
+    if (before) {
+      const same = ZB_PUBLIC_FIELDS.every(k => JSON.stringify(before[k] ?? null) === JSON.stringify(after[k] ?? null))
+                && (before.email || "") === (after.email || "");
+      if (same) return;
+    }
+
+    await ref.set(zbPublicProfile(after));
+  } catch (e) {
+    console.error("[syncPublicProfile]", e);
+  }
+});
+
+// One-time cleanup: reviews must not carry the reviewer's email
+exports.scrubReviewEmails = onCall({ timeoutSeconds: 540 }, async (request) => {
+  await assertCallerIsFullAdmin(request);
+
+  let last = null, scanned = 0, cleaned = 0;
+  while (true) {
+    let q = db.collection("reviews").orderBy(admin.firestore.FieldPath.documentId()).limit(300);
+    if (last) q = q.startAfter(last);
+    const snap = await q.get();
+    if (snap.empty) break;
+
+    const batch = db.batch();
+    let inBatch = 0;
+    for (const d of snap.docs) {
+      const r = d.data();
+      const email = r.reviewerEmail || r.userEmail;
+      if (!email) continue;
+
+      const update = {
+        reviewerEmail: admin.firestore.FieldValue.delete(),
+        userEmail: admin.firestore.FieldValue.delete()
+      };
+      if (!r.reviewerName) {
+        update.reviewerName = String(email).split("@")[0].slice(0, 2) + "***";
+      }
+      if (!r.userId) {
+        try {
+          const u = await admin.auth().getUserByEmail(email);
+          update.userId = u.uid;
+        } catch (e) { /* no account with that email any more */ }
+      }
+      batch.update(d.ref, update);
+      inBatch++;
+    }
+    if (inBatch) { await batch.commit(); cleaned += inBatch; }
+
+    scanned += snap.size;
+    last = snap.docs[snap.docs.length - 1];
+  }
+  return { ok: true, scanned, cleaned };
+});
+
+// Adds participantUids / senderUid to old messages (needed to move chat from emails to user IDs)
+exports.backfillMessageUids = onCall({ timeoutSeconds: 540 }, async (request) => {
+  await assertCallerIsFullAdmin(request);
+
+  const cache = new Map();
+  const uidOf = async (email) => {
+    if (!email) return "";
+    const key = String(email).toLowerCase();
+    if (cache.has(key)) return cache.get(key);
+    let uid = "";
+    try { uid = (await admin.auth().getUserByEmail(key)).uid; } catch (e) { /* account no longer exists */ }
+    cache.set(key, uid);
+    return uid;
+  };
+
+  let last = null, scanned = 0, updated = 0;
+  while (true) {
+    let q = db.collection("messages").orderBy(admin.firestore.FieldPath.documentId()).limit(300);
+    if (last) q = q.startAfter(last);
+    const snap = await q.get();
+    if (snap.empty) break;
+
+    const batch = db.batch();
+    let inBatch = 0;
+    for (const d of snap.docs) {
+      const m = d.data();
+      if (m.participantUids && m.senderUid) continue;
+      const parts = Array.isArray(m.participants) ? m.participants : [];
+      const uids = [];
+      for (const e of parts) uids.push(await uidOf(e));
+      batch.update(d.ref, { participantUids: uids, senderUid: await uidOf(m.senderEmail) });
+      inBatch++;
+    }
+    if (inBatch) { await batch.commit(); updated += inBatch; }
+
+    scanned += snap.size;
+    last = snap.docs[snap.docs.length - 1];
+  }
+  return { ok: true, scanned, updated };
+});
+
+// Gives a signed-in user the chat contact for a seller, so the email never sits in public data.
+exports.getChatContact = onCall(async (request) => {
+  const uid = request.auth?.uid;
+  if (!uid) throw new HttpsError("unauthenticated", "Please log in first");
+
+  const targetUid = String(request.data?.userId || "");
+  if (!targetUid || targetUid === uid) {
+    throw new HttpsError("invalid-argument", "Invalid user");
+  }
+
+  await zbRateLimit("chatcontact:" + uid, 40, 24 * 3600000);
+
+  const snap = await db.collection("users").doc(targetUid).get();
+  const email = snap.exists ? snap.data().email : "";
+  if (!email) throw new HttpsError("not-found", "User not found");
+
+  return { email };
+});
+
+// Prepares products for the move away from public emails: every ad gets a userId
+// (when it can be found) and the owner's official ads are marked isOfficial.
+exports.backfillProductOwners = onCall({ timeoutSeconds: 540 }, async (request) => {
+  await assertCallerIsFullAdmin(request);
+
+  const OWNER_EMAIL = "swaibuziraye22@gmail.com";
+  const cache = new Map();
+  const uidOf = async (email) => {
+    const key = String(email || "").toLowerCase();
+    if (!key) return "";
+    if (cache.has(key)) return cache.get(key);
+    let uid = "";
+    try { uid = (await admin.auth().getUserByEmail(key)).uid; } catch (e) { /* no account */ }
+    cache.set(key, uid);
+    return uid;
+  };
+
+  let last = null, scanned = 0, updated = 0, noOwner = 0;
+  while (true) {
+    let q = db.collection("products").orderBy(admin.firestore.FieldPath.documentId()).limit(300);
+    if (last) q = q.startAfter(last);
+    const snap = await q.get();
+    if (snap.empty) break;
+
+    const batch = db.batch();
+    let inBatch = 0;
+    for (const d of snap.docs) {
+      const p = d.data();
+      const email = String(p.userEmail || "").toLowerCase();
+      const update = {};
+
+      if (typeof p.isOfficial !== "boolean") update.isOfficial = email === OWNER_EMAIL;
+      if (!p.userId && email) {
+        const uid = await uidOf(email);
+        if (uid) update.userId = uid; else noOwner++;
+      }
+
+      if (Object.keys(update).length) { batch.update(d.ref, update); inBatch++; }
+    }
+    if (inBatch) { await batch.commit(); updated += inBatch; }
+
+    scanned += snap.size;
+    last = snap.docs[snap.docs.length - 1];
+  }
+  return { ok: true, scanned, updated, noOwner };
+});
+
+// Removes the seller's email from every ad. Makes sure each ad keeps its owner (userId)
+// and the official flag first, so nothing is lost.
+exports.scrubProductEmails = onCall({ timeoutSeconds: 540 }, async (request) => {
+  await assertCallerIsFullAdmin(request);
+
+  const OWNER_EMAIL = "swaibuziraye22@gmail.com";
+  const cache = new Map();
+  const uidOf = async (email) => {
+    const key = String(email || "").toLowerCase();
+    if (!key) return "";
+    if (cache.has(key)) return cache.get(key);
+    let uid = "";
+    try { uid = (await admin.auth().getUserByEmail(key)).uid; } catch (e) { /* no account */ }
+    cache.set(key, uid);
+    return uid;
+  };
+
+  let last = null, scanned = 0, cleaned = 0, noOwner = 0;
+  while (true) {
+    let q = db.collection("products").orderBy(admin.firestore.FieldPath.documentId()).limit(300);
+    if (last) q = q.startAfter(last);
+    const snap = await q.get();
+    if (snap.empty) break;
+
+    const batch = db.batch();
+    let inBatch = 0;
+    for (const d of snap.docs) {
+      const p = d.data();
+      if (!Object.prototype.hasOwnProperty.call(p, "userEmail")) continue;
+
+      const email = String(p.userEmail || "").toLowerCase();
+      const update = { userEmail: admin.firestore.FieldValue.delete() };
+
+      if (typeof p.isOfficial !== "boolean") update.isOfficial = email === OWNER_EMAIL;
+      if (!p.userId && email) {
+        const uid = await uidOf(email);
+        if (uid) update.userId = uid; else noOwner++;
+      }
+
+      batch.update(d.ref, update);
+      inBatch++;
+    }
+    if (inBatch) { await batch.commit(); cleaned += inBatch; }
+
+    scanned += snap.size;
+    last = snap.docs[snap.docs.length - 1];
+  }
+  return { ok: true, scanned, cleaned, noOwner };
+});
+
+// Removes follower emails and seller emails from public collections.
+exports.scrubPublicEmails = onCall({ timeoutSeconds: 540 }, async (request) => {
+  await assertCallerIsFullAdmin(request);
+
+  const FV = admin.firestore.FieldValue;
+  const jobs = [["shop_followers", "userEmail"], ["buyer_ratings", "sellerEmail"]];
+  const result = {};
+
+  for (const [col, field] of jobs) {
+    let last = null, scanned = 0, cleaned = 0;
+    while (true) {
+      let q = db.collection(col).orderBy(admin.firestore.FieldPath.documentId()).limit(400);
+      if (last) q = q.startAfter(last);
+      const snap = await q.get();
+      if (snap.empty) break;
+
+      const batch = db.batch();
+      let n = 0;
+      for (const d of snap.docs) {
+        if (Object.prototype.hasOwnProperty.call(d.data(), field)) {
+          batch.update(d.ref, { [field]: FV.delete() });
+          n++;
+        }
+      }
+      if (n) { await batch.commit(); cleaned += n; }
+
+      scanned += snap.size;
+      last = snap.docs[snap.docs.length - 1];
+    }
+    result[col] = { scanned, cleaned };
+  }
+  return { ok: true, result };
+});
+
+// Clears a shop's public contact email when it is just the owner's login email.
+// Owners can type a contact email again on purpose in Edit Shop.
+exports.clearShopLoginEmails = onCall({ timeoutSeconds: 540 }, async (request) => {
+  await assertCallerIsFullAdmin(request);
+
+  const loginEmail = new Map();
+  const emailOf = async (uid) => {
+    if (!uid) return "";
+    if (loginEmail.has(uid)) return loginEmail.get(uid);
+    let e = "";
+    try { e = String((await admin.auth().getUser(uid)).email || "").toLowerCase(); } catch (err) { /* no account */ }
+    loginEmail.set(uid, e);
+    return e;
+  };
+
+  let scanned = 0, cleared = 0;
+  for (const col of ["business_profiles", "shops"]) {
+    const snap = await db.collection(col).get();
+    let batch = db.batch();
+    let n = 0;
+    for (const d of snap.docs) {
+      scanned++;
+      const s = d.data();
+      const shopEmail = String(s.email || "").toLowerCase();
+      if (!shopEmail) continue;
+      const owner = await emailOf(s.ownerId || s.userId || d.id);
+      if (owner && owner === shopEmail) {
+        batch.update(d.ref, { email: "" });
+        n++; cleared++;
+        if (n === 400) { await batch.commit(); batch = db.batch(); n = 0; }
+      }
+    }
+    if (n) await batch.commit();
+  }
+  return { ok: true, scanned, cleared };
+});
+
+// One-time (and any-time) rebuild for every existing user
+exports.rebuildPublicProfiles = onCall({ timeoutSeconds: 540 }, async (request) => {
+  await assertCallerIsFullAdmin(request);
+
+  let last = null, count = 0;
+  while (true) {
+    let q = db.collection("users").orderBy(admin.firestore.FieldPath.documentId()).limit(300);
+    if (last) q = q.startAfter(last);
+    const snap = await q.get();
+    if (snap.empty) break;
+
+    const batch = db.batch();
+    snap.docs.forEach(d => batch.set(db.collection("public_profiles").doc(d.id), zbPublicProfile(d.data())));
+    await batch.commit();
+
+    count += snap.size;
+    last = snap.docs[snap.docs.length - 1];
+  }
+  return { ok: true, count };
 });
 
 // ============================================
@@ -4240,7 +4860,7 @@ exports.deleteMyAccount = onCall(async (request) => {
     ["cv_boosts", "userId"], ["auto_renewals", "userId"], ["business_accounts", "userId"],
     ["seller_verifications", "userId"], ["saved_searches", "userId"], ["likes", "userId"],
     ["notifications", "userId"], ["similar_item_alerts", "userId"], ["shop_followers", "userId"],
-    ["boost_credits", "userId"], ["buyer_ratings", "buyerId"], ["reviews", "sellerId"]
+    ["boost_credits", "userId"], ["buyer_ratings", "buyerId"], ["reviews", "sellerId"], ["reviews", "userId"]
   ];
   for (const [col, field] of byUid) {
     await step(col, () => selfDeleteByQuery(col, field, uid));

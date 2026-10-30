@@ -175,19 +175,15 @@ async function loadSellerBadges(userId) {
     const { db } = await import("./firebase.js");
 
     // ── Verified badge ────────────────────────
-    const verifSnap = await getDocs(query(
-      collection(db, "seller_verifications"),
-      where("userId", "==", userId),
-      where("status", "==", "approved")
-    ));
+    const pubSnap = await getDoc(doc(db, "public_profiles", userId));
 
-    if (!verifSnap.empty) {
+    if (pubSnap.exists() && pubSnap.data().isSellerVerified) {
       const badge = document.getElementById("seller-verified-badge");
       if (badge) badge.style.display = "inline-block";
     }
 
     // ── Member since ──────────────────────────
-    const userSnap = await getDoc(doc(db, "users", userId));
+    const userSnap = await getDoc(doc(db, "public_profiles", userId));
     const memberSinceEl = document.getElementById("seller-member-since");
 
     if (memberSinceEl) {
@@ -255,7 +251,7 @@ async function loadProductReviews(productId) {
         <div style="padding:12px;border-bottom:1px solid #e5e7eb;font-size:13px">
           <p style="margin:0;font-weight:700">${stars} ${review.rating}/5</p>
           <p style="margin:4px 0;color:#6b7280">${review.text}</p>
-          <p style="margin:4px 0;font-size:11px;color:#adb5bd">${review.reviewerEmail} • ${date}</p>
+          <p style="margin:4px 0;font-size:11px;color:#adb5bd">${review.reviewerName || "Anonymous"} • ${date}</p>
         </div>
       `;
       totalRating += review.rating;
@@ -301,7 +297,8 @@ window.submitProductReview = async function() {
       sellerId:      currentUser?.uid || "",
       rating:        Number(rating),
       text,
-      reviewerEmail: auth.currentUser.email,
+      reviewerName:  auth.currentUser.displayName || (auth.currentUser.email.split("@")[0].slice(0, 2) + "***"),
+      userId:        auth.currentUser.uid,
       createdAt:     new Date()
     };
 

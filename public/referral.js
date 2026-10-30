@@ -29,7 +29,7 @@ export async function attachReferral(newUserId) {
   try {
     // Find the referrer
     const snap = await getDocs(query(
-      collection(db, "users"),
+      collection(db, "public_profiles"),
       where("referralCode", "==", refCode)
     ));
     if (snap.empty) return;

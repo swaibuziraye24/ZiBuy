@@ -577,7 +577,7 @@ async function processOneRow(item, index, total, expiresAt) {
   await withRetry(() => setDoc(doc(db, "products", productId), {
     name: item.name, price: item.price, category: item.category, subcategory: "",
     condition: item.condition, description: item.description || "", location: fullLocation,
-    images: imageUrls, userId: currentUser.uid, userEmail: currentUser.email,
+    images: imageUrls, userId: currentUser.uid, isOfficial: currentUser.email === "swaibuziraye22@gmail.com",
     status: "active", views: 0,
     boost: { boosted: false, startDate: null, endDate: null, type: null },
     createdAt: new Date(), updatedAt: new Date(), expiresAt,

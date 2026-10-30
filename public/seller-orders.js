@@ -181,6 +181,11 @@ async function sha256Blob(blob) {
   return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
+window.zbOrderHelp = function (orderId, orderRef) {
+  window.location.href = "messages.html?to=" + encodeURIComponent("swaibuziraye22@gmail.com") +
+    "&oid=" + encodeURIComponent(orderId) + "&ref=" + encodeURIComponent(orderRef || "");
+};
+
 function pinBox(o) {
   return `
     <div style="margin-top:10px;padding:12px;border:1.5px dashed #6ee7b7;border-radius:12px;background:#f0fdf4">
@@ -342,6 +347,9 @@ function render() {
         ${action}
         ${(status === "on_the_way" || status === "arrived") && !cancelled && !disputed ? pinBox(o) : ""}
         ${status === "received" ? payoutBox(o) : ""}
+        <button onclick="zbOrderHelp('${o.id}', '${String(o.orderRef || o.orderId || "").replace(/[^A-Za-z0-9-]/g, "")}')"
+          style="width:100%;margin-top:10px;background:#f3f4f6;color:#374151;border:none;padding:10px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit">
+          💬 Get help with this order</button>
         ${status === "received" ? `<a href="handover-note.html?order=${o.id}" target="_blank" style="display:block;margin-top:10px;text-align:center;background:${o.noteSigned?.seller ? "#f0fdf4" : "#ff6600"};color:${o.noteSigned?.seller ? "#166534" : "white"};padding:11px;border-radius:10px;font-weight:800;font-size:13px;text-decoration:none">${o.noteSigned?.seller ? "✅ Handover note signed · view" : "✍️ Review & sign handover note"}</a>` : ""}
         ${status === "received" ? `<a href="certificate.html?order=${o.id}" target="_blank" style="display:block;margin-top:10px;text-align:center;background:#f3f4f6;color:#374151;padding:10px;border-radius:10px;font-weight:700;font-size:13px;text-decoration:none">📄 Delivery certificate</a>` : ""}
       </div>`;

@@ -1,7 +1,20 @@
 {
   "hosting": {
     "public": "public",
+    "headers": [
+      {
+        "source": "/.well-known/assetlinks.json",
+        "headers": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Access-Control-Allow-Origin", "value": "*" }
+        ]
+      }
+    ],
     "rewrites": [
+      {
+        "source": "/.well-known/assetlinks.json",
+        "destination": "/assetlinks.json"
+      },
 
       {
     "source": "/install",
@@ -27,7 +40,15 @@
       "DEPLOY_NOW.txt",
       "DEPLOYMENT.md",
       "README.md",
-      "PREMIUM_ADS_SETUP.txt"
+      "PREMIUM_ADS_SETUP.txt",
+      "PROJECT_STATUS.txt",
+      "firestore.rules",
+      "storage.rules",
+      "firestore.indexes.json",
+      "firebase-debug.log",
+      "index.js",
+      "package.json",
+      "package-lock.json"
     ]
   },
   "functions": [

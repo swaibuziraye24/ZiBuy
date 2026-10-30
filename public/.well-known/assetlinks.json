@@ -1,0 +1,11 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.ziteche.zibuy",
+    "sha256_cert_fingerprints": [
+      "15:14:00:26:E4:E2:27:6F:99:AF:26:BD:D2:23:68:0C:2E:DE:A9:27:7C:A6:2F:57:C2:E4:FC:35:BD:DB:61:19",
+      "7F:53:8A:1C:27:B7:C3:49:09:A7:3C:28:3B:9B:9B:8E:47:1B:AE:98:7D:27:13:6D:15:C8:DD:FD:FE:BD:0D:47"
+    ]
+  }
+}]

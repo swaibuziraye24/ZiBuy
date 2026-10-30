@@ -23,7 +23,7 @@ export async function renderTrustBadge(userId, targetElId, opts = {}) {
 
   try {
     const { db, doc, getDoc } = await import("./firebase.js");
-    const snap = await getDoc(doc(db, "users", userId));
+    const snap = await getDoc(doc(db, "public_profiles", userId));
     if (!snap.exists()) return;
 
     const data = snap.data();

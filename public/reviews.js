@@ -27,7 +27,8 @@ export async function submitReview(sellerId, productId, rating, reviewText) {
       productId,
       rating: Number(rating),
       text: reviewText.trim(),
-      reviewerEmail: currentUser.email,
+      reviewerName: currentUser.displayName || (currentUser.email.split("@")[0].slice(0, 2) + "***"),
+      userId: currentUser.uid,
       createdAt: new Date(),
       helpful: 0
     });

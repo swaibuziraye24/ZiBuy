@@ -3,7 +3,7 @@
 //   Offline-first PWA strategy
 // ============================================
 
-const CACHE_NAME   = "zibuy-v29";
+const CACHE_NAME   = "zibuy-v52";
 const OFFLINE_PAGE = "/offline.html";
 
 const PRECACHE = [

@@ -10,6 +10,8 @@
   "theme_color": "#ff6600",
   "orientation": "portrait",
   "lang": "en",
+  "dir": "ltr",
+  "prefer_related_applications": false,
   "categories": ["shopping", "business"],
   "shortcuts": [
     {

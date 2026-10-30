@@ -515,7 +515,7 @@ async function loadSellerReviews() {
         ${renderStars(review.rating)}
       </div>
       <p>${escapeHTML(review.text)}</p>
-      <small>${escapeHTML(review.reviewerEmail) || "Anonymous"}</small>
+      <small>${escapeHTML(review.reviewerName || "Anonymous")}</small>
     </div>
   `).join("");
 }
@@ -668,7 +668,7 @@ window.toggleFollowShop = async function () {
       {
         shopId: sellerId,
         userId: auth.currentUser.uid,
-        userEmail: auth.currentUser.email,
+        // follower email is no longer stored publicly
         createdAt: new Date()
       }
     );

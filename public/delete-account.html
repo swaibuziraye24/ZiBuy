@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#ff6600">
+  <title>Delete Your Account — ZiBuy</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/png" href="/icons/icon-192.png">
+  <link rel="manifest" href="/manifest.json">
+  <style>
+    .legal-wrap { max-width: 780px; margin: 0 auto; padding: 32px 20px 80px; }
+    .legal-hero { background: linear-gradient(135deg, #991b1b, #ef4444); color: white; padding: 40px 24px; text-align: center; margin-bottom: 32px; border-radius: 16px; }
+    .legal-hero h1 { font-size: 28px; font-weight: 900; margin: 0 0 8px; }
+    .legal-hero p { margin: 0; opacity: .9; font-size: 14px; }
+    .legal-section { background: white; border-radius: 14px; padding: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 16px; }
+    .legal-section h2 { font-size: 17px; font-weight: 800; color: #111827; margin: 0 0 12px; padding-bottom: 10px; border-bottom: 2px solid #f0f0f0; }
+    .legal-section p, .legal-section li { font-size: 14px; color: #374151; line-height: 1.8; margin-bottom: 8px; }
+    .legal-section ul, .legal-section ol { padding-left: 20px; }
+    .del-in { width: 100%; padding: 12px 14px; border: 1.5px solid #e5e7eb; border-radius: 12px; font-size: 15px; font-family: inherit; box-sizing: border-box; margin: 4px 0 12px; }
+    .del-in:focus { outline: none; border-color: #ef4444; }
+    .del-lab { display: block; font-size: 12px; font-weight: 800; color: #374151; margin-top: 8px; }
+    .del-btn { width: 100%; border: none; border-radius: 12px; padding: 14px; font-weight: 800; font-size: 15px; cursor: pointer; font-family: inherit; margin-top: 6px; }
+    .del-btn.primary { background: #ff6600; color: white; }
+    .del-btn.danger  { background: #dc2626; color: white; }
+    .del-btn:disabled { opacity: .6; cursor: not-allowed; }
+    .del-err { display: none; background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 10px 12px; border-radius: 10px; font-size: 13px; font-weight: 600; margin: 8px 0; }
+    .del-ok  { background: #f0fdf4; border: 1px solid #86efac; color: #166534; padding: 12px 14px; border-radius: 10px; font-size: 14px; font-weight: 600; line-height: 1.6; }
+    .del-box { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 12px 14px; font-size: 13px; color: #374151; line-height: 1.7; margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+<header class="topbar">
+  <a href="index.html"><img src="my_logo.png" alt="ZiBuy" style="height:45px;width:auto"></a>
+  <div style="margin-left:auto">
+    <button class="btn btn-dark" onclick="window.location.href='index.html'">← Home</button>
+  </div>
+</header>
+
+<div class="legal-wrap">
+  <div class="legal-hero">
+    <h1>🗑️ Delete Your ZiBuy Account</h1>
+    <p>ZiBuy Uganda · zibuy.ziteche.com · You can delete your account and data here at any time</p>
+  </div>
+
+  <div class="legal-section">
+    <h2>Option 1: Delete it yourself, right now</h2>
+    <p><strong>In the app or on the website:</strong> open <strong>Dashboard → Account Settings → Delete My Account</strong>, or log in below and delete it here.</p>
+    <div id="del-self"><p>Loading…</p></div>
+  </div>
+
+  <div class="legal-section">
+    <h2>Option 2: Can't log in? Ask us to delete it</h2>
+    <p>Enter the email address of your account. We will send you a 6-digit code so we know it's really you. We process these requests within <strong>30 days</strong> and email you when it's done.</p>
+    <div id="del-request"></div>
+  </div>
+
+  <div class="legal-section">
+    <h2>What happens to your data</h2>
+    <p><strong>Deleted permanently:</strong></p>
+    <ul>
+      <li>Your account and login, your profile, and your ads, with their photos and videos.</li>
+      <li>Your ID and business licence documents, wishlist, saved searches, alerts and shop follows.</li>
+      <li>Reviews you wrote and messages you sent.</li>
+      <li>Any remaining plan, boost or pin time on your account.</li>
+    </ul>
+    <p><strong>Kept, for legal reasons:</strong></p>
+    <ul>
+      <li>Order records you took part in, without your name, phone number, delivery location and email on the order itself.</li>
+      <li>Delivery proof records, signed handover notes, refund and payout confirmations for completed orders. They are legal evidence for buyers, sellers and ZiBuy, may include your name, phone number and delivery location, and have restricted access. We keep them for as long as the law requires or as needed to protect legal claims.</li>
+      <li>Encrypted backups of our database for up to 4 weeks. Deleted data may remain in them until they expire.</li>
+    </ul>
+    <p>If you have an open ZiBuy Protect dispute, please wait until it is resolved before deleting your account. Deleting an account cannot be undone.</p>
+    <p>See our <a href="privacy.html" style="color:#ff6600;font-weight:700">Privacy Policy</a> for details.</p>
+  </div>
+
+  <div class="legal-section">
+    <h2>Questions?</h2>
+    <p>📧 zitechnologies3@gmail.com · 📱 WhatsApp +256 705 816 160</p>
+  </div>
+</div>
+
+<script type="module" src="delete-account.js"></script>
+</body>
+</html>

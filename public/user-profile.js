@@ -25,7 +25,7 @@ async function loadProfile() {
     let userData = null;
 
     if (userId) {
-      const userSnap = await getDoc(doc(db, "users", userId));
+      const userSnap = await getDoc(doc(db, "public_profiles", userId));
       if (userSnap.exists()) {
         userData = userSnap.data();
         userEmail = userData.email || userEmail;
@@ -37,7 +37,7 @@ async function loadProfile() {
     const [productsSnap, reviewsSnap, verificationSnap] = await Promise.all([
       getDocs(query(collection(db, "products"), where("userId", "==", userId), where("status", "==", "active"))),
       getDocs(query(collection(db, "reviews"), where("sellerId", "==", userId))),
-      getDocs(query(collection(db, "seller_verifications"), where("userId", "==", userId)))
+      Promise.resolve(null)
     ]);
 
     // Same visibility rule as browse/search/shop — expired ads never
@@ -58,7 +58,7 @@ async function loadProfile() {
       ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
       : 0;
 
-    const isVerified = !verificationSnap.empty && verificationSnap.docs[0].data().status === "approved";
+    const isVerified = userData?.isSellerVerified === true;
 
     // Read identity fields from users/{userId} — this is what
     // dashboard.js's Edit Profile actually saves to. Falls back to a
@@ -116,8 +116,8 @@ async function loadProfile() {
       }
     } catch (e) { console.warn(e); }
 
-    window.sellerPhone = userData?.phone || (products.length > 0 ? products[0].seller?.phone : "");
-    window.sellerEmail = userEmail;
+    window.sellerPhone = (products.length > 0 ? products[0].seller?.phone : "");
+    window.sellerEmail = userEmail || (products.length > 0 ? products[0].userEmail : "");
     window.sellerName  = sellerName;
 
     const productsContainer = document.getElementById("seller-products");
@@ -143,7 +143,7 @@ async function loadProfile() {
         <div style="padding:14px;background:#f9fafb;border-radius:10px;border-left:4px solid #ff6600">
           <p style="margin:0;font-weight:700">${"⭐".repeat(r.rating)}</p>
           <p style="margin:6px 0 0;color:#6b7280;font-size:13px">${escapeHTML(r.text || r.reviewText)}</p>
-          <p style="margin:6px 0 0;font-size:11px;color:#adb5bd">${escapeHTML(r.reviewerEmail)} • ${new Date(r.createdAt.toDate()).toLocaleDateString()}</p>
+          <p style="margin:6px 0 0;font-size:11px;color:#adb5bd">${escapeHTML(r.reviewerName || "Anonymous")} • ${new Date(r.createdAt.toDate()).toLocaleDateString()}</p>
         </div>
       `).join("");
     }
@@ -172,11 +172,11 @@ window.contactPhone = function() {
 };
 
 window.messageProfile = function() {
-  if (!window.sellerEmail) {
+  if (!userId && !window.sellerEmail) {
     alert("Cannot message at this time");
     return;
   }
-  window.location.href = `messages.html?to=${window.sellerEmail}`;
+  window.location.href = `messages.html?to=${encodeURIComponent(userId || window.sellerEmail)}`;
 };
 
 window.reportThisSeller = function() {

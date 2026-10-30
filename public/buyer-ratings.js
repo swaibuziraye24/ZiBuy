@@ -18,7 +18,7 @@ export async function submitBuyerRating(sellerId, buyerId, orderId, productId, r
 
   await addDoc(collection(db, "buyer_ratings"), {
     sellerId,
-    sellerEmail: auth.currentUser.email,
+    // seller email is no longer stored on public ratings
     buyerId,
     orderId,
     productId: productId || "",
@@ -62,7 +62,7 @@ async function recalculateBuyerRating(buyerId) {
 
 export async function getBuyerRatingSummary(buyerId) {
   try {
-    const userSnap = await getDoc(doc(db, "users", buyerId));
+    const userSnap = await getDoc(doc(db, "public_profiles", buyerId));
     if (!userSnap.exists()) return { avg: 0, count: 0 };
     const data = userSnap.data();
     return { avg: data.buyerRating || 0, count: data.buyerRatingCount || 0 };

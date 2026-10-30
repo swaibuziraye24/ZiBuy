@@ -5,7 +5,7 @@ export async function renderEarnedBadge(userId, targetElId) {
   if (!el || !userId) return;
 
   try {
-    const snap = await getDoc(doc(db, "users", userId));
+    const snap = await getDoc(doc(db, "public_profiles", userId));
     if (!snap.exists() || !snap.data().earnedVerification) return;
 
     el.innerHTML = `<span style="display:inline-flex;align-items:center;gap:4px;

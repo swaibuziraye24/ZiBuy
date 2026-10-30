@@ -10,6 +10,35 @@ import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/fi
 import { onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { notifyNewMessage } from "./notifications.js";
 
+// Chat links may carry a user ID instead of an email. Ask the server for the contact.
+async function zbResolveChatTarget(to) {
+  if (!to) return "";
+  if (to.includes("@")) return to;
+  try {
+    const { getFunctions, httpsCallable } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js");
+    const r = await httpsCallable(getFunctions(), "getChatContact")({ userId: to });
+    return r.data?.email || "";
+  } catch (e) {
+    console.warn("getChatContact:", e.message);
+    return "";
+  }
+}
+
+// Finds a user's ID from their email using the safe public copy.
+async function zbUidByEmail(email) {
+  try {
+    const s = await getDocs(query(collection(db, "public_profiles"), where("emailHash", "==", await zbEmailHash(email))));
+    return s.empty ? "" : s.docs[0].id;
+  } catch (e) { return ""; }
+}
+
+// SHA-256 of a trimmed, lowercase email. Matches "emailHash" in public_profiles.
+async function zbEmailHash(email) {
+  const data = new TextEncoder().encode(String(email || "").trim().toLowerCase());
+  const buf = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
 
 // ============================================
 // Prevent HTML injection in chat messages
@@ -53,7 +82,19 @@ onAuthStateChanged(auth, (user) => {
 
   if (to) {
     setTimeout(() => {
-      openConversation(to);
+      zbResolveChatTarget(to).then((toEmail) => toEmail ? openConversation(toEmail) : null).then(() => {
+        // coming from "Get help with this order": start the message for them
+        const qs  = new URLSearchParams(window.location.search);
+        const oid = qs.get("oid");
+        if (oid) {
+          window.__zbOrderCtx = { orderId: oid, orderRef: qs.get("ref") || "" };
+          const inp = document.getElementById("message-input");
+          if (inp && !inp.value) {
+            inp.value = `Hi ZiBuy, I need help with order ${window.__zbOrderCtx.orderRef}. `;
+            inp.focus();
+          }
+        }
+      });
     }, 400);
   }
 });
@@ -62,7 +103,7 @@ onAuthStateChanged(auth, (user) => {
 async function trackSellerResponse(sellerEmail, buyerEmail, conversationStartTime) {
   try {
     const { getDoc, setDoc, doc: fdoc } = await import("./firebase.js");
-    const sellerSnap = await getDocs(query(collection(db, "users"), where("email", "==", sellerEmail)));
+    const sellerSnap = await getDocs(query(collection(db, "public_profiles"), where("emailHash", "==", await zbEmailHash(sellerEmail))));
     if (sellerSnap.empty) return;
 
     const sellerId = sellerSnap.docs[0].id;
@@ -178,6 +219,8 @@ window.openConversation = async function(email) {
 
   activeConversation = email;
 
+  zbChatSafety(email);
+
   document.getElementById("chat-empty").style.display  = "none";
   document.getElementById("chat-window").style.display = "flex";
   document.getElementById("chat-with-name").textContent = email.split("@")[0];
@@ -189,7 +232,7 @@ window.openConversation = async function(email) {
 
   // Buyer rating badge, if this contact has one
   try {
-    const userSnap = await getDocs(query(collection(db, "users"), where("email", "==", email)));
+    const userSnap = await getDocs(query(collection(db, "public_profiles"), where("emailHash", "==", await zbEmailHash(email))));
     const badgeEl = document.getElementById("chat-buyer-rating");
     if (badgeEl) {
       if (!userSnap.empty && userSnap.docs[0].data().buyerRating) {
@@ -238,6 +281,76 @@ window.openConversation = async function(email) {
   });
 };
 
+
+// ══════════════════════════════════════════════
+//  CHAT SAFETY
+// ══════════════════════════════════════════════
+const ZB_SUPPORT_EMAIL = "swaibuziraye22@gmail.com";
+
+// Returns "code" (sharing a code or password), "payment" (money outside ZiBuy), or null
+function zbMessageRisk(text) {
+  const t = String(text || "").toLowerCase();
+  if (!t) return null;
+
+  // sharing a code or password
+  if (/^\s*\d{4}\s*$/.test(t) || /^\s*\d{6}\s*$/.test(t)) return "code";
+  if (/(delivery|verification|confirmation|security|otp|pin|code)[^\d]{0,25}\d{4,6}\b/.test(t)) return "code";
+  if (/(my|the)\s+password\s*(is|:)/.test(t)) return "code";
+
+  // asking for or offering money outside ZiBuy
+  const money   = /(send|sent|pay|paid|deposit|transfer|wire)\s+(me\s+|us\s+)?(the\s+|some\s+|your\s+|a\s+)?(money|cash|deposit|advance|fee|fees|payment|balance)/;
+  const channel = /(mtn|airtel|momo|mobile money|western union|paypal|bitcoin|crypto|usdt|bank (account|details)|account number)/;
+  const phone   = /(\+?256|0)7\d{8}/;
+  const advance = /(pay|send)\s+(first|before|in advance|upfront)|advance (payment|fee)|booking fee|transport (fee|money)|registration fee|processing fee|release fee/;
+  const outside = /(outside|off)\s+(of\s+)?(the\s+)?(zibuy|app|platform)/;
+
+  if (advance.test(t)) return "payment";
+  if (outside.test(t)) return "payment";
+  if (money.test(t) && (channel.test(t) || phone.test(t))) return "payment";
+  if (channel.test(t) && phone.test(t)) return "payment";
+  return null;
+}
+
+// "Are you sure?" window shown before a risky message is sent
+function zbRiskConfirm(risk) {
+  return new Promise(resolve => {
+    const copy = risk === "code"
+      ? { title: "🔐 Don't share codes or passwords",
+          body:  "Your delivery code, verification codes and password are private. ZiBuy staff will never ask for them in chat, and a seller should only get your delivery code from you in person, when you are holding your item. Do you really want to send this?" }
+      : { title: "⚠️ Keep payments on ZiBuy",
+          body:  "This message mentions sending money outside ZiBuy. Orders paid through Buy Now or Add to Cart are protected: ZiBuy holds your payment until the item is delivered. Payments sent outside ZiBuy are not protected and are a common scam. Send anyway?" };
+
+    const m = document.createElement("div");
+    m.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px";
+    m.innerHTML = `
+      <div style="background:white;border-radius:16px;padding:22px;max-width:380px;width:100%">
+        <h3 style="margin:0 0 8px;font-size:17px">${copy.title}</h3>
+        <p style="margin:0 0 16px;font-size:13.5px;color:#374151;line-height:1.6">${copy.body}</p>
+        <button id="zb-risk-no" style="width:100%;background:#ff6600;color:white;border:none;padding:12px;border-radius:10px;font-weight:800;cursor:pointer;margin-bottom:8px">Don't send</button>
+        <button id="zb-risk-yes" style="width:100%;background:#f3f4f6;color:#6b7280;border:none;padding:11px;border-radius:10px;font-weight:700;cursor:pointer">Send anyway</button>
+      </div>`;
+    document.body.appendChild(m);
+    m.querySelector("#zb-risk-no").onclick  = () => { m.remove(); resolve(false); };
+    m.querySelector("#zb-risk-yes").onclick = () => { m.remove(); resolve(true); };
+  });
+}
+
+// Safety banner at the top of every chat (hidden in chats with ZiBuy support)
+function zbChatSafety(otherEmail) {
+  const box = document.getElementById("messages-container");
+  if (!box) return;
+
+  let b = document.getElementById("zb-chat-safety");
+  if (!b) {
+    b = document.createElement("div");
+    b.id = "zb-chat-safety";
+    b.style.cssText = "background:#fffbeb;border-bottom:1px solid #fde68a;color:#92400e;font-size:12px;line-height:1.5;padding:8px 12px;display:flex;gap:8px;align-items:flex-start";
+    b.innerHTML = `<span>🛡️</span><span style="flex:1"><strong>Stay safe:</strong> pay only through ZiBuy (Buy Now or Add to Cart). Never send money in advance, and never share your delivery code, password or email codes in chat. <a href="safety.html" target="_blank" style="color:#b45309;font-weight:700">Learn more</a></span>`;
+    box.insertAdjacentElement("beforebegin", b);
+  }
+  b.style.display = (otherEmail === ZB_SUPPORT_EMAIL) ? "none" : "flex";
+}
+
 function renderMessages(thread, container) {
   const wasNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 80;
 
@@ -258,7 +371,8 @@ function renderMessages(thread, container) {
     div.innerHTML = `
       <div style="background:${isOwn ? "#ff6600" : "#e5e7eb"};color:${isOwn ? "white" : "#111827"};
         padding:10px 14px;border-radius:10px;max-width:70%;word-wrap:break-word;font-size:14px">
-        ${escapeHTML(msg.text)}
+        ${msg.orderRef ? `<div style="font-size:11px;font-weight:800;margin-bottom:6px;padding:3px 8px;border-radius:8px;background:${isOwn ? "rgba(255,255,255,.25)" : "#fff"};display:inline-block">📦 Order ${escapeHTML(msg.orderRef)}${(currentUser.email === "swaibuziraye22@gmail.com" && msg.orderId) ? ` · <a href="admin.html?openOrder=${encodeURIComponent(msg.orderId)}" target="_blank" style="color:inherit;text-decoration:underline">Open order</a>` : ""}</div><br>` : ""}${escapeHTML(msg.text)}
+        ${(!isOwn && zbMessageRisk(msg.text)) ? `<div style="margin-top:8px;padding:6px 8px;border-radius:8px;background:#fef2f2;color:#991b1b;font-size:11.5px;font-weight:700;line-height:1.4">⚠️ ${zbMessageRisk(msg.text) === "code" ? "Never share your delivery code, password or email codes." : "This message may ask for payment outside ZiBuy. Don't send money outside ZiBuy."}</div>` : ""}
         <p style="margin:4px 0 0;font-size:11px;opacity:.75;display:flex;gap:6px;align-items:center;justify-content:flex-end">
           ${time} ${ticks}
         </p>
@@ -298,6 +412,13 @@ window.sendMessage = async function() {
   const text  = input.value.trim();
   if (!text) return;
 
+  // Warn before sending something that looks risky (never in chats with ZiBuy support)
+  const zbRisk = zbMessageRisk(text);
+  if (zbRisk && activeConversation !== ZB_SUPPORT_EMAIL) {
+    const sendIt = await zbRiskConfirm(zbRisk);
+    if (!sendIt) return;
+  }
+
   // If this is the FIRST reply from the seller in this thread, record
   // how long it took — this is what powers the response-time badge
   if (!window._firstReplyTracked?.[activeConversation]) {
@@ -334,19 +455,24 @@ window.sendMessage = async function() {
   try {
     await addDoc(collection(db, "messages"), {
       participants:    [currentUser.email, activeConversation],
+      participantUids: [currentUser.uid, await zbUidByEmail(activeConversation)],
+      senderUid:       currentUser.uid,
       senderEmail:     currentUser.email,
       text,
       read:            false,
       timestamp: serverTimestamp(),
-      lastMessageTime: serverTimestamp()
+      lastMessageTime: serverTimestamp(),
+      ...((window.__zbOrderCtx && activeConversation === "swaibuziraye22@gmail.com")
+        ? { orderId: window.__zbOrderCtx.orderId, orderRef: window.__zbOrderCtx.orderRef }
+        : {})
     });
 
     // Notify recipient — in-app + push, no manual UI refresh needed here;
     // the onSnapshot listener already open on this conversation renders
     // the new message instantly for both sides
     const recipientSnap = await getDocs(query(
-      collection(db, "users"),
-      where("email", "==", activeConversation)
+      collection(db, "public_profiles"),
+      where("emailHash", "==", await zbEmailHash(activeConversation))
     ));
 
     if (!recipientSnap.empty) {
@@ -398,7 +524,7 @@ export async function startConversation(recipientEmail, productId, productName) 
     // Track total conversations started so response RATE can be calculated,
     // not just response speed
     const { getDoc, setDoc, doc: fdoc } = await import("./firebase.js");
-    const sellerSnap = await getDocs(query(collection(db, "users"), where("email", "==", recipientEmail)));
+    const sellerSnap = await getDocs(query(collection(db, "public_profiles"), where("emailHash", "==", await zbEmailHash(recipientEmail))));
     if (!sellerSnap.empty) {
       const sellerId  = sellerSnap.docs[0].id;
       const statsRef  = fdoc(db, "response_stats", sellerId);
@@ -409,12 +535,17 @@ export async function startConversation(recipientEmail, productId, productName) 
 
     await addDoc(collection(db, "messages"), {
       participants:    [currentUser.email, recipientEmail],
+      participantUids: [currentUser.uid, await zbUidByEmail(recipientEmail)],
+      senderUid:       currentUser.uid,
       senderEmail:     currentUser.email,
       text:            `Hi! I'm interested in: ${productName}`,
       productId,
       read:            false,
       timestamp: serverTimestamp(),
-      lastMessageTime: serverTimestamp()
+      lastMessageTime: serverTimestamp(),
+      ...((window.__zbOrderCtx && activeConversation === "swaibuziraye22@gmail.com")
+        ? { orderId: window.__zbOrderCtx.orderId, orderRef: window.__zbOrderCtx.orderRef }
+        : {})
     });
 
     window.location.href =

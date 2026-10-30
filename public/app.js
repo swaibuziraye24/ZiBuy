@@ -779,7 +779,7 @@ function zbEnrichProducts(docs, planMap, verifSet, memberSinceMap) {
     product.sellerMemberSince = memberSinceMap[product.userId] || null;
     product.sellerIsVerified  = verifSet.has(product.userId);
 
-    const isAdminPost = product.userEmail === "swaibuziraye22@gmail.com";
+    const isAdminPost = product.isOfficial === true || product.userEmail === "swaibuziraye22@gmail.com";
     product.isZiBuyOfficial = isAdminPost;
     if (isAdminPost) product.isPremium = true;
 
@@ -882,8 +882,8 @@ async function fetchAndCacheProducts(isBackground) {
     const [newestSnap, premiumSnap, officialSnap, verifSnap] = await Promise.all([
       getDocs(query(collection(db, "products"), orderBy("createdAt", "desc"), limit(60))),
       getDocs(query(collection(db, "products"), where("isPremium", "==", true), limit(40))).catch(() => empty),
-      getDocs(query(collection(db, "products"), where("userEmail", "==", "swaibuziraye22@gmail.com"), limit(20))).catch(() => empty),
-      getDocs(query(collection(db, "seller_verifications"), where("status", "==", "approved"))).catch(() => empty)
+      getDocs(query(collection(db, "products"), where("isOfficial", "==", true), limit(20))).catch(() => empty),
+      getDocs(query(collection(db, "public_profiles"), where("isSellerVerified", "==", true))).catch(() => empty)
     ]);
 
     // merge the three lists, no duplicates
@@ -896,7 +896,7 @@ async function fetchAndCacheProducts(isBackground) {
     window.__zbExhausted = newestSnap.docs.length < 60;
 
     const verifSet = new Set();
-    verifSnap.docs.forEach(d => verifSet.add(d.data().userId));
+    verifSnap.docs.forEach(d => verifSet.add(d.id));
     window.__zbVerifSet = verifSet;
 
     // load ONLY the sellers of these products (not every user)
@@ -904,7 +904,7 @@ async function fetchAndCacheProducts(isBackground) {
     const chunks = [];
     for (let i = 0; i < sellerIds.length; i += 10) chunks.push(sellerIds.slice(i, i + 10));
     const userSnaps = await Promise.all(chunks.map(c =>
-      getDocs(query(collection(db, "users"), where(documentId(), "in", c))).catch(() => empty)
+      getDocs(query(collection(db, "public_profiles"), where(documentId(), "in", c))).catch(() => empty)
     ));
 
     const planMap = {};
@@ -1008,7 +1008,7 @@ async function fetchAndCacheProductsOLD(isBackground) {
       product.sellerMemberSince = memberSinceMap[product.userId] || null;
       product.sellerIsVerified  = verifSet.has(product.userId);
 
-      const isAdminPost = product.userEmail === "swaibuziraye22@gmail.com";
+      const isAdminPost = product.isOfficial === true || product.userEmail === "swaibuziraye22@gmail.com";
       product.isZiBuyOfficial = isAdminPost;
       if (isAdminPost) product.isPremium = true;
 

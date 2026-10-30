@@ -16,7 +16,7 @@ export const PLAN_SCORE = {
 export async function getUserPlan(userId) {
   if (!userId) return "free";
   try {
-    const snap = await getDoc(doc(db, "users", userId));
+    const snap = await getDoc(doc(db, "public_profiles", userId));
     if (!snap.exists()) return "free";
     return snap.data().plan || "free";
   } catch (err) {

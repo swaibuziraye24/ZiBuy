@@ -1610,7 +1610,7 @@ function renderAdsTable(ads) {
       </td>
       <td style="font-weight:700;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.adminAdNotes ? '🚩 ' : ''}${escapeHTML(a.name)}</td>
       <td style="color:var(--orange);font-weight:800">UGX ${Number(a.price||0).toLocaleString()}</td>
-      <td style="font-size:12px">${escapeHTML(a.userEmail) || "—"}</td>
+      <td style="font-size:12px">${escapeHTML(a.seller?.name) || a.userId?.slice(0, 8) || "—"}</td>
       <td>
         ${phoneOk
           ? `<span class="plan-chip chip-approved" title="${escapeHTML(a.seller?.phone||'')}">✅ ${escapeHTML(a.seller?.phone||'')}</span>`
@@ -1670,7 +1670,7 @@ function applyAdsFilters() {
   const q = (document.getElementById("ads-search")?.value || "").toLowerCase();
   let filtered = allAds.filter(a =>
     (a.name || "").toLowerCase().includes(q) ||
-    (a.userEmail || "").toLowerCase().includes(q)
+    (a.seller?.name || "").toLowerCase().includes(q)
   );
   if (currentAdsStatusFilter === "badphone") {
     filtered = filtered.filter(a => !isValidWhatsAppPhoneAdmin(a.seller?.phone));
@@ -1760,6 +1760,15 @@ function zbStartAdminOrdersLive() {
 
     allOrders = fresh;
     renderOrdersTable(allOrders);
+
+    // opened from a support chat: admin.html?openOrder=<id>
+    if (!window.__zbOpenedFromLink) {
+      const want = new URLSearchParams(location.search).get("openOrder");
+      if (want && fresh.some(o => o.id === want)) {
+        window.__zbOpenedFromLink = true;
+        setTimeout(() => window.viewOrderDetail(want), 300);
+      }
+    }
 
     // keep an open order popup in sync
     const open = document.getElementById("admin-order-detail-modal");
@@ -2274,6 +2283,146 @@ window.adminSubmitRefund = async function (orderId, btn) {
     alert(e.message || "Failed to record the refund");
     btn.disabled = false;
     btn.textContent = "Record refund & notify buyer";
+  }
+};
+
+
+// ── Account deletion requests ──
+let zbDelRows = [];
+
+window.loadDeletionRequests = async function () {
+  const body = document.getElementById("del-req-body");
+  try {
+    const snap = await getDocs(query(collection(db, "deletion_requests"), orderBy("atMs", "desc"), limit(300)));
+    zbDelRows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    if (!zbDelRows.length) {
+      body.innerHTML = `<tr class="empty-row"><td colspan="5">No requests</td></tr>`;
+      return;
+    }
+
+    body.innerHTML = zbDelRows.map(r => `<tr>
+      <td style="font-size:12px;white-space:nowrap">${new Date(r.atMs).toLocaleString("en-UG", { timeZone: "Africa/Kampala" })}</td>
+      <td>${escapeHTML(r.email || "")}</td>
+      <td style="font-size:12px;color:#6b7280;max-width:200px">${escapeHTML(r.note || "")}</td>
+      <td>${r.status === "done"
+        ? `<span style="color:#166534;font-weight:700">✅ Done</span>`
+        : `<span style="color:#92400e;font-weight:700">⏳ Pending</span>`}</td>
+      <td style="white-space:nowrap">
+        ${r.status === "done" ? "" : `
+          <button class="action-btn" onclick="viewAsUser('${r.uid}')">Open as user</button>
+          <button class="action-btn btn-approve" onclick="markDeletionDone('${r.id}')">Mark done</button>`}
+      </td></tr>`).join("");
+  } catch (e) {
+    console.error(e);
+    if (body) body.innerHTML = `<tr class="empty-row"><td colspan="5">Couldn't load the requests.</td></tr>`;
+  }
+};
+
+window.markDeletionDone = async function (id) {
+  if (!confirm("Mark this request as done? Only do this after the account has been deleted.")) return;
+  try {
+    await updateDoc(doc(db, "deletion_requests", id), {
+      status: "done", doneAt: Date.now(), doneBy: auth.currentUser?.email || ""
+    });
+    showToast("Marked as done ✅", "success");
+    window.loadDeletionRequests();
+  } catch (e) {
+    console.error(e);
+    showToast("Failed to update", "error");
+  }
+};
+
+
+window.scrubPublicEmails = async function () {
+  if (!confirm("Remove follower emails and seller emails from public records?")) return;
+  try {
+    showToast("Working…", "success");
+    const { getFunctions, httpsCallable } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js");
+    const r = await httpsCallable(getFunctions(), "scrubPublicEmails", { timeout: 540000 })();
+    const f = r.data.result.shop_followers, b = r.data.result.buyer_ratings;
+    showToast(`Done: ${f.cleaned} followers and ${b.cleaned} ratings cleaned ✅`, "success");
+  } catch (e) {
+    console.error(e);
+    showToast("Failed: " + (e.message || e), "error");
+  }
+};
+
+window.clearShopLoginEmails = async function () {
+  if (!confirm("Clear the public contact email of every shop that only shows the owner's login email? Owners can add a contact email again on purpose.")) return;
+  try {
+    showToast("Working…", "success");
+    const { getFunctions, httpsCallable } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js");
+    const r = await httpsCallable(getFunctions(), "clearShopLoginEmails", { timeout: 540000 })();
+    showToast(`Done: ${r.data.cleared} of ${r.data.scanned} shop records cleared ✅`, "success");
+  } catch (e) {
+    console.error(e);
+    showToast("Failed: " + (e.message || e), "error");
+  }
+};
+
+window.scrubProductEmails = async function () {
+  if (!confirm("Remove the seller email from ALL ads? Do this only after the new website version is live.")) return;
+  try {
+    showToast("Working… this can take a few minutes", "success");
+    const { getFunctions, httpsCallable } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js");
+    const r = await httpsCallable(getFunctions(), "scrubProductEmails", { timeout: 540000 })();
+    showToast(`Done: ${r.data.cleaned} of ${r.data.scanned} ads cleaned (${r.data.noOwner} without an account) ✅`, "success");
+  } catch (e) {
+    console.error(e);
+    showToast("Failed: " + (e.message || e), "error");
+  }
+};
+
+window.backfillProductOwners = async function () {
+  if (!confirm("Add owner IDs and the official flag to all ads? It is safe to run any time.")) return;
+  try {
+    showToast("Working… this can take a few minutes", "success");
+    const { getFunctions, httpsCallable } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js");
+    const r = await httpsCallable(getFunctions(), "backfillProductOwners", { timeout: 540000 })();
+    showToast(`Done: ${r.data.updated} of ${r.data.scanned} ads updated (${r.data.noOwner} without an account) ✅`, "success");
+  } catch (e) {
+    console.error(e);
+    showToast("Failed: " + (e.message || e), "error");
+  }
+};
+
+window.backfillMessageUids = async function () {
+  if (!confirm("Add user IDs to all old messages? It is safe to run any time.")) return;
+  try {
+    showToast("Working… this can take a few minutes", "success");
+    const { getFunctions, httpsCallable } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js");
+    const r = await httpsCallable(getFunctions(), "backfillMessageUids", { timeout: 540000 })();
+    showToast(`Done: ${r.data.updated} of ${r.data.scanned} messages updated ✅`, "success");
+  } catch (e) {
+    console.error(e);
+    showToast("Failed: " + (e.message || e), "error");
+  }
+};
+
+window.scrubReviewEmails = async function () {
+  if (!confirm("Remove reviewer emails from all existing reviews? It is safe to run any time.")) return;
+  try {
+    showToast("Cleaning reviews… this can take a minute", "success");
+    const { getFunctions, httpsCallable } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js");
+    const r = await httpsCallable(getFunctions(), "scrubReviewEmails", { timeout: 540000 })();
+    showToast(`Done: ${r.data.cleaned} of ${r.data.scanned} reviews cleaned ✅`, "success");
+  } catch (e) {
+    console.error(e);
+    showToast("Failed: " + (e.message || e), "error");
+  }
+};
+
+window.rebuildPublicProfiles = async function () {
+  if (!confirm("Rebuild the public profile copy for every user? It is safe to run any time.")) return;
+  try {
+    showToast("Rebuilding… this can take a minute", "success");
+    const { getFunctions, httpsCallable } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js");
+    const r = await httpsCallable(getFunctions(), "rebuildPublicProfiles", { timeout: 540000 })();
+    showToast(`Done: ${r.data.count} profiles ✅`, "success");
+  } catch (e) {
+    console.error(e);
+    showToast("Failed: " + (e.message || e), "error");
   }
 };
 
@@ -4141,7 +4290,7 @@ window.loadReviewsAdmin = async function() {
 
     tbody.innerHTML = reviews.map(r => `
       <tr>
-        <td style="font-size:12px">${r.reviewerEmail || "—"}</td>
+        <td style="font-size:12px">${r.reviewerName || r.reviewerEmail || "—"}</td>
         <td style="font-size:12px">${r.productId?.slice(0,12) || "—"}</td>
         <td style="font-weight:800;color:#ff6600">${"⭐".repeat(Math.min(r.rating || 0, 5))} ${r.rating}/5</td>
         <td style="font-size:13px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.text || r.reviewText || "—"}</td>
@@ -5131,7 +5280,7 @@ function runGlobalSearch() {
     html += adMatches.map(a => `
       <div onmousedown="goToSearchResult('ad','${a.id}')"
         style="padding:9px 12px;cursor:pointer;font-size:13px;border-top:1px solid #f3f4f6">
-        📦 ${escapeHTML(a.name)} <span style="color:#9ca3af">— ${escapeHTML(a.userEmail) || ""}</span>
+        📦 ${escapeHTML(a.name)} <span style="color:#9ca3af">— ${escapeHTML(a.seller?.name) || ""}</span>
       </div>`).join("");
   }
 

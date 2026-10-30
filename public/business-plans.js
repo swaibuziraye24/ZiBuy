@@ -106,7 +106,7 @@ export async function fetchUserPlan(userId) {
     // business_accounts collection — avoids exposing anyone's payment
     // references/transaction IDs to public visitors, while still working
     // correctly whether the viewer is the account owner or a stranger.
-    const snap = await getDoc(doc(db, "users", userId));
+    const snap = await getDoc(doc(db, "public_profiles", userId));
     if (!snap.exists()) return PLANS.free;
 
     const planId = snap.data().plan || "free";

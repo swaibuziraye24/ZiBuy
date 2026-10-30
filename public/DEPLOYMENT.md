@@ -33,6 +33,10 @@ When prompted:
     ],
     "rewrites": [
       {
+        "source": "/.well-known/assetlinks.json",
+        "destination": "/assetlinks.json"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }

@@ -2849,7 +2849,8 @@ expiresAt.setDate(expiresAt.getDate() + adDays);
       })(),
       images:    imageUrls,
       userId:    currentUser.uid,
-      userEmail: currentUser.email,
+      // seller email is no longer stored on public ads
+      isOfficial: currentUser.email === "swaibuziraye22@gmail.com",
       status:    "active",
       views:     0,
       boost: {

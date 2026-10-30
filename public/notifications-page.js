@@ -74,7 +74,8 @@ function getIcon(type) {
     review: "⭐",
     ad_view: "👁️",
     payment: "💳",
-    price_drop: "📉"
+    price_drop: "📉",
+    back_in_stock: "🛍️"
   };
   return icons[type] || "🔔";
 }
@@ -151,6 +152,11 @@ window.handleNotificationClick = async function(notificationId, type, relatedId)
   if (type === "message" && relatedId) {
     // relatedId holds the sender's email — jump straight into that chat
     window.location.href = `messages.html?to=${encodeURIComponent(relatedId)}`;
+    return;
+  }
+
+  if ((type === "back_in_stock" || type === "price_drop") && relatedId) {
+    window.location.href = `product.html?id=${encodeURIComponent(relatedId)}`;
     return;
   }
 

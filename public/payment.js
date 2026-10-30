@@ -198,9 +198,9 @@ async function loadCheckout() {
       bySeller.set(sellerId, {
         sellerId,
         sellerEmail: p.userEmail || "",
-        sellerName:  p.userEmail === ADMIN_EMAIL
+        sellerName:  (p.isOfficial === true || p.userEmail === ADMIN_EMAIL)
           ? "ZiBuy Official"
-          : (p.seller?.name || (p.userEmail || "").split("@")[0] || "Seller"),
+          : (p.seller?.name || "Seller"),
         sellerPhone: p.seller?.phone || "",
         items:       [],
         subtotal:    0

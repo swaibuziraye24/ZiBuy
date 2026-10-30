@@ -1823,6 +1823,12 @@ window.zbSubmitRefundConfirm = async function (refundId, btn) {
   }
 };
 
+// "Get help with this order": opens a chat with ZiBuy support, tagged with the order
+window.zbOrderHelp = function (orderId, orderRef) {
+  window.location.href = "messages.html?to=" + encodeURIComponent("swaibuziraye22@gmail.com") +
+    "&oid=" + encodeURIComponent(orderId) + "&ref=" + encodeURIComponent(orderRef || "");
+};
+
 function renderOrderCard(o) {
   const dateStr  = new Date(o.createdAt?.toDate?.() || o.createdAt).toLocaleDateString();
   const isBuyNow = !!o.productId;
@@ -1909,6 +1915,9 @@ function renderOrderCard(o) {
       ${locationLine}
       ${feeNote}
       ${zbTrackingHTML(o)}${zbDeliveryCodeSlot(o)}${zbRefundSlot(o)}
+      <button onclick="zbOrderHelp('${o.id}', '${String(o.orderRef || o.orderId || "").replace(/[^A-Za-z0-9-]/g, "")}')"
+        style="width:100%;margin-top:10px;background:#f3f4f6;color:#374151;border:none;padding:10px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer">
+        💬 Get help with this order</button>
       <p style="font-size:12px;color:#6b7280;margin:4px 0 0">Order Date: ${dateStr}</p>
       ${protectActions}
       ${cancelButton}
@@ -2992,7 +3001,7 @@ async function loadMyProfile() {
               <div style="padding:12px;background:#f9fafb;border-radius:10px;border-left:4px solid #ff6600;margin-bottom:10px">
                 <p style="margin:0;font-size:14px">${"⭐".repeat(r.rating)} <strong>${r.rating}/5</strong></p>
                 <p style="margin:6px 0;font-size:13px;color:#374151">${r.text || r.reviewText || ""}</p>
-                <p style="margin:0;font-size:11px;color:#adb5bd">${r.reviewerEmail} · ${r.createdAt ? new Date(r.createdAt.toDate()).toLocaleDateString() : ""}</p>
+                <p style="margin:0;font-size:11px;color:#adb5bd">${r.reviewerName || "Anonymous"} · ${r.createdAt ? new Date(r.createdAt.toDate()).toLocaleDateString() : ""}</p>
               </div>
             `).join("")
         }

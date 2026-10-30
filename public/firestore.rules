@@ -5,7 +5,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // ── Multi-admin check: super-admin email OR listed in /admins/{uid} ──
-    // A staff admin is blocked instantly when the owner sets suspended = true
+       // A staff admin is blocked instantly when the owner sets suspended = true
     function adminNotSuspended() {
       return get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.get("suspended", false) != true;
     }
@@ -43,7 +43,7 @@ service cloud.firestore {
       allow write: if request.auth != null && request.auth.token.email == "swaibuziraye22@gmail.com";
     }
 
-    match /admin_action_logs/{logId} {
+        match /admin_action_logs/{logId} {
       allow create: if isAdmin();
       allow read: if request.auth != null && request.auth.token.email == "swaibuziraye22@gmail.com";
     }
@@ -53,22 +53,29 @@ service cloud.firestore {
       allow write: if isFullAdmin();
     }
 
-    match /admin_sessions/{sid} {
+        match /admin_sessions/{sid} {
       allow read: if request.auth != null && request.auth.token.email == "swaibuziraye22@gmail.com";
       allow get: if request.auth != null && request.auth.uid == sid;
       allow create, update: if isAdmin() && request.auth.uid == sid;
       allow delete: if request.auth != null && request.auth.token.email == "swaibuziraye22@gmail.com";
     }
 
+    match /feature_updates/{id} {
+      allow read: if true;
+      allow write: if isFullAdmin();
+    }
     /* ======================================================
        PRODUCTS
     ====================================================== */
 
-      match /products/{document=**} {
+            match /products/{document=**} {
 
   allow read: if true;
 
-  allow create: if request.auth != null;
+  // no seller email on public ads, and only admins can mark an ad official
+  allow create: if request.auth != null
+    && !('userEmail' in request.resource.data)
+    && (request.resource.data.get('isOfficial', false) == false || isFullAdmin());
 
   allow update: if
     (
@@ -76,7 +83,10 @@ service cloud.firestore {
       (
         isFullAdmin()
         ||
-        resource.data.userId == request.auth.uid
+        (
+          resource.data.userId == request.auth.uid
+          && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['isOfficial', 'userId', 'userEmail'])
+        )
       )
     )
     ||
@@ -160,9 +170,21 @@ match /boost_credits/{id} {
      
      
      match /auto_renewals/{document=**} {
-  allow read: if request.auth != null;
-  allow create: if request.auth != null;
-  allow update: if isFullAdmin();
+  // Owner and admins only (these hold payment references)
+  allow read: if request.auth != null
+    && (resource.data.userId == request.auth.uid || isAdmin());
+
+  allow create: if request.auth != null
+    && request.resource.data.userId == request.auth.uid;
+
+  allow update: if isFullAdmin()
+    // the owner may cancel their own auto-renew, and nothing else
+    || (
+      request.auth != null
+      && resource.data.userId == request.auth.uid
+      && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+      && request.resource.data.status == 'cancelled'
+    );
 }
 
          match /pin_requests/{id} {
@@ -199,21 +221,17 @@ match /boost_credits/{id} {
     ====================================================== */
 
     match /user_plans/{document=**} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null
-        && request.auth.uid == request.resource.data.userId
-        || isFullAdmin();
-    }
+    allow read: if isAdmin();
+  allow write: if isFullAdmin();
+}
 
-    match /plans/{document=**} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null
-        && request.auth.uid == request.resource.data.userId
-        || isFullAdmin();
-    }
+match /plans/{document=**} {
+  allow read: if request.auth != null;
+  allow write: if isFullAdmin();
+}
 
     match /subscriptions/{document=**} {
-      allow read: if request.auth != null;
+           allow read: if isAdmin();
       allow write: if isFullAdmin();
     }
      
@@ -276,7 +294,9 @@ match /boost_credits/{id} {
 
     match /seller_verifications/{document=**} {
 
-      allow read: if true;
+            // ID documents and verification details: owner and admins only
+      allow read: if request.auth != null
+        && (resource.data.userId == request.auth.uid || isAdmin());
 
       allow create: if request.auth != null;
 
@@ -344,16 +364,41 @@ match /boost_credits/{id} {
     ====================================================== */
 
     match /users/{userId} {
-  allow read: if true;
+    // Private record: only the owner and admins can read it.
+  // Everyone else uses the safe copy in /public_profiles/{uid}.
+  allow get: if request.auth != null
+    && (request.auth.uid == userId || isAdmin());
+  allow list: if isAdmin();
 
-  allow create: if request.auth != null && request.auth.uid == userId;
+  // New accounts must start as a normal free account
+  allow create: if request.auth != null && request.auth.uid == userId
+    && request.resource.data.get('plan', 'free') == 'free'
+    && request.resource.data.get('banned', false) == false
+    && request.resource.data.get('isSellerVerified', false) == false
+    && request.resource.data.get('accountType', 'normal') == 'normal'
+    && request.resource.data.get('adsLimit', 10) <= 10
+    && !('termsAccepted' in request.resource.data)
+    && !('emailVerified' in request.resource.data);
 
   allow update: if request.auth != null
     && (
-      request.auth.uid == userId
+      (
+        // a user can edit their own profile, but never these protected fields
+        request.auth.uid == userId
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+             'plan','planUpdatedAt','planExpiredAt','planExpiresAt','planExpiry',
+             'isSellerVerified','isVerified','verified','verifiedAt',
+             'banned','bannedUntil','bannedAt',
+             'suspended','suspendedUntil','suspendedAt',
+             'adsLimit','subscription','accountType','role','isAdmin',
+             'trustScore','credits','homeFeedCategoryScores','homeFeedUpdatedAt',
+             'termsAccepted','emailVerified','emailVerifiedAt'
+           ])
+      )
       || isFullAdmin()
+      // buyer ratings can still be updated by other users, nothing else
       || request.resource.data.diff(resource.data).affectedKeys()
-           .hasOnly(['buyerRating', 'buyerRatingCount', 'phoneVerified', 'phone', 'phoneVerifiedAt'])
+           .hasOnly(['buyerRating', 'buyerRatingCount'])
     );
 
   allow delete: if request.auth != null
@@ -370,9 +415,10 @@ match /boost_credits/{id} {
 }
 
 
-         match /buyer_ratings/{document=**} {
+                  match /buyer_ratings/{document=**} {
   allow read: if true;
-  allow create: if request.auth != null;
+  allow create: if request.auth != null
+    && !('sellerEmail' in request.resource.data);
 }
 
 
@@ -382,18 +428,49 @@ match /boost_credits/{id} {
        ORDERS
     ====================================================== */
        match /orders/{orderId} {
-  allow read: if request.auth != null;
+  allow read: if request.auth != null
+    && (
+      isAdmin()
+      || resource.data.userEmail == request.auth.token.email
+      || resource.data.buyerUid == request.auth.uid
+      || resource.data.sellerId == request.auth.uid
+    );
 
-  allow create: if true; // guest checkout via Buy Now is allowed
+  // guest checkout via Buy Now is allowed, but a new order can only start as "placed"
+  allow create: if request.resource.data.get('trackingStatus', 'placed') == 'placed';
 
   allow update: if request.auth != null
     && (
       isFullAdmin()
-      ||
-      (
+
+      // existing buyer actions: confirm receipt, dispute, cancel
+      || (
         resource.data.userEmail == request.auth.token.email &&
         request.resource.data.diff(resource.data).affectedKeys()
           .hasOnly(['deliveryConfirmed','confirmedAt','autoConfirmed','disputeStatus','disputeReason','disputedAt','status','cancelledAt'])
+      )
+
+      // buyer confirms receipt as the final tracking step
+      || (
+        (resource.data.userEmail == request.auth.token.email
+          || resource.data.get('buyerUid', '') == request.auth.uid)
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['trackingStatus','trackingEvents','updatedAt','deliveryConfirmed','confirmedAt','autoConfirmed'])
+        && request.resource.data.trackingStatus == 'received'
+        && resource.data.get('trackingStatus', '') in ['on_the_way', 'arrived']
+      )
+
+      // seller moves the order forward, one legal step at a time
+      || (
+        resource.data.get('sellerId', '') == request.auth.uid
+        && resource.data.get('refunded', false) != true
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['trackingStatus','trackingEvents','updatedAt'])
+        && (
+          (resource.data.get('trackingStatus', '') == 'payment_verified' && request.resource.data.trackingStatus == 'packed')
+          || (resource.data.get('trackingStatus', '') == 'packed'        && request.resource.data.trackingStatus == 'on_the_way')
+          || (resource.data.get('trackingStatus', '') == 'on_the_way'    && request.resource.data.trackingStatus == 'arrived')
+        )
       )
     );
 
@@ -401,27 +478,6 @@ match /boost_credits/{id} {
     && isFullAdmin();
 }
 
-// Delivery codes: only the buyer can read theirs. Only the server writes.
-match /order_secrets/{orderId} {
-  allow read: if request.auth != null && resource.data.buyerUid == request.auth.uid;
-  allow write: if false;
-}
-
-// Permanent proof log: the buyer, seller and admins of that order can read. Only the server writes.
-match /order_proofs/{proofId} {
-  allow read: if request.auth != null
-    && (
-      isAdmin()
-      || resource.data.buyerUid == request.auth.uid
-      || resource.data.sellerId == request.auth.uid
-    );
-  allow write: if false;
-}
-
-match /order_proof_heads/{orderId} {
-  allow read: if isAdmin();
-  allow write: if false;
-}
 
 // Seller payouts: only the seller and admins can read. Only the server writes.
 match /payouts/{payoutId} {
@@ -467,6 +523,7 @@ match /rate_limits/{id} {
   allow read, write: if false;
 }
 
+
 // Refunds: the buyer and admins can read. Only the server writes.
 match /refunds/{refundId} {
   allow read: if request.auth != null
@@ -474,10 +531,59 @@ match /refunds/{refundId} {
   allow write: if false;
 }
 
+
+// Account deletion requests: admins only. The server creates them.
+match /deletion_requests/{id} {
+  allow read: if isAdmin();
+  allow update: if isFullAdmin();
+  allow create, delete: if false;
+}
+match /deletion_codes/{id} {
+  allow read, write: if false;
+}
+
+
+// Public profiles: a safe copy anyone can read. Only the server writes it.
+match /public_profiles/{uid} {
+  allow read: if true;
+  allow write: if false;
+}
+
        match /disputes/{document=**} {
-  allow read: if request.auth != null;
+    // The buyer's own disputes and admins only
+  allow read: if request.auth != null
+    && (isAdmin() || resource.data.buyerUid == request.auth.uid);
   allow create: if request.auth != null && request.resource.data.buyerUid == request.auth.uid;
   allow update: if isFullAdmin();
+}
+
+
+// Reminder counters: server only
+match /order_reminders/{id} {
+  allow read, write: if false;
+}
+
+
+      // Delivery codes: only the buyer can read theirs. Only the server writes.
+match /order_secrets/{orderId} {
+  allow read: if request.auth != null && resource.data.buyerUid == request.auth.uid;
+  allow write: if false;
+}
+
+// Permanent proof log: the buyer, seller and admins of that order can read. Only the server writes.
+match /order_proofs/{proofId} {
+  allow read: if request.auth != null
+    && (
+      isAdmin()
+      || resource.data.buyerUid == request.auth.uid
+      || resource.data.sellerId == request.auth.uid
+    );
+  allow write: if false;
+}
+
+match /order_proof_heads/{orderId} {
+  allow read: if isAdmin();
+  allow write: if false;
 }
 
 
@@ -485,13 +591,17 @@ match /refunds/{refundId} {
        REVIEWS
     ====================================================== */
 
-    match /reviews/{document=**} {
+        match /reviews/{document=**} {
 
       allow read: if true;
 
-      allow create: if request.auth != null;
+      // reviews may no longer carry the reviewer's email
+      allow create: if request.auth != null
+        && !('reviewerEmail' in request.resource.data)
+        && !('userEmail' in request.resource.data);
 
-      allow delete: if request.auth.uid == resource.data.userId;
+      allow delete: if request.auth != null
+        && request.auth.uid == resource.data.userId;
     }
     
     
@@ -572,9 +682,9 @@ match /messages/{messageId} {
     ====================================================== */
 
     match /ads/{adId} {
-      allow read: if true;
-      allow write: if request.auth != null;
-    }
+  allow read: if true;
+  allow write: if isFullAdmin();
+}
 
     /* ======================================================
        VERIFICATIONS / ANALYTICS
@@ -602,12 +712,13 @@ match /messages/{messageId} {
     
     
     
-    match /shop_followers/{followId} {
+         match /shop_followers/{followId} {
 
   allow read: if true;
 
   allow create: if request.auth != null
-    && request.resource.data.userId == request.auth.uid;
+    && request.resource.data.userId == request.auth.uid
+    && !('userEmail' in request.resource.data);
 
   allow delete: if request.auth != null
     && request.auth.uid == resource.data.userId;
@@ -627,7 +738,7 @@ match /messages/{messageId} {
 }
 
 match /reports/{document=**} {
-  allow read: if true;
+  allow read: if isAdmin();
   allow create: if request.auth != null;
   allow update: if isFullAdmin();
   allow delete: if isFullAdmin();
@@ -635,7 +746,17 @@ match /reports/{document=**} {
 
 match /response_stats/{userId} {
   allow read: if true;
-  allow write: if request.auth != null;
+
+  // you can fully manage your own stats
+  allow write: if request.auth != null && request.auth.uid == userId;
+
+  // a buyer starting a chat may add exactly 1 to a seller's conversation count
+  allow create: if request.auth != null
+    && request.resource.data.keys().hasOnly(['totalConvos'])
+    && request.resource.data.totalConvos == 1;
+  allow update: if request.auth != null
+    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['totalConvos'])
+    && request.resource.data.totalConvos == resource.data.get('totalConvos', 0) + 1;
 }
 
 

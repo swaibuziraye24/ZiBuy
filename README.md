@@ -600,6 +600,11 @@ match /boost_credits/{id} {
     && isFullAdmin();
 }
 
+// Reminder counters: server only
+match /order_reminders/{id} {
+  allow read, write: if false;
+}
+
        match /disputes/{document=**} {
   allow read: if request.auth != null;
   allow create: if request.auth != null && request.resource.data.buyerUid == request.auth.uid;

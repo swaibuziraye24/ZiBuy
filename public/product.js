@@ -252,7 +252,7 @@ async function loadProduct() {
     trackProductView(id);
 
     
-    window.__zbIsOfficial = p.userEmail === "swaibuziraye22@gmail.com";
+    window.__zbIsOfficial = p.isOfficial === true || p.userEmail === "swaibuziraye22@gmail.com";
 
         window.__zbDelivery = p.delivery || null;
 
@@ -417,7 +417,7 @@ document.head.appendChild(schemaTag);
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">
              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
               <h4 style="margin:0;font-size:15px;font-weight:800">${escapeHTML(seller.name) || "ZiBuy Seller"}</h4>
-              ${p.userEmail === "swaibuziraye22@gmail.com" ? `
+              ${(p.isOfficial === true || p.userEmail === "swaibuziraye22@gmail.com") ? `
                 <span style="background:linear-gradient(135deg,#111827,#374151);color:white;font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px;display:inline-flex;align-items:center;gap:4px">
                   <img src="my_logo.png" style="width:12px;height:12px;object-fit:contain;border-radius:2px"> ZiBuy Official
                 </span>` : ""}
@@ -491,7 +491,7 @@ document.head.appendChild(schemaTag);
 
           <!-- Contact Buttons -->
 
-          ${p.userEmail !== 'swaibuziraye22@gmail.com' ? `
+          ${!(p.isOfficial === true || p.userEmail === 'swaibuziraye22@gmail.com') ? `
           <div style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:12px;padding:14px 16px;margin-bottom:12px;font-size:13px;color:#1e3a8a;line-height:1.6">
             <strong>🛡️ How Buy Now works for this seller's item</strong><br>
             When you use <strong>Buy Now</strong> or <strong>Add to Cart</strong>, you pay <strong>ZiBuy</strong> (the company), not the seller. After you receive the item and confirm it is the real product you wanted from this seller, ZiBuy then releases the money to the seller.
@@ -648,7 +648,7 @@ window.loadProductReviews = async function (productId) {
       const text = r.reviewText || r.text || "";
       const rating = Number(r.rating) || 0;
       const stars = "⭐".repeat(Math.min(rating, 5));
-      const email = r.reviewerEmail || r.userEmail || "Anonymous";
+      const email = r.reviewerName || "Anonymous";
       const initial = email[0].toUpperCase();
       const date = r.createdAt
         ? new Date(r.createdAt.toDate()).toLocaleDateString()
@@ -856,7 +856,7 @@ async function loadSellerRating(userId) {
 
   try {
     // Check phone verification status
-    const userSnapForPhone = await getDoc(doc(db, "users", userId));
+    const userSnapForPhone = await getDoc(doc(db, "public_profiles", userId));
     if (userSnapForPhone.exists() && userSnapForPhone.data().phoneVerified) {
       const phoneBadge = document.getElementById("seller-phone-verified-badge");
       if (phoneBadge) phoneBadge.style.display = "inline-flex";
@@ -885,7 +885,7 @@ async function loadSellerRating(userId) {
     ratingEl.textContent = `${stars} ${avg} (${count} review${count !== 1 ? "s" : ""})`;
 
     // Also show verified badge if seller is verified
-    const userSnap = await getDoc(doc(db, "users", userId));
+    const userSnap = await getDoc(doc(db, "public_profiles", userId));
     if (userSnap.exists() && userSnap.data().isSellerVerified) {
       const badge = document.getElementById("seller-verified-badge");
       if (badge) badge.style.display = "inline-block";

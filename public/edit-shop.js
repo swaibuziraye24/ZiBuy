@@ -120,7 +120,7 @@ async function loadExistingShop() {
     document.getElementById("shop-location").value    = existingShop.location    || "";
     document.getElementById("shop-phone").value       = existingShop.phone       || "";
     document.getElementById("shop-whatsapp").value    = existingShop.whatsapp    || "";
-    document.getElementById("shop-email").value       = existingShop.email       || currentUser.email;
+    document.getElementById("shop-email").value       = existingShop.email       || "";
 
     if (existingShop.logoUrl) {
       document.getElementById("logo-preview").src = existingShop.logoUrl;
@@ -145,7 +145,7 @@ async function loadExistingShop() {
 
   } catch (e) {
     console.warn("loadExistingShop:", e.code);
-    document.getElementById("shop-email").value = currentUser.email;
+    document.getElementById("shop-email").value = "";
   }
 }
 
@@ -209,7 +209,7 @@ window.saveShop = async function() {
   const location    = document.getElementById("shop-location").value;
   const phone       = document.getElementById("shop-phone").value.trim();
   const whatsapp    = document.getElementById("shop-whatsapp").value.trim() || phone;
-  const email       = document.getElementById("shop-email").value.trim() || currentUser.email;
+  const email       = document.getElementById("shop-email").value.trim();
 
   if (!name) {
     document.getElementById("shop-name").style.borderColor = "#ef4444";
